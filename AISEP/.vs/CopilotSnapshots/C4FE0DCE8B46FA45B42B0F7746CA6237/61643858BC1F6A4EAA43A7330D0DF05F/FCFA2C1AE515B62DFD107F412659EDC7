@@ -1,0 +1,33 @@
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace AISEP.Models
+{
+    [Table("wallets")]
+    public class Wallet
+  {
+  [Key]
+        [Column("id")]
+ public Guid Id { get; set; }
+
+ [Column("user_id")]
+  public Guid UserId { get; set; }
+
+   [Column("balance", TypeName = "decimal(18,2)")]
+public decimal Balance { get; set; }
+
+  [Column("currency")]
+        [MaxLength(10)]
+        public string Currency { get; set; } = string.Empty;
+
+  [Column("is_active")]
+ public bool IsActive { get; set; }
+
+ // Navigation properties
+   [ForeignKey("UserId")]
+   public User User { get; set; } = null!;
+
+    public ICollection<WalletTransaction> WalletTransactions { get; set; } = new List<WalletTransaction>();
+     public ICollection<WithdrawRequest> WithdrawRequests { get; set; } = new List<WithdrawRequest>();
+    }
+}

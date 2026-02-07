@@ -1,0 +1,86 @@
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace AISEP.Models
+{
+    [Table("startups")]
+    public class Startup
+    {
+        [Key]
+ [Column("id")]
+        public Guid Id { get; set; }
+
+        [Column("user_id")]
+        public Guid UserId { get; set; }
+
+        [Column("company_name")]
+        [MaxLength(255)]
+     public string? CompanyName { get; set; }
+
+        [Column("logo_url")]
+        [MaxLength(255)]
+   public string? LogoUrl { get; set; }
+
+      [Column("founder")]
+        [MaxLength(255)]
+ public string? Founder { get; set; }
+
+      [Column("contact_info")]
+      public string? ContactInfo { get; set; }
+
+        [Column("country_city")]
+        [MaxLength(255)]
+        public string? CountryCity { get; set; }
+
+        [Column("website")]
+        [MaxLength(255)]
+   public string? Website { get; set; }
+
+        [Column("industry")]
+        [MaxLength(255)]
+   public string? Industry { get; set; }
+
+        [Column("development_stage")]
+        [MaxLength(50)]
+        public string? DevelopmentStage { get; set; } // Idea, MVP, Growth
+
+        [Column("problem_statement")]
+    public string? ProblemStatement { get; set; }
+
+        [Column("solution_description")]
+        public string? SolutionDescription { get; set; }
+
+  [Column("target_customers")]
+        public string? TargetCustomers { get; set; }
+
+        [Column("unique_value_proposition")]
+        public string? UniqueValueProposition { get; set; }
+
+        [Column("market_size", TypeName = "decimal(18,2)")]
+public decimal? MarketSize { get; set; }
+
+      [Column("business_model")]
+    public string? BusinessModel { get; set; }
+
+   [Column("revenue", TypeName = "decimal(18,2)")]
+        public decimal? Revenue { get; set; }
+
+        [Column("competitors")]
+        public string? Competitors { get; set; }
+
+        [Column("team_members")]
+   public string? TeamMembers { get; set; }
+
+        [Column("key_skills")]
+        public string? KeySkills { get; set; }
+
+[Column("team_experience")]
+        public string? TeamExperience { get; set; }
+
+        // Navigation properties
+        [ForeignKey("UserId")]
+        public User User { get; set; } = null!;
+
+public ICollection<ConnectionRequest> ConnectionRequests { get; set; } = new List<ConnectionRequest>();
+    }
+}

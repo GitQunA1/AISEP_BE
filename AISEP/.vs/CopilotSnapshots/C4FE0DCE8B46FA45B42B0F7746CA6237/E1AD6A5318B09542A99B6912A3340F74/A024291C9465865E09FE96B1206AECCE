@@ -1,0 +1,26 @@
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace AISEP.Models
+{
+    [Table("blockchainproof")]
+    public class BlockchainProof
+    {
+        [Key]
+        public Guid Id { get; set; }
+
+        public Guid DocumentId { get; set; }
+
+        [MaxLength(255)]
+        public string TransactionHash { get; set; } = string.Empty;
+
+        public DateTime Timestamp { get; set; }
+
+        [MaxLength(50)]
+        public string VerificationStatus { get; set; } = string.Empty; // Verified, Mismatch
+
+        // Navigation properties
+        [ForeignKey("DocumentId")]
+        public Document Document { get; set; } = null!;
+    }
+}

@@ -1,0 +1,315 @@
+﻿using Microsoft.EntityFrameworkCore;
+using AISEP.Models;
+
+namespace AISEP.Data
+{
+    public class ApplicationDbContext : DbContext
+    {
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+     : base(options)
+        {
+     }
+
+        // DbSets
+        public DbSet<User> Users { get; set; }
+        public DbSet<Startup> Startups { get; set; }
+      public DbSet<Investor> Investors { get; set; }
+   public DbSet<Advisor> Advisors { get; set; }
+        public DbSet<Project> Projects { get; set; }
+        public DbSet<Document> Documents { get; set; }
+    public DbSet<AIReport> AIReports { get; set; }
+        public DbSet<ConnectionRequest> ConnectionRequests { get; set; }
+        public DbSet<Deal> Deals { get; set; }
+        public DbSet<NFTRecord> NFTRecords { get; set; }
+ public DbSet<Booking> Bookings { get; set; }
+        public DbSet<Wallet> Wallets { get; set; }
+        public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<Subscription> Subscriptions { get; set; }
+        public DbSet<ActionLog> ActionLogs { get; set; }
+        public DbSet<SuccessStory> SuccessStories { get; set; }
+        public DbSet<ChatSession> ChatSessions { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
+        public DbSet<ConsultingReport> ConsultingReports { get; set; }
+        public DbSet<Review> Reviews { get; set; }
+        public DbSet<Package> Packages { get; set; }
+        public DbSet<WalletTransaction> WalletTransactions { get; set; }
+public DbSet<WithdrawRequest> WithdrawRequests { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<BlockchainProof> BlockchainProofs { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+         base.OnModelCreating(modelBuilder);
+
+       // User configurations
+      modelBuilder.Entity<User>(entity =>
+    {
+                entity.HasIndex(e => e.Email).IsUnique();
+      entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+ });
+
+            // Startup configurations
+            modelBuilder.Entity<Startup>(entity =>
+            {
+ entity.HasOne(s => s.User)
+ .WithOne(u => u.Startup)
+  .HasForeignKey<Startup>(s => s.UserId)
+.OnDelete(DeleteBehavior.Cascade);
+     });
+
+  // Investor configurations
+   modelBuilder.Entity<Investor>(entity =>
+            {
+      entity.HasOne(i => i.User)
+           .WithOne(u => u.Investor)
+    .HasForeignKey<Investor>(i => i.UserId)
+     .OnDelete(DeleteBehavior.Cascade);
+        });
+
+     // Advisor configurations
+            modelBuilder.Entity<Advisor>(entity =>
+       {
+       entity.HasOne(a => a.User)
+      .WithOne(u => u.Advisor)
+        .HasForeignKey<Advisor>(a => a.UserId)
+         .OnDelete(DeleteBehavior.Cascade);
+     });
+
+            // Project configurations
+            modelBuilder.Entity<Project>(entity =>
+            {
+   entity.HasOne(p => p.User)
+          .WithMany(u => u.Projects)
+             .HasForeignKey(p => p.UserId)
+      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+      // Document configurations
+ modelBuilder.Entity<Document>(entity =>
+    {
+    entity.HasOne(d => d.Project)
+       .WithMany(p => p.Documents)
+  .HasForeignKey(d => d.ProjectId)
+          .OnDelete(DeleteBehavior.Cascade);
+    });
+
+     // AIReport configurations
+            modelBuilder.Entity<AIReport>(entity =>
+            {
+      entity.HasOne(a => a.Project)
+   .WithMany(p => p.AIReports)
+    .HasForeignKey(a => a.ProjectId)
+      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+      // ConnectionRequest configurations
+            modelBuilder.Entity<ConnectionRequest>(entity =>
+            {
+     entity.HasOne(cr => cr.Investor)
+         .WithMany(i => i.ConnectionRequests)
+       .HasForeignKey(cr => cr.InvestorId)
+   .OnDelete(DeleteBehavior.Restrict);
+
+       entity.HasOne(cr => cr.Startup)
+       .WithMany(s => s.ConnectionRequests)
+   .HasForeignKey(cr => cr.StartupId)
+      .OnDelete(DeleteBehavior.Restrict);
+
+    entity.Property(e => e.RequestDate).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            });
+
+     // Deal configurations
+            modelBuilder.Entity<Deal>(entity =>
+      {
+        entity.HasOne(d => d.Investor)
+        .WithMany(i => i.Deals)
+        .HasForeignKey(d => d.InvestorId)
+ .OnDelete(DeleteBehavior.Restrict);
+
+          entity.HasOne(d => d.Project)
+           .WithMany(p => p.Deals)
+        .HasForeignKey(d => d.ProjectId)
+         .OnDelete(DeleteBehavior.Restrict);
+
+  entity.Property(e => e.DealDate).HasDefaultValueSql("CURRENT_TIMESTAMP");
+       });
+
+            // NFTRecord configurations
+     modelBuilder.Entity<NFTRecord>(entity =>
+            {
+     entity.HasOne(n => n.Deal)
+         .WithMany(d => d.NFTRecords)
+  .HasForeignKey(n => n.DealId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+     entity.Property(e => e.MintedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+  });
+
+  // Booking configurations
+     modelBuilder.Entity<Booking>(entity =>
+     {
+   entity.HasOne(b => b.Advisor)
+           .WithMany(a => a.Bookings)
+           .HasForeignKey(b => b.AdvisorId)
+      .OnDelete(DeleteBehavior.Restrict);
+
+   entity.HasOne(b => b.Customer)
+     .WithMany(u => u.CustomerBookings)
+    .HasForeignKey(b => b.CustomerId)
+          .OnDelete(DeleteBehavior.Restrict);
+   });
+
+ // Wallet configurations
+       modelBuilder.Entity<Wallet>(entity =>
+            {
+            entity.HasOne(w => w.User)
+            .WithMany(u => u.Wallets)
+   .HasForeignKey(w => w.UserId)
+       .OnDelete(DeleteBehavior.Cascade);
+       });
+
+            // Transaction configurations
+          modelBuilder.Entity<Transaction>(entity =>
+            {
+      entity.HasOne(t => t.User)
+    .WithMany(u => u.Transactions)
+   .HasForeignKey(t => t.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+  entity.Property(e => e.TransactionDate).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            });
+
+      // Subscription configurations
+    modelBuilder.Entity<Subscription>(entity =>
+     {
+     entity.HasOne(s => s.Package)
+          .WithMany(p => p.Subscriptions)
+           .HasForeignKey(s => s.PackageId)
+          .OnDelete(DeleteBehavior.Restrict);
+
+         entity.HasOne(s => s.User)
+            .WithMany(u => u.Subscriptions)
+         .HasForeignKey(s => s.UserId)
+         .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // ActionLog configurations
+            modelBuilder.Entity<ActionLog>(entity =>
+      {
+    entity.HasOne(a => a.User)
+    .WithMany(u => u.ActionLogs)
+      .HasForeignKey(a => a.UserId)
+          .OnDelete(DeleteBehavior.Cascade);
+
+             entity.Property(e => e.Timestamp).HasDefaultValueSql("CURRENT_TIMESTAMP");
+   });
+
+        // SuccessStory configurations
+         modelBuilder.Entity<SuccessStory>(entity =>
+   {
+                entity.HasOne(ss => ss.ConnectionRequest)
+           .WithMany(cr => cr.SuccessStories)
+                 .HasForeignKey(ss => ss.ConnectionId)
+        .OnDelete(DeleteBehavior.Cascade);
+ });
+
+            // ChatSession configurations
+            modelBuilder.Entity<ChatSession>(entity =>
+       {
+                entity.HasOne(cs => cs.Booking)
+      .WithMany(b => b.ChatSessions)
+    .HasForeignKey(cs => cs.BookingId)
+       .OnDelete(DeleteBehavior.Cascade);
+
+                entity.Property(e => e.StartTime).HasDefaultValueSql("CURRENT_TIMESTAMP");
+    });
+
+  // ChatMessage configurations
+          modelBuilder.Entity<ChatMessage>(entity =>
+         {
+  entity.HasOne(cm => cm.ChatSession)
+      .WithMany(cs => cs.ChatMessages)
+           .HasForeignKey(cm => cm.SessionId)
+          .OnDelete(DeleteBehavior.Cascade);
+
+         entity.HasOne(cm => cm.Sender)
+   .WithMany(u => u.ChatMessages)
+    .HasForeignKey(cm => cm.SenderId)
+      .OnDelete(DeleteBehavior.Restrict);
+
+         entity.Property(e => e.SentAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+       });
+
+    // ConsultingReport configurations
+            modelBuilder.Entity<ConsultingReport>(entity =>
+   {
+      entity.HasOne(cr => cr.Booking)
+     .WithMany(b => b.ConsultingReports)
+         .HasForeignKey(cr => cr.BookingId)
+           .OnDelete(DeleteBehavior.Cascade);
+
+  entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+  });
+
+       // Review configurations
+  modelBuilder.Entity<Review>(entity =>
+         {
+         entity.HasOne(r => r.Advisor)
+                    .WithMany(a => a.Reviews)
+  .HasForeignKey(r => r.AdvisorId)
+        .OnDelete(DeleteBehavior.Restrict);
+
+       entity.HasOne(r => r.Reviewer)
+      .WithMany(u => u.Reviews)
+      .HasForeignKey(r => r.ReviewerId)
+    .OnDelete(DeleteBehavior.Restrict);
+
+      entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+     });
+
+            // WalletTransaction configurations
+     modelBuilder.Entity<WalletTransaction>(entity =>
+          {
+ entity.HasOne(wt => wt.Wallet)
+        .WithMany(w => w.WalletTransactions)
+         .HasForeignKey(wt => wt.WalletId)
+    .OnDelete(DeleteBehavior.Cascade);
+
+     entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+          });
+
+            // WithdrawRequest configurations
+    modelBuilder.Entity<WithdrawRequest>(entity =>
+      {
+                entity.HasOne(wr => wr.Wallet)
+             .WithMany(w => w.WithdrawRequests)
+        .HasForeignKey(wr => wr.WalletId)
+         .OnDelete(DeleteBehavior.Cascade);
+
+           entity.Property(e => e.RequestedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            });
+
+            // Notification configurations
+        modelBuilder.Entity<Notification>(entity =>
+            {
+            entity.HasOne(n => n.User)
+     .WithMany(u => u.Notifications)
+     .HasForeignKey(n => n.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+       entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            });
+
+            // BlockchainProof configurations
+            modelBuilder.Entity<BlockchainProof>(entity =>
+         {
+        entity.HasOne(bp => bp.Document)
+      .WithMany(d => d.BlockchainProofs)
+                  .HasForeignKey(bp => bp.DocumentId)
+          .OnDelete(DeleteBehavior.Cascade);
+
+       entity.Property(e => e.Timestamp).HasDefaultValueSql("CURRENT_TIMESTAMP");
+    });
+        }
+  }
+}

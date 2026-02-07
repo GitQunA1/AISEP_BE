@@ -1,0 +1,451 @@
+using Microsoft.EntityFrameworkCore;
+using AISEP.Models;
+
+namespace AISEP.Data
+{
+    public class ApplicationDbContext : DbContext
+    {
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+       : base(options)
+        {
+        }
+
+        // DbSets
+        public DbSet<User> Users { get; set; }
+        public DbSet<Startup> Startups { get; set; }
+   public DbSet<Investor> Investors { get; set; }
+        public DbSet<Advisor> Advisors { get; set; }
+        public DbSet<Project> Projects { get; set; }
+        public DbSet<Document> Documents { get; set; }
+    public DbSet<AIReport> AIReports { get; set; }
+        public DbSet<ConnectionRequest> ConnectionRequests { get; set; }
+     public DbSet<Deal> Deals { get; set; }
+ public DbSet<NFTRecord> NFTRecords { get; set; }
+        public DbSet<Booking> Bookings { get; set; }
+  public DbSet<Wallet> Wallets { get; set; }
+        public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<Subscription> Subscriptions { get; set; }
+        public DbSet<ActionLog> ActionLogs { get; set; }
+        public DbSet<SuccessStory> SuccessStories { get; set; }
+        public DbSet<ChatSession> ChatSessions { get; set; }
+    public DbSet<ChatMessage> ChatMessages { get; set; }
+      public DbSet<ConsultingReport> ConsultingReports { get; set; }
+        public DbSet<Review> Reviews { get; set; }
+        public DbSet<Package> Packages { get; set; }
+        public DbSet<WalletTransaction> WalletTransactions { get; set; }
+        public DbSet<WithdrawRequest> WithdrawRequests { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
+        public DbSet<BlockchainProof> BlockchainProofs { get; set; }
+
+ protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // User configurations
+   modelBuilder.Entity<User>(entity =>
+            {
+   entity.ToTable("users");
+    entity.HasKey(e => e.Id);
+     entity.Property(e => e.Email).HasMaxLength(255).IsRequired();
+        entity.Property(e => e.PasswordHash).IsRequired();
+entity.Property(e => e.Role).HasConversion<string>().IsRequired();
+   entity.Property(e => e.Status).HasConversion<string>().IsRequired();
+      entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+   entity.HasIndex(e => e.Email).IsUnique();
+            });
+
+            // Startup configurations
+      modelBuilder.Entity<Startup>(entity =>
+          {
+  entity.ToTable("startups");
+           entity.HasKey(e => e.Id);
+         entity.Property(e => e.CompanyName).HasMaxLength(255);
+                entity.Property(e => e.LogoUrl).HasMaxLength(255);
+       entity.Property(e => e.Founder).HasMaxLength(255);
+entity.Property(e => e.CountryCity).HasMaxLength(255);
+                entity.Property(e => e.Website).HasMaxLength(255);
+        entity.Property(e => e.Industry).HasMaxLength(255);
+          entity.Property(e => e.DevelopmentStage).HasConversion<string>().HasMaxLength(50);
+      entity.Property(e => e.MarketSize).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.Revenue).HasColumnType("decimal(18,2)");
+
+   entity.HasOne(s => s.User)
+   .WithOne(u => u.Startup)
+          .HasForeignKey<Startup>(s => s.UserId)
+        .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Investor configurations
+        modelBuilder.Entity<Investor>(entity =>
+   {
+        entity.ToTable("investors");
+    entity.HasKey(e => e.Id);
+                entity.Property(e => e.OrganizationName).HasMaxLength(255);
+    entity.Property(e => e.InvestmentTaste).HasMaxLength(255);
+    entity.Property(e => e.WalletAddress).HasMaxLength(255);
+         entity.Property(e => e.InvestmentAmount).HasColumnType("decimal(18,2)");
+         entity.Property(e => e.RiskTolerance).HasConversion<string>().HasMaxLength(50);
+    entity.Property(e => e.InvestmentRegion).HasMaxLength(255);
+  entity.Property(e => e.FocusIndustry).HasMaxLength(255);
+           entity.Property(e => e.PreferredStage).HasConversion<string>().HasMaxLength(50);
+        entity.Property(e => e.PreviousInvestments).HasMaxLength(255);
+
+        entity.HasOne(i => i.User)
+   .WithOne(u => u.Investor)
+ .HasForeignKey<Investor>(i => i.UserId)
+         .OnDelete(DeleteBehavior.Cascade);
+     });
+
+// Advisor configurations
+  modelBuilder.Entity<Advisor>(entity =>
+   {
+       entity.ToTable("advisors");
+                entity.HasKey(e => e.Id);
+entity.Property(e => e.Expertise).HasMaxLength(255);
+   entity.Property(e => e.Rating).HasColumnType("decimal(3,2)");
+                entity.Property(e => e.LanguagesSpoken).HasMaxLength(255);
+  entity.Property(e => e.Location).HasMaxLength(255);
+         entity.Property(e => e.ProfileImage).HasMaxLength(255);
+
+  entity.HasOne(a => a.User)
+          .WithOne(u => u.Advisor)
+   .HasForeignKey<Advisor>(a => a.UserId)
+           .OnDelete(DeleteBehavior.Cascade);
+   });
+
+ // Project configurations
+            modelBuilder.Entity<Project>(entity =>
+    {
+                entity.ToTable("projects");
+        entity.HasKey(e => e.Id);
+           entity.Property(e => e.ProjectName).HasMaxLength(255).IsRequired();
+        entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
+
+      entity.HasOne(p => p.User)
+         .WithMany(u => u.Projects)
+        .HasForeignKey(p => p.UserId)
+       .OnDelete(DeleteBehavior.Cascade);
+       });
+
+            // Document configurations
+  modelBuilder.Entity<Document>(entity =>
+     {
+           entity.ToTable("documents");
+     entity.HasKey(e => e.Id);
+        entity.Property(e => e.DocumentType).HasConversion<string>().HasMaxLength(50).IsRequired();
+     entity.Property(e => e.FileName).HasMaxLength(255).IsRequired();
+entity.Property(e => e.FileUrl).HasMaxLength(255).IsRequired();
+    entity.Property(e => e.FileHash).HasMaxLength(255);
+                entity.Property(e => e.BlockchainTxHash).HasMaxLength(255);
+
+        entity.HasOne(d => d.Project)
+          .WithMany(p => p.Documents)
+        .HasForeignKey(d => d.ProjectId)
+ .OnDelete(DeleteBehavior.Cascade);
+      });
+
+  // AIReport configurations
+            modelBuilder.Entity<AIReport>(entity =>
+      {
+            entity.ToTable("aireports");
+      entity.HasKey(e => e.Id);
+         entity.Property(e => e.AnalysisResult).HasMaxLength(255);
+    entity.Property(e => e.AiStatus).HasConversion<string>().HasMaxLength(50).IsRequired();
+
+          entity.HasOne(a => a.Project)
+              .WithMany(p => p.AIReports)
+    .HasForeignKey(a => a.ProjectId)
+     .OnDelete(DeleteBehavior.Cascade);
+    });
+
+  // ConnectionRequest configurations
+          modelBuilder.Entity<ConnectionRequest>(entity =>
+            {
+      entity.ToTable("connectionrequests");
+       entity.HasKey(e => e.Id);
+       entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
+    entity.Property(e => e.RequestDate).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+             entity.HasOne(cr => cr.Investor)
+     .WithMany(i => i.ConnectionRequests)
+      .HasForeignKey(cr => cr.InvestorId)
+       .OnDelete(DeleteBehavior.Restrict);
+
+     entity.HasOne(cr => cr.Startup)
+          .WithMany(s => s.ConnectionRequests)
+      .HasForeignKey(cr => cr.StartupId)
+        .OnDelete(DeleteBehavior.Restrict);
+            });
+
+  // Deal configurations
+            modelBuilder.Entity<Deal>(entity =>
+          {
+     entity.ToTable("deals");
+    entity.HasKey(e => e.Id);
+   entity.Property(e => e.Amount).HasColumnType("decimal(18,2)").IsRequired();
+     entity.Property(e => e.Status).HasMaxLength(50).IsRequired();
+                entity.Property(e => e.PaymentMethod).HasMaxLength(50);
+     entity.Property(e => e.EquityPercentage).HasColumnType("decimal(5,2)");
+                entity.Property(e => e.TransactionHash).HasMaxLength(255);
+       entity.Property(e => e.DealDate).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+             entity.HasOne(d => d.Investor)
+        .WithMany(i => i.Deals)
+         .HasForeignKey(d => d.InvestorId)
+         .OnDelete(DeleteBehavior.Restrict);
+
+           entity.HasOne(d => d.Project)
+          .WithMany(p => p.Deals)
+         .HasForeignKey(d => d.ProjectId)
+ .OnDelete(DeleteBehavior.Restrict);
+            });
+
+       // NFTRecord configurations
+            modelBuilder.Entity<NFTRecord>(entity =>
+      {
+           entity.ToTable("nftrecords");
+      entity.HasKey(e => e.Id);
+   entity.Property(e => e.TokenId).HasMaxLength(255).IsRequired();
+     entity.Property(e => e.TxHash).HasMaxLength(255).IsRequired();
+     entity.Property(e => e.OwnerWallet).HasMaxLength(255).IsRequired();
+     entity.Property(e => e.ValidityStatus).HasConversion<string>().HasMaxLength(50).IsRequired();
+     entity.Property(e => e.PreviousOwnerWallet).HasMaxLength(255);
+    entity.Property(e => e.MintedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.HasOne(n => n.Deal)
+         .WithMany(d => d.NFTRecords)
+          .HasForeignKey(n => n.DealId)
+       .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Booking configurations
+    modelBuilder.Entity<Booking>(entity =>
+            {
+       entity.ToTable("bookings");
+          entity.HasKey(e => e.Id);
+  entity.Property(e => e.Price).HasColumnType("decimal(18,2)").IsRequired();
+            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
+
+   entity.HasOne(b => b.Advisor)
+         .WithMany(a => a.Bookings)
+   .HasForeignKey(b => b.AdvisorId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(b => b.Customer)
+          .WithMany(u => u.CustomerBookings)
+ .HasForeignKey(b => b.CustomerId)
+              .OnDelete(DeleteBehavior.Restrict);
+     });
+
+  // Wallet configurations
+            modelBuilder.Entity<Wallet>(entity =>
+          {
+          entity.ToTable("wallets");
+           entity.HasKey(e => e.Id);
+      entity.Property(e => e.Balance).HasColumnType("decimal(18,2)").IsRequired();
+          entity.Property(e => e.Currency).HasMaxLength(10).IsRequired();
+
+   entity.HasOne(w => w.User)
+  .WithMany(u => u.Wallets)
+          .HasForeignKey(w => w.UserId)
+         .OnDelete(DeleteBehavior.Cascade);
+            });
+
+  // Transaction configurations
+    modelBuilder.Entity<Transaction>(entity =>
+{
+           entity.ToTable("transactions");
+        entity.HasKey(e => e.Id);
+     entity.Property(e => e.Amount).HasColumnType("decimal(18,2)").IsRequired();
+             entity.Property(e => e.Type).HasConversion<string>().HasMaxLength(50).IsRequired();
+       entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
+      entity.Property(e => e.TransactionDate).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+      entity.HasOne(t => t.User)
+        .WithMany(u => u.Transactions)
+           .HasForeignKey(t => t.UserId)
+               .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Subscription configurations
+     modelBuilder.Entity<Subscription>(entity =>
+            {
+      entity.ToTable("subscriptions");
+  entity.HasKey(e => e.Id);
+  entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
+
+     entity.HasOne(s => s.Package)
+ .WithMany(p => p.Subscriptions)
+        .HasForeignKey(s => s.PackageId)
+        .OnDelete(DeleteBehavior.Restrict);
+
+entity.HasOne(s => s.User)
+              .WithMany(u => u.Subscriptions)
+        .HasForeignKey(s => s.UserId)
+         .OnDelete(DeleteBehavior.Cascade);
+      });
+
+            // ActionLog configurations
+ modelBuilder.Entity<ActionLog>(entity =>
+            {
+        entity.ToTable("actionlogs");
+     entity.HasKey(e => e.Id);
+       entity.Property(e => e.ActionType).HasMaxLength(255).IsRequired();
+       entity.Property(e => e.EntityType).HasMaxLength(255).IsRequired();
+                entity.Property(e => e.Timestamp).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+         entity.HasOne(a => a.User)
+     .WithMany(u => u.ActionLogs)
+        .HasForeignKey(a => a.UserId)
+               .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // SuccessStory configurations
+    modelBuilder.Entity<SuccessStory>(entity =>
+   {
+     entity.ToTable("successstories");
+     entity.HasKey(e => e.Id);
+
+     entity.HasOne(ss => ss.ConnectionRequest)
+      .WithMany(cr => cr.SuccessStories)
+     .HasForeignKey(ss => ss.ConnectionId)
+         .OnDelete(DeleteBehavior.Cascade);
+            });
+
+        // ChatSession configurations
+    modelBuilder.Entity<ChatSession>(entity =>
+  {
+      entity.ToTable("chatsessions");
+       entity.HasKey(e => e.Id);
+     entity.Property(e => e.StartTime).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.HasOne(cs => cs.Booking)
+            .WithMany(b => b.ChatSessions)
+             .HasForeignKey(cs => cs.BookingId)
+        .OnDelete(DeleteBehavior.Cascade);
+            });
+
+     // ChatMessage configurations
+      modelBuilder.Entity<ChatMessage>(entity =>
+         {
+        entity.ToTable("chatmessages");
+                entity.HasKey(e => e.Id);
+    entity.Property(e => e.Content).IsRequired();
+     entity.Property(e => e.SentAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+    entity.HasOne(cm => cm.ChatSession)
+        .WithMany(cs => cs.ChatMessages)
+    .HasForeignKey(cm => cm.SessionId)
+     .OnDelete(DeleteBehavior.Cascade);
+
+ entity.HasOne(cm => cm.Sender)
+  .WithMany(u => u.ChatMessages)
+     .HasForeignKey(cm => cm.SenderId)
+ .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // ConsultingReport configurations
+          modelBuilder.Entity<ConsultingReport>(entity =>
+       {
+            entity.ToTable("consultingreports");
+    entity.HasKey(e => e.Id);
+entity.Property(e => e.MeetingTitle).HasMaxLength(255).IsRequired();
+     entity.Property(e => e.Location).HasMaxLength(255);
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+         entity.HasOne(cr => cr.Booking)
+      .WithMany(b => b.ConsultingReports)
+        .HasForeignKey(cr => cr.BookingId)
+        .OnDelete(DeleteBehavior.Cascade);
+      });
+
+  // Review configurations
+ modelBuilder.Entity<Review>(entity =>
+    {
+         entity.ToTable("reviews");
+    entity.HasKey(e => e.Id);
+        entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                entity.HasOne(r => r.Advisor)
+          .WithMany(a => a.Reviews)
+     .HasForeignKey(r => r.AdvisorId)
+          .OnDelete(DeleteBehavior.Restrict);
+
+   entity.HasOne(r => r.Reviewer)
+        .WithMany(u => u.Reviews)
+ .HasForeignKey(r => r.ReviewerId)
+          .OnDelete(DeleteBehavior.Restrict);
+            });
+
+      // Package configurations
+ modelBuilder.Entity<Package>(entity =>
+ {
+            entity.ToTable("packages");
+   entity.HasKey(e => e.Id);
+                entity.Property(e => e.PackageName).HasMaxLength(255).IsRequired();
+         entity.Property(e => e.Price).HasColumnType("decimal(18,2)").IsRequired();
+        });
+
+         // WalletTransaction configurations
+            modelBuilder.Entity<WalletTransaction>(entity =>
+    {
+     entity.ToTable("wallettransactions");
+    entity.HasKey(e => e.Id);
+            entity.Property(e => e.Amount).HasColumnType("decimal(18,2)").IsRequired();
+          entity.Property(e => e.Type).HasConversion<string>().HasMaxLength(50).IsRequired();
+       entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+      entity.HasOne(wt => wt.Wallet)
+             .WithMany(w => w.WalletTransactions)
+     .HasForeignKey(wt => wt.WalletId)
+    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+       // WithdrawRequest configurations
+ modelBuilder.Entity<WithdrawRequest>(entity =>
+            {
+        entity.ToTable("withdrawrequests");
+     entity.HasKey(e => e.Id);
+        entity.Property(e => e.Amount).HasColumnType("decimal(18,2)").IsRequired();
+      entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
+           entity.Property(e => e.RequestedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+ entity.HasOne(wr => wr.Wallet)
+      .WithMany(w => w.WithdrawRequests)
+   .HasForeignKey(wr => wr.WalletId)
+      .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Notification configurations
+            modelBuilder.Entity<Notification>(entity =>
+     {
+     entity.ToTable("notifications");
+        entity.HasKey(e => e.Id);
+                entity.Property(e => e.Message).IsRequired();
+         entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
+     entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+        entity.HasOne(n => n.User)
+ .WithMany(u => u.Notifications)
+           .HasForeignKey(n => n.UserId)
+        .OnDelete(DeleteBehavior.Cascade);
+            });
+
+      // BlockchainProof configurations
+ modelBuilder.Entity<BlockchainProof>(entity =>
+       {
+                entity.ToTable("blockchainproof");
+       entity.HasKey(e => e.Id);
+     entity.Property(e => e.TransactionHash).HasMaxLength(255).IsRequired();
+     entity.Property(e => e.VerificationStatus).HasConversion<string>().HasMaxLength(50).IsRequired();
+            entity.Property(e => e.Timestamp).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.HasOne(bp => bp.Document)
+         .WithMany(d => d.BlockchainProofs)
+      .HasForeignKey(bp => bp.DocumentId)
+            .OnDelete(DeleteBehavior.Cascade);
+    });
+        }
+    }
+}

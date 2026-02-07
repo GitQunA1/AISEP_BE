@@ -1,0 +1,30 @@
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace AISEP.Models
+{
+    [Table("aireports")]
+    public class AIReport
+    {
+[Key]
+        public Guid Id { get; set; }
+
+        public Guid ProjectId { get; set; }
+
+     public int? PotentialScore { get; set; }
+
+        public int? ChaosScore { get; set; }
+
+        [MaxLength(255)]
+        public string? AnalysisResult { get; set; }
+
+        public DateTime? VerifiedAt { get; set; }
+
+  [MaxLength(50)]
+        public string AiStatus { get; set; } = string.Empty; // Pending, Completed
+
+    // Navigation properties
+        [ForeignKey("ProjectId")]
+        public Project Project { get; set; } = null!;
+    }
+}

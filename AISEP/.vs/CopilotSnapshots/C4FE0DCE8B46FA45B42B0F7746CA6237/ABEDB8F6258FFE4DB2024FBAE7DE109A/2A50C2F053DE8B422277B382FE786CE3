@@ -1,0 +1,29 @@
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace AISEP.Models
+{
+    public class NFTRecord
+    {
+        public Guid Id { get; set; }
+
+      public Guid DealId { get; set; }
+
+        public string TokenId { get; set; } = string.Empty;
+
+        public string TxHash { get; set; } = string.Empty;
+
+        public string OwnerWallet { get; set; } = string.Empty;
+
+        public DateTime MintedAt { get; set; }
+
+        public string ValidityStatus { get; set; } = string.Empty; // Valid, Invalid, Expired
+
+        public bool Transferable { get; set; }
+
+        public string? PreviousOwnerWallet { get; set; }
+
+        // Navigation properties
+        public Deal Deal { get; set; } = null!;
+    }
+}

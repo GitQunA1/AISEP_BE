@@ -1,0 +1,39 @@
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace AISEP.Models
+{
+    [Table("documents")]
+    public class Document
+    {
+        [Key]
+        public Guid Id { get; set; }
+
+        public Guid ProjectId { get; set; }
+
+        [MaxLength(50)]
+        public string DocumentType { get; set; } = string.Empty; // PitchDeck, BusinessPlan, Other
+
+        [MaxLength(255)]
+        public string FileName { get; set; } = string.Empty;
+
+     [MaxLength(255)]
+        public string FileUrl { get; set; } = string.Empty;
+
+   [MaxLength(255)]
+        public string? FileHash { get; set; }
+
+        [MaxLength(255)]
+        public string? BlockchainTxHash { get; set; }
+
+        public bool IsIpProtected { get; set; }
+
+        public DateTime? VerifiedAt { get; set; }
+
+    // Navigation properties
+     [ForeignKey("ProjectId")]
+        public Project Project { get; set; } = null!;
+
+        public ICollection<BlockchainProof> BlockchainProofs { get; set; } = new List<BlockchainProof>();
+    }
+}

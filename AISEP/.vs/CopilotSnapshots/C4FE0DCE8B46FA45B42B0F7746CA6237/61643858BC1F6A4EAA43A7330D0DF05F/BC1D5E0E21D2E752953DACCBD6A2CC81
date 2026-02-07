@@ -1,0 +1,38 @@
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace AISEP.Models
+{
+    [Table("projects")]
+    public class Project
+    {
+     [Key]
+  [Column("id")]
+        public Guid Id { get; set; }
+
+        [Column("user_id")]
+        public Guid UserId { get; set; }
+
+        [Column("project_name")]
+[MaxLength(255)]
+        public string ProjectName { get; set; } = string.Empty;
+
+        [Column("description")]
+        public string? Description { get; set; }
+
+        [Column("full_description")]
+        public string? FullDescription { get; set; }
+
+        [Column("status")]
+        [MaxLength(50)]
+        public string Status { get; set; } = string.Empty; // Draft, In Progress, Completed
+
+        // Navigation properties
+        [ForeignKey("UserId")]
+        public User User { get; set; } = null!;
+
+        public ICollection<Document> Documents { get; set; } = new List<Document>();
+        public ICollection<AIReport> AIReports { get; set; } = new List<AIReport>();
+        public ICollection<Deal> Deals { get; set; } = new List<Deal>();
+    }
+}

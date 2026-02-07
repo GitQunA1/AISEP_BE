@@ -1,0 +1,50 @@
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace AISEP.Models
+{
+    [Table("deals")]
+    public class Deal
+    {
+  [Key]
+        public Guid Id { get; set; }
+
+     public Guid InvestorId { get; set; }
+
+        public Guid ProjectId { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal Amount { get; set; }
+
+   public bool StartupConfirmed { get; set; }
+
+        public bool InvestorConfirmed { get; set; }
+
+        [MaxLength(50)]
+        public string Status { get; set; } = string.Empty;
+
+        public DateTime DealDate { get; set; }
+
+        [MaxLength(50)]
+        public string? PaymentMethod { get; set; }
+
+        [Column(TypeName = "decimal(5,2)")]
+public decimal? EquityPercentage { get; set; }
+
+        [MaxLength(255)]
+     public string? TransactionHash { get; set; }
+
+        public bool IsCompleted { get; set; }
+
+   public DateTime? CompletionDate { get; set; }
+
+     // Navigation properties
+        [ForeignKey("InvestorId")]
+        public Investor Investor { get; set; } = null!;
+
+        [ForeignKey("ProjectId")]
+        public Project Project { get; set; } = null!;
+
+        public ICollection<NFTRecord> NFTRecords { get; set; } = new List<NFTRecord>();
+    }
+}

@@ -1,0 +1,61 @@
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace AISEP.Models
+{
+    [Table("investors")]
+    public class Investor
+    {
+        [Key]
+        [Column("id")]
+   public Guid Id { get; set; }
+
+        [Column("user_id")]
+        public Guid UserId { get; set; }
+
+        [Column("organization_name")]
+        [MaxLength(255)]
+        public string? OrganizationName { get; set; }
+
+ [Column("investment_taste")]
+        [MaxLength(255)]
+      public string? InvestmentTaste { get; set; }
+
+        [Column("wallet_address")]
+        [MaxLength(255)]
+     public string? WalletAddress { get; set; }
+
+        [Column("investment_amount", TypeName = "decimal(18,2)")]
+        public decimal? InvestmentAmount { get; set; }
+
+        [Column("investment_date")]
+        public DateTime? InvestmentDate { get; set; }
+
+        [Column("risk_tolerance")]
+ [MaxLength(50)]
+        public string? RiskTolerance { get; set; } // Low, Medium, High
+
+        [Column("investment_region")]
+   [MaxLength(255)]
+  public string? InvestmentRegion { get; set; }
+
+      [Column("focus_industry")]
+        [MaxLength(255)]
+        public string? FocusIndustry { get; set; }
+
+        [Column("preferred_stage")]
+        [MaxLength(50)]
+        public string? PreferredStage { get; set; } // Idea, MVP, Growth, Scale
+
+ [Column("previous_investments")]
+        [MaxLength(255)]
+    public string? PreviousInvestments { get; set; }
+
+        // Navigation properties
+     [ForeignKey("UserId")]
+        public User User { get; set; } = null!;
+
+        public ICollection<ConnectionRequest> ConnectionRequests { get; set; } = new List<ConnectionRequest>();
+        public ICollection<Deal> Deals { get; set; } = new List<Deal>();
+    }
+}

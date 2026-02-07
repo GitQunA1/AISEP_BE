@@ -1,0 +1,46 @@
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace AISEP.Models
+{
+    [Table("nftrecords")]
+ public class NFTRecord
+    {
+[Key]
+  [Column("id")]
+        public Guid Id { get; set; }
+
+     [Column("deal_id")]
+        public Guid DealId { get; set; }
+
+     [Column("token_id")]
+        [MaxLength(255)]
+        public string TokenId { get; set; } = string.Empty;
+
+        [Column("tx_hash")]
+        [MaxLength(255)]
+  public string TxHash { get; set; } = string.Empty;
+
+        [Column("owner_wallet")]
+ [MaxLength(255)]
+  public string OwnerWallet { get; set; } = string.Empty;
+
+     [Column("minted_at")]
+     public DateTime MintedAt { get; set; }
+
+        [Column("validity_status")]
+   [MaxLength(50)]
+public string ValidityStatus { get; set; } = string.Empty; // Valid, Invalid, Expired
+
+        [Column("transferable")]
+     public bool Transferable { get; set; }
+
+        [Column("previousownerwallet")]
+        [MaxLength(255)]
+   public string? PreviousOwnerWallet { get; set; }
+
+        // Navigation properties
+  [ForeignKey("DealId")]
+public Deal Deal { get; set; } = null!;
+    }
+}
