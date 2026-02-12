@@ -3,8 +3,92 @@
   "WorkspaceRootPath": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\settings\\jwtsettings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\settings\\jwtsettings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\services\\jwtservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\services\\jwtservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\controllers\\investorcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\controllers\\investorcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\models\\investor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\models\\investor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\services\\ijwtservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\services\\ijwtservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\dtos\\tokenresponsedto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\dtos\\tokenresponsedto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\repositories\\repository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\repositories\\repository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\repositories\\irepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\repositories\\irepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\weatherforecast.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\weatherforecast.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\identity_setup.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}|",
+      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\identity_setup.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}|"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\database_setup.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}|",
       "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\database_setup.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\common\\unitofwork.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\common\\unitofwork.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\common\\iunitofwork.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\common\\iunitofwork.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\dtos\\refreshtokendto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\dtos\\refreshtokendto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\models\\refreshtoken.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\models\\refreshtoken.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\dtos\\logindto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\dtos\\logindto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\dtos\\registerdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\dtos\\registerdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\models\\startup.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -119,32 +203,12 @@
       "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\models\\transaction.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\models\\consultingreport.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\models\\consultingreport.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\models\\advisor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\models\\advisor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\models\\investor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\models\\investor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\models\\project.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -193,6 +257,10 @@
     {
       "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\models\\notification.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\models\\notification.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|f:\\hoc\\ki9\\sep490\\be\\aisep_be\\aisep\\aisep\\jwt_analysis.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}|",
+      "RelativeMoniker": "D:0:0:{B4847FF6-BC88-4877-BB3D-13AF5CC8D179}|AISEP\\AISEP.csproj|solutionrelative:aisep\\jwt_analysis.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}|"
     }
   ],
   "DocumentGroupContainers": [
@@ -202,96 +270,280 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 8,
+          "SelectedChildIndex": 10,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "WithdrawRequestStatus.cs",
-              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Enums\\WithdrawRequestStatus.cs",
-              "RelativeDocumentMoniker": "AISEP\\Models\\Enums\\WithdrawRequestStatus.cs",
-              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Enums\\WithdrawRequestStatus.cs",
-              "RelativeToolTip": "AISEP\\Models\\Enums\\WithdrawRequestStatus.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAIAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-06T17:30:47.047Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "BlockchainProof.cs",
-              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\BlockchainProof.cs",
-              "RelativeDocumentMoniker": "AISEP\\Models\\BlockchainProof.cs",
-              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\BlockchainProof.cs",
-              "RelativeToolTip": "AISEP\\Models\\BlockchainProof.cs",
-              "ViewState": "AgIAABEAAAAAAAAAAAAAABEAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-05T17:03:54.775Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "AIReport.cs",
-              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\AIReport.cs",
-              "RelativeDocumentMoniker": "AISEP\\Models\\AIReport.cs",
-              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\AIReport.cs",
-              "RelativeToolTip": "AISEP\\Models\\AIReport.cs",
-              "ViewState": "AgIAABIAAAAAAAAAAAAAABIAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-05T17:02:07.263Z"
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "Startup.cs",
-              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Startup.cs",
-              "RelativeDocumentMoniker": "AISEP\\Models\\Startup.cs",
-              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Startup.cs",
-              "RelativeToolTip": "AISEP\\Models\\Startup.cs",
-              "ViewState": "AgIAABUAAAAAAAAAAAAAAB0AAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-05T17:01:35.362Z",
+              "Title": "appsettings.json",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\appsettings.json",
+              "RelativeDocumentMoniker": "AISEP\\appsettings.json",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\appsettings.json",
+              "RelativeToolTip": "AISEP\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-02-11T00:21:55.449Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
-              "Title": "WalletTransactionType.cs",
-              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Enums\\WalletTransactionType.cs",
-              "RelativeDocumentMoniker": "AISEP\\Models\\Enums\\WalletTransactionType.cs",
-              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Enums\\WalletTransactionType.cs",
-              "RelativeToolTip": "AISEP\\Models\\Enums\\WalletTransactionType.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 4,
+              "Title": "AuthController.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Controllers\\AuthController.cs",
+              "RelativeDocumentMoniker": "AISEP\\Controllers\\AuthController.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Controllers\\AuthController.cs",
+              "RelativeToolTip": "AISEP\\Controllers\\AuthController.cs",
+              "ViewState": "AgIAACcAAAAAAAAAAAA1wFEAAAAyAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-06T17:30:34.311Z"
+              "WhenOpened": "2026-02-08T17:32:02.695Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "JwtService.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Services\\JwtService.cs",
+              "RelativeDocumentMoniker": "AISEP\\Services\\JwtService.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Services\\JwtService.cs",
+              "RelativeToolTip": "AISEP\\Services\\JwtService.cs",
+              "ViewState": "AgIAABUAAAAAAAAAAAAYwAgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-08T17:57:14.718Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "IJwtService.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Services\\IJwtService.cs",
+              "RelativeDocumentMoniker": "AISEP\\Services\\IJwtService.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Services\\IJwtService.cs",
+              "RelativeToolTip": "AISEP\\Services\\IJwtService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAuwAkAAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-08T18:00:02.247Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "TokenResponseDto.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\DTOs\\TokenResponseDto.cs",
+              "RelativeDocumentMoniker": "AISEP\\DTOs\\TokenResponseDto.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\DTOs\\TokenResponseDto.cs",
+              "RelativeToolTip": "AISEP\\DTOs\\TokenResponseDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-08T17:57:23.081Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 64,
+              "Title": "JWT_ANALYSIS.md",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\JWT_ANALYSIS.md",
+              "RelativeDocumentMoniker": "AISEP\\JWT_ANALYSIS.md",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\JWT_ANALYSIS.md",
+              "RelativeToolTip": "AISEP\\JWT_ANALYSIS.md",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAKwGAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-02-09T13:15:10.617Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "WeatherForecast.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\WeatherForecast.cs",
+              "RelativeDocumentMoniker": "AISEP\\WeatherForecast.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\WeatherForecast.cs",
+              "RelativeToolTip": "AISEP\\WeatherForecast.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-09T03:37:03.396Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "RefreshToken.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\RefreshToken.cs",
+              "RelativeDocumentMoniker": "AISEP\\Models\\RefreshToken.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\RefreshToken.cs",
+              "RelativeToolTip": "AISEP\\Models\\RefreshToken.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-08T17:55:17.543Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 6,
-              "Title": "ActionLog.cs",
-              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\ActionLog.cs",
-              "RelativeDocumentMoniker": "AISEP\\Models\\ActionLog.cs",
-              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\ActionLog.cs",
-              "RelativeToolTip": "AISEP\\Models\\ActionLog.cs",
-              "ViewState": "AgIAAAoAAAAAAAAAAAAIwBkAAAAAAAAAAAAAAA==",
+              "Title": "User.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\User.cs",
+              "RelativeDocumentMoniker": "AISEP\\Models\\User.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\User.cs",
+              "RelativeToolTip": "AISEP\\Models\\User.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAA8AAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-05T17:03:00.564Z"
+              "WhenOpened": "2026-02-05T17:01:20.151Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "JwtSettings.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Settings\\JwtSettings.cs",
+              "RelativeDocumentMoniker": "AISEP\\Settings\\JwtSettings.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Settings\\JwtSettings.cs",
+              "RelativeToolTip": "AISEP\\Settings\\JwtSettings.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-08T17:56:52.171Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Program.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Program.cs",
+              "RelativeDocumentMoniker": "AISEP\\Program.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Program.cs",
+              "RelativeToolTip": "AISEP\\Program.cs",
+              "ViewState": "AgIAABMAAAAAAAAAAAAkwCAAAAAzAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-05T17:04:35.94Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 5,
-              "Title": "ChatMessage.cs",
-              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\ChatMessage.cs",
-              "RelativeDocumentMoniker": "AISEP\\Models\\ChatMessage.cs",
-              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\ChatMessage.cs",
-              "RelativeToolTip": "AISEP\\Models\\ChatMessage.cs",
-              "ViewState": "AgIAABcAAAAAAAAAAAAAABcAAAAAAAAAAAAAAA==",
+              "Title": "InvestorController.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Controllers\\InvestorController.cs",
+              "RelativeDocumentMoniker": "AISEP\\Controllers\\InvestorController.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Controllers\\InvestorController.cs",
+              "RelativeToolTip": "AISEP\\Controllers\\InvestorController.cs",
+              "ViewState": "AgIAABYAAAAAAAAAAAAQwCMAAAAxAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-05T17:03:16.914Z"
+              "WhenOpened": "2026-02-10T17:50:44.467Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 13,
+              "Title": "IDENTITY_SETUP.md",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\IDENTITY_SETUP.md",
+              "RelativeDocumentMoniker": "AISEP\\IDENTITY_SETUP.md",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\IDENTITY_SETUP.md",
+              "RelativeToolTip": "AISEP\\IDENTITY_SETUP.md",
+              "ViewState": "AgIAACEAAAAAAAAAAAAAAOoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-02-08T17:33:05.819Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "Investor.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Investor.cs",
+              "RelativeDocumentMoniker": "AISEP\\Models\\Investor.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Investor.cs",
+              "RelativeToolTip": "AISEP\\Models\\Investor.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAACcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-05T17:01:42.804Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "IRepository.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Repositories\\IRepository.cs",
+              "RelativeDocumentMoniker": "AISEP\\Repositories\\IRepository.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Repositories\\IRepository.cs",
+              "RelativeToolTip": "AISEP\\Repositories\\IRepository.cs",
+              "ViewState": "AgIAAAcAAAAAAAAAAAAzwAYAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-08T18:01:03.995Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "Repository.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Repositories\\Repository.cs",
+              "RelativeDocumentMoniker": "AISEP\\Repositories\\Repository.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Repositories\\Repository.cs",
+              "RelativeToolTip": "AISEP\\Repositories\\Repository.cs",
+              "ViewState": "AgIAABIAAAAAAAAAAAAYwFEAAAAHAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-08T18:01:20.307Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "RefreshTokenDto.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\DTOs\\RefreshTokenDto.cs",
+              "RelativeDocumentMoniker": "AISEP\\DTOs\\RefreshTokenDto.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\DTOs\\RefreshTokenDto.cs",
+              "RelativeToolTip": "AISEP\\DTOs\\RefreshTokenDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-08T17:57:28.709Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "DATABASE_SETUP.md",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\DATABASE_SETUP.md",
+              "RelativeDocumentMoniker": "AISEP\\DATABASE_SETUP.md",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\DATABASE_SETUP.md",
+              "RelativeToolTip": "AISEP\\DATABASE_SETUP.md",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAOwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-02-08T17:31:03.442Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "LoginDto.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\DTOs\\LoginDto.cs",
+              "RelativeDocumentMoniker": "AISEP\\DTOs\\LoginDto.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\DTOs\\LoginDto.cs",
+              "RelativeToolTip": "AISEP\\DTOs\\LoginDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAA8AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-08T17:31:23.301Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "RegisterDto.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\DTOs\\RegisterDto.cs",
+              "RelativeDocumentMoniker": "AISEP\\DTOs\\RegisterDto.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\DTOs\\RegisterDto.cs",
+              "RelativeToolTip": "AISEP\\DTOs\\RegisterDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-08T17:31:15.657Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "UnitOfWork.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Common\\UnitOfWork.cs",
+              "RelativeDocumentMoniker": "AISEP\\Common\\UnitOfWork.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Common\\UnitOfWork.cs",
+              "RelativeToolTip": "AISEP\\Common\\UnitOfWork.cs",
+              "ViewState": "AgIAAFIAAAAAAAAAAAAAAFIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-08T16:37:21.968Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "IUnitOfWork.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Common\\IUnitOfWork.cs",
+              "RelativeDocumentMoniker": "AISEP\\Common\\IUnitOfWork.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Common\\IUnitOfWork.cs",
+              "RelativeToolTip": "AISEP\\Common\\IUnitOfWork.cs",
+              "ViewState": "AgIAAB8AAAAAAAAAAAAAACcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-08T16:34:42.51Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
               "Title": "ChatSession.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\ChatSession.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\ChatSession.cs",
@@ -303,24 +555,103 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "DATABASE_SETUP.md",
-              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\DATABASE_SETUP.md",
-              "RelativeDocumentMoniker": "AISEP\\DATABASE_SETUP.md",
-              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\DATABASE_SETUP.md",
-              "RelativeToolTip": "AISEP\\DATABASE_SETUP.md",
-              "ViewState": "AgIAADgAAAAAAAAAAAAiwEIAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
-              "WhenOpened": "2026-02-05T17:05:58.15Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{56df62a4-05a3-4e5b-aa1a-99371ccfb997}"
+              "DocumentIndex": 18,
+              "Title": "ApplicationDbContext.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Data\\ApplicationDbContext.cs",
+              "RelativeDocumentMoniker": "AISEP\\Data\\ApplicationDbContext.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Data\\ApplicationDbContext.cs",
+              "RelativeToolTip": "AISEP\\Data\\ApplicationDbContext.cs",
+              "ViewState": "AgIAAN4BAAAAAAAAAAAAAN4BAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-05T17:04:27.779Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 26,
+              "Title": "ChatMessage.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\ChatMessage.cs",
+              "RelativeDocumentMoniker": "AISEP\\Models\\ChatMessage.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\ChatMessage.cs",
+              "RelativeToolTip": "AISEP\\Models\\ChatMessage.cs",
+              "ViewState": "AgIAABcAAAAAAAAAAAAAABcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-05T17:03:16.914Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 27,
+              "Title": "ActionLog.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\ActionLog.cs",
+              "RelativeDocumentMoniker": "AISEP\\Models\\ActionLog.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\ActionLog.cs",
+              "RelativeToolTip": "AISEP\\Models\\ActionLog.cs",
+              "ViewState": "AgIAAAoAAAAAAAAAAAAIwBkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-05T17:03:00.564Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 31,
+              "Title": "WalletTransactionType.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Enums\\WalletTransactionType.cs",
+              "RelativeDocumentMoniker": "AISEP\\Models\\Enums\\WalletTransactionType.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Enums\\WalletTransactionType.cs",
+              "RelativeToolTip": "AISEP\\Models\\Enums\\WalletTransactionType.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-06T17:30:34.311Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "Startup.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Startup.cs",
+              "RelativeDocumentMoniker": "AISEP\\Models\\Startup.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Startup.cs",
+              "RelativeToolTip": "AISEP\\Models\\Startup.cs",
+              "ViewState": "AgIAABMAAAAAAAAAAAAzwB0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-05T17:01:35.362Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
+              "Title": "AIReport.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\AIReport.cs",
+              "RelativeDocumentMoniker": "AISEP\\Models\\AIReport.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\AIReport.cs",
+              "RelativeToolTip": "AISEP\\Models\\AIReport.cs",
+              "ViewState": "AgIAABIAAAAAAAAAAAAAABIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-05T17:02:07.263Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 30,
+              "Title": "WithdrawRequestStatus.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Enums\\WithdrawRequestStatus.cs",
+              "RelativeDocumentMoniker": "AISEP\\Models\\Enums\\WithdrawRequestStatus.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Enums\\WithdrawRequestStatus.cs",
+              "RelativeToolTip": "AISEP\\Models\\Enums\\WithdrawRequestStatus.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-06T17:30:47.047Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 29,
+              "Title": "BlockchainProof.cs",
+              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\BlockchainProof.cs",
+              "RelativeDocumentMoniker": "AISEP\\Models\\BlockchainProof.cs",
+              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\BlockchainProof.cs",
+              "RelativeToolTip": "AISEP\\Models\\BlockchainProof.cs",
+              "ViewState": "AgIAABEAAAAAAAAAAAAAABEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-05T17:03:54.775Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
               "Title": "ConnectionRequest.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\ConnectionRequest.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\ConnectionRequest.cs",
@@ -332,7 +663,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 23,
               "Title": "Document.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Document.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Document.cs",
@@ -344,7 +675,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 32,
               "Title": "WalletTransactionStatus.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Enums\\WalletTransactionStatus.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Enums\\WalletTransactionStatus.cs",
@@ -356,7 +687,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 33,
               "Title": "VerificationStatus.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Enums\\VerificationStatus.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Enums\\VerificationStatus.cs",
@@ -368,7 +699,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 34,
               "Title": "ValidityStatus.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Enums\\ValidityStatus.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Enums\\ValidityStatus.cs",
@@ -380,7 +711,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 35,
               "Title": "UserRole.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Enums\\UserRole.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Enums\\UserRole.cs",
@@ -392,7 +723,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 36,
               "Title": "UserStatus.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Enums\\UserStatus.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Enums\\UserStatus.cs",
@@ -404,7 +735,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 37,
               "Title": "TransactionStatus.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Enums\\TransactionStatus.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Enums\\TransactionStatus.cs",
@@ -416,7 +747,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
+              "DocumentIndex": 38,
               "Title": "TransactionType.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Enums\\TransactionType.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Enums\\TransactionType.cs",
@@ -428,7 +759,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 18,
+              "DocumentIndex": 39,
               "Title": "SubscriptionStatus.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Enums\\SubscriptionStatus.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Enums\\SubscriptionStatus.cs",
@@ -440,7 +771,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 19,
+              "DocumentIndex": 40,
               "Title": "RiskTolerance.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Enums\\RiskTolerance.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Enums\\RiskTolerance.cs",
@@ -452,7 +783,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 20,
+              "DocumentIndex": 41,
               "Title": "ProjectStatus.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Enums\\ProjectStatus.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Enums\\ProjectStatus.cs",
@@ -464,7 +795,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 21,
+              "DocumentIndex": 42,
               "Title": "PreferredStage.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Enums\\PreferredStage.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Enums\\PreferredStage.cs",
@@ -476,7 +807,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 22,
+              "DocumentIndex": 43,
               "Title": "NotificationStatus.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Enums\\NotificationStatus.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Enums\\NotificationStatus.cs",
@@ -488,7 +819,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 23,
+              "DocumentIndex": 44,
               "Title": "DocumentType.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Enums\\DocumentType.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Enums\\DocumentType.cs",
@@ -500,7 +831,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 24,
+              "DocumentIndex": 45,
               "Title": "DevelopmentStage.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Enums\\DevelopmentStage.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Enums\\DevelopmentStage.cs",
@@ -512,7 +843,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 25,
+              "DocumentIndex": 46,
               "Title": "ConnectionRequestStatus.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Enums\\ConnectionRequestStatus.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Enums\\ConnectionRequestStatus.cs",
@@ -524,7 +855,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 26,
+              "DocumentIndex": 47,
               "Title": "BookingStatus.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Enums\\BookingStatus.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Enums\\BookingStatus.cs",
@@ -536,7 +867,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 27,
+              "DocumentIndex": 48,
               "Title": "AIStatus.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Enums\\AIStatus.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Enums\\AIStatus.cs",
@@ -548,7 +879,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 28,
+              "DocumentIndex": 49,
               "Title": "Transaction.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Transaction.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Transaction.cs",
@@ -560,43 +891,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 29,
-              "Title": "ApplicationDbContext.cs",
-              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Data\\ApplicationDbContext.cs",
-              "RelativeDocumentMoniker": "AISEP\\Data\\ApplicationDbContext.cs",
-              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Data\\ApplicationDbContext.cs",
-              "RelativeToolTip": "AISEP\\Data\\ApplicationDbContext.cs",
-              "ViewState": "AgIAACQAAAAAAAAAAAAuwDcAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-05T17:04:27.779Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 30,
-              "Title": "User.cs",
-              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\User.cs",
-              "RelativeDocumentMoniker": "AISEP\\Models\\User.cs",
-              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\User.cs",
-              "RelativeToolTip": "AISEP\\Models\\User.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAApwBAAAAAXAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-05T17:01:20.151Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 35,
-              "Title": "Investor.cs",
-              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Investor.cs",
-              "RelativeDocumentMoniker": "AISEP\\Models\\Investor.cs",
-              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Investor.cs",
-              "RelativeToolTip": "AISEP\\Models\\Investor.cs",
-              "ViewState": "AgIAACMAAAAAAAAAAMBcwCcAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-05T17:01:42.804Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 34,
+              "DocumentIndex": 51,
               "Title": "Advisor.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Advisor.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Advisor.cs",
@@ -608,7 +903,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 33,
+              "DocumentIndex": 50,
               "Title": "ConsultingReport.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\ConsultingReport.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\ConsultingReport.cs",
@@ -620,31 +915,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 32,
-              "Title": "appsettings.json",
-              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\appsettings.json",
-              "RelativeDocumentMoniker": "AISEP\\appsettings.json",
-              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\appsettings.json",
-              "RelativeToolTip": "AISEP\\appsettings.json",
-              "ViewState": "AgIAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-02-05T17:04:49.354Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 31,
-              "Title": "Program.cs",
-              "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Program.cs",
-              "RelativeDocumentMoniker": "AISEP\\Program.cs",
-              "ToolTip": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Program.cs",
-              "RelativeToolTip": "AISEP\\Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAABYAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-05T17:04:35.94Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 36,
+              "DocumentIndex": 52,
               "Title": "Project.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Project.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Project.cs",
@@ -656,7 +927,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 37,
+              "DocumentIndex": 53,
               "Title": "Deal.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Deal.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Deal.cs",
@@ -668,7 +939,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 38,
+              "DocumentIndex": 54,
               "Title": "NFTRecord.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\NFTRecord.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\NFTRecord.cs",
@@ -680,7 +951,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 39,
+              "DocumentIndex": 55,
               "Title": "Booking.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Booking.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Booking.cs",
@@ -692,7 +963,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 40,
+              "DocumentIndex": 56,
               "Title": "Wallet.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Wallet.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Wallet.cs",
@@ -704,7 +975,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 47,
+              "DocumentIndex": 63,
               "Title": "Notification.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Notification.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Notification.cs",
@@ -716,7 +987,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 46,
+              "DocumentIndex": 62,
               "Title": "WithdrawRequest.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\WithdrawRequest.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\WithdrawRequest.cs",
@@ -728,7 +999,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 45,
+              "DocumentIndex": 61,
               "Title": "WalletTransaction.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\WalletTransaction.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\WalletTransaction.cs",
@@ -740,7 +1011,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 44,
+              "DocumentIndex": 60,
               "Title": "Package.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Package.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Package.cs",
@@ -752,7 +1023,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 43,
+              "DocumentIndex": 59,
               "Title": "Review.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Review.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Review.cs",
@@ -764,7 +1035,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 42,
+              "DocumentIndex": 58,
               "Title": "SuccessStory.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\SuccessStory.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\SuccessStory.cs",
@@ -776,7 +1047,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 41,
+              "DocumentIndex": 57,
               "Title": "Subscription.cs",
               "DocumentMoniker": "F:\\hoc\\ki9\\SEP490\\BE\\AISEP_BE\\AISEP\\AISEP\\Models\\Subscription.cs",
               "RelativeDocumentMoniker": "AISEP\\Models\\Subscription.cs",
@@ -785,6 +1056,10 @@
               "ViewState": "AgIAABYAAAAAAAAAAMBUwBkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-05T17:02:51.394Z"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{56df62a4-05a3-4e5b-aa1a-99371ccfb997}"
             }
           ]
         }

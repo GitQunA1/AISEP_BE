@@ -1,0 +1,11 @@
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace AISEP.DTOs
+{
+  public class LoginDto
+    {
+        [NotNull()]
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+}
