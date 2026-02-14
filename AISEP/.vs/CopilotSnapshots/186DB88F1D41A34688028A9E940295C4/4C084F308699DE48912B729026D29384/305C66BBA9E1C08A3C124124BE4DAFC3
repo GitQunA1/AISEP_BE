@@ -1,0 +1,74 @@
+﻿using System.Linq.Expressions;
+
+namespace AISEP.Repositories.Booking
+{
+    public class BookingRepository : IBookingRepository
+    {
+        public BookingRepository() { }
+
+        public Task AddAsync(Models.Booking entity)
+        {
+            
+        }
+
+        public Task AddRangeAsync(IEnumerable<Models.Booking> entities)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> AnyAsync(Expression<Func<Models.Booking, bool>> predicate)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<int> CountAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<int> CountAsync(Expression<Func<Models.Booking, bool>> predicate)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IEnumerable<Models.Booking>> FindAsync(Expression<Func<Models.Booking, bool>> predicate)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Models.Booking?> FirstOrDefaultAsync(Expression<Func<Models.Booking, bool>> predicate)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IEnumerable<Models.Booking>> GetAllAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Models.Booking?> GetByIdAsync(Guid id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Remove(Models.Booking entity)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RemoveRange(IEnumerable<Models.Booking> entities)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Update(Models.Booking entity)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void UpdateRange(IEnumerable<Models.Booking> entities)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}

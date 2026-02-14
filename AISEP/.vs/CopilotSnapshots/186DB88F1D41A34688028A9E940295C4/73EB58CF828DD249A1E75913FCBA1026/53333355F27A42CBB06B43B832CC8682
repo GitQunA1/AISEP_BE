@@ -1,0 +1,103 @@
+﻿using AISEP.Data;
+using AISEP.Repositories.Advisors;
+using AISEP.Repositories.Booking;
+using AISEP.Repositories.Investors;
+using AISEP.Repositories.RefreshTokens;
+using AISEP.Repositories.Startups;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+
+namespace AISEP.Common
+{
+    public class UnitOfWork : IUnitOfWork
+    {
+        private readonly ApplicationDbContext _context;
+        private IDbContextTransaction? _transaction;
+
+        // Repositories
+        public IRefreshTokenRepository RefreshTokenRepository { get; private set; }
+        public IBookingRepository BookingRepository { get; private set; }
+        public IAdvisorRepository AdvisorRepository { get; private set; }
+        public IStartupRepository StartupRepository { get; private set; }
+        public IInvestorRepository InvestorRepository { get; private set; }
+        // Add more repositories as needed
+
+        public UnitOfWork(ApplicationDbContext context)
+        {
+            _context = context;
+
+            // Initialize repositories
+            RefreshTokenRepository = new RefreshTokenRepository(_context);
+            BookingRepository = new BookingRepository(_context);
+            AdvisorRepository = new AdvisorRepository(_context);
+            StartupRepository = new StartupRepository(_context);
+            InvestorRepository = new InvestorRepository(_context);
+            // Add more repository initializations as needed
+        }
+
+        // Save changes
+        public async Task<int> SaveChangesAsync()
+        {
+            try
+            {
+                return await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                throw new Exception("A concurrency error occurred while saving changes.", ex);
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new Exception("An error occurred while updating the database.", ex);
+            }
+        }
+
+        // Transaction management
+        public async Task BeginTransactionAsync()
+        {
+            _transaction = await _context.Database.BeginTransactionAsync();
+        }
+
+        public async Task CommitTransactionAsync()
+        {
+            try
+            {
+                await _context.SaveChangesAsync();
+                if (_transaction != null)
+                {
+                    await _transaction.CommitAsync();
+                }
+            }
+            catch
+            {
+                await RollbackTransactionAsync();
+                throw;
+            }
+            finally
+            {
+                if (_transaction != null)
+                {
+                    await _transaction.DisposeAsync();
+                    _transaction = null;
+                }
+            }
+        }
+
+        public async Task RollbackTransactionAsync()
+        {
+            if (_transaction != null)
+            {
+                await _transaction.RollbackAsync();
+                await _transaction.DisposeAsync();
+                _transaction = null;
+            }
+        }
+
+        // Dispose
+        public void Dispose()
+        {
+            _transaction?.Dispose();
+            _context.Dispose();
+        }
+    }
+}

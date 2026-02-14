@@ -1,0 +1,25 @@
+﻿using AISEP.Repositories.Advisors;
+using AISEP.Repositories.Booking;
+using AISEP.Repositories.Investors;
+using AISEP.Repositories.RefreshTokens;
+using AISEP.Repositories.Startups;
+
+namespace AISEP.Common
+{
+    public interface IUnitOfWork : IDisposable
+    {
+        // Repositories
+        IRefreshTokenRepository RefreshTokenRepository { get; }
+        IBookingRepository BookingRepository { get; }
+        IAdvisorRepository AdvisorRepository { get; }
+        IStartupRepository StartupRepository { get; }
+        IInvestorRepository InvestorRepository { get; }
+        // Add more repositories as needed
+
+        // Methods
+        Task<int> SaveChangesAsync();
+        Task BeginTransactionAsync();
+        Task CommitTransactionAsync();
+        Task RollbackTransactionAsync();
+    }
+}

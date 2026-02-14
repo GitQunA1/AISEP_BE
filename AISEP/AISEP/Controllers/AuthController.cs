@@ -1,14 +1,8 @@
 using AISEP.DTOs;
-using AISEP.Models;
-using AISEP.Models.Enums;
 using AISEP.Services;
-using AISEP.Common;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using System.Text;
 
 namespace AISEP.Controllers
 {
@@ -16,37 +10,19 @@ namespace AISEP.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly UserManager<User> _userManager;
-        private readonly SignInManager<User> _signInManager;
-        private readonly IJwtService _jwtService;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IEmailService _emailService;
-        private readonly IConfiguration _configuration;
+        private readonly IAuthService _authService;
 
-        public AuthController(
-            UserManager<User> userManager,
-            SignInManager<User> signInManager,
-            IJwtService jwtService,
-            IUnitOfWork unitOfWork,
-            IEmailService emailService,
-            IConfiguration configuration)
+        public AuthController(IAuthService authService)
         {
-            _userManager = userManager;
-            _signInManager = signInManager;
-            _jwtService = jwtService;
-            _unitOfWork = unitOfWork;
-            _emailService = emailService;
-            _configuration = configuration;
+            _authService = authService;
         }
-        
+
         /// <summary>
         /// Register a new user
         /// </summary>
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {
-
-            // Validate model
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -57,64 +33,20 @@ namespace AISEP.Controllers
                 return BadRequest(new { message = "Passwords do not match" });
             }
 
+            var (success, message, userId, email) = await _authService.RegisterAsync(model);
 
-            var existingUser = await _userManager.FindByEmailAsync(model.Email);
-            if (existingUser != null)
+            if (!success)
             {
-                return BadRequest(new { message = "Email already registered" });
+                return BadRequest(new { message });
             }
 
-
-            //if (model.Role == UserRole.Admin || model.Role == UserRole.Staff)
-            //{
-            //    return BadRequest(new { message = "Cannot register as Admin or Staff through public registration" });
-            //}
-
-
-            var user = new User
+            return Ok(new
             {
-                UserName = model.Name,
-                Email = model.Email,
-                Role = model.Role,
-                Status = UserStatus.Pending,
-                IsEmailVerified = false,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            var result = await _userManager.CreateAsync(user, model.Password);
-
-            if (result.Succeeded)
-            {
-                // Generate email confirmation token
-                var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-
-                // Encode token for URL
-                var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
-
-                // Create confirmation link
-                var confirmationLink = $"{_configuration["AppUrl"]}/api/auth/confirm-email?userId={user.Id}&token={encodedToken}";
-
-                // Send confirmation email
-                try
-                {
-                    await _emailService.SendEmailConfirmationAsync(user.Email!, user.UserName!, confirmationLink);
-                }
-                catch (Exception ex)
-                {
-                    // Log error but don't fail registration
-                    Console.WriteLine($"Failed to send confirmation email: {ex.Message}");
-                }
-
-                return Ok(new
-                {
-                    message = "User registered successfully. Please check your email to confirm your account.",
-                    userId = user.Id,
-                    email = user.Email,
-                    emailSent = true
-                });
-            }
-
-            return BadRequest(new { errors = result.Errors });
+                message,
+                userId,
+                email,
+                emailSent = true
+            });
         }
 
         /// <summary>
@@ -128,41 +60,14 @@ namespace AISEP.Controllers
                 return BadRequest(new { message = "Invalid email confirmation link" });
             }
 
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user == null)
+            var (success, message) = await _authService.ConfirmEmailAsync(userId, token);
+
+            if (!success)
             {
-                return NotFound(new { message = "User not found" });
+                return BadRequest(new { message });
             }
 
-            if (user.EmailConfirmed)
-            {
-                return Ok(new { message = "Email already confirmed" });
-            }
-
-            // Decode token
-            var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
-
-            var result = await _userManager.ConfirmEmailAsync(user, decodedToken);
-
-            if (result.Succeeded)
-            {
-                // Update custom EmailVerified flag
-                user.IsEmailVerified = true;
-                user.Status = UserStatus.Active;
-                await _userManager.UpdateAsync(user);
-
-                return Ok(new
-                {
-                    message = "Email confirmed successfully! You can now login.",
-                    email = user.Email
-                });
-            }
-
-            return BadRequest(new
-            {
-                message = "Email confirmation failed",
-                errors = result.Errors.Select(e => e.Description)
-            });
+            return Ok(new { message });
         }
 
         /// <summary>
@@ -176,35 +81,14 @@ namespace AISEP.Controllers
                 return BadRequest(ModelState);
             }
 
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null)
+            var (success, message) = await _authService.ResendConfirmationAsync(model.Email);
+
+            if (!success)
             {
-                // Don't reveal that user doesn't exist
-                return Ok(new { message = "If the email exists, a confirmation link has been sent." });
+                return BadRequest(new { message });
             }
 
-            if (user.EmailConfirmed)
-            {
-                return BadRequest(new { message = "Email is already confirmed" });
-            }
-
-            // Generate new token
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
-
-            // Create confirmation link
-            var confirmationLink = $"{_configuration["AppUrl"]}/api/auth/confirm-email?userId={user.Id}&token={encodedToken}";
-
-            // Send email
-            try
-            {
-                await _emailService.SendEmailConfirmationAsync(user.Email!, user.UserName!, confirmationLink);
-                return Ok(new { message = "Confirmation email has been resent. Please check your inbox." });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Failed to send email. Please try again later." });
-            }
+            return Ok(new { message });
         }
 
         /// <summary>
@@ -213,63 +97,20 @@ namespace AISEP.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
-            
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                var user = await _userManager.FindByEmailAsync(model.Email);
-                if (user == null)
-                {
-                    return Unauthorized(new { message = "Invalid email or password" });
-                }
-
-                // Check if user is banned
-                if (user.Status == UserStatus.Banned)
-                {
-                    return Unauthorized(new { message = "Account has been banned" });
-                }
-
-                var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, lockoutOnFailure: true);
-
-                if (result.Succeeded)
-                {
-                    // Generate tokens
-                    var accessToken = _jwtService.GenerateAccessToken(user);
-                    var refreshToken = _jwtService.GenerateRefreshToken();
-
-                    // Save refresh token to database using UnitOfWork
-                    var refreshTokenEntity = new RefreshToken
-                    {
-                        UserId = user.Id,
-                        Token = refreshToken,
-                        ExpiryDate = DateTime.UtcNow.AddDays(7),
-                        CreatedAt = DateTime.UtcNow,
-                        CreatedByIp = HttpContext.Connection.RemoteIpAddress?.ToString()
-                    };
-
-                    await _unitOfWork.RefreshTokens.AddAsync(refreshTokenEntity);
-                    await _unitOfWork.SaveChangesAsync();
-
-                    return Ok(new TokenResponseDto
-                    {
-                        AccessToken = accessToken,
-                        RefreshToken = refreshToken,
-                        AccessTokenExpiration = DateTime.UtcNow.AddMinutes(15),
-                        RefreshTokenExpiration = refreshTokenEntity.ExpiryDate
-                    });
-                }
-
-                if (result.IsLockedOut)
-                {
-                    return Unauthorized(new { message = "Account locked due to multiple failed login attempts" });
-                }
-
-                return Unauthorized(new { message = "Invalid email or password" });
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
             }
-           
-        
+
+            var (success, tokenResponse, message) = await _authService.LoginAsync(model);
+
+            if (!success)
+            {
+                return Unauthorized(new { message });
+            }
+
+            return Ok(tokenResponse);
+        }
 
         /// <summary>
         /// Refresh access token using refresh token
@@ -277,66 +118,19 @@ namespace AISEP.Controllers
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenDto model)
         {
-           
-                if (string.IsNullOrEmpty(model.RefreshToken))
-                {
-                    return BadRequest(new { message = "Refresh token is required" });
-                }
+            if (string.IsNullOrEmpty(model.RefreshToken))
+            {
+                return BadRequest(new { message = "Refresh token is required" });
+            }
 
-                // Find refresh token in database using UnitOfWork
-                var refreshToken = await _unitOfWork.RefreshTokens
-                    .FirstOrDefaultAsync(rt => rt.Token == model.RefreshToken);
+            var (success, tokenResponse, message) = await _authService.RefreshTokenAsync(model.RefreshToken);
 
-                if (refreshToken == null)
-                {
-                    return Unauthorized(new { message = "Invalid refresh token" });
-                }
+            if (!success)
+            {
+                return Unauthorized(new { message });
+            }
 
-                // Get user
-                var user = await _unitOfWork.Users.GetByIdAsync(refreshToken.UserId);
-                if (user == null)
-                {
-                    return Unauthorized(new { message = "User not found" });
-                }
-
-                // Check if token is active
-                if (!refreshToken.IsActive)
-                {
-                    return Unauthorized(new { message = "Refresh token is no longer active" });
-                }
-
-                // Generate new tokens
-                var newAccessToken = _jwtService.GenerateAccessToken(user);
-                var newRefreshToken = _jwtService.GenerateRefreshToken();
-
-                // Revoke old refresh token
-                refreshToken.IsRevoked = true;
-                refreshToken.RevokedAt = DateTime.UtcNow;
-                refreshToken.RevokedByIp = HttpContext.Connection.RemoteIpAddress?.ToString();
-                refreshToken.ReplacedByToken = newRefreshToken;
-
-                // Create new refresh token
-                var newRefreshTokenEntity = new RefreshToken
-                {
-                    UserId = refreshToken.UserId,
-                    Token = newRefreshToken,
-                    ExpiryDate = DateTime.UtcNow.AddDays(7),
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedByIp = HttpContext.Connection.RemoteIpAddress?.ToString()
-                };
-
-                _unitOfWork.RefreshTokens.Update(refreshToken);
-                await _unitOfWork.RefreshTokens.AddAsync(newRefreshTokenEntity);
-                await _unitOfWork.SaveChangesAsync();
-
-                return Ok(new TokenResponseDto
-                {
-                    AccessToken = newAccessToken,
-                    RefreshToken = newRefreshToken,
-                    AccessTokenExpiration = DateTime.UtcNow.AddMinutes(15),
-                    RefreshTokenExpiration = newRefreshTokenEntity.ExpiryDate
-                });
-           
+            return Ok(tokenResponse);
         }
 
         /// <summary>
@@ -346,37 +140,19 @@ namespace AISEP.Controllers
         [Authorize]
         public async Task<IActionResult> RevokeToken([FromBody] RefreshTokenDto model)
         {
-           
-                var token = model.RefreshToken;
+            if (string.IsNullOrEmpty(model.RefreshToken))
+            {
+                return BadRequest(new { message = "Refresh token is required" });
+            }
 
-                if (string.IsNullOrEmpty(token))
-                {
-                    return BadRequest(new { message = "Refresh token is required" });
-                }
+            var (success, message) = await _authService.RevokeTokenAsync(model.RefreshToken);
 
-                var refreshToken = await _unitOfWork.RefreshTokens
-                    .FirstOrDefaultAsync(rt => rt.Token == token);
+            if (!success)
+            {
+                return BadRequest(new { message });
+            }
 
-                if (refreshToken == null)
-                {
-                    return NotFound(new { message = "Refresh token not found" });
-                }
-
-                if (!refreshToken.IsActive)
-                {
-                    return BadRequest(new { message = "Token is already inactive" });
-                }
-
-                // Revoke token
-                refreshToken.IsRevoked = true;
-                refreshToken.RevokedAt = DateTime.UtcNow;
-                refreshToken.RevokedByIp = HttpContext.Connection.RemoteIpAddress?.ToString();
-
-                _unitOfWork.RefreshTokens.Update(refreshToken);
-                await _unitOfWork.SaveChangesAsync();
-
-                return Ok(new { message = "Token revoked successfully" });
-           
+            return Ok(new { message });
         }
 
         /// <summary>
@@ -386,30 +162,20 @@ namespace AISEP.Controllers
         [Authorize]
         public async Task<IActionResult> Logout()
         {
-           
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Unauthorized();
-                }
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized();
+            }
 
-                // Revoke all active refresh tokens for this user
-                var refreshTokens = await _unitOfWork.RefreshTokens
-                    .FindAsync(rt => rt.UserId == Guid.Parse(userId) && !rt.IsRevoked);
+            var (success, message) = await _authService.LogoutAsync(Guid.Parse(userId));
 
-                foreach (var token in refreshTokens)
-                {
-                    token.IsRevoked = true;
-                    token.RevokedAt = DateTime.UtcNow;
-                    token.RevokedByIp = HttpContext.Connection.RemoteIpAddress?.ToString();
-                }
+            if (!success)
+            {
+                return BadRequest(new { message });
+            }
 
-                _unitOfWork.RefreshTokens.UpdateRange(refreshTokens);
-                await _unitOfWork.SaveChangesAsync();
-                await _signInManager.SignOutAsync();
-
-                return Ok(new { message = "Logout successful" });
-           
+            return Ok(new { message });
         }
 
         /// <summary>
@@ -419,30 +185,28 @@ namespace AISEP.Controllers
         [Authorize]
         public async Task<IActionResult> GetCurrentUser()
         {
-           
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Unauthorized(new { message = "User not authenticated" });
-                }
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new { message = "User not authenticated" });
+            }
 
-                var user = await _userManager.FindByIdAsync(userId);
-                if (user == null)
-                {
-                    return NotFound(new { message = "User not found" });
-                }
+            var user = await _authService.GetCurrentUserAsync(Guid.Parse(userId));
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found" });
+            }
 
-                return Ok(new
-                {
-                    userId = user.Id,
-                    email = user.Email,
-                    role = user.Role.ToString(),
-                    status = user.Status.ToString(),
-                    isEmailVerified = user.IsEmailVerified,
-                    dateOfBirth = user.DateOfBirth,
-                    createdAt = user.CreatedAt
-                });
-           
+            return Ok(new
+            {
+                userId = user.Id,
+                email = user.Email,
+                role = user.Role.ToString(),
+                status = user.Status.ToString(),
+                isEmailVerified = user.IsEmailVerified,
+                dateOfBirth = user.DateOfBirth,
+                createdAt = user.CreatedAt
+            });
         }
     }
 }

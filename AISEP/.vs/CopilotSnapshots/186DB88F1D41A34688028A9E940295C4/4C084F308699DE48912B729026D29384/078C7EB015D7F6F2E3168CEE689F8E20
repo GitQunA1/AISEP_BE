@@ -1,0 +1,6 @@
+﻿namespace AISEP.Repositories.Booking
+{
+    public interface IBookingRepository : IRepository<Models.Booking>
+    {
+    }
+}

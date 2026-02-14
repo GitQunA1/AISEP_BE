@@ -1,0 +1,11 @@
+﻿using AISEP.Repositories;
+
+namespace AISEP.Repositories.Booking
+{
+    public interface IBookingRepository : IRepository<Models.Booking>
+    {
+        Task<IEnumerable<Models.Booking>> GetBookingsByAdvisorIdAsync(Guid advisorId);
+        Task<IEnumerable<Models.Booking>> GetBookingsByCustomerIdAsync(Guid customerId);
+        Task<Models.Booking?> GetBookingWithDetailsAsync(Guid bookingId);
+    }
+}

@@ -1,0 +1,129 @@
+using AISEP.DTOs;
+using AISEP.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace AISEP.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    [Authorize]
+    public class BookingController : ControllerBase
+    {
+        private readonly IBookingService _bookingService;
+
+        public BookingController(IBookingService bookingService)
+        {
+            _bookingService = bookingService;
+        }
+
+        /// <summary>
+        /// Create a new booking
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> CreateBooking([FromBody] CreateBookingDto dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var booking = await _bookingService.CreateBookingAsync(dto);
+                return CreatedAtAction(nameof(GetBookingById), new { id = booking!.Id }, booking);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Get booking by ID
+        /// </summary>
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetBookingById(Guid id)
+        {
+            var booking = await _bookingService.GetBookingByIdAsync(id);
+            if (booking == null)
+            {
+                return NotFound(new { message = "Booking not found" });
+            }
+
+            return Ok(booking);
+        }
+
+        /// <summary>
+        /// Get all bookings
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetAllBookings()
+        {
+            var bookings = await _bookingService.GetAllBookingsAsync();
+            return Ok(bookings);
+        }
+
+        /// <summary>
+        /// Get bookings by advisor ID
+        /// </summary>
+        [HttpGet("advisor/{advisorId}")]
+        public async Task<IActionResult> GetBookingsByAdvisorId(Guid advisorId)
+        {
+            var bookings = await _bookingService.GetBookingsByAdvisorIdAsync(advisorId);
+            return Ok(bookings);
+        }
+
+        /// <summary>
+        /// Get bookings by customer ID
+        /// </summary>
+        [HttpGet("customer/{customerId}")]
+        public async Task<IActionResult> GetBookingsByCustomerId(Guid customerId)
+        {
+            var bookings = await _bookingService.GetBookingsByCustomerIdAsync(customerId);
+            return Ok(bookings);
+        }
+
+        /// <summary>
+        /// Update booking
+        /// </summary>
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateBooking(Guid id, [FromBody] UpdateBookingDto dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var booking = await _bookingService.UpdateBookingAsync(id, dto);
+                if (booking == null)
+                {
+                    return NotFound(new { message = "Booking not found" });
+                }
+
+                return Ok(booking);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Delete booking
+        /// </summary>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteBooking(Guid id)
+        {
+            var result = await _bookingService.DeleteBookingAsync(id);
+            if (!result)
+            {
+                return NotFound(new { message = "Booking not found" });
+            }
+
+            return NoContent();
+        }
+    }
+}
