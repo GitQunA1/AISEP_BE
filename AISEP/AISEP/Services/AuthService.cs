@@ -301,10 +301,5 @@ namespace AISEP.Services
 
             return (true, "Logout successful");
         }
-
-        public async Task<User?> GetCurrentUserAsync(Guid userId)
-        {
-            return await _userManager.FindByIdAsync(userId.ToString());
-        }
     }
 }

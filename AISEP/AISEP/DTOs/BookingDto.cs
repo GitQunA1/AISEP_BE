@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace AISEP.DTOs
 {
-    public class CreateBookingDto
+    public class BookingDto
     {
         [Required(ErrorMessage = "AdvisorId is required")]
         public Guid AdvisorId { get; set; }
@@ -20,14 +20,6 @@ namespace AISEP.DTOs
         [Required(ErrorMessage = "Price is required")]
         [Range(0, double.MaxValue, ErrorMessage = "Price must be greater than or equal to 0")]
         public decimal Price { get; set; }
-    }
-
-    public class UpdateBookingDto
-    {
-        public DateTime? StartTime { get; set; }
-        public DateTime? EndTime { get; set; }
-        public decimal? Price { get; set; }
-        public BookingStatus? Status { get; set; }
     }
 
     public class BookingResponseDto

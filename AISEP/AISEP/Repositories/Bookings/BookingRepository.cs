@@ -40,11 +40,7 @@ namespace AISEP.Repositories.Bookings
             await _context.Bookings.AddAsync(booking);
         }
 
-        public async Task UpdateAsync(Booking booking)
-        {
-            _context.Bookings.Update(booking);
-            await Task.CompletedTask;
-        }
+      
 
         public async Task DeleteAsync(Guid id)
         {
@@ -77,26 +73,14 @@ namespace AISEP.Repositories.Bookings
                 .ToListAsync();
         }
 
-        public async Task<Booking?> GetBookingWithDetailsAsync(Guid bookingId)
+       
+        public IQueryable<Booking> GetQueryable()
         {
-            return await _context.Bookings
+            return _context.Bookings
                 .Include(b => b.Advisor)
                     .ThenInclude(a => a.User)
                 .Include(b => b.Customer)
-                .Include(b => b.ChatSessions)
-                .Include(b => b.ConsultingReports)
-                .FirstOrDefaultAsync(b => b.Id == bookingId);
-        }
-
-        public async Task<bool> IsAdvisorAvailableAsync(Guid advisorId, DateTime startTime, DateTime endTime)
-        {
-            return !await _context.Bookings.AnyAsync(b =>
-                b.AdvisorId == advisorId &&
-                b.Status != BookingStatus.Cancelled &&
-                ((b.StartTime <= startTime && b.EndTime > startTime) ||
-                 (b.StartTime < endTime && b.EndTime >= endTime) ||
-                 (b.StartTime >= startTime && b.EndTime <= endTime))
-            );
+                .AsNoTracking();
         }
     }
 }

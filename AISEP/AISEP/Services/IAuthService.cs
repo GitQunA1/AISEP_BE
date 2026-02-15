@@ -1,5 +1,4 @@
 using AISEP.DTOs;
-using AISEP.Models;
 
 namespace AISEP.Services
 {
@@ -12,6 +11,5 @@ namespace AISEP.Services
         Task<(bool Success, TokenResponseDto? TokenResponse, string Message)> RefreshTokenAsync(string refreshToken);
         Task<(bool Success, string Message)> RevokeTokenAsync(string refreshToken);
         Task<(bool Success, string Message)> LogoutAsync(Guid userId);
-        Task<User?> GetCurrentUserAsync(Guid userId);
     }
 }

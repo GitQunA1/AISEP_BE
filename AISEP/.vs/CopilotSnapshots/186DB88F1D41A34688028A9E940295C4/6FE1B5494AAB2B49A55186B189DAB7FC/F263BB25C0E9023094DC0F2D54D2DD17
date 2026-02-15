@@ -1,0 +1,64 @@
+﻿using System.Security.Claims;
+
+namespace AISEP.Services
+{
+    /// <summary>
+    /// Service implementation để lấy thông tin user hiện tại từ JWT claims
+    /// </summary>
+    public class CurrentUserService : ICurrentUserService
+    {
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public CurrentUserService(IHttpContextAccessor httpContextAccessor)
+        {
+            _httpContextAccessor = httpContextAccessor;
+        }
+
+        /// <summary>
+        /// Lấy User ID từ JWT claims
+        /// </summary>
+        public Guid? GetUserId()
+        {
+            var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            
+            if (string.IsNullOrEmpty(userIdClaim))
+            {
+                return null;
+            }
+
+            return Guid.TryParse(userIdClaim, out var userId) ? userId : null;
+        }
+
+        /// <summary>
+        /// Lấy Email từ JWT claims
+        /// </summary>
+        public string? GetUserEmail()
+        {
+            return _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Email);
+        }
+
+        /// <summary>
+        /// Lấy Username từ JWT claims
+        /// </summary>
+        public string? GetUserName()
+        {
+            return _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Name);
+        }
+
+        /// <summary>
+        /// Lấy Role từ JWT claims
+        /// </summary>
+        public string? GetUserRole()
+        {
+            return _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Role);
+        }
+
+        /// <summary>
+        /// Kiểm tra user đã đăng nhập chưa
+        /// </summary>
+        public bool IsAuthenticated()
+        {
+            return _httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? false;
+        }
+    }
+}

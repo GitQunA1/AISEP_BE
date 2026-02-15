@@ -1,0 +1,150 @@
+﻿using AISEP.Common;
+using AISEP.DTOs;
+using AISEP.Models;
+using AISEP.Models.Enums;
+using Microsoft.EntityFrameworkCore;
+using Sieve.Models;
+using Sieve.Services;
+
+namespace AISEP.Services
+{
+    public class BookingService : IBookingService
+    {
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly ISieveProcessor _sieveProcessor;
+
+        public BookingService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor)
+        {
+            _unitOfWork = unitOfWork;
+            _sieveProcessor = sieveProcessor;
+        }
+
+        public async Task<BookingResponseDto?> CreateBookingAsync(CreateBookingDto dto)
+        {
+         
+            var advisor = await _unitOfWork.Bookings.GetByIdAsync(dto.AdvisorId);
+            if (advisor == null)
+            {
+                throw new Exception("Advisor not found");
+            }
+
+            
+            var booking = new Booking
+            {
+                Id = Guid.NewGuid(),
+                AdvisorId = dto.AdvisorId,
+                CustomerId = dto.CustomerId,
+                StartTime = dto.StartTime,
+                EndTime = dto.EndTime,
+                Price = dto.Price,
+                Status = BookingStatus.Pending
+            };
+
+            await _unitOfWork.Bookings.AddAsync(booking);
+            await _unitOfWork.SaveChangesAsync();
+
+            
+            var createdBooking = await _unitOfWork.Bookings.GetBookingWithDetailsAsync(booking.Id);
+            return MapToResponseDto(createdBooking);
+        }
+
+        public async Task<BookingResponseDto?> GetBookingByIdAsync(Guid id)
+        {
+            var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
+            return booking != null ? MapToResponseDto(booking) : null;
+        }
+
+        public async Task<PagedResultDto<BookingResponseDto>> GetAllBookingsAsync(SieveModel sieveModel)
+        {
+            var query = _unitOfWork.Bookings.GetQueryable();
+            return await ApplySieveAndPaginateAsync(query, sieveModel);
+        }
+
+        public async Task<PagedResultDto<BookingResponseDto>> GetBookingsByAdvisorIdAsync(Guid advisorId, SieveModel sieveModel)
+        {
+            // Filter theo advisorId TRƯỚC khi apply Sieve
+            var query = _unitOfWork.Bookings.GetQueryable()
+                .Where(b => b.AdvisorId == advisorId);
+
+            return await ApplySieveAndPaginateAsync(query, sieveModel);
+        }
+
+        public async Task<PagedResultDto<BookingResponseDto>> GetBookingsByCustomerIdAsync(Guid customerId, SieveModel sieveModel)
+        {
+            // Filter theo customerId TRƯỚC khi apply Sieve
+            var query = _unitOfWork.Bookings.GetQueryable()
+                .Where(b => b.CustomerId == customerId);
+
+            return await ApplySieveAndPaginateAsync(query, sieveModel);
+        }
+
+        public async Task<bool> DeleteBookingAsync(Guid id)
+        {
+            var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
+            if (booking == null)
+            {
+                return false;
+            }
+
+            await _unitOfWork.Bookings.DeleteAsync(id);
+            await _unitOfWork.SaveChangesAsync();
+            return true;
+        }
+
+        // ============================================
+        // PRIVATE HELPER METHODS
+        // ============================================
+
+        /// <summary>
+        /// Helper method để apply Sieve và paginate (tránh duplicate code)
+        /// </summary>
+        private async Task<PagedResultDto<BookingResponseDto>> ApplySieveAndPaginateAsync(
+            IQueryable<Booking> query, 
+            SieveModel sieveModel)
+        {
+            // Đếm tổng số items (không apply paging)
+            var totalCount = await _sieveProcessor
+                .Apply(sieveModel, query, applyPagination: false, applySorting: false)
+                .CountAsync();
+
+            // Apply Sieve filter/sort/paging
+            var items = await _sieveProcessor
+                .Apply(sieveModel, query)
+                .ToListAsync();
+
+            var page = sieveModel.Page ?? 1;
+            var pageSize = sieveModel.PageSize ?? 10;
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+            return new PagedResultDto<BookingResponseDto>
+            {
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = totalCount,
+                TotalPages = totalPages,
+                Items = items.Select(MapToResponseDto)
+            };
+        }
+
+        private BookingResponseDto MapToResponseDto(Booking? booking)
+        {
+            if (booking == null)
+            {
+                throw new ArgumentNullException(nameof(booking));
+            }
+
+            return new BookingResponseDto
+            {
+                Id = booking.Id,
+                AdvisorId = booking.AdvisorId,
+                AdvisorName = booking.Advisor?.User?.UserName ?? "Unknown",
+                CustomerId = booking.CustomerId,
+                CustomerName = booking.Customer?.UserName ?? "Unknown",
+                StartTime = booking.StartTime,
+                EndTime = booking.EndTime,
+                Price = booking.Price,
+                Status = booking.Status
+            };
+        }
+    }
+}

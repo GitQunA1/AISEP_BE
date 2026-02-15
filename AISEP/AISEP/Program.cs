@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Sieve.Models;
+using Sieve.Services;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +17,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers();
+
+// Add HttpContextAccessor (required for CurrentUserService)
+builder.Services.AddHttpContextAccessor();
 
 // Configure JwtSettings
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
@@ -27,6 +32,9 @@ builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Emai
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
  options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+//Add Sieve
+builder.Services.AddScoped<ISieveProcessor, ApplicationSieveProcessor>();
+builder.Services.Configure<SieveOptions>(builder.Configuration.GetSection("Sieve"));
 // Add Identity
 builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
 {
@@ -76,7 +84,12 @@ builder.Services.AddAuthentication(options =>
 // Add Unit of Work
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+// Add Sieve for filtering, sorting, and paging
+builder.Services.AddScoped<Sieve.Services.ISieveProcessor, ApplicationSieveProcessor>();
+builder.Services.Configure<Sieve.Models.SieveOptions>(builder.Configuration.GetSection("Sieve"));
+
 // Add Services
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();

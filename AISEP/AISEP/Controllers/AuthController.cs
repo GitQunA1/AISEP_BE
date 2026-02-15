@@ -11,15 +11,15 @@ namespace AISEP.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly ICurrentUserService _currentUserService;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, ICurrentUserService currentUserService)
         {
             _authService = authService;
+            _currentUserService = currentUserService;
         }
 
-        /// <summary>
-        /// Register a new user
-        /// </summary>
+       
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {
@@ -49,9 +49,6 @@ namespace AISEP.Controllers
             });
         }
 
-        /// <summary>
-        /// Confirm email address
-        /// </summary>
         [HttpGet("confirm-email")]
         public async Task<IActionResult> ConfirmEmail([FromQuery] string userId, [FromQuery] string token)
         {
@@ -70,9 +67,7 @@ namespace AISEP.Controllers
             return Ok(new { message });
         }
 
-        /// <summary>
-        /// Resend email confirmation
-        /// </summary>
+       
         [HttpPost("resend-confirmation")]
         public async Task<IActionResult> ResendConfirmation([FromBody] ResendConfirmationDto model)
         {
@@ -91,9 +86,6 @@ namespace AISEP.Controllers
             return Ok(new { message });
         }
 
-        /// <summary>
-        /// Login user and return JWT tokens
-        /// </summary>
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
@@ -112,9 +104,7 @@ namespace AISEP.Controllers
             return Ok(tokenResponse);
         }
 
-        /// <summary>
-        /// Refresh access token using refresh token
-        /// </summary>
+      >
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenDto model)
         {
@@ -133,9 +123,6 @@ namespace AISEP.Controllers
             return Ok(tokenResponse);
         }
 
-        /// <summary>
-        /// Revoke refresh token
-        /// </summary>
         [HttpPost("revoke-token")]
         [Authorize]
         public async Task<IActionResult> RevokeToken([FromBody] RefreshTokenDto model)
@@ -155,9 +142,7 @@ namespace AISEP.Controllers
             return Ok(new { message });
         }
 
-        /// <summary>
-        /// Logout user (revoke all refresh tokens)
-        /// </summary>
+      
         [HttpPost("logout")]
         [Authorize]
         public async Task<IActionResult> Logout()
@@ -178,35 +163,7 @@ namespace AISEP.Controllers
             return Ok(new { message });
         }
 
-        /// <summary>
-        /// Get current user info
-        /// </summary>
-        [HttpGet("me")]
-        [Authorize]
-        public async Task<IActionResult> GetCurrentUser()
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized(new { message = "User not authenticated" });
-            }
-
-            var user = await _authService.GetCurrentUserAsync(Guid.Parse(userId));
-            if (user == null)
-            {
-                return NotFound(new { message = "User not found" });
-            }
-
-            return Ok(new
-            {
-                userId = user.Id,
-                email = user.Email,
-                role = user.Role.ToString(),
-                status = user.Status.ToString(),
-                isEmailVerified = user.IsEmailVerified,
-                dateOfBirth = user.DateOfBirth,
-                createdAt = user.CreatedAt
-            });
-        }
+    
+    
     }
 }

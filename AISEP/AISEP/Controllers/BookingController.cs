@@ -2,6 +2,8 @@ using AISEP.DTOs;
 using AISEP.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Sieve.Models;
+using System.Security.Claims;
 
 namespace AISEP.Controllers
 {
@@ -17,11 +19,8 @@ namespace AISEP.Controllers
             _bookingService = bookingService;
         }
 
-        /// <summary>
-        /// Create a new booking
-        /// </summary>
         [HttpPost]
-        public async Task<IActionResult> CreateBooking([FromBody] CreateBookingDto dto)
+        public async Task<IActionResult> CreateBooking([FromBody] BookingDto dto)
         {
             try
             {
@@ -30,8 +29,13 @@ namespace AISEP.Controllers
                     return BadRequest(ModelState);
                 }
 
+             
                 var booking = await _bookingService.CreateBookingAsync(dto);
                 return CreatedAtAction(nameof(GetBookingById), new { id = booking!.Id }, booking);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
             }
             catch (Exception ex)
             {
@@ -39,9 +43,7 @@ namespace AISEP.Controllers
             }
         }
 
-        /// <summary>
-        /// Get booking by ID
-        /// </summary>
+        
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBookingById(Guid id)
         {
@@ -54,66 +56,32 @@ namespace AISEP.Controllers
             return Ok(booking);
         }
 
-        /// <summary>
-        /// Get all bookings
-        /// </summary>
+        
         [HttpGet]
-        public async Task<IActionResult> GetAllBookings()
+        public async Task<IActionResult> GetAllBookings([FromQuery] SieveModel model)
         {
-            var bookings = await _bookingService.GetAllBookingsAsync();
+            var bookings = await _bookingService.GetAllBookingsAsync(model);
             return Ok(bookings);
         }
 
-        /// <summary>
-        /// Get bookings by advisor ID
-        /// </summary>
-        [HttpGet("advisor/{advisorId}")]
-        public async Task<IActionResult> GetBookingsByAdvisorId(Guid advisorId)
-        {
-            var bookings = await _bookingService.GetBookingsByAdvisorIdAsync(advisorId);
-            return Ok(bookings);
-        }
+        //[HttpGet("advisor/{advisorId}")]
+        //public async Task<IActionResult> GetBookingsByAdvisorId(Guid advisorId, [FromQuery] SieveModel sieveModel)
+        //{
+        //    var bookings = await _bookingService.GetBookingsByAdvisorIdAsync(advisorId, sieveModel);
+        //    return Ok(bookings);
+        //}
 
-        /// <summary>
-        /// Get bookings by customer ID
-        /// </summary>
-        [HttpGet("customer/{customerId}")]
-        public async Task<IActionResult> GetBookingsByCustomerId(Guid customerId)
-        {
-            var bookings = await _bookingService.GetBookingsByCustomerIdAsync(customerId);
-            return Ok(bookings);
-        }
+      
+        //[HttpGet("customer/{customerId}")]
+        //public async Task<IActionResult> GetBookingsByCustomerId(Guid customerId, [FromQuery] SieveModel sieveModel)
+        //{
+        //    var bookings = await _bookingService.GetBookingsByCustomerIdAsync(customerId, sieveModel);
+        //    return Ok(bookings);
+        //}
 
-        /// <summary>
-        /// Update booking
-        /// </summary>
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateBooking(Guid id, [FromBody] UpdateBookingDto dto)
-        {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+     
 
-                var booking = await _bookingService.UpdateBookingAsync(id, dto);
-                if (booking == null)
-                {
-                    return NotFound(new { message = "Booking not found" });
-                }
-
-                return Ok(booking);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
-
-        /// <summary>
-        /// Delete booking
-        /// </summary>
+       
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBooking(Guid id)
         {
