@@ -11,7 +11,7 @@ namespace AISEP.Models
 
         public UserStatus Status { get; set; }
 
-        public bool IsEmailVerified { get; set; }
+        public bool IsVerified { get; set; }
 
         public DateTime? DateOfBirth { get; set; }
 

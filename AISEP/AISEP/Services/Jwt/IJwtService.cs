@@ -1,7 +1,7 @@
 using AISEP.Models;
 using System.Security.Claims;
 
-namespace AISEP.Services
+namespace AISEP.Services.Jwt
 {
     public interface IJwtService
     {

@@ -1,4 +1,4 @@
-namespace AISEP.Services
+namespace AISEP.Services.Email
 {
     public interface IEmailService
     {

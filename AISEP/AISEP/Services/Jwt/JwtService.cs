@@ -7,7 +7,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace AISEP.Services
+namespace AISEP.Services.Jwt
 {
     public class JwtService : IJwtService
     {

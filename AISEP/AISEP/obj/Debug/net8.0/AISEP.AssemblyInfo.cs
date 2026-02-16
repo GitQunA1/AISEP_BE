@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AISEP")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3b8b51ca192f5044f95f76ac67f79f95bdf7125a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+42749828347d3ba02912fd8b0461614f469a2bf8")]
 [assembly: System.Reflection.AssemblyProductAttribute("AISEP")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AISEP")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

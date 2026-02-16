@@ -14,6 +14,7 @@
           "Microsoft.EntityFrameworkCore": "8.0.23",
           "Microsoft.EntityFrameworkCore.Tools": "8.0.23",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "8.0.11",
+          "Sieve": "2.5.5",
           "Swashbuckle.AspNetCore": "6.6.2",
           "System.IdentityModel.Tokens.Jwt": "8.2.1"
         },
@@ -582,6 +583,17 @@
           }
         }
       },
+      "Sieve/2.5.5": {
+        "dependencies": {
+          "Microsoft.Extensions.Options": "8.0.2"
+        },
+        "runtime": {
+          "lib/netstandard2.1/Sieve.dll": {
+            "assemblyVersion": "2.5.5.0",
+            "fileVersion": "2.5.5.0"
+          }
+        }
+      },
       "Swashbuckle.AspNetCore/6.6.2": {
         "dependencies": {
           "Swashbuckle.AspNetCore.Swagger": "6.6.2",
@@ -981,6 +993,13 @@
       "sha512": "sha512-leShR/O/nSIS3Jpj8yUBmkzaXzBbtlV326+MYkX2BwAj2qSNrUv/H6m8G9Hnv2zUkQYccTpmV5jIVq5vdciEUA==",
       "path": "npgsql.entityframeworkcore.postgresql/8.0.11",
       "hashPath": "npgsql.entityframeworkcore.postgresql.8.0.11.nupkg.sha512"
+    },
+    "Sieve/2.5.5": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-JNT/m73vu7lzUfi+DNGVRptWYDJTRhS7BgVwqcvlEq5sAhrMmiFZJxM3LPagjsJbcuscMrmMfLgLvhyDNGv/Bg==",
+      "path": "sieve/2.5.5",
+      "hashPath": "sieve.2.5.5.nupkg.sha512"
     },
     "Swashbuckle.AspNetCore/6.6.2": {
       "type": "package",

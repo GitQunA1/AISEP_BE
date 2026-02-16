@@ -3,7 +3,7 @@ using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Mail;
 
-namespace AISEP.Services
+namespace AISEP.Services.Email
 {
     public class EmailService : IEmailService
     {

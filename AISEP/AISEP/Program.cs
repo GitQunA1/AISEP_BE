@@ -1,7 +1,11 @@
 using AISEP.Common;
 using AISEP.Data;
 using AISEP.Models;
-using AISEP.Services;
+using AISEP.Services.Auth;
+using AISEP.Services.Bookings;
+using AISEP.Services.CurrentUser;
+using AISEP.Services.Email;
+using AISEP.Services.Jwt;
 using AISEP.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;

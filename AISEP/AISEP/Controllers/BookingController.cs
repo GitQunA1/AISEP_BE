@@ -1,5 +1,5 @@
 using AISEP.DTOs;
-using AISEP.Services;
+using AISEP.Services.Bookings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sieve.Models;

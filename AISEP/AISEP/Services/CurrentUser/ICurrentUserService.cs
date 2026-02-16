@@ -1,6 +1,6 @@
 using AISEP.DTOs;
 
-namespace AISEP.Services
+namespace AISEP.Services.CurrentUser
 {
 
     public interface ICurrentUserService

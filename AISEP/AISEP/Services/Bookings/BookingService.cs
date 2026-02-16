@@ -2,11 +2,12 @@ using AISEP.Common;
 using AISEP.DTOs;
 using AISEP.Models;
 using AISEP.Models.Enums;
+using AISEP.Services.CurrentUser;
 using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
 using Sieve.Services;
 
-namespace AISEP.Services
+namespace AISEP.Services.Bookings
 {
     public class BookingService : IBookingService
     {

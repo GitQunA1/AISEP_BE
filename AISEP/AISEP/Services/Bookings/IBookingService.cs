@@ -1,7 +1,7 @@
 using AISEP.DTOs;
 using Sieve.Models;
 
-namespace AISEP.Services
+namespace AISEP.Services.Bookings
 {
     public interface IBookingService
     {

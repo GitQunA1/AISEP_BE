@@ -2,11 +2,13 @@ using AISEP.Common;
 using AISEP.DTOs;
 using AISEP.Models;
 using AISEP.Models.Enums;
+using AISEP.Services.Email;
+using AISEP.Services.Jwt;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Text;
 
-namespace AISEP.Services
+namespace AISEP.Services.Auth
 {
     public class AuthService : IAuthService
     {
@@ -55,7 +57,6 @@ namespace AISEP.Services
                 Email = model.Email,
                 Role = model.Role,
                 Status = UserStatus.Pending,
-                IsEmailVerified = false,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -111,7 +112,7 @@ namespace AISEP.Services
             }
 
             // Update custom EmailVerified flag
-            user.IsEmailVerified = true;
+            user.EmailConfirmed = true;
             user.Status = UserStatus.Active;
             await _userManager.UpdateAsync(user);
 

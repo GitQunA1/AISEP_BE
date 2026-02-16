@@ -13,7 +13,6 @@ namespace AISEP.Repositories.Bookings
        
         Task<IEnumerable<Booking>> GetBookingsByAdvisorIdAsync(Guid advisorId);
         Task<IEnumerable<Booking>> GetBookingsByCustomerIdAsync(Guid customerId);
-        Task<Booking?> GetBookingWithDetailsAsync(Guid bookingId);
     
 
        IQueryable<Booking> GetQueryable();
