@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using AISEP.Models;
+using AISEP.Models.Entities;
 
 namespace AISEP.Data
 {

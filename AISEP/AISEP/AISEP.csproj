@@ -17,7 +17,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Controllers\" />
     <Folder Include="Helper\" />
+    <Folder Include="Models\DTOs\" />
+    <Folder Include="Services\" />
+    <Folder Include="Repositories\" />
     <Folder Include="Repositories\" />
     <Folder Include="Services\UserService\" />
     <Folder Include="Settings\" />
