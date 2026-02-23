@@ -1,11 +1,12 @@
 using AISEP.Common;
 using AISEP.Data;
-using AISEP.Models;
+using AISEP.Models.Entities;
 using AISEP.Services.Auth;
 using AISEP.Services.Bookings;
 using AISEP.Services.CurrentUser;
 using AISEP.Services.Email;
 using AISEP.Services.Jwt;
+using AISEP.Services.Reviews;
 using AISEP.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -98,6 +99,8 @@ builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
+//builder.Services.AddScoped<IAdvisorService, AdvisorService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -142,5 +145,8 @@ app.UseAuthentication(); // Add Authentication middleware
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Seed data mẫu
+//await DataSeeder.SeedAsync(app.Services);
 
 app.Run();

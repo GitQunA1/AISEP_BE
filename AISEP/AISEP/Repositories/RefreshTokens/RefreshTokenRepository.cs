@@ -1,5 +1,5 @@
 using AISEP.Data;
-using AISEP.Models;
+using AISEP.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace AISEP.Repositories.RefreshTokens

@@ -1,4 +1,4 @@
-using AISEP.Models;
+using AISEP.Models.Entities;
 
 namespace AISEP.Repositories.RefreshTokens
 {

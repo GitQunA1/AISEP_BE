@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using AISEP.Models;
+using AISEP.Models.Entities;
 
 namespace AISEP.Data
 {

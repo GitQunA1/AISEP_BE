@@ -8,8 +8,8 @@ namespace AISEP.DTOs
         [Required(ErrorMessage = "AdvisorId is required")]
         public Guid AdvisorId { get; set; }
 
-        [Required(ErrorMessage = "CustomerId is required")]
-        public Guid CustomerId { get; set; }
+        //[Required(ErrorMessage = "CustomerId is required")]
+        //public Guid CustomerId { get; set; }
 
         [Required(ErrorMessage = "StartTime is required")]
         public DateTime StartTime { get; set; }
@@ -17,9 +17,9 @@ namespace AISEP.DTOs
         [Required(ErrorMessage = "EndTime is required")]
         public DateTime EndTime { get; set; }
 
-        [Required(ErrorMessage = "Price is required")]
-        [Range(0, double.MaxValue, ErrorMessage = "Price must be greater than or equal to 0")]
-        public decimal Price { get; set; }
+        //[Required(ErrorMessage = "Price is required")]
+        //[Range(0, double.MaxValue, ErrorMessage = "Price must be greater than or equal to 0")]
+        //public decimal Price { get; set; }
     }
 
     public class BookingResponseDto

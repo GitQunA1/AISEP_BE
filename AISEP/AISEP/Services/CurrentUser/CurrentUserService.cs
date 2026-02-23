@@ -1,5 +1,5 @@
 using AISEP.DTOs;
-using AISEP.Models;
+using AISEP.Models.Entities;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 

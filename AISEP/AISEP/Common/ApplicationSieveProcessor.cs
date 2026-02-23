@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using AISEP.Models.Entities;
+using Microsoft.Extensions.Options;
 using Sieve.Models;
 using Sieve.Services;
 
@@ -16,26 +17,33 @@ namespace AISEP.Common
         protected override SievePropertyMapper MapProperties(SievePropertyMapper mapper)
         {
             // Booking
-            mapper.Property<Models.Booking>(b => b.StartTime)
+            mapper.Property<Booking>(b => b.StartTime)
                 .CanFilter()
                 .CanSort();
-            mapper.Property<Models.Booking>(b => b.EndTime)
+            mapper.Property<Booking>(b => b.EndTime)
                 .CanFilter()
                 .CanSort();
-            mapper.Property<Models.Booking>(b => b.Status)
+            mapper.Property<Booking>(b => b.Status)
                 .CanFilter()
                 .CanSort();
-            mapper.Property<Models.Booking>(b => b.Price)
+            mapper.Property<Booking>(b => b.Price)
                 .CanFilter()
                 .CanSort();
             
 
             // Advisor
-            mapper.Property<Models.Advisor>(a => a.Rating)
+            mapper.Property<Advisor>(a => a.Rating)
                 .CanFilter()
                 .CanSort();
             // User
-            mapper.Property<Models.User>(u => u.Email)
+            mapper.Property<User>(u => u.Email)
+                .CanFilter()
+                .CanSort();
+            //Reviews
+            mapper.Property<Review>(r => r.Rating)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Review>(r => r.CreatedAt)
                 .CanFilter()
                 .CanSort();
             return mapper;

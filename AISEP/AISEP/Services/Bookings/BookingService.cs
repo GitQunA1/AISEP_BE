@@ -1,6 +1,6 @@
 using AISEP.Common;
 using AISEP.DTOs;
-using AISEP.Models;
+using AISEP.Models.Entities;
 using AISEP.Models.Enums;
 using AISEP.Services.CurrentUser;
 using Microsoft.EntityFrameworkCore;
@@ -44,9 +44,9 @@ namespace AISEP.Services.Bookings
             await _unitOfWork.Bookings.AddAsync(booking);
             await _unitOfWork.SaveChangesAsync();
 
-        
-       
-            return MapToResponseDto(booking);
+            // Load lại booking từ DB để có navigation properties
+            var created = await _unitOfWork.Bookings.GetByIdAsync(booking.Id);
+            return MapToResponseDto(created);
         }
 
         public async Task<BookingResponseDto?> GetBookingByIdAsync(Guid id)
@@ -57,25 +57,21 @@ namespace AISEP.Services.Bookings
 
         public async Task<PagedResultDto<BookingResponseDto>> GetAllBookingsAsync(SieveModel sieveModel)
         {
-            var query = _unitOfWork.Bookings.GetQueryable();
+            var query = _unitOfWork.Bookings.GetBookingQuery();
             return await ApplySieveAndPaginateAsync(query, sieveModel);
         }
 
         public async Task<PagedResultDto<BookingResponseDto>> GetBookingsByAdvisorIdAsync(Guid advisorId, SieveModel sieveModel)
         {
-            
-            var query = _unitOfWork.Bookings.GetQueryable()
+            var query = _unitOfWork.Bookings.GetBookingQuery()
                 .Where(b => b.AdvisorId == advisorId);
-
             return await ApplySieveAndPaginateAsync(query, sieveModel);
         }
 
         public async Task<PagedResultDto<BookingResponseDto>> GetBookingsByCustomerIdAsync(Guid customerId, SieveModel sieveModel)
         {
-           
-            var query = _unitOfWork.Bookings.GetQueryable()
+            var query = _unitOfWork.Bookings.GetBookingQuery()
                 .Where(b => b.CustomerId == customerId);
-
             return await ApplySieveAndPaginateAsync(query, sieveModel);
         }
 

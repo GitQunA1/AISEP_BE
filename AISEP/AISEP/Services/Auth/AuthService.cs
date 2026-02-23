@@ -1,6 +1,6 @@
 using AISEP.Common;
 using AISEP.DTOs;
-using AISEP.Models;
+using AISEP.Models.Entities;
 using AISEP.Models.Enums;
 using AISEP.Services.Email;
 using AISEP.Services.Jwt;
@@ -187,7 +187,7 @@ namespace AISEP.Services.Auth
                 Token = refreshToken,
                 ExpiryDate = DateTime.UtcNow.AddDays(7),
                 CreatedAt = DateTime.UtcNow,
-                CreatedByIp = null // Will be set in controller
+                CreatedByIp = null 
             };
 
             await _unitOfWork.RefreshTokens.AddAsync(refreshTokenEntity);
@@ -243,7 +243,7 @@ namespace AISEP.Services.Auth
                 Token = newRefreshToken,
                 ExpiryDate = DateTime.UtcNow.AddDays(7),
                 CreatedAt = DateTime.UtcNow,
-                CreatedByIp = null // Will be set in controller
+                CreatedByIp = null 
             };
 
             await _unitOfWork.RefreshTokens.UpdateAsync(refreshTokenEntity);
@@ -275,7 +275,6 @@ namespace AISEP.Services.Auth
                 return (false, "Token is already inactive");
             }
 
-            // Revoke token
             refreshTokenEntity.IsRevoked = true;
             refreshTokenEntity.RevokedAt = DateTime.UtcNow;
 
@@ -287,7 +286,7 @@ namespace AISEP.Services.Auth
 
         public async Task<(bool Success, string Message)> LogoutAsync(Guid userId)
         {
-            // Revoke all active refresh tokens for this user using UnitOfWork
+            
             var refreshTokens = await _unitOfWork.RefreshTokens.GetActiveTokensByUserIdAsync(userId);
 
             foreach (var token in refreshTokens)

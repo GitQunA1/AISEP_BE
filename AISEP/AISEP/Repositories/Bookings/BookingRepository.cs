@@ -1,6 +1,5 @@
 using AISEP.Data;
-using AISEP.Models;
-using AISEP.Models.Enums;
+using AISEP.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace AISEP.Repositories.Bookings
@@ -25,22 +24,10 @@ namespace AISEP.Repositories.Bookings
                 .FirstOrDefaultAsync(b => b.Id == id);
         }
 
-        public async Task<IEnumerable<Booking>> GetAllAsync()
-        {
-            return await _context.Bookings
-                .Include(b => b.Advisor)
-                    .ThenInclude(a => a.User)
-                .Include(b => b.Customer)
-                .OrderByDescending(b => b.StartTime)
-                .ToListAsync();
-        }
-
         public async Task AddAsync(Booking booking)
         {
             await _context.Bookings.AddAsync(booking);
         }
-
-      
 
         public async Task DeleteAsync(Guid id)
         {
@@ -51,30 +38,7 @@ namespace AISEP.Repositories.Bookings
             }
         }
 
-        public async Task<IEnumerable<Booking>> GetBookingsByAdvisorIdAsync(Guid advisorId)
-        {
-            return await _context.Bookings
-                .Include(b => b.Advisor)
-                    .ThenInclude(a => a.User)
-                .Include(b => b.Customer)
-                .Where(b => b.AdvisorId == advisorId)
-                .OrderByDescending(b => b.StartTime)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Booking>> GetBookingsByCustomerIdAsync(Guid customerId)
-        {
-            return await _context.Bookings
-                .Include(b => b.Advisor)
-                    .ThenInclude(a => a.User)
-                .Include(b => b.Customer)
-                .Where(b => b.CustomerId == customerId)
-                .OrderByDescending(b => b.StartTime)
-                .ToListAsync();
-        }
-
-       
-        public IQueryable<Booking> GetQueryable()
+        public IQueryable<Booking> GetBookingQuery()
         {
             return _context.Bookings
                 .Include(b => b.Advisor)
