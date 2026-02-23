@@ -1,25 +1,17 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using AISEP.Models.Enums;
+using Microsoft.AspNetCore.Identity;
 
 namespace AISEP.Models.Entities
 {
-    public class User
+    public class User : IdentityUser<Guid>
     {
-        public Guid Id { get; set; }
-
-        public string Email { get; set; } = string.Empty;
-
-        
-        public string PasswordHash { get; set; } = string.Empty;
-
-        
         public UserRole Role { get; set; }
 
-        
         public UserStatus Status { get; set; }
 
-        public bool IsEmailVerified { get; set; }
+        public bool IsVerified { get; set; }
 
         public DateTime? DateOfBirth { get; set; }
 
@@ -38,5 +30,6 @@ namespace AISEP.Models.Entities
         public ICollection<ChatMessage> ChatMessages { get; set; } = new List<ChatMessage>();
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
         public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+        public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     }
 }

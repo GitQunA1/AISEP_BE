@@ -1,58 +1,66 @@
 using Microsoft.EntityFrameworkCore;
-using AISEP.Models.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using AISEP.Models;
 
 namespace AISEP.Data
 {
-    public class ApplicationDbContext : DbContext
-    {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+    public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
+{
+ public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
        : base(options)
         {
-        }
+      }
 
-        // DbSets
-        public DbSet<User> Users { get; set; }
-        public DbSet<Startup> Startups { get; set; }
-   public DbSet<Investor> Investors { get; set; }
+      // DbSets
+public DbSet<Startup> Startups { get; set; }
+        public DbSet<Investor> Investors { get; set; }
         public DbSet<Advisor> Advisors { get; set; }
         public DbSet<Project> Projects { get; set; }
-        public DbSet<Document> Documents { get; set; }
-    public DbSet<AIReport> AIReports { get; set; }
+     public DbSet<Document> Documents { get; set; }
+        public DbSet<AIReport> AIReports { get; set; }
         public DbSet<ConnectionRequest> ConnectionRequests { get; set; }
-     public DbSet<Deal> Deals { get; set; }
+   public DbSet<Deal> Deals { get; set; }
  public DbSet<NFTRecord> NFTRecords { get; set; }
-        public DbSet<Booking> Bookings { get; set; }
-  public DbSet<Wallet> Wallets { get; set; }
-        public DbSet<Transaction> Transactions { get; set; }
+  public DbSet<Booking> Bookings { get; set; }
+public DbSet<Wallet> Wallets { get; set; }
+  public DbSet<Transaction> Transactions { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
-        public DbSet<ActionLog> ActionLogs { get; set; }
+   public DbSet<ActionLog> ActionLogs { get; set; }
         public DbSet<SuccessStory> SuccessStories { get; set; }
-        public DbSet<ChatSession> ChatSessions { get; set; }
-    public DbSet<ChatMessage> ChatMessages { get; set; }
-      public DbSet<ConsultingReport> ConsultingReports { get; set; }
+   public DbSet<ChatSession> ChatSessions { get; set; }
+ public DbSet<ChatMessage> ChatMessages { get; set; }
+        public DbSet<ConsultingReport> ConsultingReports { get; set; }
         public DbSet<Review> Reviews { get; set; }
-        public DbSet<Package> Packages { get; set; }
-        public DbSet<WalletTransaction> WalletTransactions { get; set; }
+    public DbSet<Package> Packages { get; set; }
+public DbSet<WalletTransaction> WalletTransactions { get; set; }
         public DbSet<WithdrawRequest> WithdrawRequests { get; set; }
-    public DbSet<Notification> Notifications { get; set; }
-        public DbSet<BlockchainProof> BlockchainProofs { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+ public DbSet<BlockchainProof> BlockchainProofs { get; set; }
+  public DbSet<RefreshToken> RefreshTokens { get; set; }
 
- protected override void OnModelCreating(ModelBuilder modelBuilder)
+     protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(modelBuilder);
+  base.OnModelCreating(modelBuilder); // Important for Identity tables
 
-            // User configurations
-   modelBuilder.Entity<User>(entity =>
-            {
-   entity.ToTable("users");
-    entity.HasKey(e => e.Id);
-     entity.Property(e => e.Email).HasMaxLength(255).IsRequired();
-        entity.Property(e => e.PasswordHash).IsRequired();
-entity.Property(e => e.Role).HasConversion<string>().IsRequired();
-   entity.Property(e => e.Status).HasConversion<string>().IsRequired();
-      entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
-   entity.HasIndex(e => e.Email).IsUnique();
-            });
+   // User configurations
+     modelBuilder.Entity<User>(entity =>
+   {
+     entity.ToTable("users");
+    // Id, Email, PasswordHash are configured by Identity
+       entity.Property(e => e.Role).HasConversion<string>().IsRequired();
+       entity.Property(e => e.Status).HasConversion<string>().IsRequired();
+  entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+        // Email unique index is already configured by Identity
+  });
+
+  // Identity tables configuration (optional - customize table names)
+    modelBuilder.Entity<IdentityRole<Guid>>().ToTable("roles");
+            modelBuilder.Entity<IdentityUserRole<Guid>>().ToTable("user_roles");
+    modelBuilder.Entity<IdentityUserClaim<Guid>>().ToTable("user_claims");
+      modelBuilder.Entity<IdentityUserLogin<Guid>>().ToTable("user_logins");
+  modelBuilder.Entity<IdentityUserToken<Guid>>().ToTable("user_tokens");
+            modelBuilder.Entity<IdentityRoleClaim<Guid>>().ToTable("role_claims");
 
             // Startup configurations
       modelBuilder.Entity<Startup>(entity =>
@@ -436,16 +444,35 @@ entity.Property(e => e.MeetingTitle).HasMaxLength(255).IsRequired();
  modelBuilder.Entity<BlockchainProof>(entity =>
        {
                 entity.ToTable("blockchainproof");
-       entity.HasKey(e => e.Id);
+    entity.HasKey(e => e.Id);
      entity.Property(e => e.TransactionHash).HasMaxLength(255).IsRequired();
      entity.Property(e => e.VerificationStatus).HasConversion<string>().HasMaxLength(50).IsRequired();
-            entity.Property(e => e.Timestamp).HasDefaultValueSql("CURRENT_TIMESTAMP");
+        entity.Property(e => e.Timestamp).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             entity.HasOne(bp => bp.Document)
          .WithMany(d => d.BlockchainProofs)
       .HasForeignKey(bp => bp.DocumentId)
-            .OnDelete(DeleteBehavior.Cascade);
+          .OnDelete(DeleteBehavior.Cascade);
     });
+
+            // RefreshToken configurations
+      modelBuilder.Entity<RefreshToken>(entity =>
+      {
+              entity.ToTable("refresh_tokens");
+       entity.HasKey(e => e.Id);
+     entity.Property(e => e.Token).HasMaxLength(500).IsRequired();
+    entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+      entity.Property(e => e.CreatedByIp).HasMaxLength(50);
+   entity.Property(e => e.RevokedByIp).HasMaxLength(50);
+  entity.Property(e => e.ReplacedByToken).HasMaxLength(500);
+
+      entity.HasOne(rt => rt.User)
+       .WithMany(u => u.RefreshTokens)
+            .HasForeignKey(rt => rt.UserId)
+  .OnDelete(DeleteBehavior.Cascade);
+
+   entity.HasIndex(e => e.Token);
+   });
         }
     }
 }

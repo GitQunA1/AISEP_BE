@@ -1,0 +1,42 @@
+﻿using AISEP.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace AISEP.Common
+{
+    public interface IUnitOfWork : IDisposable
+    {
+        // DbSets - Truy cập trực tiếp vào các bảng
+        DbSet<User> Users { get; }
+        DbSet<RefreshToken> RefreshTokens { get; }
+        DbSet<Booking> Bookings { get; }
+        DbSet<Advisor> Advisors { get; }
+        DbSet<Startup> Startups { get; }
+        DbSet<Investor> Investors { get; }
+        DbSet<Project> Projects { get; }
+        DbSet<Deal> Deals { get; }
+        DbSet<Transaction> Transactions { get; }
+        DbSet<Wallet> Wallets { get; }
+        DbSet<WalletTransaction> WalletTransactions { get; }
+        DbSet<Notification> Notifications { get; }
+        DbSet<ChatSession> ChatSessions { get; }
+        DbSet<ChatMessage> ChatMessages { get; }
+        DbSet<Review> Reviews { get; }
+        DbSet<Subscription> Subscriptions { get; }
+        DbSet<Package> Packages { get; }
+        DbSet<ActionLog> ActionLogs { get; }
+        DbSet<Document> Documents { get; }
+        DbSet<ConnectionRequest> ConnectionRequests { get; }
+        DbSet<ConsultingReport> ConsultingReports { get; }
+        DbSet<WithdrawRequest> WithdrawRequests { get; }
+        DbSet<AIReport> AIReports { get; }
+        DbSet<NFTRecord> NFTRecords { get; }
+        DbSet<BlockchainProof> BlockchainProofs { get; }
+        DbSet<SuccessStory> SuccessStories { get; }
+
+        // Methods
+        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+        Task BeginTransactionAsync();
+        Task CommitTransactionAsync();
+        Task RollbackTransactionAsync();
+    }
+}

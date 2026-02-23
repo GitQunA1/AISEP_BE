@@ -1,0 +1,14 @@
+﻿using AISEP.Repositories.Bookings;
+
+namespace AISEP.Common
+{
+    public interface IUnitOfWork : IDisposable
+    {
+        // Repositories
+        IBookingRepository Bookings { get; }
+        // Add more repositories here as needed
+
+        // Save changes
+        Task<int> SaveChangesAsync();
+    }
+}
