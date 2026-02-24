@@ -3,6 +3,7 @@ using AISEP.Repositories.Advisors;
 using AISEP.Repositories.Bookings;
 using AISEP.Repositories.RefreshTokens;
 using AISEP.Repositories.Reviews;
+using AISEP.Repositories.StartupFollowers;
 
 namespace AISEP.Common
 {
@@ -13,6 +14,7 @@ namespace AISEP.Common
         private IRefreshTokenRepository? _refreshTokens;
         private IAdvisorsRepository? _advisors;
         private IReviewRepository? _reviews;
+        private IStartupFollowerRepository? _startupFollowers;
 
         public UnitOfWork(ApplicationDbContext context)
         {
@@ -23,6 +25,7 @@ namespace AISEP.Common
         public IRefreshTokenRepository RefreshTokens => _refreshTokens ??= new RefreshTokenRepository(_context);
         //public IAdvisorsRepository Advisors => _advisors ??= new AdvisorRepository(_context);
         public IReviewRepository Reviews => _reviews ??= new ReviewRepository(_context);
+        public IStartupFollowerRepository StartupFollowers => _startupFollowers ??= new StartupFollowerRepository(_context);
 
         public async Task<int> SaveChangesAsync()
         {

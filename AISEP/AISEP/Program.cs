@@ -7,6 +7,7 @@ using AISEP.Services.CurrentUser;
 using AISEP.Services.Email;
 using AISEP.Services.Jwt;
 using AISEP.Services.Reviews;
+using AISEP.Services.StartupFollowers;
 using AISEP.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -101,6 +102,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 //builder.Services.AddScoped<IAdvisorService, AdvisorService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<IStartupFollowerService, StartupFollowerService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

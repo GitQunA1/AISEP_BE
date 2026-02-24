@@ -44,7 +44,7 @@ namespace AISEP.Services.Bookings
             await _unitOfWork.Bookings.AddAsync(booking);
             await _unitOfWork.SaveChangesAsync();
 
-            // Load lại booking từ DB để có navigation properties
+            
             var created = await _unitOfWork.Bookings.GetByIdAsync(booking.Id);
             return MapToResponseDto(created);
         }

@@ -46,6 +46,10 @@ namespace AISEP.Common
             mapper.Property<Review>(r => r.CreatedAt)
                 .CanFilter()
                 .CanSort();
+            //StartupFollower
+            mapper.Property<StartupFollower>(sf => sf.FollowedAt)
+                .CanFilter()
+                .CanSort();
             return mapper;
         }
     }

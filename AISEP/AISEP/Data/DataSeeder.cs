@@ -29,6 +29,7 @@
 //            await SeedReviewsAsync(context);
 //            await SeedNotificationsAsync(context);
 //            await SeedSubscriptionsAsync(context);
+//            await SeedStartupFollowersAsync(context);
 //        }
 
 //        // =============================================
@@ -60,13 +61,13 @@
 //            {
 //                var user = new User
 //                {
-//                    Id             = Guid.NewGuid(),
-//                    UserName       = u.Name,
-//                    Email          = u.Email,
-//                    Role           = u.Role,
-//                    Status         = UserStatus.Active,
-//                    IsVerified     = true,
-//                    CreatedAt      = DateTime.UtcNow,
+//                    Id = Guid.NewGuid(),
+//                    UserName = u.Name,
+//                    Email = u.Email,
+//                    Role = u.Role,
+//                    Status = UserStatus.Active,
+//                    IsVerified = true,
+//                    CreatedAt = DateTime.UtcNow,
 //                    EmailConfirmed = true
 //                };
 
@@ -331,10 +332,10 @@
 
 //            var wallets = users.Select(u => new Wallet
 //            {
-//                Id       = Guid.NewGuid(),
-//                UserId   = u.Id,
-//                Balance  = u.Role == UserRole.Investor ? 10000000m
-//                         : u.Role == UserRole.Advisor   ? 5000000m
+//                Id = Guid.NewGuid(),
+//                UserId = u.Id,
+//                Balance = u.Role == UserRole.Investor ? 10000000m
+//                         : u.Role == UserRole.Advisor ? 5000000m
 //                         : 1000000m,
 //                Currency = "VND",
 //                IsActive = true
@@ -351,7 +352,7 @@
 //        {
 //            if (await context.Bookings.AnyAsync()) return;
 
-//            var advisor   = await context.Advisors.FirstOrDefaultAsync();
+//            var advisor = await context.Advisors.FirstOrDefaultAsync();
 //            var customers = await context.Users
 //                .Where(u => u.Role == UserRole.Startup)
 //                .ToListAsync();
@@ -497,7 +498,7 @@
 //        {
 //            if (await context.Reviews.AnyAsync()) return;
 
-//            var advisor       = await context.Advisors.FirstOrDefaultAsync();
+//            var advisor = await context.Advisors.FirstOrDefaultAsync();
 //            var reviewerUsers = await context.Users
 //                .Where(u => u.Role == UserRole.Startup)
 //                .ToListAsync();
@@ -570,7 +571,7 @@
 //        {
 //            if (await context.Subscriptions.AnyAsync()) return;
 
-//            var package      = await context.Packages.FirstOrDefaultAsync(p => p.PackageName == "Pro");
+//            var package = await context.Packages.FirstOrDefaultAsync(p => p.PackageName == "Pro");
 //            var startupUsers = await context.Users
 //                .Where(u => u.Role == UserRole.Startup)
 //                .ToListAsync();
@@ -579,16 +580,155 @@
 
 //            var subscriptions = startupUsers.Take(2).Select(u => new Subscription
 //            {
-//                Id        = Guid.NewGuid(),
+//                Id = Guid.NewGuid(),
 //                PackageId = package.Id,
-//                UserId    = u.Id,
+//                UserId = u.Id,
 //                StartDate = DateTime.UtcNow,
-//                EndDate   = DateTime.UtcNow.AddDays(30),
-//                Status    = SubscriptionStatus.Active
+//                EndDate = DateTime.UtcNow.AddDays(30),
+//                Status = SubscriptionStatus.Active
 //            }).ToList();
 
 //            await context.Subscriptions.AddRangeAsync(subscriptions);
 //            await context.SaveChangesAsync();
+//        }
+
+//        // =============================================
+//        // 13. STARTUP FOLLOWERS
+//        // =============================================
+//        private static async Task SeedStartupFollowersAsync(ApplicationDbContext context)
+//        {
+//            if (await context.StartupFollowers.AnyAsync())
+//            {
+//                Console.WriteLine("[Seeder] StartupFollowers đã có dữ liệu, bỏ qua seed");
+//                return;
+//            }
+
+//            var investors = await context.Users
+//                .Where(u => u.Role == UserRole.Investor)
+//                .ToListAsync();
+
+//            var advisors = await context.Users
+//                .Where(u => u.Role == UserRole.Advisor)
+//                .ToListAsync();
+
+//            var staff = await context.Users
+//                .Where(u => u.Role == UserRole.Staff)
+//                .ToListAsync();
+
+//            var startups = await context.Startups.ToListAsync();
+
+//            if (!startups.Any())
+//            {
+//                Console.WriteLine("[Seeder] Không có startup nào, bỏ qua SeedStartupFollowers");
+//                return;
+//            }
+
+//            var followers = new List<StartupFollower>();
+
+//            // ===== INVESTORS FOLLOW STARTUPS =====
+//            // Investor 1 (LeVanInvestor) follow TechStart VN và EduTech Solutions
+//            if (investors.Count > 0)
+//            {
+//                if (startups.Count > 0)
+//                {
+//                    followers.Add(new StartupFollower
+//                    {
+//                        UserId = investors[0].Id,
+//                        StartupId = startups[0].Id, // TechStart VN
+//                        FollowedAt = DateTime.UtcNow.AddDays(-15)
+//                    });
+//                    Console.WriteLine($"[Seeder] {investors[0].UserName} follow {startups[0].CompanyName}");
+//                }
+
+//                if (startups.Count > 2)
+//                {
+//                    followers.Add(new StartupFollower
+//                    {
+//                        UserId = investors[0].Id,
+//                        StartupId = startups[2].Id, // EduTech Solutions
+//                        FollowedAt = DateTime.UtcNow.AddDays(-10)
+//                    });
+//                    Console.WriteLine($"[Seeder] {investors[0].UserName} follow {startups[2].CompanyName}");
+//                }
+//            }
+
+//            // Investor 2 (PhamThiInvestor) follow tất cả startups (quan tâm đa dạng)
+//            if (investors.Count > 1)
+//            {
+//                foreach (var startup in startups)
+//                {
+//                    followers.Add(new StartupFollower
+//                    {
+//                        UserId = investors[1].Id,
+//                        StartupId = startup.Id,
+//                        FollowedAt = DateTime.UtcNow.AddDays(-7)
+//                    });
+//                    Console.WriteLine($"[Seeder] {investors[1].UserName} follow {startup.CompanyName}");
+//                }
+//            }
+
+//            // ===== ADVISORS FOLLOW STARTUPS (để theo dõi tiềm năng) =====
+//            // Advisor 1 follow TechStart và GreenFarm
+//            if (advisors.Count > 0)
+//            {
+//                if (startups.Count > 0)
+//                {
+//                    followers.Add(new StartupFollower
+//                    {
+//                        UserId = advisors[0].Id,
+//                        StartupId = startups[0].Id,
+//                        FollowedAt = DateTime.UtcNow.AddDays(-5)
+//                    });
+//                }
+//                if (startups.Count > 1)
+//                {
+//                    followers.Add(new StartupFollower
+//                    {
+//                        UserId = advisors[0].Id,
+//                        StartupId = startups[1].Id,
+//                        FollowedAt = DateTime.UtcNow.AddDays(-5)
+//                    });
+//                }
+//            }
+
+//            // Advisor 2 follow EduTech (quan tâm lĩnh vực giáo dục)
+//            if (advisors.Count > 1 && startups.Count > 2)
+//            {
+//                followers.Add(new StartupFollower
+//                {
+//                    UserId = advisors[1].Id,
+//                    StartupId = startups[2].Id,
+//                    FollowedAt = DateTime.UtcNow.AddDays(-3)
+//                });
+//                Console.WriteLine($"[Seeder] {advisors[1].UserName} follow {startups[2].CompanyName}");
+//            }
+
+//            // ===== STAFF FOLLOW (theo dõi để hỗ trợ) =====
+//            if (staff.Count > 0)
+//            {
+//                // Staff follow startup đầu tiên
+//                if (startups.Count > 0)
+//                {
+//                    followers.Add(new StartupFollower
+//                    {
+//                        UserId = staff[0].Id,
+//                        StartupId = startups[0].Id,
+//                        FollowedAt = DateTime.UtcNow.AddDays(-2)
+//                    });
+//                    Console.WriteLine($"[Seeder] Staff {staff[0].UserName} follow {startups[0].CompanyName}");
+//                }
+//            }
+
+//            if (followers.Any())
+//            {
+//                await context.StartupFollowers.AddRangeAsync(followers);
+//                await context.SaveChangesAsync();
+//                Console.WriteLine($"[Seeder] ✅ Đã seed {followers.Count} startup followers thành công");
+//            }
+//            else
+//            {
+//                Console.WriteLine("[Seeder] ⚠️ Không có followers nào được tạo");
+//            }
 //        }
 //    }
 //}

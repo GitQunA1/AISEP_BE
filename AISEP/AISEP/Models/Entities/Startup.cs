@@ -32,5 +32,8 @@ namespace AISEP.Models.Entities
         public User User { get; set; } = null!;
 
         public ICollection<ConnectionRequest> ConnectionRequests { get; set; } = new List<ConnectionRequest>();
+
+        // Followers (many-to-many)
+        public ICollection<StartupFollower> Followers { get; set; } = new List<StartupFollower>();
     }
 }

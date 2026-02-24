@@ -37,7 +37,7 @@ namespace AISEP.Services.Auth
 
         public async Task<(bool Success, string Message, Guid? UserId, string? Email)> RegisterAsync(RegisterDto model)
         {
-            // Check if user already exists
+         
             var existingUser = await _userManager.FindByEmailAsync(model.Email);
             if (existingUser != null)
             {
@@ -50,7 +50,7 @@ namespace AISEP.Services.Auth
             //    return (false, "Cannot register as Admin or Staff through public registration", null, null);
             //}
 
-            // Create user
+           
             var user = new User
             {
                 UserName = model.Name,
@@ -74,15 +74,15 @@ namespace AISEP.Services.Auth
             var confirmationLink = $"{_configuration["AppUrl"]}/api/auth/confirm-email?userId={user.Id}&token={encodedToken}";
 
             // Send confirmation email
-            try
-            {
+            //try
+            //{
                 await _emailService.SendEmailConfirmationAsync(user.Email!, user.UserName!, confirmationLink);
-            }
-            catch (Exception ex)
-            {
-                // Log error but don't fail registration
-                Console.WriteLine($"Failed to send confirmation email: {ex.Message}");
-            }
+            //}
+            //catch (Exception ex)
+            //{
+               
+            //    Console.WriteLine($"Failed to send confirmation email: {ex.Message}");
+            //}
 
             return (true, "User registered successfully. Please check your email to confirm your account.", user.Id, user.Email);
         }
@@ -111,7 +111,7 @@ namespace AISEP.Services.Auth
                 return (false, $"Email confirmation failed: {errors}");
             }
 
-            // Update custom EmailVerified flag
+         
             user.EmailConfirmed = true;
             user.Status = UserStatus.Active;
             await _userManager.UpdateAsync(user);
@@ -124,7 +124,7 @@ namespace AISEP.Services.Auth
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                // Don't reveal that user doesn't exist
+            
                 return (true, "If the email exists, a confirmation link has been sent.");
             }
 
@@ -158,7 +158,7 @@ namespace AISEP.Services.Auth
                 return (false, null, "Invalid email or password");
             }
 
-            // Check if user is banned
+          
             if (user.Status == UserStatus.Banned)
             {
                 return (false, null, "Account has been banned");
@@ -206,7 +206,7 @@ namespace AISEP.Services.Auth
 
         public async Task<(bool Success, TokenResponseDto? TokenResponse, string Message)> RefreshTokenAsync(string refreshToken)
         {
-            // Find refresh token in database using UnitOfWork
+           
             var refreshTokenEntity = await _unitOfWork.RefreshTokens.GetByTokenAsync(refreshToken);
 
             if (refreshTokenEntity == null)
@@ -214,14 +214,14 @@ namespace AISEP.Services.Auth
                 return (false, null, "Invalid refresh token");
             }
 
-            // Get user
+            
             var user = await _userManager.FindByIdAsync(refreshTokenEntity.UserId.ToString());
             if (user == null)
             {
                 return (false, null, "User not found");
             }
 
-            // Check if token is active
+           
             if (!refreshTokenEntity.IsActive)
             {
                 return (false, null, "Refresh token is no longer active");

@@ -38,6 +38,7 @@ public DbSet<WalletTransaction> WalletTransactions { get; set; }
         public DbSet<Notification> Notifications { get; set; }
  public DbSet<BlockchainProof> BlockchainProofs { get; set; }
   public DbSet<RefreshToken> RefreshTokens { get; set; }
+  public DbSet<StartupFollower> StartupFollowers { get; set; }
 
      protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -455,7 +456,7 @@ entity.Property(e => e.MeetingTitle).HasMaxLength(255).IsRequired();
           .OnDelete(DeleteBehavior.Cascade);
     });
 
-            // RefreshToken configurations
+           
       modelBuilder.Entity<RefreshToken>(entity =>
       {
               entity.ToTable("refresh_tokens");
@@ -473,6 +474,25 @@ entity.Property(e => e.MeetingTitle).HasMaxLength(255).IsRequired();
 
    entity.HasIndex(e => e.Token);
    });
+
+
+modelBuilder.Entity<StartupFollower>(entity =>
+{
+    entity.ToTable("startup_followers");
+    entity.HasKey(sf => new { sf.UserId, sf.StartupId });
+
+    entity.HasOne(sf => sf.User)
+        .WithMany(u => u.FollowedStartups)
+        .HasForeignKey(sf => sf.UserId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+    entity.HasOne(sf => sf.Startup)
+        .WithMany(s => s.Followers)
+        .HasForeignKey(sf => sf.StartupId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+    entity.Property(sf => sf.FollowedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+});
         }
     }
 }

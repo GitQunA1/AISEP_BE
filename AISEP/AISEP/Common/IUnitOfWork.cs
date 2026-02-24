@@ -2,6 +2,7 @@ using AISEP.Repositories.Advisors;
 using AISEP.Repositories.Bookings;
 using AISEP.Repositories.RefreshTokens;
 using AISEP.Repositories.Reviews;
+using AISEP.Repositories.StartupFollowers;
 
 namespace AISEP.Common
 {
@@ -14,6 +15,8 @@ namespace AISEP.Common
         //IAdvisorsRepository Advisors { get; }
 
         IReviewRepository Reviews { get; }
+        IStartupFollowerRepository StartupFollowers { get; }
+
         // Add more repositories here as needed
 
         // Save changes

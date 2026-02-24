@@ -254,22 +254,6 @@
   },
   {
     "ContainingType": "AISEP.Controllers.ReviewController",
-    "Method": "DeleteReview",
-    "RelativePath": "api/Review/{id}",
-    "HttpMethod": "DELETE",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Guid",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "AISEP.Controllers.ReviewController",
     "Method": "GetReviewsByAdvisor",
     "RelativePath": "api/Review/advisor/{advisorId}",
     "HttpMethod": "GET",
@@ -308,6 +292,69 @@
     "ContainingType": "AISEP.Controllers.ReviewController",
     "Method": "GetMyReviews",
     "RelativePath": "api/Review/my-reviews",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "Filters",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Sorts",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Page",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "PageSize",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AISEP.Controllers.StartupFollowerController",
+    "Method": "FollowStartup",
+    "RelativePath": "api/startups/{startupId}/follow",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "startupId",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AISEP.Controllers.StartupFollowerController",
+    "Method": "UnfollowStartup",
+    "RelativePath": "api/startups/{startupId}/follow",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "startupId",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AISEP.Controllers.StartupFollowerController",
+    "Method": "GetMyFollowedStartups",
+    "RelativePath": "api/startups/my-followed",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
