@@ -14,7 +14,7 @@ namespace AISEP.Repositories.Reviews
             await _context.Reviews.AddAsync(review);
         }
 
-        public Task<Review?> GetByIdAsync(Guid id)
+        public Task<Review?> GetByIdAsync(int id)
         {
             return _context.Reviews
                 .Include(r => r.Advisor)
@@ -23,7 +23,7 @@ namespace AISEP.Repositories.Reviews
                 .FirstOrDefaultAsync(r => r.Id == id);
         }
 
-        public async Task DeleteAsync(Guid id)
+        public async Task DeleteAsync(int id)
         {
             var review = await _context.Reviews.FindAsync(id);
             if (review != null)

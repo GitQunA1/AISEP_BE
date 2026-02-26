@@ -4,9 +4,9 @@ namespace AISEP.Repositories.Reviews
 {
     public interface IReviewRepository
     {
-        Task<Review?> GetByIdAsync(Guid id);
+        Task<Review?> GetByIdAsync(int id);
         Task AddAsync(Review review);
-        Task DeleteAsync(Guid id);
+        Task DeleteAsync(int id);
         IQueryable<Review> GetReviewQuery();
     }
 }

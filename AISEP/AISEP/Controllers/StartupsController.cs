@@ -32,7 +32,7 @@ namespace AISEP.Controllers
 
         
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetStartupById(Guid id)
+        public async Task<IActionResult> GetStartupById(int id)
         {
             var startup = await _startupService.GetStartupByIdAsync(id);
             if (startup == null)

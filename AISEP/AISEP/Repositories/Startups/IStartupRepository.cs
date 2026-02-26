@@ -6,8 +6,8 @@ namespace AISEP.Repositories.Startups
 {
     public interface IStartupRepository
     {
-        IQueryable<Startup> SearchStartupsQuery(string? industry = null, DevelopmentStage? stage = null);
-        Task<Startup?> GetByIdAsync(Guid id);
+        IQueryable<Startup> SearchStartupsQuery(string? industry = null, DevelopmentStage? stage = null, string? searchTerm = null);
+        Task<Startup?> GetByIdAsync(int id);
         IQueryable<Startup> GetStartupQuery();
     }
 }

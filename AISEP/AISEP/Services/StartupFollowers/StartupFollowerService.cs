@@ -24,13 +24,10 @@ namespace AISEP.Services.StartupFollowers
             _sieveProcessor = sieveProcessor;
         }
 
-        public async Task<bool> FollowStartupAsync(Guid startupId)
+        public async Task<bool> FollowStartupAsync(int startupId)
         {
             var userId = _currentUserService.GetUserId();
-            if (userId == Guid.Empty)
-                throw new UnauthorizedAccessException("User not authenticated");
 
-           
             var exists = await _unitOfWork.StartupFollowers.IsFollowingAsync(userId, startupId);
             if (exists)
                 return false;
@@ -47,11 +44,9 @@ namespace AISEP.Services.StartupFollowers
             return true;
         }
 
-        public async Task<bool> UnfollowStartupAsync(Guid startupId)
+        public async Task<bool> UnfollowStartupAsync(int startupId)
         {
             var userId = _currentUserService.GetUserId();
-            if (userId == Guid.Empty)
-                throw new UnauthorizedAccessException("User not authenticated");
 
             var exists = await _unitOfWork.StartupFollowers.IsFollowingAsync(userId, startupId);
             if (!exists)
@@ -62,11 +57,9 @@ namespace AISEP.Services.StartupFollowers
             return true;
         }
 
-        public async Task<bool> IsFollowingAsync(Guid startupId)
+        public async Task<bool> IsFollowingAsync(int startupId)
         {
             var userId = _currentUserService.GetUserId();
-            if (userId == Guid.Empty)
-                throw new UnauthorizedAccessException("User not authenticated");
 
             return await _unitOfWork.StartupFollowers.IsFollowingAsync(userId, startupId);
         }
@@ -80,8 +73,6 @@ namespace AISEP.Services.StartupFollowers
         public async Task<PagedResultDto<FollowedStartupDto>> GetMyFollowedStartupsAsync(SieveModel model)
         {
             var userId = _currentUserService.GetUserId();
-            if (userId == Guid.Empty)
-                throw new UnauthorizedAccessException("User not authenticated");
 
             var query = _unitOfWork.StartupFollowers.GetFollowerQuery()
                 .Where(sf => sf.UserId == userId);

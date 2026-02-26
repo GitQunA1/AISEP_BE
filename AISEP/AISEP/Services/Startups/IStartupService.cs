@@ -7,7 +7,7 @@ namespace AISEP.Services.Startups
     public interface IStartupService
     {
         Task<PagedResultDto<StartupResponseDto>> SearchStartupsAsync(SieveModel model, string? industry = null, DevelopmentStage? stage = null);
-        Task<StartupResponseDto?> GetStartupByIdAsync(Guid id);
+        Task<StartupResponseDto?> GetStartupByIdAsync(int id);
         Task<PagedResultDto<StartupResponseDto>> GetAllStartupsAsync(SieveModel model);
     }
 }

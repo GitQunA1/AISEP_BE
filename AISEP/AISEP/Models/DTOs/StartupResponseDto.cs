@@ -4,7 +4,7 @@ namespace AISEP.DTOs
 {
     public class StartupResponseDto
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
         public string? CompanyName { get; set; }
         public string? LogoUrl { get; set; }
         public string? Founder { get; set; }

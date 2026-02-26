@@ -4,10 +4,10 @@ namespace AISEP.Repositories.Bookings
 {
     public interface IBookingRepository
     {
-       
-        Task<Booking?> GetByIdAsync(Guid id);
+
+        Task<Booking?> GetByIdAsync(int id);
         Task AddAsync(Booking booking);
-        Task DeleteAsync(Guid id);
+        Task DeleteAsync(int id);
         IQueryable<Booking> GetBookingQuery();
 
     }

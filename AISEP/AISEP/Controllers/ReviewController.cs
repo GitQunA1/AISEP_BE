@@ -1,4 +1,4 @@
-using AISEP.DTOs;
+using AISEP.Models.DTOs;
 using AISEP.Services.Reviews;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -44,10 +44,10 @@ namespace AISEP.Controllers
             }
         }
 
-   
-        [HttpGet("{id:guid}")]
+
+        [HttpGet("{id:int}")]
         [AllowAnonymous]
-        public async Task<IActionResult> GetReviewById(Guid id)
+        public async Task<IActionResult> GetReviewById(int id)
         {
             var review = await _reviewService.GetReviewByIdAsync(id);
             if (review == null)
@@ -56,7 +56,7 @@ namespace AISEP.Controllers
             return Ok(review);
         }
 
-      
+
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> GetAllReviews([FromQuery] SieveModel model)
@@ -65,10 +65,10 @@ namespace AISEP.Controllers
             return Ok(reviews);
         }
 
-        
-        [HttpGet("advisor/{advisorId:guid}")]
+
+        [HttpGet("advisor/{advisorId:int}")]
         [AllowAnonymous]
-        public async Task<IActionResult> GetReviewsByAdvisor(Guid advisorId, [FromQuery] SieveModel model)
+        public async Task<IActionResult> GetReviewsByAdvisor(int advisorId, [FromQuery] SieveModel model)
         {
             var reviews = await _reviewService.GetReviewsByAdvisorIdAsync(advisorId, model);
             return Ok(reviews);
@@ -88,9 +88,9 @@ namespace AISEP.Controllers
             }
         }
 
-      
-        //[HttpDelete("{id:guid}")]
-        //public async Task<IActionResult> DeleteReview(Guid id)
+
+        //[HttpDelete("{id:int}")]
+        //public async Task<IActionResult> DeleteReview(int id)
         //{
         //    try
         //    {

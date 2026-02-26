@@ -25,7 +25,7 @@ namespace AISEP.Services.Startups
             return await ApplySieveAndPaginateAsync(query, model);
         }
 
-        public async Task<StartupResponseDto?> GetStartupByIdAsync(Guid id)
+        public async Task<StartupResponseDto?> GetStartupByIdAsync(int id)
         {
             var startup = await _repository.GetByIdAsync(id);
             return startup != null ? MapToResponseDto(startup) : null;

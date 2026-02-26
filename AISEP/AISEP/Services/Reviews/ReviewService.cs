@@ -1,5 +1,6 @@
 ﻿using AISEP.Common;
 using AISEP.DTOs;
+using AISEP.Models.DTOs;
 using AISEP.Models.Entities;
 using AISEP.Services.CurrentUser;
 using Microsoft.EntityFrameworkCore;
@@ -21,7 +22,6 @@ namespace AISEP.Services.Reviews
             var userId = _currentUserService.GetUserId();
             var review = new Review
             {
-                Id = Guid.NewGuid(),
                 AdvisorId = dto.AdvisorId,
                 ReviewerId = userId,
                 Rating = dto.Rating,
@@ -31,7 +31,7 @@ namespace AISEP.Services.Reviews
             await _unitOfWork.Reviews.AddAsync(review);
             await _unitOfWork.SaveChangesAsync();
 
-          
+
             var created = await _unitOfWork.Reviews.GetByIdAsync(review.Id);
             return MapToResponseDto(created);
         }
@@ -42,13 +42,13 @@ namespace AISEP.Services.Reviews
             return await ApplySieveAndPaginateAsync(query, model);
         }
 
-        public async Task<ReviewResponseDto?> GetReviewByIdAsync(Guid id)
+        public async Task<ReviewResponseDto?> GetReviewByIdAsync(int id)
         {
             var review = await _unitOfWork.Reviews.GetByIdAsync(id);
             return review != null ? MapToResponseDto(review) : null;
         }
 
-        public async Task<PagedResultDto<ReviewResponseDto>> GetReviewsByAdvisorIdAsync(Guid advisorId, SieveModel model)
+        public async Task<PagedResultDto<ReviewResponseDto>> GetReviewsByAdvisorIdAsync(int advisorId, SieveModel model)
         {
             var query = _unitOfWork.Reviews.GetReviewQuery()
                 .Where(r => r.AdvisorId == advisorId);
@@ -58,22 +58,18 @@ namespace AISEP.Services.Reviews
         public async Task<PagedResultDto<ReviewResponseDto>> GetMyReviewsAsync(SieveModel model)
         {
             var userId = _currentUserService.GetUserId();
-            if (userId == null)
-                throw new UnauthorizedAccessException("User not authenticated");
 
             var query = _unitOfWork.Reviews.GetReviewQuery()
                 .Where(r => r.ReviewerId == userId);
             return await ApplySieveAndPaginateAsync(query, model);
         }
 
-        public async Task<bool> DeleteReviewAsync(Guid id)
+        public async Task<bool> DeleteReviewAsync(int id)
         {
             var review = await _unitOfWork.Reviews.GetByIdAsync(id);
             if (review == null) return false;
 
             var userId = _currentUserService.GetUserId();
-            if (userId == null)
-                throw new UnauthorizedAccessException("User not authenticated");
 
             // Chỉ chủ review mới được xóa
             if (review.ReviewerId != userId)

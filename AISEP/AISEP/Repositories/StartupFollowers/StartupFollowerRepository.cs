@@ -14,7 +14,7 @@ namespace AISEP.Repositories.StartupFollowers
             await _context.StartupFollowers.AddAsync(startupFollower);
         }
 
-        public async Task RemoveAsync(Guid userId, Guid startupId)
+        public async Task RemoveAsync(int userId, int startupId)
         {
             var follower = await _context.StartupFollowers
                 .FirstOrDefaultAsync(sf => sf.UserId == userId && sf.StartupId == startupId);
@@ -24,16 +24,7 @@ namespace AISEP.Repositories.StartupFollowers
             }
         }
 
-        public async Task<StartupFollower?> GetByIdAsync(Guid userId, Guid startupId)
-        {
-            return await _context.StartupFollowers
-                .Include(sf => sf.User)
-                .Include(sf => sf.Startup)
-                    .ThenInclude(s => s.User)
-                .FirstOrDefaultAsync(sf => sf.UserId == userId && sf.StartupId == startupId);
-        }
-
-        public async Task<bool> IsFollowingAsync(Guid userId, Guid startupId)
+        public async Task<bool> IsFollowingAsync(int userId, int startupId)
         {
             return await _context.StartupFollowers
                 .AnyAsync(sf => sf.UserId == userId && sf.StartupId == startupId);
@@ -46,6 +37,15 @@ namespace AISEP.Repositories.StartupFollowers
                 .Include(sf => sf.Startup)
                     .ThenInclude(s => s.User)
                 .AsNoTracking();
+        }
+
+        public async Task<StartupFollower?> GetByIdAsync(int userId, int startupId)
+        {
+            return await _context.StartupFollowers
+                .Include(sf => sf.User)
+                .Include(sf => sf.Startup)
+                    .ThenInclude(s => s.User)
+                .FirstOrDefaultAsync(sf => sf.UserId == userId && sf.StartupId == startupId);
         }
     }
 }
