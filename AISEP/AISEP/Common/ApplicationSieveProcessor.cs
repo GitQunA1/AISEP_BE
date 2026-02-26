@@ -29,7 +29,7 @@ namespace AISEP.Common
             mapper.Property<Booking>(b => b.Price)
                 .CanFilter()
                 .CanSort();
-            
+
 
             // Advisor
             mapper.Property<Advisor>(a => a.Rating)
@@ -50,6 +50,30 @@ namespace AISEP.Common
             mapper.Property<StartupFollower>(sf => sf.FollowedAt)
                 .CanFilter()
                 .CanSort();
+
+            // Startup
+            mapper.Property<Startup>(s => s.CompanyName)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Startup>(s => s.Industry)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Startup>(s => s.DevelopmentStage)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Startup>(s => s.Revenue)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Startup>(s => s.MarketSize)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Startup>(s => s.CountryCity)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Startup>(s => s.CreatedAt)
+                .CanFilter()
+                .CanSort();
+
             return mapper;
         }
     }

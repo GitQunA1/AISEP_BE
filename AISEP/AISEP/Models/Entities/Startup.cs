@@ -27,6 +27,7 @@ namespace AISEP.Models.Entities
         public string? TeamMembers { get; set; }
         public string? KeySkills { get; set; }
         public string? TeamExperience { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation properties
         public User User { get; set; } = null!;

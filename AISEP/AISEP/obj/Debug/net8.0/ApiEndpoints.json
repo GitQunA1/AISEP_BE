@@ -320,9 +320,56 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "AISEP.Controllers.StartupsController",
+    "Method": "GetAllStartups",
+    "RelativePath": "api/Startups",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "Filters",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Sorts",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Page",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "PageSize",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AISEP.Controllers.StartupsController",
+    "Method": "GetStartupById",
+    "RelativePath": "api/Startups/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "AISEP.Controllers.StartupFollowerController",
     "Method": "FollowStartup",
-    "RelativePath": "api/startups/{startupId}/follow",
+    "RelativePath": "api/startups/{startupId}",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -338,7 +385,7 @@
   {
     "ContainingType": "AISEP.Controllers.StartupFollowerController",
     "Method": "UnfollowStartup",
-    "RelativePath": "api/startups/{startupId}/follow",
+    "RelativePath": "api/startups/{startupId}",
     "HttpMethod": "DELETE",
     "IsController": true,
     "Order": 0,
@@ -377,6 +424,47 @@
       {
         "Name": "PageSize",
         "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AISEP.Controllers.StartupsController",
+    "Method": "SearchStartups",
+    "RelativePath": "api/Startups/search",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "Filters",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Sorts",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Page",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "PageSize",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "industry",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "stage",
+        "Type": "System.String",
         "IsRequired": false
       }
     ],

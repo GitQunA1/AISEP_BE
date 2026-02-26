@@ -1,12 +1,14 @@
 using AISEP.Common;
 using AISEP.Data;
 using AISEP.Models.Entities;
+using AISEP.Repositories.Startups;
 using AISEP.Services.Auth;
 using AISEP.Services.Bookings;
 using AISEP.Services.CurrentUser;
 using AISEP.Services.Email;
 using AISEP.Services.Jwt;
 using AISEP.Services.Reviews;
+using AISEP.Services.Startups;
 using AISEP.Services.StartupFollowers;
 using AISEP.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -94,6 +96,9 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<Sieve.Services.ISieveProcessor, ApplicationSieveProcessor>();
 builder.Services.Configure<Sieve.Models.SieveOptions>(builder.Configuration.GetSection("Sieve"));
 
+// Add Repositories
+builder.Services.AddScoped<IStartupRepository, StartupRepository>();
+
 // Add Services
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
@@ -103,6 +108,7 @@ builder.Services.AddScoped<IBookingService, BookingService>();
 //builder.Services.AddScoped<IAdvisorService, AdvisorService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IStartupFollowerService, StartupFollowerService>();
+builder.Services.AddScoped<IStartupService, StartupService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

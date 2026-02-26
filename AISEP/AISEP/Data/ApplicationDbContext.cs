@@ -77,6 +77,7 @@ entity.Property(e => e.CountryCity).HasMaxLength(255);
           entity.Property(e => e.DevelopmentStage).HasConversion<string>().HasMaxLength(50);
       entity.Property(e => e.MarketSize).HasColumnType("decimal(18,2)");
             entity.Property(e => e.Revenue).HasColumnType("decimal(18,2)");
+  entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
    entity.HasOne(s => s.User)
    .WithOne(u => u.Startup)

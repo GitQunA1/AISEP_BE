@@ -21,7 +21,7 @@ namespace AISEP.Controllers
         /// <summary>
         /// Follow một startup
         /// </summary>
-        [HttpPost("{startupId:guid}/follow")]
+        [HttpPost("{startupId:guid}")]
         public async Task<IActionResult> FollowStartup(Guid startupId)
         {
             try
@@ -43,7 +43,7 @@ namespace AISEP.Controllers
         }
 
        
-        [HttpDelete("{startupId:guid}/follow")]
+        [HttpDelete("{startupId:guid}")]
         public async Task<IActionResult> UnfollowStartup(Guid startupId)
         {
             try
