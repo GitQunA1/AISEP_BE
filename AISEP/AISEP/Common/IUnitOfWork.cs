@@ -1,4 +1,5 @@
 using AISEP.Repositories.Bookings;
+using AISEP.Repositories.Documents;
 using AISEP.Repositories.RefreshTokens;
 
 namespace AISEP.Common
@@ -8,7 +9,7 @@ namespace AISEP.Common
         // Repositories
         IBookingRepository Bookings { get; }
         IRefreshTokenRepository RefreshTokens { get; }
-        // Add more repositories here as needed
+        IDocumentRepository Documents { get; }
 
         // Save changes
         Task<int> SaveChangesAsync();

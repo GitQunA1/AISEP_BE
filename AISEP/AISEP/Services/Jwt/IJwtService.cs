@@ -1,4 +1,4 @@
-using AISEP.Models;
+using AISEP.Models.Entities;
 using System.Security.Claims;
 
 namespace AISEP.Services.Jwt

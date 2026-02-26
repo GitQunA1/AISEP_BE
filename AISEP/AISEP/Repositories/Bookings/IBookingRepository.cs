@@ -1,18 +1,18 @@
-using AISEP.Models;
+using AISEP.Models.Entities;
 
 namespace AISEP.Repositories.Bookings
 {
     public interface IBookingRepository
     {
        
-        Task<Booking?> GetByIdAsync(Guid id);
+        Task<Booking?> GetByIdAsync(int id);
         Task<IEnumerable<Booking>> GetAllAsync();
         Task AddAsync(Booking booking);
-        Task DeleteAsync(Guid id);
+        Task DeleteAsync(int id);
 
        
-        Task<IEnumerable<Booking>> GetBookingsByAdvisorIdAsync(Guid advisorId);
-        Task<IEnumerable<Booking>> GetBookingsByCustomerIdAsync(Guid customerId);
+        Task<IEnumerable<Booking>> GetBookingsByAdvisorIdAsync(int advisorId);
+        Task<IEnumerable<Booking>> GetBookingsByCustomerIdAsync(int customerId);
     
 
        IQueryable<Booking> GetQueryable();

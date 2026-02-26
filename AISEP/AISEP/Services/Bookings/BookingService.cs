@@ -1,8 +1,9 @@
 using AISEP.Common;
 using AISEP.DTOs;
-using AISEP.Models;
+using AISEP.Models.Entities;
 using AISEP.Models.Enums;
 using AISEP.Services.CurrentUser;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
 using Sieve.Services;
@@ -14,45 +15,39 @@ namespace AISEP.Services.Bookings
         private readonly IUnitOfWork _unitOfWork;
         private readonly ISieveProcessor _sieveProcessor;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IMapper _mapper;
 
         public BookingService(
             IUnitOfWork unitOfWork, 
             ISieveProcessor sieveProcessor,
-            ICurrentUserService currentUserService)
+            ICurrentUserService currentUserService,
+            IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             _sieveProcessor = sieveProcessor;
             _currentUserService = currentUserService;
+            _mapper = mapper;
         }
 
         public async Task<BookingResponseDto?> CreateBookingAsync(BookingDto dto)
         {
-           
-            var currentUser =  _currentUserService.GetUserId();
+            var currentUser = _currentUserService.GetUserId();
 
-            var booking = new Booking
-            {
-                Id = Guid.NewGuid(),
-                AdvisorId = dto.AdvisorId,
-                CustomerId = currentUser, 
-                StartTime = dto.StartTime,
-                EndTime = dto.EndTime,
-                Price = 200000, 
-                Status = BookingStatus.Pending
-            };
+            var booking = _mapper.Map<Booking>(dto);
+            booking.CustomerId = currentUser;
+            booking.Price = 200000;
+            booking.Status = BookingStatus.Pending;
 
             await _unitOfWork.Bookings.AddAsync(booking);
             await _unitOfWork.SaveChangesAsync();
 
-        
-       
-            return MapToResponseDto(booking);
+            return _mapper.Map<BookingResponseDto>(booking);
         }
 
-        public async Task<BookingResponseDto?> GetBookingByIdAsync(Guid id)
+        public async Task<BookingResponseDto?> GetBookingByIdAsync(int id)
         {
             var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
-            return booking != null ? MapToResponseDto(booking) : null;
+            return booking != null ? _mapper.Map<BookingResponseDto>(booking) : null;
         }
 
         public async Task<PagedResultDto<BookingResponseDto>> GetAllBookingsAsync(SieveModel sieveModel)
@@ -61,7 +56,7 @@ namespace AISEP.Services.Bookings
             return await ApplySieveAndPaginateAsync(query, sieveModel);
         }
 
-        public async Task<PagedResultDto<BookingResponseDto>> GetBookingsByAdvisorIdAsync(Guid advisorId, SieveModel sieveModel)
+        public async Task<PagedResultDto<BookingResponseDto>> GetBookingsByAdvisorIdAsync(int advisorId, SieveModel sieveModel)
         {
             
             var query = _unitOfWork.Bookings.GetQueryable()
@@ -70,7 +65,7 @@ namespace AISEP.Services.Bookings
             return await ApplySieveAndPaginateAsync(query, sieveModel);
         }
 
-        public async Task<PagedResultDto<BookingResponseDto>> GetBookingsByCustomerIdAsync(Guid customerId, SieveModel sieveModel)
+        public async Task<PagedResultDto<BookingResponseDto>> GetBookingsByCustomerIdAsync(int customerId, SieveModel sieveModel)
         {
            
             var query = _unitOfWork.Bookings.GetQueryable()
@@ -79,7 +74,7 @@ namespace AISEP.Services.Bookings
             return await ApplySieveAndPaginateAsync(query, sieveModel);
         }
 
-        public async Task<bool> DeleteBookingAsync(Guid id)
+        public async Task<bool> DeleteBookingAsync(int id)
         {
             var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
             if (booking == null)
@@ -117,28 +112,7 @@ namespace AISEP.Services.Bookings
                 PageSize = pageSize,
                 TotalCount = totalCount,
                 TotalPages = totalPages,
-                Items = items.Select(MapToResponseDto)
-            };
-        }
-
-        private BookingResponseDto MapToResponseDto(Booking? booking)
-        {
-            if (booking == null)
-            {
-                throw new ArgumentNullException(nameof(booking));
-            }
-
-            return new BookingResponseDto
-            {
-                Id = booking.Id,
-                AdvisorId = booking.AdvisorId,
-                AdvisorName = booking.Advisor?.User?.UserName ?? "Unknown",
-                CustomerId = booking.CustomerId,
-                CustomerName = booking.Customer?.UserName ?? "Unknown",
-                StartTime = booking.StartTime,
-                EndTime = booking.EndTime,
-                Price = booking.Price,
-                Status = booking.Status
+                Items = items.Select(b => _mapper.Map<BookingResponseDto>(b))
             };
         }
     }

@@ -1,6 +1,7 @@
 using AISEP.Common;
 using AISEP.DTOs;
 using AISEP.Models;
+using AISEP.Models.Entities;
 using AISEP.Models.Enums;
 using AISEP.Services.Email;
 using AISEP.Services.Jwt;
@@ -35,7 +36,7 @@ namespace AISEP.Services.Auth
             _configuration = configuration;
         }
 
-        public async Task<(bool Success, string Message, Guid? UserId, string? Email)> RegisterAsync(RegisterDto model)
+        public async Task<(bool Success, string Message, int? UserId, string? Email)> RegisterAsync(RegisterDto model)
         {
             // Check if user already exists
             var existingUser = await _userManager.FindByEmailAsync(model.Email);
@@ -285,7 +286,7 @@ namespace AISEP.Services.Auth
             return (true, "Token revoked successfully");
         }
 
-        public async Task<(bool Success, string Message)> LogoutAsync(Guid userId)
+        public async Task<(bool Success, string Message)> LogoutAsync(int userId)
         {
             // Revoke all active refresh tokens for this user using UnitOfWork
             var refreshTokens = await _unitOfWork.RefreshTokens.GetActiveTokensByUserIdAsync(userId);

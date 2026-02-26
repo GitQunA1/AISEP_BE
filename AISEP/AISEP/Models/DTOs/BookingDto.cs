@@ -6,10 +6,10 @@ namespace AISEP.DTOs
     public class BookingDto
     {
         [Required(ErrorMessage = "AdvisorId is required")]
-        public Guid AdvisorId { get; set; }
+        public int AdvisorId { get; set; }
 
         [Required(ErrorMessage = "CustomerId is required")]
-        public Guid CustomerId { get; set; }
+        public int CustomerId { get; set; }
 
         [Required(ErrorMessage = "StartTime is required")]
         public DateTime StartTime { get; set; }
@@ -24,10 +24,10 @@ namespace AISEP.DTOs
 
     public class BookingResponseDto
     {
-        public Guid Id { get; set; }
-        public Guid AdvisorId { get; set; }
+        public int Id { get; set; }
+        public int AdvisorId { get; set; }
         public string AdvisorName { get; set; } = string.Empty;
-        public Guid CustomerId { get; set; }
+        public int CustomerId { get; set; }
         public string CustomerName { get; set; } = string.Empty;
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }

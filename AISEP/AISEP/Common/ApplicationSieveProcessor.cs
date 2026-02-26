@@ -16,26 +16,26 @@ namespace AISEP.Common
         protected override SievePropertyMapper MapProperties(SievePropertyMapper mapper)
         {
             // Booking
-            mapper.Property<Models.Booking>(b => b.StartTime)
+            mapper.Property<Models.Entities.Booking>(b => b.StartTime)
                 .CanFilter()
                 .CanSort();
-            mapper.Property<Models.Booking>(b => b.EndTime)
+            mapper.Property<Models.Entities.Booking>(b => b.EndTime)
                 .CanFilter()
                 .CanSort();
-            mapper.Property<Models.Booking>(b => b.Status)
+            mapper.Property<Models.Entities.Booking>(b => b.Status)
                 .CanFilter()
                 .CanSort();
-            mapper.Property<Models.Booking>(b => b.Price)
+            mapper.Property<Models.Entities.Booking>(b => b.Price)
                 .CanFilter()
                 .CanSort();
             
 
             // Advisor
-            mapper.Property<Models.Advisor>(a => a.Rating)
+            mapper.Property<Models.Entities.Advisor>(a => a.Rating)
                 .CanFilter()
                 .CanSort();
             // User
-            mapper.Property<Models.User>(u => u.Email)
+            mapper.Property<Models.Entities.User>(u => u.Email)
                 .CanFilter()
                 .CanSort();
             return mapper;

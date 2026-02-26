@@ -6,8 +6,8 @@ namespace AISEP.Models.Entities
 {
     public class Startup
     {
-        public Guid Id { get; set; }
-        public Guid UserId { get; set; }
+        public int Id { get; set; }
+        public int UserId { get; set; }
         public string? CompanyName { get; set; }
         public string? LogoUrl { get; set; }
         public string? Founder { get; set; }

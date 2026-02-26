@@ -154,7 +154,7 @@ namespace AISEP.Controllers
                 return Unauthorized();
             }
 
-            var (success, message) = await _authService.LogoutAsync(Guid.Parse(userId));
+            var (success, message) = await _authService.LogoutAsync(int.Parse(userId));
 
             if (!success)
             {

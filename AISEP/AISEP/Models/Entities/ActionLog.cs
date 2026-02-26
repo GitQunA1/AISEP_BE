@@ -5,15 +5,15 @@ namespace AISEP.Models.Entities
 {
     public class ActionLog
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
 
-        public Guid UserId { get; set; }
+        public int UserId { get; set; }
 
         public string ActionType { get; set; } = string.Empty;
 
         public string EntityType { get; set; } = string.Empty;
 
-        public Guid EntityId { get; set; }
+        public int EntityId { get; set; }
 
         public string? Description { get; set; }
 

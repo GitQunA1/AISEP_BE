@@ -6,7 +6,7 @@ namespace AISEP.Services.CurrentUser
     public interface ICurrentUserService
     {
 
-        Guid GetUserId();
+        int GetUserId();
 
       
         string GetUserEmail();

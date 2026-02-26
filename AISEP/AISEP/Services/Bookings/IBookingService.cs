@@ -6,11 +6,11 @@ namespace AISEP.Services.Bookings
     public interface IBookingService
     {
         Task<BookingResponseDto?> CreateBookingAsync(BookingDto dto);
-        Task<BookingResponseDto?> GetBookingByIdAsync(Guid id);
+        Task<BookingResponseDto?> GetBookingByIdAsync(int id);
         Task<PagedResultDto<BookingResponseDto>> GetAllBookingsAsync(SieveModel model);
-        Task<PagedResultDto<BookingResponseDto>> GetBookingsByAdvisorIdAsync(Guid advisorId, SieveModel model);
-        Task<PagedResultDto<BookingResponseDto>> GetBookingsByCustomerIdAsync(Guid customerId, SieveModel model);
+        Task<PagedResultDto<BookingResponseDto>> GetBookingsByAdvisorIdAsync(int advisorId, SieveModel model);
+        Task<PagedResultDto<BookingResponseDto>> GetBookingsByCustomerIdAsync(int customerId, SieveModel model);
 
-        Task<bool> DeleteBookingAsync(Guid id);
+        Task<bool> DeleteBookingAsync(int id);
     }
 }

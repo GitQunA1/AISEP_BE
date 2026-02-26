@@ -45,7 +45,7 @@ namespace AISEP.Controllers
 
         
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetBookingById(Guid id)
+        public async Task<IActionResult> GetBookingById(int id)
         {
             var booking = await _bookingService.GetBookingByIdAsync(id);
             if (booking == null)
@@ -83,7 +83,7 @@ namespace AISEP.Controllers
 
        
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteBooking(Guid id)
+        public async Task<IActionResult> DeleteBooking(int id)
         {
             var result = await _bookingService.DeleteBookingAsync(id);
             if (!result)

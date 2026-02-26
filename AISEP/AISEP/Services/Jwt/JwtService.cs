@@ -1,4 +1,4 @@
-using AISEP.Models;
+using AISEP.Models.Entities;
 using AISEP.Settings;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;

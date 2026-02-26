@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace AISEP.Models.Entities
 {
-    public class User : IdentityUser<Guid>
+    public class User : IdentityUser<int>
     {
         public UserRole Role { get; set; }
 

@@ -5,7 +5,7 @@ namespace AISEP.Models.Entities
 {
     public class Package
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
 
         public string PackageName { get; set; } = string.Empty;
 

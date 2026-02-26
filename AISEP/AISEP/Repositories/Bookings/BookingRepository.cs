@@ -1,6 +1,5 @@
 using AISEP.Data;
-using AISEP.Models;
-using AISEP.Models.Enums;
+using AISEP.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace AISEP.Repositories.Bookings
@@ -14,7 +13,7 @@ namespace AISEP.Repositories.Bookings
             _context = context;
         }
 
-        public async Task<Booking?> GetByIdAsync(Guid id)
+        public async Task<Booking?> GetByIdAsync(int id)
         {
             return await _context.Bookings
                 .Include(b => b.Advisor)
@@ -42,7 +41,7 @@ namespace AISEP.Repositories.Bookings
 
       
 
-        public async Task DeleteAsync(Guid id)
+        public async Task DeleteAsync(int id)
         {
             var booking = await _context.Bookings.FindAsync(id);
             if (booking != null)
@@ -51,7 +50,7 @@ namespace AISEP.Repositories.Bookings
             }
         }
 
-        public async Task<IEnumerable<Booking>> GetBookingsByAdvisorIdAsync(Guid advisorId)
+        public async Task<IEnumerable<Booking>> GetBookingsByAdvisorIdAsync(int advisorId)
         {
             return await _context.Bookings
                 .Include(b => b.Advisor)
@@ -62,7 +61,7 @@ namespace AISEP.Repositories.Bookings
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Booking>> GetBookingsByCustomerIdAsync(Guid customerId)
+        public async Task<IEnumerable<Booking>> GetBookingsByCustomerIdAsync(int customerId)
         {
             return await _context.Bookings
                 .Include(b => b.Advisor)

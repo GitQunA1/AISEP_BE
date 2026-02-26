@@ -6,9 +6,9 @@ namespace AISEP.Models.Entities
 {
     public class NFTRecord
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
 
-      public Guid DealId { get; set; }
+      public int DealId { get; set; }
 
         public string TokenId { get; set; } = string.Empty;
 

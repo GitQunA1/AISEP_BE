@@ -5,9 +5,9 @@ namespace AISEP.Models.Entities
 {
     public class Deal
     {
-  public Guid Id { get; set; }
-   public Guid InvestorId { get; set; }
-        public Guid ProjectId { get; set; }
+  public int Id { get; set; }
+   public int InvestorId { get; set; }
+        public int ProjectId { get; set; }
   public decimal Amount { get; set; }
         public bool StartupConfirmed { get; set; }
         public bool InvestorConfirmed { get; set; }
