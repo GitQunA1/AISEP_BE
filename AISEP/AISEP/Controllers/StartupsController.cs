@@ -18,9 +18,7 @@ namespace AISEP.Controllers
             _startupService = startupService;
         }
 
-        /// <summary>
-        /// Search startups by industry and/or development stage with pagination
-        /// </summary>
+       
         [HttpGet("search")]
         public async Task<IActionResult> SearchStartups(
             [FromQuery] SieveModel model,
@@ -32,9 +30,7 @@ namespace AISEP.Controllers
             return Ok(new { success = true, data = result });
         }
 
-        /// <summary>
-        /// Get startup by ID
-        /// </summary>
+        
         [HttpGet("{id}")]
         public async Task<IActionResult> GetStartupById(Guid id)
         {
@@ -45,9 +41,7 @@ namespace AISEP.Controllers
             return Ok(new { success = true, data = startup });
         }
 
-        /// <summary>
-        /// Get all startups with pagination and filtering (using Sieve)
-        /// </summary>
+       
         [HttpGet]
         public async Task<IActionResult> GetAllStartups([FromQuery] SieveModel model)
         {

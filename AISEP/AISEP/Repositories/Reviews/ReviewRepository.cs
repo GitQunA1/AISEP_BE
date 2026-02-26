@@ -18,8 +18,8 @@ namespace AISEP.Repositories.Reviews
         {
             return _context.Reviews
                 .Include(r => r.Advisor)
-                    .ThenInclude(a => a.User)   // ✅ Advisor → User → UserName
-                .Include(r => r.Reviewer)       // ✅ Reviewer → UserName (trực tiếp, không cần ThenInclude)
+                    .ThenInclude(a => a.User)   
+                .Include(r => r.Reviewer)       
                 .FirstOrDefaultAsync(r => r.Id == id);
         }
 
@@ -34,8 +34,8 @@ namespace AISEP.Repositories.Reviews
         {
             return _context.Reviews
                 .Include(r => r.Advisor)
-                    .ThenInclude(a => a.User)   // ✅ Thêm ThenInclude để lấy UserName
-                .Include(r => r.Reviewer)       // ✅ Reviewer là User, có UserName trực tiếp
+                    .ThenInclude(a => a.User)  
+                .Include(r => r.Reviewer)       
                 .AsNoTracking();
         }
     }
