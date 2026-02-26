@@ -6,11 +6,11 @@ namespace AISEP.Models.Entities
 {
     public class Booking
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
 
-        public Guid AdvisorId { get; set; }
+        public int AdvisorId { get; set; }
 
-        public Guid CustomerId { get; set; }
+        public int CustomerId { get; set; }
 
         public DateTime StartTime { get; set; }
 

@@ -6,10 +6,10 @@ namespace AISEP.Models.Entities
 {
     public class ConnectionRequest
     {
-        public Guid Id { get; set; }
-        public Guid InvestorId { get; set; }
-        public Guid StartupId { get; set; }
-        public ConnectionRequestStatus Status { get; set; }
+        public int Id { get; set; }
+     public int InvestorId { get; set; }
+     public int StartupId { get; set; }
+     public ConnectionRequestStatus Status { get; set; }
         public DateTime RequestDate { get; set; }
         public DateTime? ResponseDate { get; set; }
         public string? Message { get; set; }

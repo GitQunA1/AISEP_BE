@@ -2,14 +2,19 @@ using AISEP.Common;
 using AISEP.Data;
 using AISEP.Models.Entities;
 using AISEP.Repositories.Startups;
+using AISEP.Models;
+using AISEP.Models.Entities;
 using AISEP.Services.Auth;
+using AISEP.Services.Blockchain;
 using AISEP.Services.Bookings;
 using AISEP.Services.CurrentUser;
+using AISEP.Services.Documents;
 using AISEP.Services.Email;
 using AISEP.Services.Jwt;
 using AISEP.Services.Reviews;
 using AISEP.Services.Startups;
 using AISEP.Services.StartupFollowers;
+using AISEP.Services.Storage;
 using AISEP.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -36,6 +41,12 @@ var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSetting
 // Configure EmailSettings
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
+// Configure BlockchainSettings
+builder.Services.Configure<BlockchainSettings>(builder.Configuration.GetSection("BlockchainSettings"));
+
+// Configure CloudinarySettings
+builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
+
 // Add DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
  options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -44,7 +55,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<ISieveProcessor, ApplicationSieveProcessor>();
 builder.Services.Configure<SieveOptions>(builder.Configuration.GetSection("Sieve"));
 // Add Identity
-builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
+builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
 {
   // Password settings
     options.Password.RequireDigit = true;
@@ -92,6 +103,9 @@ builder.Services.AddAuthentication(options =>
 // Add Unit of Work
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+// Add AutoMapper
+builder.Services.AddAutoMapper(typeof(MappingProfile));
+
 // Add Sieve for filtering, sorting, and paging
 builder.Services.AddScoped<Sieve.Services.ISieveProcessor, ApplicationSieveProcessor>();
 builder.Services.Configure<Sieve.Models.SieveOptions>(builder.Configuration.GetSection("Sieve"));
@@ -109,6 +123,9 @@ builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IStartupFollowerService, StartupFollowerService>();
 builder.Services.AddScoped<IStartupService, StartupService>();
+builder.Services.AddScoped<IStorageService, CloudinaryStorageService>();
+builder.Services.AddScoped<IBlockchainService, SepoliaBlockchainService>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

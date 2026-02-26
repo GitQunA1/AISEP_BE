@@ -485,7 +485,8 @@ $RECYCLE.BIN/
 
 # Ignore all appsettings files
 **/appsettings*.json
-**/appsettings*.Development.json
+**/appsettings.Development.json
+**/appsettings.Local.json
 
 # But keep the example template
 !**/appsettings.example.json

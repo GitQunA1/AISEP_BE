@@ -1,5 +1,6 @@
 using AISEP.Repositories.Advisors;
 using AISEP.Repositories.Bookings;
+using AISEP.Repositories.Documents;
 using AISEP.Repositories.RefreshTokens;
 using AISEP.Repositories.Reviews;
 using AISEP.Repositories.StartupFollowers;
@@ -11,6 +12,7 @@ namespace AISEP.Common
         // Repositories
         IBookingRepository Bookings { get; }
         IRefreshTokenRepository RefreshTokens { get; }
+        IDocumentRepository Documents { get; }
 
         //IAdvisorsRepository Advisors { get; }
 

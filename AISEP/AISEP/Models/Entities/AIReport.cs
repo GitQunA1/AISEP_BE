@@ -4,8 +4,8 @@ namespace AISEP.Models.Entities
 {
     public class AIReport
     {
-        public Guid Id { get; set; }
-        public Guid ProjectId { get; set; }
+        public int Id { get; set; }
+        public int ProjectId { get; set; }
         public int? PotentialScore { get; set; }
         public int? ChaosScore { get; set; }
         public string? AnalysisResult { get; set; }

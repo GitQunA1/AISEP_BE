@@ -2,9 +2,9 @@ namespace AISEP.Models.Entities
 {
     public class ConsultingReport
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
 
-        public Guid BookingId { get; set; }
+        public int BookingId { get; set; }
 
         public string MeetingTitle { get; set; } = string.Empty;
 

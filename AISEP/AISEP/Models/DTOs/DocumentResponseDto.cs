@@ -1,23 +1,20 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using AISEP.Models.Enums;
 
-namespace AISEP.Models.Entities
+namespace AISEP.Models.DTOs
 {
-    public class Document
+    /// <summary>
+    /// Response DTO trả về thông tin Document cho client.
+    /// </summary>
+    public class DocumentResponseDto
     {
         public int Id { get; set; }
         public int ProjectId { get; set; }
-        public DocumentType DocumentType { get; set; }
+        public string DocumentType { get; set; } = string.Empty;
         public string FileName { get; set; } = string.Empty;
         public string FileUrl { get; set; } = string.Empty;
         public string? FileHash { get; set; }
         public string? BlockchainTxHash { get; set; }
         public bool IsIpProtected { get; set; }
         public DateTime? VerifiedAt { get; set; }
-
-        // Navigation properties
-        public Project Project { get; set; } = null!;
-        public ICollection<BlockchainProof> BlockchainProofs { get; set; } = new List<BlockchainProof>();
     }
 }

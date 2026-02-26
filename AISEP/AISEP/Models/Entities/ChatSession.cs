@@ -4,9 +4,9 @@ namespace AISEP.Models.Entities
 {
     public class ChatSession
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
 
-        public Guid BookingId { get; set; }
+        public int BookingId { get; set; }
 
         public bool IsOpen { get; set; }
 

@@ -13,7 +13,7 @@ namespace AISEP.Repositories.Bookings
             _context = context;
         }
 
-        public async Task<Booking?> GetByIdAsync(Guid id)
+        public async Task<Booking?> GetByIdAsync(int id)
         {
             return await _context.Bookings
                 .Include(b => b.Advisor)
@@ -29,7 +29,10 @@ namespace AISEP.Repositories.Bookings
             await _context.Bookings.AddAsync(booking);
         }
 
-        public async Task DeleteAsync(Guid id)
+        
+      
+
+        public async Task DeleteAsync(int id)
         {
             var booking = await _context.Bookings.FindAsync(id);
             if (booking != null)

@@ -6,9 +6,9 @@ namespace AISEP.Models.Entities
 {
     public class WalletTransaction
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
 
-        public Guid WalletId { get; set; }
+        public int WalletId { get; set; }
 
         public decimal Amount { get; set; }
 

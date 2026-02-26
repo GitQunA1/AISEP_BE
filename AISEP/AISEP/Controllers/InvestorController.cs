@@ -1,8 +1,7 @@
 ﻿using AISEP.Common;
 using AISEP.DTOs;
-using AISEP.Models;
+using AISEP.Models.Entities;
 using AISEP.Models.Enums;
-using AISEP.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 

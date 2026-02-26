@@ -6,9 +6,9 @@ namespace AISEP.Models.Entities
 {
     public class Investor
     {
-      public Guid Id { get; set; }
+      public int Id { get; set; }
 
-      public Guid UserId { get; set; }
+      public int UserId { get; set; }
 
       public string? OrganizationName { get; set; }
 

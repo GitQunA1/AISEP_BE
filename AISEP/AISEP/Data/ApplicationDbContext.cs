@@ -2,10 +2,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using AISEP.Models.Entities;
+using AISEP.Models;
+using AISEP.Models.Entities;
 
 namespace AISEP.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
+    public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, int>
 {
  public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
        : base(options)
@@ -56,12 +58,12 @@ public DbSet<WalletTransaction> WalletTransactions { get; set; }
   });
 
   // Identity tables configuration (optional - customize table names)
-    modelBuilder.Entity<IdentityRole<Guid>>().ToTable("roles");
-            modelBuilder.Entity<IdentityUserRole<Guid>>().ToTable("user_roles");
-    modelBuilder.Entity<IdentityUserClaim<Guid>>().ToTable("user_claims");
-      modelBuilder.Entity<IdentityUserLogin<Guid>>().ToTable("user_logins");
-  modelBuilder.Entity<IdentityUserToken<Guid>>().ToTable("user_tokens");
-            modelBuilder.Entity<IdentityRoleClaim<Guid>>().ToTable("role_claims");
+    modelBuilder.Entity<IdentityRole<int>>().ToTable("roles");
+            modelBuilder.Entity<IdentityUserRole<int>>().ToTable("user_roles");
+    modelBuilder.Entity<IdentityUserClaim<int>>().ToTable("user_claims");
+      modelBuilder.Entity<IdentityUserLogin<int>>().ToTable("user_logins");
+  modelBuilder.Entity<IdentityUserToken<int>>().ToTable("user_tokens");
+            modelBuilder.Entity<IdentityRoleClaim<int>>().ToTable("role_claims");
 
             // Startup configurations
       modelBuilder.Entity<Startup>(entity =>

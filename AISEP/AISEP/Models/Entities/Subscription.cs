@@ -5,11 +5,11 @@ namespace AISEP.Models.Entities
 {
     public class Subscription
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
 
-        public Guid PackageId { get; set; }
+        public int PackageId { get; set; }
 
-        public Guid UserId { get; set; }
+        public int UserId { get; set; }
 
         public DateTime StartDate { get; set; }
 

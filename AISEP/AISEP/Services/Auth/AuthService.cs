@@ -35,7 +35,7 @@ namespace AISEP.Services.Auth
             _configuration = configuration;
         }
 
-        public async Task<(bool Success, string Message, Guid? UserId, string? Email)> RegisterAsync(RegisterDto model)
+        public async Task<(bool Success, string Message, int? UserId, string? Email)> RegisterAsync(RegisterDto model)
         {
          
             var existingUser = await _userManager.FindByEmailAsync(model.Email);
@@ -284,7 +284,7 @@ namespace AISEP.Services.Auth
             return (true, "Token revoked successfully");
         }
 
-        public async Task<(bool Success, string Message)> LogoutAsync(Guid userId)
+        public async Task<(bool Success, string Message)> LogoutAsync(int userId)
         {
             
             var refreshTokens = await _unitOfWork.RefreshTokens.GetActiveTokensByUserIdAsync(userId);

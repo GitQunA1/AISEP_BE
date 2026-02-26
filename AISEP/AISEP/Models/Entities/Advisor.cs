@@ -5,9 +5,9 @@ namespace AISEP.Models.Entities
 {
     public class Advisor
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
 
-        public Guid UserId { get; set; }
+        public int UserId { get; set; }
 
         public string? Bio { get; set; }
 

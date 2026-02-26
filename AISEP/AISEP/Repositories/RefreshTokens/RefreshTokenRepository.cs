@@ -20,7 +20,7 @@ namespace AISEP.Repositories.RefreshTokens
                 .FirstOrDefaultAsync(rt => rt.Token == token);
         }
 
-        public async Task<IEnumerable<RefreshToken>> GetActiveTokensByUserIdAsync(Guid userId)
+        public async Task<IEnumerable<RefreshToken>> GetActiveTokensByUserIdAsync(int userId)
         {
             return await _context.RefreshTokens
                 .Where(rt => rt.UserId == userId && !rt.IsRevoked)

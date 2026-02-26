@@ -19,7 +19,7 @@ namespace AISEP.Services.CurrentUser
         }
 
       
-        public Guid GetUserId()
+        public int GetUserId()
         {
             var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userIdClaim == null) {
@@ -27,7 +27,7 @@ namespace AISEP.Services.CurrentUser
             }
 
 
-            return Guid.Parse(userIdClaim) ;
+            return int.Parse(userIdClaim) ;
         }
 
         
