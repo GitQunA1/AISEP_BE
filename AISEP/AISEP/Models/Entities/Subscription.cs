@@ -5,7 +5,7 @@ namespace AISEP.Models.Entities
 {
     public class Subscription
     {
-        public int Id { get; set; }
+        public int SubscriptionId { get; set; }
 
         public int PackageId { get; set; }
 

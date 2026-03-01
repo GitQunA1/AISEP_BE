@@ -67,7 +67,7 @@ namespace AISEP.Services.Startups
         {
             return new StartupResponseDto
             {
-                Id = startup.Id,
+                Id = startup.StartupId,
                 CompanyName = startup.CompanyName,
                 LogoUrl = startup.LogoUrl,
                 Founder = startup.Founder,

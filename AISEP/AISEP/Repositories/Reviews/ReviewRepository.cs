@@ -20,7 +20,7 @@ namespace AISEP.Repositories.Reviews
                 .Include(r => r.Advisor)
                     .ThenInclude(a => a.User)   
                 .Include(r => r.Reviewer)       
-                .FirstOrDefaultAsync(r => r.Id == id);
+                .FirstOrDefaultAsync(r => r.ReviewId == id);
         }
 
         public async Task DeleteAsync(int id)

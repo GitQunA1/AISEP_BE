@@ -4,7 +4,7 @@ namespace AISEP.Models.Entities
 {
     public class Review
     {
-        public int Id { get; set; }
+        public int ReviewId { get; set; }
 
         public int AdvisorId { get; set; }
 

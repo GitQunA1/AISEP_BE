@@ -6,7 +6,7 @@ namespace AISEP.Models.Entities
 {
     public class ConnectionRequest
     {
-        public int Id { get; set; }
+        public int ConnectionRequestId { get; set; }
         public int InvestorId { get; set; }
         public int StartupId { get; set; }
         public ConnectionRequestStatus Status { get; set; }
@@ -31,6 +31,6 @@ namespace AISEP.Models.Entities
         // Navigation properties
         public Investor Investor { get; set; } = null!;
         public Startup Startup { get; set; } = null!;
-        public ICollection<SuccessStory> SuccessStories { get; set; } = new List<SuccessStory>();
+        public ICollection<Post> Posts { get; set; } = new List<Post>();
     }
 }

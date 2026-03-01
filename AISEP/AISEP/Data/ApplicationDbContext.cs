@@ -20,7 +20,8 @@ public DbSet<Startup> Startups { get; set; }
         public DbSet<Advisor> Advisors { get; set; }
         public DbSet<Project> Projects { get; set; }
      public DbSet<Document> Documents { get; set; }
-        public DbSet<AIReport> AIReports { get; set; }
+        public DbSet<StartupAIAnalysis> StartupAIAnalyses { get; set; }
+        public DbSet<InvestorAIAnalysis> InvestorAIAnalyses { get; set; }
         public DbSet<ConnectionRequest> ConnectionRequests { get; set; }
    public DbSet<Deal> Deals { get; set; }
  public DbSet<NFTRecord> NFTRecords { get; set; }
@@ -29,7 +30,7 @@ public DbSet<Wallet> Wallets { get; set; }
   public DbSet<Transaction> Transactions { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
    public DbSet<ActionLog> ActionLogs { get; set; }
-        public DbSet<SuccessStory> SuccessStories { get; set; }
+        public DbSet<Post> Posts { get; set; }
    public DbSet<ChatSession> ChatSessions { get; set; }
  public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<ConsultingReport> ConsultingReports { get; set; }
@@ -41,6 +42,7 @@ public DbSet<WalletTransaction> WalletTransactions { get; set; }
  public DbSet<BlockchainProof> BlockchainProofs { get; set; }
   public DbSet<RefreshToken> RefreshTokens { get; set; }
   public DbSet<StartupFollower> StartupFollowers { get; set; }
+        public DbSet<UserReport> UserReports { get; set; }
 
      protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -69,7 +71,7 @@ public DbSet<WalletTransaction> WalletTransactions { get; set; }
       modelBuilder.Entity<Startup>(entity =>
           {
   entity.ToTable("startups");
-           entity.HasKey(e => e.Id);
+           entity.HasKey(e => e.StartupId);
          entity.Property(e => e.CompanyName).HasMaxLength(255);
                 entity.Property(e => e.LogoUrl).HasMaxLength(255);
        entity.Property(e => e.Founder).HasMaxLength(255);
@@ -91,7 +93,7 @@ entity.Property(e => e.CountryCity).HasMaxLength(255);
         modelBuilder.Entity<Investor>(entity =>
    {
         entity.ToTable("investors");
-    entity.HasKey(e => e.Id);
+    entity.HasKey(e => e.InvestorId);
                 entity.Property(e => e.OrganizationName).HasMaxLength(255);
     entity.Property(e => e.InvestmentTaste).HasMaxLength(255);
     entity.Property(e => e.WalletAddress).HasMaxLength(255);
@@ -112,7 +114,7 @@ entity.Property(e => e.CountryCity).HasMaxLength(255);
   modelBuilder.Entity<Advisor>(entity =>
    {
        entity.ToTable("advisors");
-                entity.HasKey(e => e.Id);
+                entity.HasKey(e => e.AdvisorId);
 entity.Property(e => e.Expertise).HasMaxLength(255);
    entity.Property(e => e.Rating).HasColumnType("decimal(3,2)");
                 entity.Property(e => e.LanguagesSpoken).HasMaxLength(255);
@@ -129,7 +131,7 @@ entity.Property(e => e.Expertise).HasMaxLength(255);
             modelBuilder.Entity<Project>(entity =>
     {
                 entity.ToTable("projects");
-        entity.HasKey(e => e.Id);
+        entity.HasKey(e => e.ProjectId);
            entity.Property(e => e.ProjectName).HasMaxLength(255).IsRequired();
         entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
 
@@ -143,7 +145,7 @@ entity.Property(e => e.Expertise).HasMaxLength(255);
   modelBuilder.Entity<Document>(entity =>
      {
            entity.ToTable("documents");
-     entity.HasKey(e => e.Id);
+     entity.HasKey(e => e.DocumentId);
         entity.Property(e => e.DocumentType).HasConversion<string>().HasMaxLength(50).IsRequired();
      entity.Property(e => e.FileName).HasMaxLength(255).IsRequired();
 entity.Property(e => e.FileUrl).HasMaxLength(255).IsRequired();
@@ -156,16 +158,31 @@ entity.Property(e => e.FileUrl).HasMaxLength(255).IsRequired();
  .OnDelete(DeleteBehavior.Cascade);
       });
 
-  // AIReport configurations
-            modelBuilder.Entity<AIReport>(entity =>
+  // StartupAIAnalysis configurations
+            modelBuilder.Entity<StartupAIAnalysis>(entity =>
       {
-            entity.ToTable("aireports");
-      entity.HasKey(e => e.Id);
-         entity.Property(e => e.AnalysisResult).HasMaxLength(255);
-    entity.Property(e => e.AiStatus).HasConversion<string>().HasMaxLength(50).IsRequired();
+            entity.ToTable("startup_ai_analyses");
+      entity.HasKey(e => e.EvaluationId);
 
           entity.HasOne(a => a.Project)
-              .WithMany(p => p.AIReports)
+              .WithMany(p => p.StartupAIAnalyses)
+    .HasForeignKey(a => a.ProjectId)
+     .OnDelete(DeleteBehavior.Cascade);
+    });
+
+  // InvestorAIAnalysis configurations
+            modelBuilder.Entity<InvestorAIAnalysis>(entity =>
+      {
+            entity.ToTable("investor_ai_analyses");
+      entity.HasKey(e => e.AnalysisId);
+
+          entity.HasOne(a => a.Investor)
+              .WithMany(i => i.InvestorAIAnalyses)
+    .HasForeignKey(a => a.InvestorId)
+     .OnDelete(DeleteBehavior.Cascade);
+
+          entity.HasOne(a => a.Project)
+              .WithMany(p => p.InvestorAIAnalyses)
     .HasForeignKey(a => a.ProjectId)
      .OnDelete(DeleteBehavior.Cascade);
     });
@@ -174,7 +191,7 @@ entity.Property(e => e.FileUrl).HasMaxLength(255).IsRequired();
           modelBuilder.Entity<ConnectionRequest>(entity =>
             {
       entity.ToTable("connectionrequests");
-       entity.HasKey(e => e.Id);
+       entity.HasKey(e => e.ConnectionRequestId);
        entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
     entity.Property(e => e.RequestDate).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
@@ -193,7 +210,7 @@ entity.Property(e => e.FileUrl).HasMaxLength(255).IsRequired();
             modelBuilder.Entity<Deal>(entity =>
           {
      entity.ToTable("deals");
-    entity.HasKey(e => e.Id);
+    entity.HasKey(e => e.DealId);
    entity.Property(e => e.Amount).HasColumnType("decimal(18,2)").IsRequired();
      entity.Property(e => e.Status).HasMaxLength(50).IsRequired();
                 entity.Property(e => e.PaymentMethod).HasMaxLength(50);
@@ -216,7 +233,7 @@ entity.Property(e => e.FileUrl).HasMaxLength(255).IsRequired();
             modelBuilder.Entity<NFTRecord>(entity =>
       {
            entity.ToTable("nftrecords");
-      entity.HasKey(e => e.Id);
+      entity.HasKey(e => e.NFTRecordId);
    entity.Property(e => e.TokenId).HasMaxLength(255).IsRequired();
      entity.Property(e => e.TxHash).HasMaxLength(255).IsRequired();
      entity.Property(e => e.OwnerWallet).HasMaxLength(255).IsRequired();
@@ -234,7 +251,7 @@ entity.Property(e => e.FileUrl).HasMaxLength(255).IsRequired();
     modelBuilder.Entity<Booking>(entity =>
             {
        entity.ToTable("bookings");
-          entity.HasKey(e => e.Id);
+          entity.HasKey(e => e.BookingId);
   entity.Property(e => e.Price).HasColumnType("decimal(18,2)").IsRequired();
             entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
 
@@ -253,7 +270,7 @@ entity.Property(e => e.FileUrl).HasMaxLength(255).IsRequired();
             modelBuilder.Entity<Wallet>(entity =>
           {
           entity.ToTable("wallets");
-           entity.HasKey(e => e.Id);
+           entity.HasKey(e => e.WalletId);
       entity.Property(e => e.Balance).HasColumnType("decimal(18,2)").IsRequired();
           entity.Property(e => e.Currency).HasMaxLength(10).IsRequired();
 
@@ -267,7 +284,7 @@ entity.Property(e => e.FileUrl).HasMaxLength(255).IsRequired();
     modelBuilder.Entity<Transaction>(entity =>
 {
            entity.ToTable("transactions");
-        entity.HasKey(e => e.Id);
+        entity.HasKey(e => e.TransactionId);
      entity.Property(e => e.Amount).HasColumnType("decimal(18,2)").IsRequired();
              entity.Property(e => e.Type).HasConversion<string>().HasMaxLength(50).IsRequired();
        entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
@@ -283,7 +300,7 @@ entity.Property(e => e.FileUrl).HasMaxLength(255).IsRequired();
      modelBuilder.Entity<Subscription>(entity =>
             {
       entity.ToTable("subscriptions");
-  entity.HasKey(e => e.Id);
+  entity.HasKey(e => e.SubscriptionId);
   entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
 
      entity.HasOne(s => s.Package)
@@ -301,7 +318,7 @@ entity.HasOne(s => s.User)
  modelBuilder.Entity<ActionLog>(entity =>
             {
         entity.ToTable("actionlogs");
-     entity.HasKey(e => e.Id);
+     entity.HasKey(e => e.ActionLogId);
        entity.Property(e => e.ActionType).HasMaxLength(255).IsRequired();
        entity.Property(e => e.EntityType).HasMaxLength(255).IsRequired();
                 entity.Property(e => e.Timestamp).HasDefaultValueSql("CURRENT_TIMESTAMP");
@@ -312,23 +329,24 @@ entity.HasOne(s => s.User)
                .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // SuccessStory configurations
-    modelBuilder.Entity<SuccessStory>(entity =>
-   {
-     entity.ToTable("successstories");
-     entity.HasKey(e => e.Id);
+            // Post configurations
+            modelBuilder.Entity<Post>(entity =>
+            {
+                entity.ToTable("posts");
+                entity.HasKey(e => e.PostId);
+                entity.Property(e => e.Title).HasMaxLength(255);
 
-     entity.HasOne(ss => ss.ConnectionRequest)
-      .WithMany(cr => cr.SuccessStories)
-     .HasForeignKey(ss => ss.ConnectionId)
-         .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(p => p.ConnectionRequest)
+                    .WithMany(cr => cr.Posts)
+                    .HasForeignKey(p => p.ConnectionRequestId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
         // ChatSession configurations
     modelBuilder.Entity<ChatSession>(entity =>
   {
       entity.ToTable("chatsessions");
-       entity.HasKey(e => e.Id);
+       entity.HasKey(e => e.ChatSessionId);
      entity.Property(e => e.StartTime).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             entity.HasOne(cs => cs.Booking)
@@ -341,13 +359,13 @@ entity.HasOne(s => s.User)
       modelBuilder.Entity<ChatMessage>(entity =>
          {
         entity.ToTable("chatmessages");
-                entity.HasKey(e => e.Id);
+                entity.HasKey(e => e.ChatMessageId);
     entity.Property(e => e.Content).IsRequired();
      entity.Property(e => e.SentAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
     entity.HasOne(cm => cm.ChatSession)
         .WithMany(cs => cs.ChatMessages)
-    .HasForeignKey(cm => cm.SessionId)
+    .HasForeignKey(cm => cm.ChatSessionId)
      .OnDelete(DeleteBehavior.Cascade);
 
  entity.HasOne(cm => cm.Sender)
@@ -360,7 +378,7 @@ entity.HasOne(s => s.User)
           modelBuilder.Entity<ConsultingReport>(entity =>
        {
             entity.ToTable("consultingreports");
-    entity.HasKey(e => e.Id);
+    entity.HasKey(e => e.ConsultingReportId);
 entity.Property(e => e.MeetingTitle).HasMaxLength(255).IsRequired();
      entity.Property(e => e.Location).HasMaxLength(255);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
@@ -375,7 +393,7 @@ entity.Property(e => e.MeetingTitle).HasMaxLength(255).IsRequired();
  modelBuilder.Entity<Review>(entity =>
     {
          entity.ToTable("reviews");
-    entity.HasKey(e => e.Id);
+    entity.HasKey(e => e.ReviewId);
         entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                 entity.HasOne(r => r.Advisor)
@@ -393,7 +411,7 @@ entity.Property(e => e.MeetingTitle).HasMaxLength(255).IsRequired();
  modelBuilder.Entity<Package>(entity =>
  {
             entity.ToTable("packages");
-   entity.HasKey(e => e.Id);
+   entity.HasKey(e => e.PackageId);
                 entity.Property(e => e.PackageName).HasMaxLength(255).IsRequired();
          entity.Property(e => e.Price).HasColumnType("decimal(18,2)").IsRequired();
         });
@@ -402,7 +420,7 @@ entity.Property(e => e.MeetingTitle).HasMaxLength(255).IsRequired();
             modelBuilder.Entity<WalletTransaction>(entity =>
     {
      entity.ToTable("wallettransactions");
-    entity.HasKey(e => e.Id);
+    entity.HasKey(e => e.WalletTransactionId);
             entity.Property(e => e.Amount).HasColumnType("decimal(18,2)").IsRequired();
           entity.Property(e => e.Type).HasConversion<string>().HasMaxLength(50).IsRequired();
        entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
@@ -418,7 +436,7 @@ entity.Property(e => e.MeetingTitle).HasMaxLength(255).IsRequired();
  modelBuilder.Entity<WithdrawRequest>(entity =>
             {
         entity.ToTable("withdrawrequests");
-     entity.HasKey(e => e.Id);
+     entity.HasKey(e => e.WithdrawRequestId);
         entity.Property(e => e.Amount).HasColumnType("decimal(18,2)").IsRequired();
       entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
            entity.Property(e => e.RequestedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
@@ -433,7 +451,7 @@ entity.Property(e => e.MeetingTitle).HasMaxLength(255).IsRequired();
             modelBuilder.Entity<Notification>(entity =>
      {
      entity.ToTable("notifications");
-        entity.HasKey(e => e.Id);
+        entity.HasKey(e => e.NotificationId);
                 entity.Property(e => e.Message).IsRequired();
          entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
      entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
@@ -448,7 +466,7 @@ entity.Property(e => e.MeetingTitle).HasMaxLength(255).IsRequired();
  modelBuilder.Entity<BlockchainProof>(entity =>
        {
                 entity.ToTable("blockchainproof");
-    entity.HasKey(e => e.Id);
+    entity.HasKey(e => e.BlockchainProofId);
      entity.Property(e => e.TransactionHash).HasMaxLength(255).IsRequired();
      entity.Property(e => e.VerificationStatus).HasConversion<string>().HasMaxLength(50).IsRequired();
         entity.Property(e => e.Timestamp).HasDefaultValueSql("CURRENT_TIMESTAMP");
@@ -463,7 +481,7 @@ entity.Property(e => e.MeetingTitle).HasMaxLength(255).IsRequired();
       modelBuilder.Entity<RefreshToken>(entity =>
       {
               entity.ToTable("refresh_tokens");
-       entity.HasKey(e => e.Id);
+       entity.HasKey(e => e.RefreshTokenId);
      entity.Property(e => e.Token).HasMaxLength(500).IsRequired();
     entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
       entity.Property(e => e.CreatedByIp).HasMaxLength(50);
@@ -496,6 +514,26 @@ modelBuilder.Entity<StartupFollower>(entity =>
 
     entity.Property(sf => sf.FollowedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 });
+
+        // UserReport configurations
+        modelBuilder.Entity<UserReport>(entity =>
+        {
+            entity.ToTable("user_reports");
+            entity.HasKey(e => e.ReportId);
+            entity.Property(e => e.EvidenceUrl).HasMaxLength(255);
+            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.HasOne(r => r.Reporter)
+                .WithMany(u => u.ReportsMade)
+                .HasForeignKey(r => r.ReporterId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(r => r.ReportedUser)
+                .WithMany(u => u.ReportsReceived)
+                .HasForeignKey(r => r.ReportedUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
         }
     }
 }

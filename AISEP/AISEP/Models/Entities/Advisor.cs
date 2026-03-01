@@ -5,7 +5,7 @@ namespace AISEP.Models.Entities
 {
     public class Advisor
     {
-        public int Id { get; set; }
+        public int AdvisorId { get; set; }
 
         public int UserId { get; set; }
 

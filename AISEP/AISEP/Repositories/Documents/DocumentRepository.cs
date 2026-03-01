@@ -18,7 +18,7 @@ namespace AISEP.Repositories.Documents
             return await _context.Documents
                 .Include(d => d.Project)
                 .Include(d => d.BlockchainProofs)
-                .FirstOrDefaultAsync(d => d.Id == id);
+                .FirstOrDefaultAsync(d => d.DocumentId == id);
         }
 
         public async Task<IEnumerable<Document>> GetByProjectIdAsync(int projectId)

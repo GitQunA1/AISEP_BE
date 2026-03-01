@@ -1,13 +1,13 @@
 namespace AISEP.Models.Entities
 {
-    public class AIReport
+    public class StartupAIAnalysis
     {
-        public int Id { get; set; }
+        public int EvaluationId { get; set; }
         public int ProjectId { get; set; }
         public int? PotentialScore { get; set; }
         public int? ChaosScore { get; set; }
         public string? AnalysisJson { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation properties
         public Project Project { get; set; } = null!;

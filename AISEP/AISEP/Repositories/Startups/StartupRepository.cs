@@ -36,7 +36,7 @@ namespace AISEP.Repositories.Startups
             return await _context.Startups
                 .Include(s => s.Followers)
                 .Include(s => s.User)
-                .FirstOrDefaultAsync(s => s.Id == id);
+                .FirstOrDefaultAsync(s => s.StartupId == id);
         }
 
         public IQueryable<Startup> GetStartupQuery()

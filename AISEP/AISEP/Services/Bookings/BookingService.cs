@@ -42,7 +42,7 @@ namespace AISEP.Services.Bookings
             await _unitOfWork.SaveChangesAsync();
 
             
-            var created = await _unitOfWork.Bookings.GetByIdAsync(booking.Id);
+            var created = await _unitOfWork.Bookings.GetByIdAsync(booking.BookingId);
            
             return _mapper.Map<BookingResponseDto>(booking);
         }

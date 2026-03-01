@@ -6,7 +6,7 @@ namespace AISEP.Models.Entities
 {
     public class Transaction
     {
-        public int Id { get; set; }
+        public int TransactionId { get; set; }
 
         public int UserId { get; set; }
 

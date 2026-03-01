@@ -6,7 +6,7 @@ namespace AISEP.Models.Entities
 {
     public class NFTRecord
     {
-        public int Id { get; set; }
+        public int NFTRecordId { get; set; }
 
       public int DealId { get; set; }
 

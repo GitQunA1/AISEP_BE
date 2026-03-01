@@ -21,7 +21,7 @@ namespace AISEP.Repositories.Bookings
                 .Include(b => b.Customer)
                 .Include(b => b.ChatSessions)
                 .Include(b => b.ConsultingReports)
-                .FirstOrDefaultAsync(b => b.Id == id);
+                .FirstOrDefaultAsync(b => b.BookingId == id);
         }
 
         public async Task AddAsync(Booking booking)

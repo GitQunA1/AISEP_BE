@@ -4,7 +4,7 @@ namespace AISEP.Models.Entities
 {
     public class ChatSession
     {
-        public int Id { get; set; }
+        public int ChatSessionId { get; set; }
 
         public int BookingId { get; set; }
 

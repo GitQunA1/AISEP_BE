@@ -5,7 +5,7 @@ namespace AISEP.Models.Entities
 {
     public class ActionLog
     {
-        public int Id { get; set; }
+        public int ActionLogId { get; set; }
 
         public int UserId { get; set; }
 

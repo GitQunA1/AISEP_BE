@@ -5,7 +5,7 @@ namespace AISEP.Models.Entities
 {
     public class BlockchainProof
     {
-        public int Id { get; set; }
+        public int BlockchainProofId { get; set; }
         public int DocumentId { get; set; }
         public string TransactionHash { get; set; } = string.Empty;
         public DateTime Timestamp { get; set; }

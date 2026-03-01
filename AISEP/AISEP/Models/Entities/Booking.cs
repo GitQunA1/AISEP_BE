@@ -6,7 +6,7 @@ namespace AISEP.Models.Entities
 {
     public class Booking
     {
-        public int Id { get; set; }
+        public int BookingId { get; set; }
 
         public int AdvisorId { get; set; }
 

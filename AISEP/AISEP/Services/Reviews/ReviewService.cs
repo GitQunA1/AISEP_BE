@@ -32,7 +32,7 @@ namespace AISEP.Services.Reviews
             await _unitOfWork.SaveChangesAsync();
 
 
-            var created = await _unitOfWork.Reviews.GetByIdAsync(review.Id);
+            var created = await _unitOfWork.Reviews.GetByIdAsync(review.ReviewId);
             return MapToResponseDto(created);
         }
 
@@ -116,7 +116,7 @@ namespace AISEP.Services.Reviews
 
             return new ReviewResponseDto
             {
-                Id            = review.Id,
+                Id            = review.ReviewId,
                 AdvisorName   = review.Advisor?.User?.UserName ?? "Unknown",
                 ReviewerName  = review.Reviewer?.UserName ?? "Unknown",
                 Rating        = review.Rating,

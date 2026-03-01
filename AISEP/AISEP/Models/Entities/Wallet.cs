@@ -5,7 +5,7 @@ namespace AISEP.Models.Entities
 {
     public class Wallet
     {
-        public int Id { get; set; }
+        public int WalletId { get; set; }
 
         public int UserId { get; set; }
 

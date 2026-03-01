@@ -4,7 +4,7 @@ namespace AISEP.Models.Entities
 {
     public class WithdrawRequest
     {
-        public int Id { get; set; }
+        public int WithdrawRequestId { get; set; }
 
         public int WalletId { get; set; }
 

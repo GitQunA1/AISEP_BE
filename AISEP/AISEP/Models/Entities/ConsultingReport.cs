@@ -2,7 +2,7 @@ namespace AISEP.Models.Entities
 {
     public class ConsultingReport
     {
-        public int Id { get; set; }
+        public int ConsultingReportId { get; set; }
 
         public int BookingId { get; set; }
 

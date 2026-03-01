@@ -34,5 +34,9 @@ namespace AISEP.Models.Entities
 
         // Followed startups (many-to-many)
         public ICollection<StartupFollower> FollowedStartups { get; set; } = new List<StartupFollower>();
+
+        // Reports
+        public ICollection<UserReport> ReportsMade { get; set; } = new List<UserReport>();
+        public ICollection<UserReport> ReportsReceived { get; set; } = new List<UserReport>();
     }
 }

@@ -6,7 +6,7 @@ namespace AISEP.Models.Entities
 {
     public class Investor
     {
-      public int Id { get; set; }
+      public int InvestorId { get; set; }
 
       public int UserId { get; set; }
 
@@ -35,5 +35,6 @@ namespace AISEP.Models.Entities
 
       public ICollection<ConnectionRequest> ConnectionRequests { get; set; } = new List<ConnectionRequest>();
       public ICollection<Deal> Deals { get; set; } = new List<Deal>();
+      public ICollection<InvestorAIAnalysis> InvestorAIAnalyses { get; set; } = new List<InvestorAIAnalysis>();
     }
 }

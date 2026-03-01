@@ -27,7 +27,7 @@ namespace AISEP.Common
 
             // BookingDto → Booking Entity
             CreateMap<BookingDto, Booking>()
-                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.BookingId, opt => opt.Ignore())
                 .ForMember(dest => dest.Status, opt => opt.Ignore())
                 .ForMember(dest => dest.Advisor, opt => opt.Ignore())
                 .ForMember(dest => dest.Customer, opt => opt.Ignore())

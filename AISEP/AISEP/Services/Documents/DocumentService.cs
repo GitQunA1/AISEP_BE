@@ -80,7 +80,7 @@ namespace AISEP.Services.Documents
 
                 var result = _mapper.Map<DocumentResponseDto>(document);
 
-                _logger.LogInformation("UploadDocument completed — DocumentId: {DocumentId}", document.Id);
+                _logger.LogInformation("UploadDocument completed — DocumentId: {DocumentId}", document.DocumentId);
                 return result;
             }
             catch (Exception ex)
