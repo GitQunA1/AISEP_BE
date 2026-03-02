@@ -1,3 +1,4 @@
+using AISEP.Common;
 using AISEP.Models.DTOs;
 using AISEP.Services.Reviews;
 using Microsoft.AspNetCore.Authorization;
@@ -18,96 +19,52 @@ namespace AISEP.Controllers
             _reviewService = reviewService;
         }
 
- 
         [HttpPost]
         public async Task<IActionResult> CreateReview([FromBody] ReviewDto dto)
         {
-            try
-            {
-                if (!ModelState.IsValid)
-                    return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+                return BadRequest(ApiResponse.Fail("Invalid request data."));
 
-                var result = await _reviewService.CreateReviewAsync(dto);
-                return CreatedAtAction(nameof(GetReviewById), new { id = result!.Id }, result);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new { message = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            var result = await _reviewService.CreateReviewAsync(dto);
+            if (result is null)
+                return BadRequest(ApiResponse.Fail("Could not create review."));
+
+            return CreatedAtAction(nameof(GetReviewById), new { id = result.Id },
+                ApiResponse.Success(result));
         }
-
 
         [HttpGet("{id:int}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetReviewById(int id)
         {
             var review = await _reviewService.GetReviewByIdAsync(id);
-            if (review == null)
-                return NotFound(new { message = "Review not found" });
+            if (review is null)
+                return NotFound(ApiResponse.Fail("Review not found."));
 
-            return Ok(review);
+            return Ok(ApiResponse.Success(review));
         }
-
 
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> GetAllReviews([FromQuery] SieveModel model)
         {
             var reviews = await _reviewService.GetAllReviewsAsync(model);
-            return Ok(reviews);
+            return Ok(ApiResponse.Success(reviews));
         }
-
 
         [HttpGet("advisor/{advisorId:int}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetReviewsByAdvisor(int advisorId, [FromQuery] SieveModel model)
         {
             var reviews = await _reviewService.GetReviewsByAdvisorIdAsync(advisorId, model);
-            return Ok(reviews);
+            return Ok(ApiResponse.Success(reviews));
         }
 
         [HttpGet("my-reviews")]
         public async Task<IActionResult> GetMyReviews([FromQuery] SieveModel model)
         {
-            try
-            {
-                var reviews = await _reviewService.GetMyReviewsAsync(model);
-                return Ok(reviews);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new { message = ex.Message });
-            }
+            var reviews = await _reviewService.GetMyReviewsAsync(model);
+            return Ok(ApiResponse.Success(reviews));
         }
-
-
-        //[HttpDelete("{id:int}")]
-        //public async Task<IActionResult> DeleteReview(int id)
-        //{
-        //    try
-        //    {
-        //        var result = await _reviewService.DeleteReviewAsync(id);
-        //        if (!result)
-        //            return NotFound(new { message = "Review not found" });
-
-        //        return NoContent();
-        //    }
-        //    catch (UnauthorizedAccessException ex)
-        //    {
-        //        return Unauthorized(new { message = ex.Message });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(new { message = ex.Message });
-        //    }
-        //}
     }
 }

@@ -1,0 +1,52 @@
+using AISEP.Data;
+using AISEP.Models.Entities;
+using Microsoft.EntityFrameworkCore;
+
+namespace AISEP.Repositories.Investors
+{
+    public class InvestorRepository : IInvestorRepository
+    {
+        private readonly ApplicationDbContext _context;
+
+        public InvestorRepository(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        public IQueryable<Investor> GetAllQuery()
+        {
+            return _context.Investors
+                .Include(i => i.User)
+                .AsQueryable();
+        }
+
+        public async Task<Investor?> GetByIdAsync(int investorId)
+        {
+            return await _context.Investors
+                .Include(i => i.User)
+                .FirstOrDefaultAsync(i => i.InvestorId == investorId);
+        }
+
+        public async Task<Investor?> GetByUserIdAsync(int userId)
+        {
+            return await _context.Investors
+                .Include(i => i.User)
+                .FirstOrDefaultAsync(i => i.UserId == userId);
+        }
+
+        public async Task AddAsync(Investor investor)
+        {
+            await _context.Investors.AddAsync(investor);
+        }
+
+        public void Update(Investor investor)
+        {
+            _context.Investors.Update(investor);
+        }
+
+        public async Task<int> SaveChangesAsync()
+        {
+            return await _context.SaveChangesAsync();
+        }
+    }
+}

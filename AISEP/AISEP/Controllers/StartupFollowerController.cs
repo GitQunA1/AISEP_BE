@@ -1,3 +1,4 @@
+using AISEP.Common;
 using AISEP.DTOs;
 using AISEP.Services.StartupFollowers;
 using Microsoft.AspNetCore.Authorization;
@@ -21,47 +22,24 @@ namespace AISEP.Controllers
         /// <summary>
         /// Follow một startup
         /// </summary>
-        [HttpPost("{startupId:int}")]
+        [HttpPost("{startupId:int}/follow")]
         public async Task<IActionResult> FollowStartup(int startupId)
         {
-            try
-            {
-                var result = await _followerService.FollowStartupAsync(startupId);
-                if (!result)
-                    return BadRequest(new { message = "You already follow this startup" });
+            var result = await _followerService.FollowStartupAsync(startupId);
+            if (!result)
+                return Conflict(ApiResponse.Fail("You already follow this startup."));
 
-                return Ok(new { message = "Followed startup successfully" });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            return Ok(ApiResponse.Success());
         }
 
-       
-        [HttpDelete("{startupId:int}")]
+        [HttpDelete("{startupId:int}/follow")]
         public async Task<IActionResult> UnfollowStartup(int startupId)
         {
-            try
-            {
-                var result = await _followerService.UnfollowStartupAsync(startupId);
-                if (!result)
-                    return NotFound(new { message = "You are not following this startup" });
+            var result = await _followerService.UnfollowStartupAsync(startupId);
+            if (!result)
+                return NotFound(ApiResponse.Fail("You are not following this startup."));
 
-                return Ok(new { message = "Unfollowed startup successfully" });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            return Ok(ApiResponse.Success());
         }
 
         

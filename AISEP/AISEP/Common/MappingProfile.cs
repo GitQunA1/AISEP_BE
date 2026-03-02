@@ -38,6 +38,38 @@ namespace AISEP.Common
             CreateMap<User, UserResponseDto>()
                 .ForMember(dest => dest.UserId,
                     opt => opt.MapFrom(src => src.Id));
+
+            // Startup Entity → StartupResponseDto
+            CreateMap<Startup, StartupResponseDto>()
+                .ForMember(dest => dest.Id,
+                    opt => opt.MapFrom(src => src.StartupId))
+                .ForMember(dest => dest.FollowerCount,
+                    opt => opt.MapFrom(src => src.Followers != null ? src.Followers.Count : 0));
+
+            // Investor Entity → InvestorResponseDto
+            CreateMap<Investor, InvestorResponseDto>()
+                .ForMember(dest => dest.UserName,
+                    opt => opt.MapFrom(src => src.User != null ? src.User.UserName : null))
+                .ForMember(dest => dest.Email,
+                    opt => opt.MapFrom(src => src.User != null ? src.User.Email : null));
+
+            // InvestorDto → Investor Entity
+            CreateMap<InvestorDto, Investor>()
+                .ForMember(dest => dest.InvestorId, opt => opt.Ignore())
+                .ForMember(dest => dest.UserId, opt => opt.Ignore())
+                .ForMember(dest => dest.User, opt => opt.Ignore())
+                .ForMember(dest => dest.ConnectionRequests, opt => opt.Ignore())
+                .ForMember(dest => dest.Deals, opt => opt.Ignore())
+                .ForMember(dest => dest.InvestorAIAnalyses, opt => opt.Ignore());
+
+            // StartupFollower Entity → FollowedStartupDto
+            CreateMap<StartupFollower, FollowedStartupDto>()
+                .ForMember(dest => dest.CompanyName,
+                    opt => opt.MapFrom(src => src.Startup != null ? src.Startup.CompanyName : "Unknown"))
+                .ForMember(dest => dest.LogoUrl,
+                    opt => opt.MapFrom(src => src.Startup != null ? src.Startup.LogoUrl : null))
+                .ForMember(dest => dest.Industry,
+                    opt => opt.MapFrom(src => src.Startup != null ? src.Startup.Industry : null));
         }
     }
 }

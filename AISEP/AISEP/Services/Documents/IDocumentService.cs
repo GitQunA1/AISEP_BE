@@ -17,7 +17,7 @@ namespace AISEP.Services.Documents
         /// <summary>
         /// Lấy document theo Id.
         /// </summary>
-        Task<DocumentResponseDto> GetByIdAsync(int id);
+        Task<DocumentResponseDto?> GetByIdAsync(int id);
 
         /// <summary>
         /// Lấy danh sách document theo ProjectId.

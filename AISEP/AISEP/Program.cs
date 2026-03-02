@@ -1,6 +1,7 @@
 using AISEP.Common;
 using AISEP.Data;
 using AISEP.Models.Entities;
+using AISEP.Repositories.Investors;
 using AISEP.Repositories.Startups;
 using AISEP.Models;
 using AISEP.Models.Entities;
@@ -10,6 +11,7 @@ using AISEP.Services.Bookings;
 using AISEP.Services.CurrentUser;
 using AISEP.Services.Documents;
 using AISEP.Services.Email;
+using AISEP.Services.Investors;
 using AISEP.Services.Jwt;
 using AISEP.Services.Reviews;
 using AISEP.Services.Startups;
@@ -112,6 +114,7 @@ builder.Services.Configure<Sieve.Models.SieveOptions>(builder.Configuration.GetS
 
 // Add Repositories
 builder.Services.AddScoped<IStartupRepository, StartupRepository>();
+builder.Services.AddScoped<IInvestorRepository, InvestorRepository>();
 
 // Add Services
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
@@ -119,10 +122,10 @@ builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
-//builder.Services.AddScoped<IAdvisorService, AdvisorService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IStartupFollowerService, StartupFollowerService>();
 builder.Services.AddScoped<IStartupService, StartupService>();
+builder.Services.AddScoped<IInvestorService, InvestorService>();
 builder.Services.AddScoped<IStorageService, CloudinaryStorageService>();
 builder.Services.AddScoped<IBlockchainService, SepoliaBlockchainService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();

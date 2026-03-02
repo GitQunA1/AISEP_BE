@@ -2,6 +2,7 @@ using AISEP.DTOs;
 using AISEP.Models.Entities;
 using AISEP.Models.Enums;
 using AISEP.Repositories.Startups;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
 using Sieve.Services;
@@ -12,11 +13,13 @@ namespace AISEP.Services.Startups
     {
         private readonly IStartupRepository _repository;
         private readonly ISieveProcessor _sieveProcessor;
+        private readonly IMapper _mapper;
 
-        public StartupService(IStartupRepository repository, ISieveProcessor sieveProcessor)
+        public StartupService(IStartupRepository repository, ISieveProcessor sieveProcessor, IMapper mapper)
         {
             _repository = repository;
             _sieveProcessor = sieveProcessor;
+            _mapper = mapper;
         }
 
         public async Task<PagedResultDto<StartupResponseDto>> SearchStartupsAsync(SieveModel model, string? industry = null, DevelopmentStage? stage = null)
@@ -28,7 +31,7 @@ namespace AISEP.Services.Startups
         public async Task<StartupResponseDto?> GetStartupByIdAsync(int id)
         {
             var startup = await _repository.GetByIdAsync(id);
-            return startup != null ? MapToResponseDto(startup) : null;
+            return startup is null ? null : _mapper.Map<StartupResponseDto>(startup);
         }
 
         public async Task<PagedResultDto<StartupResponseDto>> GetAllStartupsAsync(SieveModel model)
@@ -38,7 +41,7 @@ namespace AISEP.Services.Startups
         }
 
         private async Task<PagedResultDto<StartupResponseDto>> ApplySieveAndPaginateAsync(
-            IQueryable<Startup> query, 
+            IQueryable<Startup> query,
             SieveModel sieveModel)
         {
             var totalCount = await _sieveProcessor
@@ -51,35 +54,14 @@ namespace AISEP.Services.Startups
 
             var page = sieveModel.Page ?? 1;
             var pageSize = sieveModel.PageSize ?? 10;
-            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
             return new PagedResultDto<StartupResponseDto>
             {
                 Page = page,
                 PageSize = pageSize,
                 TotalCount = totalCount,
-                TotalPages = totalPages,
-                Items = items.Select(MapToResponseDto)
-            };
-        }
-
-        private StartupResponseDto MapToResponseDto(Startup startup)
-        {
-            return new StartupResponseDto
-            {
-                Id = startup.StartupId,
-                CompanyName = startup.CompanyName,
-                LogoUrl = startup.LogoUrl,
-                Founder = startup.Founder,
-                CountryCity = startup.CountryCity,
-                Website = startup.Website,
-                Industry = startup.Industry,
-                DevelopmentStage = startup.DevelopmentStage,
-                ProblemStatement = startup.ProblemStatement,
-                SolutionDescription = startup.SolutionDescription,
-                MarketSize = startup.MarketSize,
-                Revenue = startup.Revenue,
-                FollowerCount = startup.Followers?.Count ?? 0
+                TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
+                Items = items.Select(s => _mapper.Map<StartupResponseDto>(s))
             };
         }
     }

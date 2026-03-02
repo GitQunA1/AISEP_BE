@@ -74,6 +74,29 @@ namespace AISEP.Common
                 .CanFilter()
                 .CanSort();
 
+            // Investor
+            mapper.Property<Investor>(i => i.OrganizationName)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Investor>(i => i.FocusIndustry)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Investor>(i => i.InvestmentRegion)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Investor>(i => i.RiskTolerance)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Investor>(i => i.PreferredStage)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Investor>(i => i.InvestmentAmount)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Investor>(i => i.InvestmentDate)
+                .CanFilter()
+                .CanSort();
+
             return mapper;
         }
     }

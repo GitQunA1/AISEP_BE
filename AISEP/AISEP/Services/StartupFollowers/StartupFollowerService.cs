@@ -2,6 +2,7 @@ using AISEP.Common;
 using AISEP.DTOs;
 using AISEP.Models.Entities;
 using AISEP.Services.CurrentUser;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
 using Sieve.Services;
@@ -13,15 +14,18 @@ namespace AISEP.Services.StartupFollowers
         private readonly IUnitOfWork _unitOfWork;
         private readonly ICurrentUserService _currentUserService;
         private readonly ISieveProcessor _sieveProcessor;
+        private readonly IMapper _mapper;
 
         public StartupFollowerService(
-            IUnitOfWork unitOfWork, 
+            IUnitOfWork unitOfWork,
             ICurrentUserService currentUserService,
-            ISieveProcessor sieveProcessor)
+            ISieveProcessor sieveProcessor,
+            IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             _currentUserService = currentUserService;
             _sieveProcessor = sieveProcessor;
+            _mapper = mapper;
         }
 
         public async Task<bool> FollowStartupAsync(int startupId)
@@ -110,35 +114,9 @@ namespace AISEP.Services.StartupFollowers
                 PageSize = pageSize,
                 TotalCount = totalCount,
                 TotalPages = totalPages,
-                Items = items.Select(MapToFollowedStartupDto)
+                Items = items.Select(sf => _mapper.Map<FollowedStartupDto>(sf))
             };
         }
-
-        //private async Task<PagedResultDto<StartupFollowerResponseDto>> ApplySieveAndPaginateFollowersAsync(
-        //    IQueryable<StartupFollower> query, 
-        //    SieveModel sieveModel)
-        //{
-        //    var totalCount = await _sieveProcessor
-        //        .Apply(sieveModel, query, applyPagination: false, applySorting: false)
-        //        .CountAsync();
-
-        //    var items = await _sieveProcessor
-        //        .Apply(sieveModel, query)
-        //        .ToListAsync();
-
-        //    var page = sieveModel.Page ?? 1;
-        //    var pageSize = sieveModel.PageSize ?? 10;
-        //    var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-
-        //    return new PagedResultDto<StartupFollowerResponseDto>
-        //    {
-        //        Page = page,
-        //        PageSize = pageSize,
-        //        TotalCount = totalCount,
-        //        TotalPages = totalPages,
-        //        Items = items.Select(MapToFollowerDto)
-        //    };
-        //}
 
         private FollowedStartupDto MapToFollowedStartupDto(StartupFollower sf)
         {

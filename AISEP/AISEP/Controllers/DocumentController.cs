@@ -1,3 +1,4 @@
+using AISEP.Common;
 using AISEP.Models.DTOs;
 using AISEP.Services.Documents;
 using Microsoft.AspNetCore.Authorization;
@@ -17,58 +18,41 @@ namespace AISEP.Controllers
             _documentService = documentService;
         }
 
-        /// <summary>
-        /// Upload document mới (Cloudinary + tuỳ chọn Blockchain).
-        /// </summary>
         [HttpPost("upload")]
         public async Task<IActionResult> Upload([FromForm] UploadDocumentDto dto)
         {
             if (dto.File == null || dto.File.Length == 0)
-                return BadRequest(new { message = "File is required." });
+                return BadRequest(ApiResponse.Fail("File is required."));
 
             var result = await _documentService.UploadDocumentAsync(dto);
-            return Ok(result);
+            return Ok(ApiResponse.Success(result));
         }
 
-        /// <summary>
-        /// Lấy document theo Id.
-        /// </summary>
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
-            try
-            {
-                var result = await _documentService.GetByIdAsync(id);
-                return Ok(result);
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new { message = $"Document with Id {id} not found." });
-            }
+            var result = await _documentService.GetByIdAsync(id);
+            if (result is null)
+                return NotFound(ApiResponse.Fail($"Document with Id {id} not found."));
+
+            return Ok(ApiResponse.Success(result));
         }
 
-        /// <summary>
-        /// Lấy danh sách document theo ProjectId.
-        /// </summary>
         [HttpGet("project/{projectId:int}")]
         public async Task<IActionResult> GetByProjectId(int projectId)
         {
             var result = await _documentService.GetByProjectIdAsync(projectId);
-            return Ok(result);
+            return Ok(ApiResponse.Success(result));
         }
 
-        /// <summary>
-        /// Xoá document theo Id.
-        /// </summary>
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
             var deleted = await _documentService.DeleteAsync(id);
-
             if (!deleted)
-                return NotFound(new { message = $"Document with Id {id} not found." });
+                return NotFound(ApiResponse.Fail($"Document with Id {id} not found."));
 
-            return Ok(new { message = "Document deleted successfully." });
+            return Ok(ApiResponse.Success());
         }
     }
 }

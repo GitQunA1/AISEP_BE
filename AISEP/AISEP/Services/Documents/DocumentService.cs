@@ -91,12 +91,11 @@ namespace AISEP.Services.Documents
             }
         }
 
-        public async Task<DocumentResponseDto> GetByIdAsync(int id)
+        public async Task<DocumentResponseDto?> GetByIdAsync(int id)
         {
             var document = await _unitOfWork.Documents.GetByIdAsync(id);
-
-            if (document == null)
-                throw new KeyNotFoundException($"Document with Id {id} not found.");
+            if (document is null)
+                return null;
 
             return _mapper.Map<DocumentResponseDto>(document);
         }

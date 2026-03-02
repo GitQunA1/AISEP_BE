@@ -1,9 +1,9 @@
+using AISEP.Common;
 using AISEP.DTOs;
 using AISEP.Services.Bookings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sieve.Models;
-using System.Security.Claims;
 
 namespace AISEP.Controllers
 {
@@ -22,76 +22,42 @@ namespace AISEP.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateBooking([FromBody] BookingDto dto)
         {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+            if (!ModelState.IsValid)
+                return BadRequest(ApiResponse.Fail("Invalid request data."));
 
-             
-                var booking = await _bookingService.CreateBookingAsync(dto);
-                return CreatedAtAction(nameof(GetBookingById), new { id = booking!.Id }, booking);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            var booking = await _bookingService.CreateBookingAsync(dto);
+            if (booking is null)
+                return BadRequest(ApiResponse.Fail("Could not create booking."));
+
+            return CreatedAtAction(nameof(GetBookingById), new { id = booking.Id },
+                ApiResponse.Success(booking));
         }
 
-        
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBookingById(int id)
         {
             var booking = await _bookingService.GetBookingByIdAsync(id);
-            if (booking == null)
-            {
-                return NotFound(new { message = "Booking not found" });
-            }
+            if (booking is null)
+                return NotFound(ApiResponse.Fail("Booking not found."));
 
-            return Ok(booking);
+            return Ok(ApiResponse.Success(booking));
         }
 
-        
         [HttpGet]
         public async Task<IActionResult> GetAllBookings([FromQuery] SieveModel model)
         {
             var bookings = await _bookingService.GetAllBookingsAsync(model);
-            return Ok(bookings);
+            return Ok(ApiResponse.Success(bookings));
         }
 
-        //[HttpGet("advisor/{advisorId}")]
-        //public async Task<IActionResult> GetBookingsByAdvisorId(Guid advisorId, [FromQuery] SieveModel sieveModel)
-        //{
-        //    var bookings = await _bookingService.GetBookingsByAdvisorIdAsync(advisorId, sieveModel);
-        //    return Ok(bookings);
-        //}
-
-      
-        //[HttpGet("customer/{customerId}")]
-        //public async Task<IActionResult> GetBookingsByCustomerId(Guid customerId, [FromQuery] SieveModel sieveModel)
-        //{
-        //    var bookings = await _bookingService.GetBookingsByCustomerIdAsync(customerId, sieveModel);
-        //    return Ok(bookings);
-        //}
-
-     
-
-       
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBooking(int id)
         {
             var result = await _bookingService.DeleteBookingAsync(id);
             if (!result)
-            {
-                return NotFound(new { message = "Booking not found" });
-            }
+                return NotFound(ApiResponse.Fail("Booking not found."));
 
-            return NoContent();
+            return Ok(ApiResponse.Success());
         }
     }
 }
