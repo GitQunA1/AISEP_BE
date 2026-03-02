@@ -1,43 +1,33 @@
 using AISEP.Settings;
+using MailKit.Net.Smtp;
+using MailKit.Security;
 using Microsoft.Extensions.Options;
-using System.Net;
-using System.Net.Mail;
+using MimeKit;
 
 namespace AISEP.Services.Email
 {
     public class EmailService : IEmailService
     {
         private readonly EmailSettings _emailSettings;
-        
 
         public EmailService(IOptions<EmailSettings> emailSettings)
         {
             _emailSettings = emailSettings.Value;
-           
         }
 
         public async Task SendEmailAsync(string toEmail, string subject, string htmlMessage)
         {
-           
-                using var smtpClient = new SmtpClient(_emailSettings.SmtpServer, _emailSettings.SmtpPort)
-                {
-                    Credentials = new NetworkCredential(_emailSettings.Username, _emailSettings.Password),
-                    EnableSsl = _emailSettings.EnableSsl
-                };
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(_emailSettings.SenderName, _emailSettings.SenderEmail));
+            message.To.Add(MailboxAddress.Parse(toEmail));
+            message.Subject = subject;
+            message.Body = new TextPart("html") { Text = htmlMessage };
 
-                var mailMessage = new MailMessage
-                {
-                    From = new MailAddress(_emailSettings.SenderEmail, _emailSettings.SenderName),
-                    Subject = subject,
-                    Body = htmlMessage,
-                    IsBodyHtml = true
-                };
-
-                mailMessage.To.Add(toEmail);
-
-                await smtpClient.SendMailAsync(mailMessage);
-                
-            
+            using var client = new SmtpClient();
+            await client.ConnectAsync(_emailSettings.SmtpServer, _emailSettings.SmtpPort, SecureSocketOptions.StartTls);
+            await client.AuthenticateAsync(_emailSettings.Username, _emailSettings.Password);
+            await client.SendAsync(message);
+            await client.DisconnectAsync(true);
         }
 
         public async Task SendEmailConfirmationAsync(string toEmail, string userName, string confirmationLink)
