@@ -32,6 +32,7 @@ namespace AISEP.Models.Entities
         // Navigation properties
         public User User { get; set; } = null!;
 
+        public ICollection<Project> Projects { get; set; } = new List<Project>();
         public ICollection<ConnectionRequest> ConnectionRequests { get; set; } = new List<ConnectionRequest>();
 
         // Followers (many-to-many)

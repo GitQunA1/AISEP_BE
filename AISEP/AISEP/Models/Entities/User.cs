@@ -21,7 +21,6 @@ namespace AISEP.Models.Entities
         public Startup? Startup { get; set; }
         public Investor? Investor { get; set; }
         public Advisor? Advisor { get; set; }
-        public ICollection<Project> Projects { get; set; } = new List<Project>();
         public ICollection<Booking> CustomerBookings { get; set; } = new List<Booking>();
         public ICollection<Wallet> Wallets { get; set; } = new List<Wallet>();
         public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();

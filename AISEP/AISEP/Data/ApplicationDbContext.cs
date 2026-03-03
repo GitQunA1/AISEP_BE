@@ -135,9 +135,9 @@ entity.Property(e => e.Expertise).HasMaxLength(255);
            entity.Property(e => e.ProjectName).HasMaxLength(255).IsRequired();
         entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
 
-      entity.HasOne(p => p.User)
-         .WithMany(u => u.Projects)
-        .HasForeignKey(p => p.UserId)
+      entity.HasOne(p => p.Startup)
+         .WithMany(s => s.Projects)
+        .HasForeignKey(p => p.StartupId)
        .OnDelete(DeleteBehavior.Cascade);
        });
 
