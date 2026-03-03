@@ -2,7 +2,7 @@ namespace AISEP.Models.Entities
 {
     public class PostPr
     {
-        public int Id { get; set; }
+        public int PostPrId { get; set; }
         public int ConnectionId { get; set; }
         public string? Title { get; set; }
         public string? Content { get; set; }

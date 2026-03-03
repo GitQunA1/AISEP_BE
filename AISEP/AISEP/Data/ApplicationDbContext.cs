@@ -30,7 +30,7 @@ public DbSet<Wallet> Wallets { get; set; }
   public DbSet<Transaction> Transactions { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
    public DbSet<ActionLog> ActionLogs { get; set; }
-        public DbSet<Post> Posts { get; set; }
+        public DbSet<PostPr> PostPrs { get; set; }
    public DbSet<ChatSession> ChatSessions { get; set; }
  public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<ConsultingReport> ConsultingReports { get; set; }
@@ -329,16 +329,16 @@ entity.HasOne(s => s.User)
                .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Post configurations
-            modelBuilder.Entity<Post>(entity =>
+            // PostPr configurations
+            modelBuilder.Entity<PostPr>(entity =>
             {
-                entity.ToTable("posts");
-                entity.HasKey(e => e.PostId);
+                entity.ToTable("postprs");
+                entity.HasKey(e => e.PostPrId);
                 entity.Property(e => e.Title).HasMaxLength(255);
 
                 entity.HasOne(p => p.ConnectionRequest)
-                    .WithMany(cr => cr.Posts)
-                    .HasForeignKey(p => p.ConnectionRequestId)
+                    .WithMany(cr => cr.PostPrs)
+                    .HasForeignKey(p => p.ConnectionId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 

@@ -35,7 +35,7 @@ erDiagram
 
     Document ||--o{ BlockchainProof : "verified by"
 
-    ConnectionRequest ||--o{ Post : "generates"
+    ConnectionRequest ||--o{ PostPr : "generates"
 
     Deal ||--o{ NFTRecord : "mints"
 

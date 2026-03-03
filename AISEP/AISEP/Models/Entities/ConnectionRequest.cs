@@ -31,6 +31,6 @@ namespace AISEP.Models.Entities
         // Navigation properties
         public Investor Investor { get; set; } = null!;
         public Startup Startup { get; set; } = null!;
-        public ICollection<Post> Posts { get; set; } = new List<Post>();
+        public ICollection<PostPr> PostPrs { get; set; } = new List<PostPr>();
     }
 }
