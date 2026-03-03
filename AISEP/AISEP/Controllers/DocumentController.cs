@@ -38,10 +38,10 @@ namespace AISEP.Controllers
             return Ok(ApiResponse.Success(result));
         }
 
-        [HttpGet("project/{projectId:int}")]
-        public async Task<IActionResult> GetByProjectId(int projectId)
+        [HttpGet("startup/{startupId:int}")]
+        public async Task<IActionResult> GetByStartupId(int startupId)
         {
-            var result = await _documentService.GetByProjectIdAsync(projectId);
+            var result = await _documentService.GetByStartupIdAsync(startupId);
             return Ok(ApiResponse.Success(result));
         }
 

@@ -28,10 +28,10 @@ erDiagram
     Advisor ||--o{ Booking : "provides"
     Advisor ||--o{ Review : "receives"
 
-    Project ||--o{ Document : "has"
-    Project ||--o{ StartupAIAnalysis : "has"
-    Project ||--o{ InvestorAIAnalysis : "has"
-    Project ||--o{ Deal : "has"
+    Startup ||--o{ Document : "has"
+    Startup ||--o{ StartupAIAnalysis : "has"
+    Startup ||--o{ InvestorAIAnalysis : "has"
+    Startup ||--o{ Deal : "has"
 
     Document ||--o{ BlockchainProof : "verified by"
 

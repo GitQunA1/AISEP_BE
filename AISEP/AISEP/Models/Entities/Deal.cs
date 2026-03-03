@@ -7,7 +7,7 @@ namespace AISEP.Models.Entities
     {
   public int DealId { get; set; }
    public int InvestorId { get; set; }
-        public int ProjectId { get; set; }
+        public int StartupId { get; set; }
   public decimal Amount { get; set; }
         public bool StartupConfirmed { get; set; }
         public bool InvestorConfirmed { get; set; }
@@ -21,7 +21,7 @@ namespace AISEP.Models.Entities
 
      // Navigation properties
   public Investor Investor { get; set; } = null!;
-   public Project Project { get; set; } = null!;
+   public Startup Startup { get; set; } = null!;
   public ICollection<NFTRecord> NFTRecords { get; set; } = new List<NFTRecord>();
   }
 }

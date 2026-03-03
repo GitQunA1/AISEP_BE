@@ -12,7 +12,7 @@ namespace AISEP.Models.DTOs
         public IFormFile File { get; set; } = null!;
 
         [Required]
-        public int ProjectId { get; set; }
+        public int StartupId { get; set; }
 
         [Required]
         public DocumentType DocumentType { get; set; }

@@ -42,8 +42,8 @@ namespace AISEP.Services.Documents
 
         public async Task<DocumentResponseDto> UploadDocumentAsync(UploadDocumentDto dto)
         {
-            _logger.LogInformation("UploadDocument started — ProjectId: {ProjectId}, FileName: {FileName}, IpProtected: {IpProtected}",
-                dto.ProjectId, dto.File.FileName, dto.IsIpProtected);
+            _logger.LogInformation("UploadDocument started — StartupId: {StartupId}, FileName: {FileName}, IpProtected: {IpProtected}",
+                dto.StartupId, dto.File.FileName, dto.IsIpProtected);
 
             try
             {
@@ -58,14 +58,14 @@ namespace AISEP.Services.Documents
                 if (dto.IsIpProtected)
                 {
                     fileHash = await _blockchainService.ComputeFileHashAsync(dto.File);
-                    txHash = await _blockchainService.StoreHashAsync(fileHash, dto.ProjectId);
+                    txHash = await _blockchainService.StoreHashAsync(fileHash, dto.StartupId);
                     verifiedAt = DateTime.UtcNow;
                 }
 
                 // 3. Lưu vào Database
                 var document = new Document
                 {
-                    ProjectId = dto.ProjectId,
+                    StartupId = dto.StartupId,
                     DocumentType = dto.DocumentType,
                     FileName = dto.File.FileName,
                     FileUrl = fileUrl,
@@ -85,8 +85,8 @@ namespace AISEP.Services.Documents
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "UploadDocument failed — ProjectId: {ProjectId}, FileName: {FileName}",
-                    dto.ProjectId, dto.File.FileName);
+                _logger.LogError(ex, "UploadDocument failed — StartupId: {StartupId}, FileName: {FileName}",
+                    dto.StartupId, dto.File.FileName);
                 throw;
             }
         }
@@ -100,9 +100,9 @@ namespace AISEP.Services.Documents
             return _mapper.Map<DocumentResponseDto>(document);
         }
 
-        public async Task<IEnumerable<DocumentResponseDto>> GetByProjectIdAsync(int projectId)
+        public async Task<IEnumerable<DocumentResponseDto>> GetByStartupIdAsync(int startupId)
         {
-            var documents = await _unitOfWork.Documents.GetByProjectIdAsync(projectId);
+            var documents = await _unitOfWork.Documents.GetByStartupIdAsync(startupId);
             return documents.Select(d => _mapper.Map<DocumentResponseDto>(d));
         }
 

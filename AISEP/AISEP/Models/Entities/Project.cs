@@ -15,9 +15,5 @@ namespace AISEP.Models.Entities
 
         // Navigation properties
         public Startup Startup { get; set; } = null!;
-        public ICollection<Document> Documents { get; set; } = new List<Document>();
-        public ICollection<StartupAIAnalysis> StartupAIAnalyses { get; set; } = new List<StartupAIAnalysis>();
-        public ICollection<InvestorAIAnalysis> InvestorAIAnalyses { get; set; } = new List<InvestorAIAnalysis>();
-        public ICollection<Deal> Deals { get; set; } = new List<Deal>();
     }
 }

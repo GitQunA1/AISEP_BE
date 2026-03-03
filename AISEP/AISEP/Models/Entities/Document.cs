@@ -7,7 +7,7 @@ namespace AISEP.Models.Entities
     public class Document
     {
         public int DocumentId { get; set; }
-        public int ProjectId { get; set; }
+        public int StartupId { get; set; }
         public DocumentType DocumentType { get; set; }
         public string FileName { get; set; } = string.Empty;
         public string FileUrl { get; set; } = string.Empty;
@@ -17,7 +17,7 @@ namespace AISEP.Models.Entities
         public DateTime? VerifiedAt { get; set; }
 
         // Navigation properties
-        public Project Project { get; set; } = null!;
+        public Startup Startup { get; set; } = null!;
         public ICollection<BlockchainProof> BlockchainProofs { get; set; } = new List<BlockchainProof>();
     }
 }

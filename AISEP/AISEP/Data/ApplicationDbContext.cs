@@ -152,9 +152,9 @@ entity.Property(e => e.FileUrl).HasMaxLength(255).IsRequired();
     entity.Property(e => e.FileHash).HasMaxLength(255);
                 entity.Property(e => e.BlockchainTxHash).HasMaxLength(255);
 
-        entity.HasOne(d => d.Project)
-          .WithMany(p => p.Documents)
-        .HasForeignKey(d => d.ProjectId)
+        entity.HasOne(d => d.Startup)
+          .WithMany(s => s.Documents)
+        .HasForeignKey(d => d.StartupId)
  .OnDelete(DeleteBehavior.Cascade);
       });
 
@@ -164,9 +164,9 @@ entity.Property(e => e.FileUrl).HasMaxLength(255).IsRequired();
             entity.ToTable("startup_ai_analyses");
       entity.HasKey(e => e.EvaluationId);
 
-          entity.HasOne(a => a.Project)
-              .WithMany(p => p.StartupAIAnalyses)
-    .HasForeignKey(a => a.ProjectId)
+          entity.HasOne(a => a.Startup)
+              .WithMany(s => s.StartupAIAnalyses)
+    .HasForeignKey(a => a.StartupId)
      .OnDelete(DeleteBehavior.Cascade);
     });
 
@@ -181,9 +181,9 @@ entity.Property(e => e.FileUrl).HasMaxLength(255).IsRequired();
     .HasForeignKey(a => a.InvestorId)
      .OnDelete(DeleteBehavior.Cascade);
 
-          entity.HasOne(a => a.Project)
-              .WithMany(p => p.InvestorAIAnalyses)
-    .HasForeignKey(a => a.ProjectId)
+          entity.HasOne(a => a.Startup)
+              .WithMany(s => s.InvestorAIAnalyses)
+    .HasForeignKey(a => a.StartupId)
      .OnDelete(DeleteBehavior.Cascade);
     });
 
@@ -223,9 +223,9 @@ entity.Property(e => e.FileUrl).HasMaxLength(255).IsRequired();
          .HasForeignKey(d => d.InvestorId)
          .OnDelete(DeleteBehavior.Restrict);
 
-           entity.HasOne(d => d.Project)
-          .WithMany(p => p.Deals)
-         .HasForeignKey(d => d.ProjectId)
+           entity.HasOne(d => d.Startup)
+          .WithMany(s => s.Deals)
+         .HasForeignKey(d => d.StartupId)
  .OnDelete(DeleteBehavior.Restrict);
             });
 

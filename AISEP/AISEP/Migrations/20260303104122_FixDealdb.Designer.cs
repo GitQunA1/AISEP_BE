@@ -3,6 +3,7 @@ using System;
 using AISEP.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AISEP.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260303104122_FixDealdb")]
+    partial class FixDealdb
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -433,7 +436,7 @@ namespace AISEP.Migrations
                     b.Property<bool>("IsIpProtected")
                         .HasColumnType("boolean");
 
-                    b.Property<int>("StartupId")
+                    b.Property<int>("ProjectId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("VerifiedAt")
@@ -441,7 +444,7 @@ namespace AISEP.Migrations
 
                     b.HasKey("DocumentId");
 
-                    b.HasIndex("StartupId");
+                    b.HasIndex("ProjectId");
 
                     b.ToTable("documents", (string)null);
                 });
@@ -520,14 +523,14 @@ namespace AISEP.Migrations
                     b.Property<int>("InvestorId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("StartupId")
+                    b.Property<int>("ProjectId")
                         .HasColumnType("integer");
 
                     b.HasKey("AnalysisId");
 
                     b.HasIndex("InvestorId");
 
-                    b.HasIndex("StartupId");
+                    b.HasIndex("ProjectId");
 
                     b.ToTable("investor_ai_analyses", (string)null);
                 });
@@ -902,12 +905,12 @@ namespace AISEP.Migrations
                     b.Property<int?>("PotentialScore")
                         .HasColumnType("integer");
 
-                    b.Property<int>("StartupId")
+                    b.Property<int>("ProjectId")
                         .HasColumnType("integer");
 
                     b.HasKey("EvaluationId");
 
-                    b.HasIndex("StartupId");
+                    b.HasIndex("ProjectId");
 
                     b.ToTable("startup_ai_analyses", (string)null);
                 });
@@ -1490,13 +1493,13 @@ namespace AISEP.Migrations
 
             modelBuilder.Entity("AISEP.Models.Entities.Document", b =>
                 {
-                    b.HasOne("AISEP.Models.Entities.Startup", "Startup")
+                    b.HasOne("AISEP.Models.Entities.Project", "Project")
                         .WithMany("Documents")
-                        .HasForeignKey("StartupId")
+                        .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Startup");
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("AISEP.Models.Entities.Investor", b =>
@@ -1518,15 +1521,15 @@ namespace AISEP.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("AISEP.Models.Entities.Startup", "Startup")
+                    b.HasOne("AISEP.Models.Entities.Project", "Project")
                         .WithMany("InvestorAIAnalyses")
-                        .HasForeignKey("StartupId")
+                        .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Investor");
 
-                    b.Navigation("Startup");
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("AISEP.Models.Entities.NFTRecord", b =>
@@ -1616,13 +1619,13 @@ namespace AISEP.Migrations
 
             modelBuilder.Entity("AISEP.Models.Entities.StartupAIAnalysis", b =>
                 {
-                    b.HasOne("AISEP.Models.Entities.Startup", "Startup")
+                    b.HasOne("AISEP.Models.Entities.Project", "Project")
                         .WithMany("StartupAIAnalyses")
-                        .HasForeignKey("StartupId")
+                        .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Startup");
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("AISEP.Models.Entities.StartupFollower", b =>
@@ -1827,21 +1830,24 @@ namespace AISEP.Migrations
                     b.Navigation("Subscriptions");
                 });
 
+            modelBuilder.Entity("AISEP.Models.Entities.Project", b =>
+                {
+                    b.Navigation("Documents");
+
+                    b.Navigation("InvestorAIAnalyses");
+
+                    b.Navigation("StartupAIAnalyses");
+                });
+
             modelBuilder.Entity("AISEP.Models.Entities.Startup", b =>
                 {
                     b.Navigation("ConnectionRequests");
 
                     b.Navigation("Deals");
 
-                    b.Navigation("Documents");
-
                     b.Navigation("Followers");
 
-                    b.Navigation("InvestorAIAnalyses");
-
                     b.Navigation("Projects");
-
-                    b.Navigation("StartupAIAnalyses");
                 });
 
             modelBuilder.Entity("AISEP.Models.Entities.User", b =>

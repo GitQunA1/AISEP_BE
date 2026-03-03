@@ -33,7 +33,11 @@ namespace AISEP.Models.Entities
         public User User { get; set; } = null!;
 
         public ICollection<Project> Projects { get; set; } = new List<Project>();
+        public ICollection<Document> Documents { get; set; } = new List<Document>();
+        public ICollection<StartupAIAnalysis> StartupAIAnalyses { get; set; } = new List<StartupAIAnalysis>();
+        public ICollection<InvestorAIAnalysis> InvestorAIAnalyses { get; set; } = new List<InvestorAIAnalysis>();
         public ICollection<ConnectionRequest> ConnectionRequests { get; set; } = new List<ConnectionRequest>();
+        public ICollection<Deal> Deals { get; set; } = new List<Deal>();
 
         // Followers (many-to-many)
         public ICollection<StartupFollower> Followers { get; set; } = new List<StartupFollower>();
