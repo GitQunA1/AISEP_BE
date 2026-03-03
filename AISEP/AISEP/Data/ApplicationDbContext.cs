@@ -274,9 +274,9 @@ entity.Property(e => e.FileUrl).HasMaxLength(255).IsRequired();
       entity.Property(e => e.Balance).HasColumnType("decimal(18,2)").IsRequired();
           entity.Property(e => e.Currency).HasMaxLength(10).IsRequired();
 
-   entity.HasOne(w => w.User)
-  .WithMany(u => u.Wallets)
-          .HasForeignKey(w => w.UserId)
+   entity.HasOne(w => w.Advisor)
+  .WithOne(a => a.Wallet)
+          .HasForeignKey<Wallet>(w => w.AdvisorId)
          .OnDelete(DeleteBehavior.Cascade);
             });
 

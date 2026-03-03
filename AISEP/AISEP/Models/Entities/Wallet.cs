@@ -7,7 +7,7 @@ namespace AISEP.Models.Entities
     {
         public int WalletId { get; set; }
 
-        public int UserId { get; set; }
+        public int AdvisorId { get; set; }
 
         public decimal Balance { get; set; }
 
@@ -16,7 +16,7 @@ namespace AISEP.Models.Entities
         public bool IsActive { get; set; }
 
         // Navigation properties
-        public User User { get; set; } = null!;
+        public Advisor Advisor { get; set; } = null!;
 
         public ICollection<WalletTransaction> WalletTransactions { get; set; } = new List<WalletTransaction>();
         public ICollection<WithdrawRequest> WithdrawRequests { get; set; } = new List<WithdrawRequest>();
