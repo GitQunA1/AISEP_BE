@@ -8,14 +8,13 @@ namespace AISEP.DTOs
         public string? CompanyName { get; set; }
         public string? LogoUrl { get; set; }
         public string? Founder { get; set; }
+        public string? ContactInfo { get; set; }
         public string? CountryCity { get; set; }
         public string? Website { get; set; }
         public string? Industry { get; set; }
-        public DevelopmentStage? DevelopmentStage { get; set; }
-        public string? ProblemStatement { get; set; }
-        public string? SolutionDescription { get; set; }
-        public decimal? MarketSize { get; set; }
-        public decimal? Revenue { get; set; }
+        public string? BusinessLicenseUrl { get; set; }
+        public string ApprovalStatus { get; set; } = string.Empty;
         public int FollowerCount { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }

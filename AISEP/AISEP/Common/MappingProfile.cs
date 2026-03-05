@@ -43,6 +43,10 @@ namespace AISEP.Common
             CreateMap<Startup, StartupResponseDto>()
                 .ForMember(dest => dest.Id,
                     opt => opt.MapFrom(src => src.StartupId))
+                .ForMember(dest => dest.Industry,
+                    opt => opt.MapFrom(src => src.Industry != null ? src.Industry.ToString() : null))
+                .ForMember(dest => dest.ApprovalStatus,
+                    opt => opt.MapFrom(src => src.ApprovalStatus.ToString()))
                 .ForMember(dest => dest.FollowerCount,
                     opt => opt.MapFrom(src => src.Followers != null ? src.Followers.Count : 0));
 
