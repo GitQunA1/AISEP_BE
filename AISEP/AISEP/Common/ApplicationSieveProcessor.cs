@@ -58,15 +58,6 @@ namespace AISEP.Common
             mapper.Property<Startup>(s => s.Industry)
                 .CanFilter()
                 .CanSort();
-            mapper.Property<Startup>(s => s.DevelopmentStage)
-                .CanFilter()
-                .CanSort();
-            mapper.Property<Startup>(s => s.Revenue)
-                .CanFilter()
-                .CanSort();
-            mapper.Property<Startup>(s => s.MarketSize)
-                .CanFilter()
-                .CanSort();
             mapper.Property<Startup>(s => s.CountryCity)
                 .CanFilter()
                 .CanSort();

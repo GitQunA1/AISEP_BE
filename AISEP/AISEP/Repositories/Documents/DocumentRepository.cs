@@ -16,16 +16,14 @@ namespace AISEP.Repositories.Documents
         public async Task<Document?> GetByIdAsync(int id)
         {
             return await _context.Documents
-                .Include(d => d.Startup)
-                .Include(d => d.BlockchainProofs)
+                .Include(d => d.Project)
                 .FirstOrDefaultAsync(d => d.DocumentId == id);
         }
 
         public async Task<IEnumerable<Document>> GetByStartupIdAsync(int startupId)
         {
             return await _context.Documents
-                .Include(d => d.BlockchainProofs)
-                .Where(d => d.StartupId == startupId)
+                .Where(d => d.ProjectId == startupId)
                 .OrderByDescending(d => d.VerifiedAt)
                 .ToListAsync();
         }
@@ -33,8 +31,7 @@ namespace AISEP.Repositories.Documents
         public async Task<IEnumerable<Document>> GetAllAsync()
         {
             return await _context.Documents
-                .Include(d => d.Startup)
-                .Include(d => d.BlockchainProofs)
+                .Include(d => d.Project)
                 .OrderByDescending(d => d.VerifiedAt)
                 .ToListAsync();
         }
@@ -57,8 +54,7 @@ namespace AISEP.Repositories.Documents
         public IQueryable<Document> GetQueryable()
         {
             return _context.Documents
-                .Include(d => d.Startup)
-                .Include(d => d.BlockchainProofs)
+                .Include(d => d.Project)
                 .AsQueryable();
         }
     }

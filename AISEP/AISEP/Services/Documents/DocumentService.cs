@@ -65,7 +65,7 @@ namespace AISEP.Services.Documents
                 // 3. Lưu vào Database
                 var document = new Document
                 {
-                    StartupId = dto.StartupId,
+                    ProjectId = dto.StartupId,
                     DocumentType = dto.DocumentType,
                     FileName = dto.File.FileName,
                     FileUrl = fileUrl,

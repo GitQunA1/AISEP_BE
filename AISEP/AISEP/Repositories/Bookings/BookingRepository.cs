@@ -19,8 +19,8 @@ namespace AISEP.Repositories.Bookings
                 .Include(b => b.Advisor)
                     .ThenInclude(a => a.User)
                 .Include(b => b.Customer)
-                .Include(b => b.ChatSessions)
-                .Include(b => b.ConsultingReports)
+                .Include(b => b.ChatSession)
+                .Include(b => b.ConsultingReport)
                 .FirstOrDefaultAsync(b => b.BookingId == id);
         }
 

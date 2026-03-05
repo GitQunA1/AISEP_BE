@@ -31,8 +31,8 @@ namespace AISEP.Common
                 .ForMember(dest => dest.Status, opt => opt.Ignore())
                 .ForMember(dest => dest.Advisor, opt => opt.Ignore())
                 .ForMember(dest => dest.Customer, opt => opt.Ignore())
-                .ForMember(dest => dest.ChatSessions, opt => opt.Ignore())
-                .ForMember(dest => dest.ConsultingReports, opt => opt.Ignore());
+                .ForMember(dest => dest.ChatSession, opt => opt.Ignore())
+                .ForMember(dest => dest.ConsultingReport, opt => opt.Ignore());
 
             // User Entity → UserResponseDto
             CreateMap<User, UserResponseDto>()

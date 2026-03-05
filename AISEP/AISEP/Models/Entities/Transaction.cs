@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using AISEP.Models.Enums;
 
 namespace AISEP.Models.Entities
@@ -7,16 +5,12 @@ namespace AISEP.Models.Entities
     public class Transaction
     {
         public int TransactionId { get; set; }
-
         public int UserId { get; set; }
-
         public decimal Amount { get; set; }
-
         public TransactionType Type { get; set; }
-
         public TransactionStatus Status { get; set; }
-
-        public DateTime TransactionDate { get; set; }
+        public string? PayosOrderCode { get; set; }
+        public DateTime TransactionDate { get; set; } = DateTime.UtcNow;
 
         // Navigation properties
         public User User { get; set; } = null!;

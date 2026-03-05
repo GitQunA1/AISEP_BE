@@ -21,11 +21,8 @@ namespace AISEP.Repositories.Startups
                 .Include(s => s.User)
                 .Where(s =>
                     (string.IsNullOrWhiteSpace(industry) || (s.Industry != null && s.Industry.ToLower().Contains(industry.ToLower())))
-                    && (!stage.HasValue || s.DevelopmentStage == stage.Value)
                     && (string.IsNullOrWhiteSpace(searchTerm) || 
-                        (s.CompanyName != null && s.CompanyName.ToLower().Contains(searchTerm.ToLower())) ||
-                        (s.ProblemStatement != null && s.ProblemStatement.ToLower().Contains(searchTerm.ToLower())) ||
-                        (s.SolutionDescription != null && s.SolutionDescription.ToLower().Contains(searchTerm.ToLower()))
+                        (s.CompanyName != null && s.CompanyName.ToLower().Contains(searchTerm.ToLower()))
                     )
                 )
                 .AsQueryable();
