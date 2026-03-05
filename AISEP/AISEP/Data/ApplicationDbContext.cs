@@ -72,7 +72,7 @@ namespace AISEP.Data
                 entity.Property(e => e.Founder).HasMaxLength(255);
                 entity.Property(e => e.CountryCity).HasMaxLength(255);
                 entity.Property(e => e.Website).HasMaxLength(255);
-                entity.Property(e => e.Industry).HasMaxLength(255);
+                entity.Property(e => e.Industry).HasConversion<string>();
                 entity.Property(e => e.BusinessLicenseUrl).HasMaxLength(255);
                 entity.Property(e => e.ApprovalStatus).HasConversion<string>().HasMaxLength(50);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
@@ -93,7 +93,7 @@ namespace AISEP.Data
                 entity.Property(e => e.InvestmentAmount).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.RiskTolerance).HasConversion<string>().HasMaxLength(50);
                 entity.Property(e => e.InvestmentRegion).HasMaxLength(255);
-                entity.Property(e => e.FocusIndustry).HasMaxLength(255);
+                entity.Property(e => e.FocusIndustry).HasConversion<string>();
                 entity.Property(e => e.PreferredStage).HasConversion<string>().HasMaxLength(50);
                 entity.Property(e => e.PreviousInvestments).HasMaxLength(255);
                 entity.Property(e => e.IdentityDocumentUrl).HasMaxLength(255);

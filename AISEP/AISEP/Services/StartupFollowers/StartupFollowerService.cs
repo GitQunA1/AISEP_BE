@@ -125,7 +125,7 @@ namespace AISEP.Services.StartupFollowers
                 StartupId = sf.StartupId,
                 CompanyName = sf.Startup?.CompanyName ?? "Unknown",
                 LogoUrl = sf.Startup?.LogoUrl,
-                Industry = sf.Startup?.Industry,
+                Industry = sf.Startup?.Industry.ToString(),
                 FollowedAt = sf.FollowedAt
             };
         }

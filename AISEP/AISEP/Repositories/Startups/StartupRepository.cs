@@ -20,7 +20,7 @@ namespace AISEP.Repositories.Startups
                 .Include(s => s.Followers)
                 .Include(s => s.User)
                 .Where(s =>
-                    (string.IsNullOrWhiteSpace(industry) || (s.Industry != null && s.Industry.ToLower().Contains(industry.ToLower())))
+                    (string.IsNullOrWhiteSpace(industry) || (s.Industry != null && s.Industry.ToString().ToLower().Contains(industry.ToLower())))
                     && (string.IsNullOrWhiteSpace(searchTerm) || 
                         (s.CompanyName != null && s.CompanyName.ToLower().Contains(searchTerm.ToLower()))
                     )

@@ -12,7 +12,7 @@ namespace AISEP.Models.Entities
         public string? ContactInfo { get; set; }
         public string? CountryCity { get; set; }
         public string? Website { get; set; }
-        public string? Industry { get; set; }
+        public Industry? Industry { get; set; }
         public string? BusinessLicenseUrl { get; set; }
         public ApprovalStatus ApprovalStatus { get; set; } = ApprovalStatus.Unverified;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
