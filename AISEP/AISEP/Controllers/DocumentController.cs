@@ -1,5 +1,5 @@
 using AISEP.Common;
-using AISEP.Models.DTOs;
+using AISEP.DTOs.Requests;
 using AISEP.Services.Documents;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +19,7 @@ namespace AISEP.Controllers
         }
 
         [HttpPost("upload")]
-        public async Task<IActionResult> Upload([FromForm] UploadDocumentDto dto)
+        public async Task<IActionResult> Upload([FromForm] UploadDocumentRequest dto)
         {
             if (dto.File == null || dto.File.Length == 0)
                 return BadRequest(ApiResponse<object>.ErrorResponse("File is required.", "Validation failed"));

@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace AISEP.DTOs
+namespace AISEP.DTOs.Requests
 {
-    public class LoginDto
+    public class LoginRequest
     {
         [Required(ErrorMessage = "Email is required")]
         [EmailAddress(ErrorMessage = "Invalid email format")]

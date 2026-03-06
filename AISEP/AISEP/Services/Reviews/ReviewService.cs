@@ -1,6 +1,7 @@
-﻿using AISEP.Common;
+using AISEP.Common;
 using AISEP.DTOs;
-using AISEP.Models.DTOs;
+using AISEP.DTOs.Requests;
+using AISEP.DTOs.Responses;
 using AISEP.Models.Entities;
 using AISEP.Services.CurrentUser;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +18,7 @@ namespace AISEP.Services.Reviews
 
         public ReviewService(IUnitOfWork unitOfWork, ICurrentUserService currentUserService, ISieveProcessor sieveProcessor) { _unitOfWork = unitOfWork; _currentUserService = currentUserService; _sieveProcessor = sieveProcessor; }
 
-        public async Task<ReviewResponseDto?> CreateReviewAsync(ReviewDto dto)
+        public async Task<ReviewResponse?> CreateReviewAsync(CreateReviewRequest dto)
         {
             var userId = _currentUserService.GetUserId();
             var review = new Review
@@ -36,26 +37,26 @@ namespace AISEP.Services.Reviews
             return MapToResponseDto(created);
         }
 
-        public async Task<PagedResultDto<ReviewResponseDto>> GetAllReviewsAsync(SieveModel model)
+        public async Task<PagedResult<ReviewResponse>> GetAllReviewsAsync(SieveModel model)
         {
             var query = _unitOfWork.Reviews.GetReviewQuery();
             return await ApplySieveAndPaginateAsync(query, model);
         }
 
-        public async Task<ReviewResponseDto?> GetReviewByIdAsync(int id)
+        public async Task<ReviewResponse?> GetReviewByIdAsync(int id)
         {
             var review = await _unitOfWork.Reviews.GetByIdAsync(id);
             return review != null ? MapToResponseDto(review) : null;
         }
 
-        public async Task<PagedResultDto<ReviewResponseDto>> GetReviewsByAdvisorIdAsync(int advisorId, SieveModel model)
+        public async Task<PagedResult<ReviewResponse>> GetReviewsByAdvisorIdAsync(int advisorId, SieveModel model)
         {
             var query = _unitOfWork.Reviews.GetReviewQuery()
                 .Where(r => r.AdvisorId == advisorId);
             return await ApplySieveAndPaginateAsync(query, model);
         }
 
-        public async Task<PagedResultDto<ReviewResponseDto>> GetMyReviewsAsync(SieveModel model)
+        public async Task<PagedResult<ReviewResponse>> GetMyReviewsAsync(SieveModel model)
         {
             var userId = _currentUserService.GetUserId();
 
@@ -71,7 +72,7 @@ namespace AISEP.Services.Reviews
 
             var userId = _currentUserService.GetUserId();
 
-            // Chỉ chủ review mới được xóa
+            // Ch? ch? review m?i du?c x�a
             if (review.ReviewerId != userId)
                 throw new UnauthorizedAccessException("You can only delete your own review");
 
@@ -80,7 +81,7 @@ namespace AISEP.Services.Reviews
             return true;
         }
 
-        private async Task<PagedResultDto<ReviewResponseDto>> ApplySieveAndPaginateAsync(
+        private async Task<PagedResult<ReviewResponse>> ApplySieveAndPaginateAsync(
          IQueryable<Review> query,
          SieveModel sieveModel)
         {
@@ -98,7 +99,7 @@ namespace AISEP.Services.Reviews
             var pageSize = sieveModel.PageSize ?? 10;
             var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
-            return new PagedResultDto<ReviewResponseDto>
+            return new PagedResult<ReviewResponse>
             {
                 Page = page,
                 PageSize = pageSize,
@@ -107,14 +108,14 @@ namespace AISEP.Services.Reviews
                 Items = items.Select(MapToResponseDto)
             };
         }
-        private ReviewResponseDto MapToResponseDto(Review? review)
+        private ReviewResponse MapToResponseDto(Review? review)
         {
             if (review == null)
             {
                 throw new ArgumentNullException(nameof(review));
             }
 
-            return new ReviewResponseDto
+            return new ReviewResponse
             {
                 Id            = review.ReviewId,
                 AdvisorName   = review.Advisor?.User?.UserName ?? "Unknown",
@@ -127,3 +128,4 @@ namespace AISEP.Services.Reviews
        
     }
 }
+

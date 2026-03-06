@@ -1,5 +1,4 @@
 using AISEP.Common;
-using AISEP.DTOs;
 using AISEP.Services.StartupFollowers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

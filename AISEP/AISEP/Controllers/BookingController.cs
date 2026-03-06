@@ -1,5 +1,5 @@
 using AISEP.Common;
-using AISEP.DTOs;
+using AISEP.DTOs.Requests;
 using AISEP.Services.Bookings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,7 +20,7 @@ namespace AISEP.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateBooking([FromBody] BookingDto dto)
+        public async Task<IActionResult> CreateBooking([FromBody] CreateBookingRequest dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ApiResponse<object>.ErrorResponse("Invalid request data.", "Validation failed"));

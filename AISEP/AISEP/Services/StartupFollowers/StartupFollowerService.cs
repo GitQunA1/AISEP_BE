@@ -1,5 +1,6 @@
 using AISEP.Common;
 using AISEP.DTOs;
+using AISEP.DTOs.Responses;
 using AISEP.Models.Entities;
 using AISEP.Services.CurrentUser;
 using AutoMapper;
@@ -74,7 +75,7 @@ namespace AISEP.Services.StartupFollowers
         //    return follower != null ? MapToFollowerDto(follower) : null;
         //}
 
-        public async Task<PagedResultDto<FollowedStartupDto>> GetMyFollowedStartupsAsync(SieveModel model)
+        public async Task<PagedResult<FollowedStartupResponse>> GetMyFollowedStartupsAsync(SieveModel model)
         {
             var userId = _currentUserService.GetUserId();
 
@@ -92,7 +93,7 @@ namespace AISEP.Services.StartupFollowers
         //    return await ApplySieveAndPaginateFollowersAsync(query, model);
         //}
 
-        private async Task<PagedResultDto<FollowedStartupDto>> ApplySieveAndPaginateAsync(
+        private async Task<PagedResult<FollowedStartupResponse>> ApplySieveAndPaginateAsync(
             IQueryable<StartupFollower> query, 
             SieveModel sieveModel)
         {
@@ -108,19 +109,19 @@ namespace AISEP.Services.StartupFollowers
             var pageSize = sieveModel.PageSize ?? 10;
             var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
-            return new PagedResultDto<FollowedStartupDto>
+            return new PagedResult<FollowedStartupResponse>
             {
                 Page = page,
                 PageSize = pageSize,
                 TotalCount = totalCount,
                 TotalPages = totalPages,
-                Items = items.Select(sf => _mapper.Map<FollowedStartupDto>(sf))
+                Items = items.Select(sf => _mapper.Map<FollowedStartupResponse>(sf))
             };
         }
 
-        private FollowedStartupDto MapToFollowedStartupDto(StartupFollower sf)
+        private FollowedStartupResponse MapToFollowedStartupResponse(StartupFollower sf)
         {
-            return new FollowedStartupDto
+            return new FollowedStartupResponse
             {
                 StartupId = sf.StartupId,
                 CompanyName = sf.Startup?.CompanyName ?? "Unknown",
@@ -143,3 +144,4 @@ namespace AISEP.Services.StartupFollowers
         //}
     }
 }
+

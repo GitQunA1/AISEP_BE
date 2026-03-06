@@ -1,8 +1,6 @@
-using AISEP.Models.Enums;
-
-namespace AISEP.DTOs
+namespace AISEP.DTOs.Responses
 {
-    public class StartupResponseDto
+    public class StartupResponse
     {
         public int Id { get; set; }
         public string? CompanyName { get; set; }

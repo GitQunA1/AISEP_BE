@@ -1,9 +1,9 @@
 using AISEP.Models.Enums;
 using System.ComponentModel.DataAnnotations;
 
-namespace AISEP.DTOs
+namespace AISEP.DTOs.Requests
 {
-    public class CreateStartupDto
+    public class CreateStartupRequest
     {
         [Required]
         [MaxLength(255)]

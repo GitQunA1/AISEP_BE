@@ -1,5 +1,6 @@
 using AISEP.Common;
-using AISEP.Models.DTOs;
+using AISEP.DTOs.Requests;
+using AISEP.DTOs.Responses;
 using AISEP.Models.Entities;
 using AISEP.Services.Blockchain;
 using AISEP.Services.Storage;
@@ -40,7 +41,7 @@ namespace AISEP.Services.Documents
             _mapper = mapper;
         }
 
-        public async Task<DocumentResponseDto> UploadDocumentAsync(UploadDocumentDto dto)
+        public async Task<DocumentResponse> UploadDocumentAsync(UploadDocumentRequest dto)
         {
             _logger.LogInformation("UploadDocument started — StartupId: {StartupId}, FileName: {FileName}, IpProtected: {IpProtected}",
                 dto.StartupId, dto.File.FileName, dto.IsIpProtected);
@@ -78,7 +79,7 @@ namespace AISEP.Services.Documents
                 await _unitOfWork.Documents.AddAsync(document);
                 await _unitOfWork.SaveChangesAsync();
 
-                var result = _mapper.Map<DocumentResponseDto>(document);
+                var result = _mapper.Map<DocumentResponse>(document);
 
                 _logger.LogInformation("UploadDocument completed — DocumentId: {DocumentId}", document.DocumentId);
                 return result;
@@ -91,19 +92,19 @@ namespace AISEP.Services.Documents
             }
         }
 
-        public async Task<DocumentResponseDto?> GetByIdAsync(int id)
+        public async Task<DocumentResponse?> GetByIdAsync(int id)
         {
             var document = await _unitOfWork.Documents.GetByIdAsync(id);
             if (document is null)
                 return null;
 
-            return _mapper.Map<DocumentResponseDto>(document);
+            return _mapper.Map<DocumentResponse>(document);
         }
 
-        public async Task<IEnumerable<DocumentResponseDto>> GetByStartupIdAsync(int startupId)
+        public async Task<IEnumerable<DocumentResponse>> GetByStartupIdAsync(int startupId)
         {
             var documents = await _unitOfWork.Documents.GetByStartupIdAsync(startupId);
-            return documents.Select(d => _mapper.Map<DocumentResponseDto>(d));
+            return documents.Select(d => _mapper.Map<DocumentResponse>(d));
         }
 
         public async Task<bool> DeleteAsync(int id)
@@ -122,3 +123,4 @@ namespace AISEP.Services.Documents
 
     }
 }
+

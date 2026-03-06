@@ -1,8 +1,8 @@
 using AISEP.Models.Enums;
 
-namespace AISEP.DTOs
+namespace AISEP.DTOs.Requests
 {
-    public class StartupSearchDto
+    public class StartupSearchRequest
     {
         public string? Industry { get; set; }
         public DevelopmentStage? DevelopmentStage { get; set; }

@@ -1,4 +1,5 @@
-using AISEP.Models.DTOs;
+using AISEP.DTOs.Requests;
+using AISEP.DTOs.Responses;
 
 namespace AISEP.Services.Documents
 {
@@ -12,17 +13,17 @@ namespace AISEP.Services.Documents
         /// <summary>
         /// Upload document: Cloudinary + (tuỳ chọn) Blockchain + lưu DB.
         /// </summary>
-        Task<DocumentResponseDto> UploadDocumentAsync(UploadDocumentDto dto);
+        Task<DocumentResponse> UploadDocumentAsync(UploadDocumentRequest dto);
 
         /// <summary>
         /// Lấy document theo Id.
         /// </summary>
-        Task<DocumentResponseDto?> GetByIdAsync(int id);
+        Task<DocumentResponse?> GetByIdAsync(int id);
 
         /// <summary>
         /// Lấy danh sách document theo StartupId.
         /// </summary>
-        Task<IEnumerable<DocumentResponseDto>> GetByStartupIdAsync(int startupId);
+        Task<IEnumerable<DocumentResponse>> GetByStartupIdAsync(int startupId);
 
         /// <summary>
         /// Xoá document theo Id.

@@ -1,4 +1,5 @@
 using AISEP.DTOs;
+using AISEP.DTOs.Responses;
 using Sieve.Models;
 
 namespace AISEP.Services.StartupFollowers
@@ -8,6 +9,6 @@ namespace AISEP.Services.StartupFollowers
         Task<bool> FollowStartupAsync(int startupId);
         Task<bool> UnfollowStartupAsync(int startupId);
         Task<bool> IsFollowingAsync(int startupId);
-        Task<PagedResultDto<FollowedStartupDto>> GetMyFollowedStartupsAsync(SieveModel model);
+        Task<PagedResult<FollowedStartupResponse>> GetMyFollowedStartupsAsync(SieveModel model);
     }
 }

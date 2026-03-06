@@ -1,5 +1,5 @@
 ﻿using AISEP.Common;
-using AISEP.DTOs;
+using AISEP.DTOs.Requests;
 using AISEP.Services.CurrentUser;
 using AISEP.Services.Investors;
 using Microsoft.AspNetCore.Authorization;
@@ -56,7 +56,7 @@ namespace AISEP.Controllers
         // POST api/investor
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] InvestorDto dto)
+        public async Task<IActionResult> Create([FromBody] InvestorRequest dto)
         {
             var userId = _currentUserService.GetUserId();
             var data = await _investorService.CreateAsync(userId, dto);
@@ -71,7 +71,7 @@ namespace AISEP.Controllers
         // PUT api/investor
         [Authorize]
         [HttpPut]
-        public async Task<IActionResult> Update([FromBody] InvestorDto dto)
+        public async Task<IActionResult> Update([FromBody] InvestorRequest dto)
         {
             var userId = _currentUserService.GetUserId();
             var data = await _investorService.UpdateAsync(userId, dto);

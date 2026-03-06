@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace AISEP.Models.DTOs
+namespace AISEP.DTOs.Requests
 {
-    public class ReviewDto
+    public class CreateReviewRequest
     {
         [Required]
         public int AdvisorId { get; set; }

@@ -1,5 +1,5 @@
 ﻿using AISEP.Common;
-using AISEP.DTOs;
+using AISEP.DTOs.Requests;
 using AISEP.Models.Enums;
 using AISEP.Services.CurrentUser;
 using AISEP.Services.Startups;
@@ -56,7 +56,7 @@ namespace AISEP.Controllers
         // Startup user
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateStartupDto dto)
+        public async Task<IActionResult> Create([FromBody] CreateStartupRequest dto)
         {
             var userId = _currentUserService.GetUserId();
             var data = await _startupService.CreateStartupAsync(userId, dto);

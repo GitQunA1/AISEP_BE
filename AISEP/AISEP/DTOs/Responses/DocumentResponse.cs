@@ -1,11 +1,6 @@
-using AISEP.Models.Enums;
-
-namespace AISEP.Models.DTOs
+namespace AISEP.DTOs.Responses
 {
-    /// <summary>
-    /// Response DTO trả về thông tin Document cho client.
-    /// </summary>
-    public class DocumentResponseDto
+    public class DocumentResponse
     {
         public int Id { get; set; }
         public int StartupId { get; set; }

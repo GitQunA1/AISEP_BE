@@ -1,6 +1,6 @@
-namespace AISEP.DTOs
+namespace AISEP.DTOs.Responses
 {
-   public class TokenResponseDto
+    public class TokenResponse
     {
         public string AccessToken { get; set; } = string.Empty;
         public string RefreshToken { get; set; } = string.Empty;

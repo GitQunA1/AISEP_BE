@@ -1,4 +1,6 @@
 using AISEP.DTOs;
+using AISEP.DTOs.Requests;
+using AISEP.DTOs.Responses;
 using AISEP.Models.Entities;
 using AISEP.Repositories.Investors;
 using AutoMapper;
@@ -21,7 +23,7 @@ namespace AISEP.Services.Investors
             _mapper = mapper;
         }
 
-        public async Task<PagedResultDto<InvestorResponseDto>> GetAllAsync(SieveModel model)
+        public async Task<PagedResult<InvestorResponse>> GetAllAsync(SieveModel model)
         {
             var query = _repository.GetAllQuery();
 
@@ -36,29 +38,29 @@ namespace AISEP.Services.Investors
             var page = model.Page ?? 1;
             var pageSize = model.PageSize ?? 10;
 
-            return new PagedResultDto<InvestorResponseDto>
+            return new PagedResult<InvestorResponse>
             {
                 Page = page,
                 PageSize = pageSize,
                 TotalCount = totalCount,
                 TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
-                Items = items.Select(i => _mapper.Map<InvestorResponseDto>(i))
+                Items = items.Select(i => _mapper.Map<InvestorResponse>(i))
             };
         }
 
-        public async Task<InvestorResponseDto?> GetByIdAsync(int investorId)
+        public async Task<InvestorResponse?> GetByIdAsync(int investorId)
         {
             var investor = await _repository.GetByIdAsync(investorId);
-            return investor is null ? null : _mapper.Map<InvestorResponseDto>(investor);
+            return investor is null ? null : _mapper.Map<InvestorResponse>(investor);
         }
 
-        public async Task<InvestorResponseDto?> GetMyProfileAsync(int userId)
+        public async Task<InvestorResponse?> GetMyProfileAsync(int userId)
         {
             var investor = await _repository.GetByUserIdAsync(userId);
-            return investor is null ? null : _mapper.Map<InvestorResponseDto>(investor);
+            return investor is null ? null : _mapper.Map<InvestorResponse>(investor);
         }
 
-        public async Task<InvestorResponseDto?> CreateAsync(int userId, InvestorDto dto)
+        public async Task<InvestorResponse?> CreateAsync(int userId, InvestorRequest dto)
         {
             var existing = await _repository.GetByUserIdAsync(userId);
             if (existing is not null)
@@ -71,10 +73,10 @@ namespace AISEP.Services.Investors
             await _repository.SaveChangesAsync();
 
             var created = await _repository.GetByIdAsync(investor.InvestorId);
-            return _mapper.Map<InvestorResponseDto>(created!);
+            return _mapper.Map<InvestorResponse>(created!);
         }
 
-        public async Task<InvestorResponseDto?> UpdateAsync(int userId, InvestorDto dto)
+        public async Task<InvestorResponse?> UpdateAsync(int userId, InvestorRequest dto)
         {
             var investor = await _repository.GetByUserIdAsync(userId);
             if (investor is null)
@@ -85,7 +87,8 @@ namespace AISEP.Services.Investors
             _repository.Update(investor);
             await _repository.SaveChangesAsync();
 
-            return _mapper.Map<InvestorResponseDto>(investor);
+            return _mapper.Map<InvestorResponse>(investor);
         }
     }
 }
+

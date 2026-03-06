@@ -1,5 +1,6 @@
 using AISEP.Common;
-using AISEP.DTOs;
+using AISEP.DTOs.Requests;
+using AISEP.DTOs.Responses;
 using AISEP.Services.Auth;
 using AISEP.Services.CurrentUser;
 using Microsoft.AspNetCore.Authorization;
@@ -23,7 +24,7 @@ namespace AISEP.Controllers
 
        
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterDto model)
+        public async Task<IActionResult> Register([FromBody] RegisterRequest model)
         {
             if (!ModelState.IsValid)
             {
@@ -65,7 +66,7 @@ namespace AISEP.Controllers
 
        
         [HttpPost("resend-confirmation")]
-        public async Task<IActionResult> ResendConfirmation([FromBody] ResendConfirmationDto model)
+        public async Task<IActionResult> ResendConfirmation([FromBody] ResendConfirmationRequest model)
         {
             if (!ModelState.IsValid)
             {
@@ -83,7 +84,7 @@ namespace AISEP.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginDto model)
+        public async Task<IActionResult> Login([FromBody] LoginRequest model)
         {
             if (!ModelState.IsValid)
             {
@@ -102,7 +103,7 @@ namespace AISEP.Controllers
 
       
         [HttpPost("refresh-token")]
-        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenDto model)
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest model)
         {
             if (string.IsNullOrEmpty(model.RefreshToken))
             {
@@ -121,7 +122,7 @@ namespace AISEP.Controllers
 
         [HttpPost("revoke-token")]
         [Authorize]
-        public async Task<IActionResult> RevokeToken([FromBody] RefreshTokenDto model)
+        public async Task<IActionResult> RevokeToken([FromBody] RefreshTokenRequest model)
         {
             if (string.IsNullOrEmpty(model.RefreshToken))
             {

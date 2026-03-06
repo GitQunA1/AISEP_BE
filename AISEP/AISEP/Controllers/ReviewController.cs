@@ -1,5 +1,5 @@
 using AISEP.Common;
-using AISEP.Models.DTOs;
+using AISEP.DTOs.Requests;
 using AISEP.Services.Reviews;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,7 +20,7 @@ namespace AISEP.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateReview([FromBody] ReviewDto dto)
+        public async Task<IActionResult> CreateReview([FromBody] CreateReviewRequest dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ApiResponse<object>.ErrorResponse("Invalid request data.", "Validation failed"));

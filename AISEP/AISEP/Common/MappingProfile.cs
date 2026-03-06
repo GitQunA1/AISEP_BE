@@ -1,7 +1,8 @@
 using AutoMapper;
-using AISEP.Models.DTOs;
-using AISEP.Models.Entities;
 using AISEP.DTOs;
+using AISEP.DTOs.Requests;
+using AISEP.DTOs.Responses;
+using AISEP.Models.Entities;
 
 namespace AISEP.Common
 {
@@ -9,13 +10,13 @@ namespace AISEP.Common
     {
         public MappingProfile()
         {
-            // Document Entity → DocumentResponseDto
-            CreateMap<Document, DocumentResponseDto>()
+            // Document Entity → DocumentResponse
+            CreateMap<Document, DocumentResponse>()
                 .ForMember(dest => dest.DocumentType,
                     opt => opt.MapFrom(src => src.DocumentType.ToString()));
 
-            // Booking Entity → BookingResponseDto
-            CreateMap<Booking, BookingResponseDto>()
+            // Booking Entity → BookingResponse
+            CreateMap<Booking, BookingResponse>()
                 .ForMember(dest => dest.AdvisorName,
                     opt => opt.MapFrom(src => src.Advisor != null && src.Advisor.User != null
                         ? src.Advisor.User.UserName
@@ -25,8 +26,8 @@ namespace AISEP.Common
                         ? src.Customer.UserName
                         : "Unknown"));
 
-            // BookingDto → Booking Entity
-            CreateMap<BookingDto, Booking>()
+            // CreateBookingRequest → Booking Entity
+            CreateMap<CreateBookingRequest, Booking>()
                 .ForMember(dest => dest.BookingId, opt => opt.Ignore())
                 .ForMember(dest => dest.Status, opt => opt.Ignore())
                 .ForMember(dest => dest.Advisor, opt => opt.Ignore())
@@ -34,13 +35,13 @@ namespace AISEP.Common
                 .ForMember(dest => dest.ChatSession, opt => opt.Ignore())
                 .ForMember(dest => dest.ConsultingReport, opt => opt.Ignore());
 
-            // User Entity → UserResponseDto
-            CreateMap<User, UserResponseDto>()
+            // User Entity → UserResponse
+            CreateMap<User, UserResponse>()
                 .ForMember(dest => dest.UserId,
                     opt => opt.MapFrom(src => src.Id));
 
-            // Startup Entity → StartupResponseDto
-            CreateMap<Startup, StartupResponseDto>()
+            // Startup Entity → StartupResponse
+            CreateMap<Startup, StartupResponse>()
                 .ForMember(dest => dest.Id,
                     opt => opt.MapFrom(src => src.StartupId))
                 .ForMember(dest => dest.Industry,
@@ -50,15 +51,15 @@ namespace AISEP.Common
                 .ForMember(dest => dest.FollowerCount,
                     opt => opt.MapFrom(src => src.Followers != null ? src.Followers.Count : 0));
 
-            // Investor Entity → InvestorResponseDto
-            CreateMap<Investor, InvestorResponseDto>()
+            // Investor Entity → InvestorResponse
+            CreateMap<Investor, InvestorResponse>()
                 .ForMember(dest => dest.UserName,
                     opt => opt.MapFrom(src => src.User != null ? src.User.UserName : null))
                 .ForMember(dest => dest.Email,
                     opt => opt.MapFrom(src => src.User != null ? src.User.Email : null));
 
-            // InvestorDto → Investor Entity
-            CreateMap<InvestorDto, Investor>()
+            // InvestorRequest → Investor Entity
+            CreateMap<InvestorRequest, Investor>()
                 .ForMember(dest => dest.InvestorId, opt => opt.Ignore())
                 .ForMember(dest => dest.UserId, opt => opt.Ignore())
                 .ForMember(dest => dest.User, opt => opt.Ignore())
@@ -66,8 +67,8 @@ namespace AISEP.Common
                 .ForMember(dest => dest.Deals, opt => opt.Ignore())
                 .ForMember(dest => dest.InvestorAIAnalyses, opt => opt.Ignore());
 
-            // StartupFollower Entity → FollowedStartupDto
-            CreateMap<StartupFollower, FollowedStartupDto>()
+            // StartupFollower Entity → FollowedStartupResponse
+            CreateMap<StartupFollower, FollowedStartupResponse>()
                 .ForMember(dest => dest.CompanyName,
                     opt => opt.MapFrom(src => src.Startup != null ? src.Startup.CompanyName : "Unknown"))
                 .ForMember(dest => dest.LogoUrl,
@@ -77,3 +78,4 @@ namespace AISEP.Common
         }
     }
 }
+
