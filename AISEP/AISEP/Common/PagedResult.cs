@@ -1,4 +1,4 @@
-namespace AISEP.DTOs
+namespace AISEP.Common
 {
     public class PagedResult<T>
     {

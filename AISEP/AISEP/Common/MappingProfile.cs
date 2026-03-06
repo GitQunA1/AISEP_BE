@@ -1,6 +1,4 @@
 using AutoMapper;
-using AISEP.DTOs;
-using AISEP.Models.Enums;
 using AISEP.DTOs.Requests;
 using AISEP.DTOs.Responses;
 using AISEP.Models.Entities;
@@ -77,8 +75,8 @@ namespace AISEP.Common
                 .ForMember(dest => dest.Industry,
                     opt => opt.MapFrom(src => src.Startup != null ? src.Startup.Industry : null));
 
-            // Project Entity → ProjectResponseDto
-            CreateMap<Project, ProjectResponseDto>()
+            // Project Entity → ProjectResponse
+            CreateMap<Project, ProjectResponse>()
                 .ForMember(dest => dest.DevelopmentStage,
                     opt => opt.MapFrom(src => src.DevelopmentStage != null ? src.DevelopmentStage.ToString() : null))
                 .ForMember(dest => dest.Status,

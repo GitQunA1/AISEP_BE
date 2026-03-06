@@ -1,10 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-<<<<<<<< HEAD:AISEP/AISEP/DTOs/ReviewDto.cs
-namespace AISEP.DTOs
-========
 namespace AISEP.DTOs.Requests
->>>>>>>> NHQuan:AISEP/AISEP/DTOs/Requests/CreateReviewRequest.cs
 {
     public class CreateReviewRequest
     {

@@ -1,5 +1,5 @@
 using AISEP.Common;
-using AISEP.DTOs;
+using AISEP.DTOs.Requests;
 using AISEP.Services.CurrentUser;
 using AISEP.Services.Projects;
 using Microsoft.AspNetCore.Mvc;
@@ -24,7 +24,7 @@ namespace AISEP.Controllers
         public async Task<IActionResult> GetAll([FromQuery] SieveModel model)
         {
             var result = await _projectService.GetAllProjectsAsync(model);
-            return Ok(ApiResponse.Success(result));
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
         }
 
         [HttpGet("{id:int}")]
@@ -32,8 +32,8 @@ namespace AISEP.Controllers
         {
             var project = await _projectService.GetProjectByIdAsync(id);
             if (project is null)
-                return NotFound(ApiResponse.Fail("Project not found."));
-            return Ok(ApiResponse.Success(project));
+                return NotFound(ApiResponse<object>.ErrorResponse("Project not found.", "Not found", 404));
+            return Ok(ApiResponse<object>.SuccessResponse(project, "Success"));
         }
 
         [HttpGet("my")]
@@ -41,15 +41,16 @@ namespace AISEP.Controllers
         {
             var userId = _currentUserService.GetUserId();
             var result = await _projectService.GetMyProjectsAsync(userId, model);
-            return Ok(ApiResponse.Success(result));
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateProjectDto dto)
+        public async Task<IActionResult> Create([FromBody] CreateProjectRequest dto)
         {
             var userId = _currentUserService.GetUserId();
             var data   = await _projectService.CreateProjectAsync(userId, dto);
-            return CreatedAtAction(nameof(GetById), new { id = data.ProjectId }, ApiResponse.Success(data));
+            return CreatedAtAction(nameof(GetById), new { id = data.ProjectId },
+                ApiResponse<object>.SuccessResponse(data, "Project created successfully", 201));
         }
 
         [HttpPut("{id:int}/submit")]
@@ -57,21 +58,21 @@ namespace AISEP.Controllers
         {
             var userId = _currentUserService.GetUserId();
             await _projectService.SubmitProjectAsync(id, userId);
-            return Ok(ApiResponse.Success("Project submitted for review successfully."));
+            return Ok(ApiResponse<object>.SuccessResponse(null, "Project submitted for review successfully."));
         }
 
         [HttpPut("{id:int}/approve")]
-        public async Task<IActionResult> Approve(int id, [FromBody] ReviewProjectDto dto)
+        public async Task<IActionResult> Approve(int id, [FromBody] ApproveProjectRequest dto)
         {
             await _projectService.ApproveProjectAsync(id, dto);
-            return Ok(ApiResponse.Success("Project approved successfully."));
+            return Ok(ApiResponse<object>.SuccessResponse(null, "Project approved successfully."));
         }
 
         [HttpPut("{id:int}/reject")]
-        public async Task<IActionResult> Reject(int id, [FromBody] RejectProjectDto dto)
+        public async Task<IActionResult> Reject(int id, [FromBody] RejectProjectRequest dto)
         {
             await _projectService.RejectProjectAsync(id, dto);
-            return Ok(ApiResponse.Success("Project rejected successfully."));
+            return Ok(ApiResponse<object>.SuccessResponse(null, "Project rejected successfully."));
         }
     }
 }

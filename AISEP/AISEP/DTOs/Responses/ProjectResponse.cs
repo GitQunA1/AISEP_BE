@@ -1,6 +1,6 @@
-namespace AISEP.DTOs
+namespace AISEP.DTOs.Responses
 {
-    public class ProjectResponseDto
+    public class ProjectResponse
     {
         public int ProjectId { get; set; }
         public int StartupId { get; set; }

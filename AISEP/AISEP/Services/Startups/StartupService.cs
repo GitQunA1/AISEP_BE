@@ -1,11 +1,8 @@
 using AISEP.Common;
-using AISEP.Data;
-using AISEP.DTOs;
 using AISEP.DTOs.Requests;
 using AISEP.DTOs.Responses;
 using AISEP.Models.Entities;
 using AISEP.Models.Enums;
-using AISEP.Repositories.Startups;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
@@ -15,33 +12,27 @@ namespace AISEP.Services.Startups
 {
     public class StartupService : IStartupService
     {
-        private readonly IStartupRepository _repository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly ISieveProcessor _sieveProcessor;
         private readonly IMapper _mapper;
-        private readonly ApplicationDbContext _context;
 
-        public StartupService(IStartupRepository repository, ISieveProcessor sieveProcessor, IMapper mapper, ApplicationDbContext context)
+        public StartupService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper)
         {
-            _repository = repository;
+            _unitOfWork = unitOfWork;
             _sieveProcessor = sieveProcessor;
             _mapper = mapper;
-            _context = context;
         }
 
-        // ── Public ────────────────────────────────────────────────────────
-
-        public async Task<PagedResultDto<StartupResponseDto>> SearchStartupsAsync(SieveModel model, string? industry = null, DevelopmentStage? stage = null)
+        public async Task<PagedResult<StartupResponse>> SearchStartupsAsync(SieveModel model, string? industry = null, DevelopmentStage? stage = null)
         {
-            var query = _repository.SearchStartupsQuery(industry, stage);
+            var query = _unitOfWork.Startups.SearchStartupsQuery(industry, stage);
             return await ApplySieveAndPaginateAsync(query, model);
         }
 
         public async Task<StartupResponse?> GetStartupByIdAsync(int id)
         {
-            var startup = await _repository.GetByIdAsync(id);
-            return startup is null ? null : _mapper.Map<StartupResponse>(startup);
             var startup = await _unitOfWork.Startups.GetByIdAsync(id);
-            return startup is null ? null : _mapper.Map<StartupResponseDto>(startup);
+            return startup is null ? null : _mapper.Map<StartupResponse>(startup);
         }
 
         public async Task<PagedResult<StartupResponse>> GetAllStartupsAsync(SieveModel model)
@@ -56,11 +47,9 @@ namespace AISEP.Services.Startups
             return await ApplySieveAndPaginateAsync(query, model);
         }
 
-      
-
         public async Task<StartupResponse> CreateStartupAsync(int userId, CreateStartupRequest dto)
         {
-            var existing = await _repository.GetByUserIdAsync(userId);
+            var existing = await _unitOfWork.Startups.GetByUserIdAsync(userId);
             if (existing is not null)
                 throw new InvalidOperationException("Startup profile already exists for this account.");
 
@@ -102,42 +91,6 @@ namespace AISEP.Services.Startups
             await _unitOfWork.SaveChangesAsync();
         }
 
-        //public async Task<StartupResponseDto?> GetMyProfileAsync(int userId)
-        //{
-        //    var startup = await _repository.GetByUserIdAsync(userId);
-        //    return startup is null ? null : _mapper.Map<StartupResponse>(startup);
-        //}
-
-      
-
-        //public async Task<PagedResult<StartupResponse>> GetPendingStartupsAsync(SieveModel model)
-        //{
-        //    var query = _repository.GetPendingStartupsQuery();
-        //    return await ApplySieveAndPaginateAsync(query, model);
-        //}
-
-        //public async Task ReviewStartupAsync(int startupId, ReviewStartupDto dto)
-        //{
-        //    if (dto.Status != ApprovalStatus.Approved && dto.Status != ApprovalStatus.Rejected)
-        //        throw new ArgumentException("Status must be Approved or Rejected.");
-
-        //    if (dto.Status == ApprovalStatus.Rejected && string.IsNullOrWhiteSpace(dto.Reason))
-        //        throw new ArgumentException("Reason is required when rejecting a startup.");
-
-        //    var startup = await _repository.GetByIdAsync(startupId);
-        //    if (startup is null)
-        //        throw new KeyNotFoundException("Startup not found.");
-
-        //    if (startup.ApprovalStatus != ApprovalStatus.Pending)
-        //        throw new InvalidOperationException($"Startup is not in Pending status. Current status: {startup.ApprovalStatus}.");
-
-        //    startup.ApprovalStatus = dto.Status;
-        //    _repository.Update(startup);
-        //    await _context.SaveChangesAsync();
-        //}
-
-    
-
         private async Task<PagedResult<StartupResponse>> ApplySieveAndPaginateAsync(
             IQueryable<Startup> query,
             SieveModel sieveModel)
@@ -164,4 +117,3 @@ namespace AISEP.Services.Startups
         }
     }
 }
-

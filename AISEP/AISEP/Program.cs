@@ -36,18 +36,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-// [ApiController] tự động validate ModelState, configure lại format response cho khớp ApiResponse
-builder.Services.Configure<ApiBehaviorOptions>(options =>
-{
-    options.InvalidModelStateResponseFactory = context =>
-    {
-        var errors = context.ModelState.Values
-            .SelectMany(v => v.Errors)
-            .Select(e => e.ErrorMessage);
-        return new BadRequestObjectResult(ApiResponse.Fail(string.Join(" | ", errors)));
-    };
-});
-
 // Add HttpContextAccessor (required for CurrentUserService)
 builder.Services.AddHttpContextAccessor();
 
@@ -154,7 +142,7 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
         var errors = context.ModelState.Values
             .SelectMany(v => v.Errors)
             .Select(e => e.ErrorMessage);
-        return new BadRequestObjectResult(ApiResponse.Fail(string.Join(" | ", errors)));
+        return new BadRequestObjectResult(ApiResponse<object>.ErrorResponse(errors.ToList(), string.Join(" | ", errors)));
     };
 });
 

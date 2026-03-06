@@ -1,5 +1,6 @@
 using AISEP.Common;
-using AISEP.DTOs;
+using AISEP.DTOs.Requests;
+using AISEP.DTOs.Responses;
 using AISEP.Models.Entities;
 using AISEP.Models.Enums;
 using AutoMapper;
@@ -22,18 +23,18 @@ namespace AISEP.Services.Projects
             _mapper = mapper;
         }
 
-        public async Task<PagedResultDto<ProjectResponseDto>> GetAllProjectsAsync(SieveModel model)
+        public async Task<PagedResult<ProjectResponse>> GetAllProjectsAsync(SieveModel model)
         {
             return await PaginateAsync(_unitOfWork.Projects.GetAllQuery(), model);
         }
 
-        public async Task<ProjectResponseDto?> GetProjectByIdAsync(int id)
+        public async Task<ProjectResponse?> GetProjectByIdAsync(int id)
         {
             var project = await _unitOfWork.Projects.GetByIdAsync(id);
-            return project is null ? null : _mapper.Map<ProjectResponseDto>(project);
+            return project is null ? null : _mapper.Map<ProjectResponse>(project);
         }
 
-        public async Task<PagedResultDto<ProjectResponseDto>> GetMyProjectsAsync(int userId, SieveModel model)
+        public async Task<PagedResult<ProjectResponse>> GetMyProjectsAsync(int userId, SieveModel model)
         {
             var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
             if (startup is null)
@@ -42,7 +43,7 @@ namespace AISEP.Services.Projects
             return await PaginateAsync(_unitOfWork.Projects.GetByStartupIdQuery(startup.StartupId), model);
         }
 
-        public async Task<ProjectResponseDto> CreateProjectAsync(int userId, CreateProjectDto dto)
+        public async Task<ProjectResponse> CreateProjectAsync(int userId, CreateProjectRequest dto)
         {
             var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
             if (startup is null)
@@ -72,7 +73,7 @@ namespace AISEP.Services.Projects
             await _unitOfWork.Projects.AddAsync(project);
             await _unitOfWork.SaveChangesAsync();
 
-            return _mapper.Map<ProjectResponseDto>(project);
+            return _mapper.Map<ProjectResponse>(project);
         }
 
         public async Task SubmitProjectAsync(int projectId, int userId)
@@ -93,7 +94,7 @@ namespace AISEP.Services.Projects
             await _unitOfWork.SaveChangesAsync();
         }
 
-        public async Task ApproveProjectAsync(int projectId, ReviewProjectDto dto)
+        public async Task ApproveProjectAsync(int projectId, ApproveProjectRequest dto)
         {
             var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
             if (project is null)
@@ -108,7 +109,7 @@ namespace AISEP.Services.Projects
             await _unitOfWork.SaveChangesAsync();
         }
 
-        public async Task RejectProjectAsync(int projectId, RejectProjectDto dto)
+        public async Task RejectProjectAsync(int projectId, RejectProjectRequest dto)
         {
             var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
             if (project is null)
@@ -122,7 +123,7 @@ namespace AISEP.Services.Projects
             await _unitOfWork.SaveChangesAsync();
         }
 
-        private async Task<PagedResultDto<ProjectResponseDto>> PaginateAsync(IQueryable<Project> query, SieveModel model)
+        private async Task<PagedResult<ProjectResponse>> PaginateAsync(IQueryable<Project> query, SieveModel model)
         {
             var totalCount = await _sieveProcessor
                 .Apply(model, query, applyPagination: false, applySorting: false)
@@ -135,13 +136,13 @@ namespace AISEP.Services.Projects
             var page     = model.Page ?? 1;
             var pageSize = model.PageSize ?? 10;
 
-            return new PagedResultDto<ProjectResponseDto>
+            return new PagedResult<ProjectResponse>
             {
                 Page       = page,
                 PageSize   = pageSize,
                 TotalCount = totalCount,
                 TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
-                Items      = items.Select(p => _mapper.Map<ProjectResponseDto>(p))
+                Items      = items.Select(p => _mapper.Map<ProjectResponse>(p))
             };
         }
     }

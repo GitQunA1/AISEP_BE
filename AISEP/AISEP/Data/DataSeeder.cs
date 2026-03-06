@@ -39,15 +39,15 @@ namespace AISEP.Data
 
             var users = new[]
             {
-                new { Email = "admin@aisep.com",     Name = "AdminAISEP",       Role = UserRole.Admin,    Password = "Admin@123" },
-                new { Email = "advisor1@aisep.com",  Name = "NguyenVanAdvisor", Role = UserRole.Advisor,  Password = "Advisor@123" },
-                new { Email = "advisor2@aisep.com",  Name = "TranThiAdvisor",   Role = UserRole.Advisor,  Password = "Advisor@123" },
-                new { Email = "investor1@aisep.com", Name = "LeVanInvestor",    Role = UserRole.Investor, Password = "Investor@123" },
-                new { Email = "investor2@aisep.com", Name = "PhamThiInvestor",  Role = UserRole.Investor, Password = "Investor@123" },
-                new { Email = "startup1@aisep.com",  Name = "TechStartVN",      Role = UserRole.Startup,  Password = "Startup@123" },
-                new { Email = "startup2@aisep.com",  Name = "GreenFarmTech",    Role = UserRole.Startup,  Password = "Startup@123" },
+                new { Email = "admin@aisep.com",     Name = "AdminAISEP",        Role = UserRole.Admin,    Password = "Admin@123" },
+                new { Email = "advisor1@aisep.com",  Name = "NguyenVanAdvisor",  Role = UserRole.Advisor,  Password = "Advisor@123" },
+                new { Email = "advisor2@aisep.com",  Name = "TranThiAdvisor",    Role = UserRole.Advisor,  Password = "Advisor@123" },
+                new { Email = "investor1@aisep.com", Name = "LeVanInvestor",     Role = UserRole.Investor, Password = "Investor@123" },
+                new { Email = "investor2@aisep.com", Name = "PhamThiInvestor",   Role = UserRole.Investor, Password = "Investor@123" },
+                new { Email = "startup1@aisep.com",  Name = "TechStartVN",       Role = UserRole.Startup,  Password = "Startup@123" },
+                new { Email = "startup2@aisep.com",  Name = "GreenFarmTech",     Role = UserRole.Startup,  Password = "Startup@123" },
                 new { Email = "startup3@aisep.com",  Name = "EduTechSolutions",  Role = UserRole.Startup,  Password = "Startup@123" },
-                new { Email = "staff1@aisep.com",    Name = "HoangVanStaff",    Role = UserRole.Staff,    Password = "Staff@123" },
+                new { Email = "staff1@aisep.com",    Name = "HoangVanStaff",     Role = UserRole.Staff,    Password = "Staff@123" },
             };
 
             foreach (var u in users)
@@ -214,7 +214,8 @@ namespace AISEP.Data
                     CountryCity    = "Ho Chi Minh City, Vietnam",
                     Website        = "https://techstart.vn",
                     Industry       = Industry.Fintech,
-                    ApprovalStatus = ApprovalStatus.Approved
+                    ApprovalStatus = ApprovalStatus.Approved,
+                    CreatedAt      = DateTime.UtcNow.AddMonths(-3)
                 },
                 new Startup
                 {
@@ -225,7 +226,8 @@ namespace AISEP.Data
                     CountryCity    = "Can Tho, Vietnam",
                     Website        = "https://greenfarm.tech",
                     Industry       = Industry.Agritech,
-                    ApprovalStatus = ApprovalStatus.Approved
+                    ApprovalStatus = ApprovalStatus.Approved,
+                    CreatedAt      = DateTime.UtcNow.AddMonths(-2)
                 },
                 new Startup
                 {
@@ -236,7 +238,8 @@ namespace AISEP.Data
                     CountryCity    = "Da Nang, Vietnam",
                     Website        = "https://edutech.vn",
                     Industry       = Industry.Edtech,
-                    ApprovalStatus = ApprovalStatus.Pending
+                    ApprovalStatus = ApprovalStatus.Pending,
+                    CreatedAt      = DateTime.UtcNow.AddMonths(-1)
                 }
             };
 
@@ -254,9 +257,9 @@ namespace AISEP.Data
 
             var packages = new List<Package>
             {
-                new Package { PackageName = "Basic",      Description = "Gói cơ bản - Phù hợp cho startup mới",               Price = 99000m,  Duration = 30 },
-                new Package { PackageName = "Pro",        Description = "Gói Pro - Đầy đủ tính năng cho startup tăng trưởng",  Price = 299000m, Duration = 30 },
-                new Package { PackageName = "Enterprise", Description = "Gói doanh nghiệp - Cho startup giai đoạn scale",       Price = 999000m, Duration = 30 }
+                new Package { PackageName = "Basic",      Description = "Gói cơ bản - Phù hợp cho startup mới",               Price = 99000m,  DurationMonths = 1 },
+                new Package { PackageName = "Pro",        Description = "Gói Pro - Đầy đủ tính năng cho startup tăng trưởng",  Price = 299000m, DurationMonths = 1 },
+                new Package { PackageName = "Enterprise", Description = "Gói doanh nghiệp - Cho startup giai đoạn scale",       Price = 999000m, DurationMonths = 1 }
             };
 
             await context.Packages.AddRangeAsync(packages);
@@ -288,14 +291,13 @@ namespace AISEP.Data
         }
 
         // =============================================
-        // 7. PROJECTS (thuộc Startup)
+        // 7. PROJECTS
         // =============================================
         private static async Task SeedProjectsAsync(ApplicationDbContext context)
         {
             if (await context.Projects.AnyAsync()) return;
 
             var startups = await context.Startups.ToListAsync();
-
             if (startups.Count < 3)
             {
                 Console.WriteLine("[Seeder] ⚠️ Không đủ Startups, bỏ qua SeedProjects.");
@@ -322,6 +324,7 @@ namespace AISEP.Data
                     KeySkills              = "FinTech, Blockchain, Mobile Dev",
                     TeamExperience         = "10+ years combined experience",
                     Status                 = ProjectStatus.Published,
+                    CreatedAt              = DateTime.UtcNow.AddDays(-20),
                     PublishedAt            = DateTime.UtcNow.AddDays(-10)
                 },
                 new Project
@@ -342,6 +345,7 @@ namespace AISEP.Data
                     KeySkills              = "AgriTech, IoT, Mobile Dev",
                     TeamExperience         = "8+ years in agriculture and technology",
                     Status                 = ProjectStatus.Published,
+                    CreatedAt              = DateTime.UtcNow.AddDays(-15),
                     PublishedAt            = DateTime.UtcNow.AddDays(-5)
                 },
                 new Project
@@ -361,7 +365,8 @@ namespace AISEP.Data
                     TeamMembers            = "Vo Van C (CEO), Nguyen Thi D (CTO)",
                     KeySkills              = "EdTech, AI, UX Design",
                     TeamExperience         = "5+ years in education and technology",
-                    Status                 = ProjectStatus.Draft
+                    Status                 = ProjectStatus.Draft,
+                    CreatedAt              = DateTime.UtcNow.AddDays(-5)
                 }
             };
 
@@ -421,7 +426,7 @@ namespace AISEP.Data
         }
 
         // =============================================
-        // 9. CONNECTION REQUESTS (Investor -> Project)
+        // 9. CONNECTION REQUESTS (Investor → Project)
         // =============================================
         private static async Task SeedConnectionRequestsAsync(ApplicationDbContext context)
         {
@@ -444,7 +449,8 @@ namespace AISEP.Data
                     RequestDate     = DateTime.UtcNow.AddDays(-10),
                     ResponseDate    = DateTime.UtcNow.AddDays(-8),
                     Message         = "Chúng tôi rất quan tâm đến giải pháp thanh toán của các bạn",
-                    ResponseMessage = "Cảm ơn bạn, chúng tôi rất vui được hợp tác!"
+                    ResponseMessage = "Cảm ơn bạn, chúng tôi rất vui được hợp tác!",
+                    CreatedAt       = DateTime.UtcNow.AddDays(-10)
                 },
                 new ConnectionRequest
                 {
@@ -452,7 +458,8 @@ namespace AISEP.Data
                     ProjectId   = projects[1].ProjectId,
                     Status      = ConnectionRequestStatus.Pending,
                     RequestDate = DateTime.UtcNow.AddDays(-2),
-                    Message     = "AgriTech là lĩnh vực chúng tôi đang tập trung đầu tư"
+                    Message     = "AgriTech là lĩnh vực chúng tôi đang tập trung đầu tư",
+                    CreatedAt   = DateTime.UtcNow.AddDays(-2)
                 }
             };
 
@@ -462,7 +469,7 @@ namespace AISEP.Data
         }
 
         // =============================================
-        // 10. REVIEWS (yêu cầu có Booking Completed)
+        // 10. REVIEWS
         // =============================================
         private static async Task SeedReviewsAsync(ApplicationDbContext context)
         {
@@ -543,7 +550,7 @@ namespace AISEP.Data
                 PackageId = package.PackageId,
                 UserId    = u.Id,
                 StartDate = DateTime.UtcNow,
-                EndDate   = DateTime.UtcNow.AddDays(30),
+                EndDate   = DateTime.UtcNow.AddMonths(1),
                 Status    = SubscriptionStatus.Active
             }).ToList();
 
@@ -571,28 +578,28 @@ namespace AISEP.Data
             if (investorUsers.Count > 0)
             {
                 if (startups.Count > 0)
-                    followers.Add(new StartupFollower { UserId = investorUsers[0].Id, StartupId = startups[0].StartupId, FollowedAt = DateTime.UtcNow.AddDays(-15) });
+                    followers.Add(new StartupFollower { UserId = investorUsers[0].Id, StartupId = startups[0].StartupId, CreatedAt = DateTime.UtcNow.AddDays(-15) });
                 if (startups.Count > 2)
-                    followers.Add(new StartupFollower { UserId = investorUsers[0].Id, StartupId = startups[2].StartupId, FollowedAt = DateTime.UtcNow.AddDays(-10) });
+                    followers.Add(new StartupFollower { UserId = investorUsers[0].Id, StartupId = startups[2].StartupId, CreatedAt = DateTime.UtcNow.AddDays(-10) });
             }
 
             if (investorUsers.Count > 1)
                 foreach (var s in startups)
-                    followers.Add(new StartupFollower { UserId = investorUsers[1].Id, StartupId = s.StartupId, FollowedAt = DateTime.UtcNow.AddDays(-7) });
+                    followers.Add(new StartupFollower { UserId = investorUsers[1].Id, StartupId = s.StartupId, CreatedAt = DateTime.UtcNow.AddDays(-7) });
 
             if (advisorUsers.Count > 0)
             {
                 if (startups.Count > 0)
-                    followers.Add(new StartupFollower { UserId = advisorUsers[0].Id, StartupId = startups[0].StartupId, FollowedAt = DateTime.UtcNow.AddDays(-5) });
+                    followers.Add(new StartupFollower { UserId = advisorUsers[0].Id, StartupId = startups[0].StartupId, CreatedAt = DateTime.UtcNow.AddDays(-5) });
                 if (startups.Count > 1)
-                    followers.Add(new StartupFollower { UserId = advisorUsers[0].Id, StartupId = startups[1].StartupId, FollowedAt = DateTime.UtcNow.AddDays(-5) });
+                    followers.Add(new StartupFollower { UserId = advisorUsers[0].Id, StartupId = startups[1].StartupId, CreatedAt = DateTime.UtcNow.AddDays(-5) });
             }
 
             if (advisorUsers.Count > 1 && startups.Count > 2)
-                followers.Add(new StartupFollower { UserId = advisorUsers[1].Id, StartupId = startups[2].StartupId, FollowedAt = DateTime.UtcNow.AddDays(-3) });
+                followers.Add(new StartupFollower { UserId = advisorUsers[1].Id, StartupId = startups[2].StartupId, CreatedAt = DateTime.UtcNow.AddDays(-3) });
 
             if (staffUsers.Count > 0 && startups.Count > 0)
-                followers.Add(new StartupFollower { UserId = staffUsers[0].Id, StartupId = startups[0].StartupId, FollowedAt = DateTime.UtcNow.AddDays(-2) });
+                followers.Add(new StartupFollower { UserId = staffUsers[0].Id, StartupId = startups[0].StartupId, CreatedAt = DateTime.UtcNow.AddDays(-2) });
 
             if (followers.Any())
             {
