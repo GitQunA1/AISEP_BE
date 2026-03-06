@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AISEP.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260305160054_UpdateIndustryToEnum")]
-    partial class UpdateIndustryToEnum
+    [Migration("20260306052206_SyncToDbDiagram")]
+    partial class SyncToDbDiagram
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -617,7 +617,7 @@ namespace AISEP.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
-                    b.Property<int>("Duration")
+                    b.Property<int>("DurationMonths")
                         .HasColumnType("integer");
 
                     b.Property<string>("PackageName")
@@ -943,7 +943,7 @@ namespace AISEP.Migrations
                     b.Property<int>("StartupId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("FollowedAt")
+                    b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
@@ -1000,6 +1000,11 @@ namespace AISEP.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
                     b.Property<string>("PayosOrderCode")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
@@ -1008,11 +1013,6 @@ namespace AISEP.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
-
-                    b.Property<DateTime>("TransactionDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Type")
                         .IsRequired()
@@ -1057,6 +1057,9 @@ namespace AISEP.Migrations
                         .HasColumnType("character varying(256)");
 
                     b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPremium")
                         .HasColumnType("boolean");
 
                     b.Property<bool>("IsVerified")
@@ -1117,11 +1120,11 @@ namespace AISEP.Migrations
 
             modelBuilder.Entity("AISEP.Models.Entities.UserReport", b =>
                 {
-                    b.Property<int>("ReportId")
+                    b.Property<int>("UserReportId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ReportId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("UserReportId"));
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -1146,7 +1149,7 @@ namespace AISEP.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.HasKey("ReportId");
+                    b.HasKey("UserReportId");
 
                     b.HasIndex("ReportedUserId");
 

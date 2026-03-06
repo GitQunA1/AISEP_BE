@@ -1,8 +1,5 @@
 namespace AISEP.Services.Blockchain
 {
-    /// <summary>
-    /// Chuyên nhận Hash và lưu lên Ethereum Sepolia Testnet.
-    /// </summary>
     public interface IBlockchainService
     {
         /// <summary>

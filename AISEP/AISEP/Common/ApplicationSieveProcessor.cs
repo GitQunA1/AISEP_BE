@@ -47,7 +47,7 @@ namespace AISEP.Common
                 .CanFilter()
                 .CanSort();
             //StartupFollower
-            mapper.Property<StartupFollower>(sf => sf.FollowedAt)
+            mapper.Property<StartupFollower>(sf => sf.CreatedAt)
                 .CanFilter()
                 .CanSort();
 

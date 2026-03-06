@@ -1,6 +1,8 @@
 using AISEP.Common;
 using AISEP.Data;
 using AISEP.DTOs;
+using AISEP.DTOs.Requests;
+using AISEP.DTOs.Responses;
 using AISEP.Models.Entities;
 using AISEP.Models.Enums;
 using AISEP.Repositories.Startups;
@@ -13,40 +15,42 @@ namespace AISEP.Services.Startups
 {
     public class StartupService : IStartupService
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IStartupRepository _repository;
         private readonly ISieveProcessor _sieveProcessor;
         private readonly IMapper _mapper;
-     
+        private readonly ApplicationDbContext _context;
 
-        public StartupService(IStartupRepository repository, ISieveProcessor sieveProcessor, IMapper mapper, IUnitOfWork unitOfWork)
+        public StartupService(IStartupRepository repository, ISieveProcessor sieveProcessor, IMapper mapper, ApplicationDbContext context)
         {
-            _unitOfWork = unitOfWork;
+            _repository = repository;
             _sieveProcessor = sieveProcessor;
             _mapper = mapper;
-           
+            _context = context;
         }
 
-       
+        // ── Public ────────────────────────────────────────────────────────
 
         public async Task<PagedResultDto<StartupResponseDto>> SearchStartupsAsync(SieveModel model, string? industry = null, DevelopmentStage? stage = null)
         {
-            var query = _unitOfWork.Startups.SearchStartupsQuery(industry, stage);
+            var query = _repository.SearchStartupsQuery(industry, stage);
             return await ApplySieveAndPaginateAsync(query, model);
         }
 
-        public async Task<StartupResponseDto?> GetStartupByIdAsync(int id)
+        public async Task<StartupResponse?> GetStartupByIdAsync(int id)
         {
+            var startup = await _repository.GetByIdAsync(id);
+            return startup is null ? null : _mapper.Map<StartupResponse>(startup);
             var startup = await _unitOfWork.Startups.GetByIdAsync(id);
             return startup is null ? null : _mapper.Map<StartupResponseDto>(startup);
         }
 
-        public async Task<PagedResultDto<StartupResponseDto>> GetAllStartupsAsync(SieveModel model)
+        public async Task<PagedResult<StartupResponse>> GetAllStartupsAsync(SieveModel model)
         {
             var query = _unitOfWork.Startups.GetStartupQuery();
             return await ApplySieveAndPaginateAsync(query, model);
         }
 
-        public async Task<PagedResultDto<StartupResponseDto>> GetStartupsByStatusAsync(SieveModel model, ApprovalStatus? status = null)
+        public async Task<PagedResult<StartupResponse>> GetStartupsByStatusAsync(SieveModel model, ApprovalStatus? status = null)
         {
             var query = _unitOfWork.Startups.GetByStatusQuery(status);
             return await ApplySieveAndPaginateAsync(query, model);
@@ -54,9 +58,9 @@ namespace AISEP.Services.Startups
 
       
 
-        public async Task<StartupResponseDto> CreateStartupAsync(int userId, CreateStartupDto dto)
+        public async Task<StartupResponse> CreateStartupAsync(int userId, CreateStartupRequest dto)
         {
-            var existing = await _unitOfWork.Startups.GetByUserIdAsync(userId);
+            var existing = await _repository.GetByUserIdAsync(userId);
             if (existing is not null)
                 throw new InvalidOperationException("Startup profile already exists for this account.");
 
@@ -78,7 +82,7 @@ namespace AISEP.Services.Startups
             await _unitOfWork.Startups.AddAsync(startup);
             await _unitOfWork.SaveChangesAsync();
 
-            return _mapper.Map<StartupResponseDto>(startup);
+            return _mapper.Map<StartupResponse>(startup);
         }
 
         public async Task ApproveStartupAsync(int userId)
@@ -101,12 +105,12 @@ namespace AISEP.Services.Startups
         //public async Task<StartupResponseDto?> GetMyProfileAsync(int userId)
         //{
         //    var startup = await _repository.GetByUserIdAsync(userId);
-        //    return startup is null ? null : _mapper.Map<StartupResponseDto>(startup);
+        //    return startup is null ? null : _mapper.Map<StartupResponse>(startup);
         //}
 
       
 
-        //public async Task<PagedResultDto<StartupResponseDto>> GetPendingStartupsAsync(SieveModel model)
+        //public async Task<PagedResult<StartupResponse>> GetPendingStartupsAsync(SieveModel model)
         //{
         //    var query = _repository.GetPendingStartupsQuery();
         //    return await ApplySieveAndPaginateAsync(query, model);
@@ -134,7 +138,7 @@ namespace AISEP.Services.Startups
 
     
 
-        private async Task<PagedResultDto<StartupResponseDto>> ApplySieveAndPaginateAsync(
+        private async Task<PagedResult<StartupResponse>> ApplySieveAndPaginateAsync(
             IQueryable<Startup> query,
             SieveModel sieveModel)
         {
@@ -149,14 +153,15 @@ namespace AISEP.Services.Startups
             var page = sieveModel.Page ?? 1;
             var pageSize = sieveModel.PageSize ?? 10;
 
-            return new PagedResultDto<StartupResponseDto>
+            return new PagedResult<StartupResponse>
             {
                 Page = page,
                 PageSize = pageSize,
                 TotalCount = totalCount,
                 TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
-                Items = items.Select(s => _mapper.Map<StartupResponseDto>(s))
+                Items = items.Select(s => _mapper.Map<StartupResponse>(s))
             };
         }
     }
 }
+

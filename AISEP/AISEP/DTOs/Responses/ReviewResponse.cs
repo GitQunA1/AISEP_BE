@@ -1,6 +1,6 @@
-namespace AISEP.Models.DTOs
+namespace AISEP.DTOs.Responses
 {
-    public class ReviewResponseDto
+    public class ReviewResponse
     {
         public int Id { get; set; }
         public int AdvisorId { get; set; }

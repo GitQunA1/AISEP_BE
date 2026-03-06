@@ -1,5 +1,6 @@
 using AISEP.Common;
-using AISEP.DTOs;
+using AISEP.DTOs.Requests;
+using AISEP.DTOs.Responses;
 using AISEP.Models.Entities;
 using AISEP.Models.Enums;
 using AISEP.Services.Email;
@@ -35,7 +36,7 @@ namespace AISEP.Services.Auth
             _configuration = configuration;
         }
 
-        public async Task<(bool Success, string Message, int? UserId, string? Email)> RegisterAsync(RegisterDto model)
+        public async Task<(bool Success, string Message, int? UserId, string? Email)> RegisterAsync(RegisterRequest model)
         {
          
             var existingUser = await _userManager.FindByEmailAsync(model.Email);
@@ -150,7 +151,7 @@ namespace AISEP.Services.Auth
             }
         }
 
-        public async Task<(bool Success, TokenResponseDto? TokenResponse, string Message)> LoginAsync(LoginDto model)
+        public async Task<(bool Success, TokenResponse? TokenResponse, string Message)> LoginAsync(LoginRequest model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
@@ -193,7 +194,7 @@ namespace AISEP.Services.Auth
             await _unitOfWork.RefreshTokens.AddAsync(refreshTokenEntity);
             await _unitOfWork.SaveChangesAsync();
 
-            var tokenResponse = new TokenResponseDto
+            var tokenResponse = new TokenResponse
             {
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
@@ -204,7 +205,7 @@ namespace AISEP.Services.Auth
             return (true, tokenResponse, "Login successful");
         }
 
-        public async Task<(bool Success, TokenResponseDto? TokenResponse, string Message)> RefreshTokenAsync(string refreshToken)
+        public async Task<(bool Success, TokenResponse? TokenResponse, string Message)> RefreshTokenAsync(string refreshToken)
         {
            
             var refreshTokenEntity = await _unitOfWork.RefreshTokens.GetByTokenAsync(refreshToken);
@@ -250,7 +251,7 @@ namespace AISEP.Services.Auth
             await _unitOfWork.RefreshTokens.AddAsync(newRefreshTokenEntity);
             await _unitOfWork.SaveChangesAsync();
 
-            var tokenResponse = new TokenResponseDto
+            var tokenResponse = new TokenResponse
             {
                 AccessToken = newAccessToken,
                 RefreshToken = newRefreshToken,

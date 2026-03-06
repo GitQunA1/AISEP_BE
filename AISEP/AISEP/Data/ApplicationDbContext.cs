@@ -421,7 +421,7 @@ namespace AISEP.Data
                 entity.Property(e => e.Type).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.PayosOrderCode).HasMaxLength(255);
-                entity.Property(e => e.TransactionDate).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                 entity.HasOne(t => t.User)
                     .WithMany(u => u.Transactions)
@@ -461,7 +461,7 @@ namespace AISEP.Data
             modelBuilder.Entity<UserReport>(entity =>
             {
                 entity.ToTable("user_reports");
-                entity.HasKey(e => e.ReportId);
+                entity.HasKey(e => e.UserReportId);
                 entity.Property(e => e.EvidenceUrl).HasMaxLength(255);
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
@@ -510,7 +510,7 @@ namespace AISEP.Data
                     .HasForeignKey(sf => sf.StartupId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                entity.Property(sf => sf.FollowedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(sf => sf.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
             });
         }
     }

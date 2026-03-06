@@ -10,7 +10,7 @@ namespace AISEP.Models.Entities
         public TransactionType Type { get; set; }
         public TransactionStatus Status { get; set; }
         public string? PayosOrderCode { get; set; }
-        public DateTime TransactionDate { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation properties
         public User User { get; set; } = null!;

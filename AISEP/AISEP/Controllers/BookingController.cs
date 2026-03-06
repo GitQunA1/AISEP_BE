@@ -1,5 +1,5 @@
 using AISEP.Common;
-using AISEP.DTOs;
+using AISEP.DTOs.Requests;
 using AISEP.Services.Bookings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,17 +20,17 @@ namespace AISEP.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateBooking([FromBody] BookingDto dto)
+        public async Task<IActionResult> CreateBooking([FromBody] CreateBookingRequest dto)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ApiResponse.Fail("Invalid request data."));
+                return BadRequest(ApiResponse<object>.ErrorResponse("Invalid request data.", "Validation failed"));
 
             var booking = await _bookingService.CreateBookingAsync(dto);
             if (booking is null)
-                return BadRequest(ApiResponse.Fail("Could not create booking."));
+                return BadRequest(ApiResponse<object>.ErrorResponse("Could not create booking.", "Failed to create booking"));
 
             return CreatedAtAction(nameof(GetBookingById), new { id = booking.Id },
-                ApiResponse.Success(booking));
+                ApiResponse<object>.SuccessResponse(booking, "Booking created successfully", 201));
         }
 
         [HttpGet("{id}")]
@@ -38,16 +38,16 @@ namespace AISEP.Controllers
         {
             var booking = await _bookingService.GetBookingByIdAsync(id);
             if (booking is null)
-                return NotFound(ApiResponse.Fail("Booking not found."));
+                return NotFound(ApiResponse<object>.ErrorResponse("Booking not found.", "Not found", 404));
 
-            return Ok(ApiResponse.Success(booking));
+            return Ok(ApiResponse<object>.SuccessResponse(booking, "Success"));
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAllBookings([FromQuery] SieveModel model)
         {
             var bookings = await _bookingService.GetAllBookingsAsync(model);
-            return Ok(ApiResponse.Success(bookings));
+            return Ok(ApiResponse<object>.SuccessResponse(bookings, "Success"));
         }
 
         [HttpDelete("{id}")]
@@ -55,9 +55,9 @@ namespace AISEP.Controllers
         {
             var result = await _bookingService.DeleteBookingAsync(id);
             if (!result)
-                return NotFound(ApiResponse.Fail("Booking not found."));
+                return NotFound(ApiResponse<object>.ErrorResponse("Booking not found.", "Not found", 404));
 
-            return Ok(ApiResponse.Success());
+            return Ok(ApiResponse<object>.SuccessResponse(null!, "Deleted successfully"));
         }
     }
 }

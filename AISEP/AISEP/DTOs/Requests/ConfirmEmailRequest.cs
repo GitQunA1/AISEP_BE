@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace AISEP.DTOs
+namespace AISEP.DTOs.Requests
 {
-    public class ConfirmEmailDto
+    public class ConfirmEmailRequest
     {
         [Required(ErrorMessage = "UserId is required")]
         public string UserId { get; set; } = string.Empty;

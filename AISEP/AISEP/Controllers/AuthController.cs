@@ -1,4 +1,6 @@
-using AISEP.DTOs;
+using AISEP.Common;
+using AISEP.DTOs.Requests;
+using AISEP.DTOs.Responses;
 using AISEP.Services.Auth;
 using AISEP.Services.CurrentUser;
 using Microsoft.AspNetCore.Authorization;
@@ -22,7 +24,7 @@ namespace AISEP.Controllers
 
        
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterDto model)
+        public async Task<IActionResult> Register([FromBody] RegisterRequest model)
         {
             if (!ModelState.IsValid)
             {
@@ -31,23 +33,17 @@ namespace AISEP.Controllers
 
             if (model.Password != model.ConfirmPassword)
             {
-                return BadRequest(new { message = "Passwords do not match" });
+                return BadRequest(ApiResponse<object>.ErrorResponse("Passwords do not match", "Validation failed"));
             }
 
             var (success, message, userId, email) = await _authService.RegisterAsync(model);
 
             if (!success)
             {
-                return BadRequest(new { message });
+                return BadRequest(ApiResponse<object>.ErrorResponse(message, message));
             }
 
-            return Ok(new
-            {
-                message,
-                userId,
-                email,
-                emailSent = true
-            });
+            return Ok(ApiResponse<object>.SuccessResponse(new { userId, email, emailSent = true }, message));
         }
 
         [HttpGet("confirm-email")]
@@ -55,22 +51,22 @@ namespace AISEP.Controllers
         {
             if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(token))
             {
-                return BadRequest(new { message = "Invalid email confirmation link" });
+                return BadRequest(ApiResponse<object>.ErrorResponse("Invalid email confirmation link", "Validation failed"));
             }
 
             var (success, message) = await _authService.ConfirmEmailAsync(userId, token);
 
             if (!success)
             {
-                return BadRequest(new { message });
+                return BadRequest(ApiResponse<object>.ErrorResponse(message, message));
             }
 
-            return Ok(new { message });
+            return Ok(ApiResponse<object>.SuccessResponse(null!, message));
         }
 
        
         [HttpPost("resend-confirmation")]
-        public async Task<IActionResult> ResendConfirmation([FromBody] ResendConfirmationDto model)
+        public async Task<IActionResult> ResendConfirmation([FromBody] ResendConfirmationRequest model)
         {
             if (!ModelState.IsValid)
             {
@@ -81,14 +77,14 @@ namespace AISEP.Controllers
 
             if (!success)
             {
-                return BadRequest(new { message });
+                return BadRequest(ApiResponse<object>.ErrorResponse(message, message));
             }
 
-            return Ok(new { message });
+            return Ok(ApiResponse<object>.SuccessResponse(null!, message));
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginDto model)
+        public async Task<IActionResult> Login([FromBody] LoginRequest model)
         {
             if (!ModelState.IsValid)
             {
@@ -99,48 +95,48 @@ namespace AISEP.Controllers
 
             if (!success)
             {
-                return Unauthorized(new { message });
+                return Unauthorized(ApiResponse<object>.ErrorResponse(message, message, 401));
             }
 
-            return Ok(tokenResponse);
+            return Ok(ApiResponse<object>.SuccessResponse(tokenResponse, "Login successful"));
         }
 
       
         [HttpPost("refresh-token")]
-        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenDto model)
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest model)
         {
             if (string.IsNullOrEmpty(model.RefreshToken))
             {
-                return BadRequest(new { message = "Refresh token is required" });
+                return BadRequest(ApiResponse<object>.ErrorResponse("Refresh token is required", "Validation failed"));
             }
 
             var (success, tokenResponse, message) = await _authService.RefreshTokenAsync(model.RefreshToken);
 
             if (!success)
             {
-                return Unauthorized(new { message });
+                return Unauthorized(ApiResponse<object>.ErrorResponse(message, message, 401));
             }
 
-            return Ok(tokenResponse);
+            return Ok(ApiResponse<object>.SuccessResponse(tokenResponse, "Token refreshed successfully"));
         }
 
         [HttpPost("revoke-token")]
         [Authorize]
-        public async Task<IActionResult> RevokeToken([FromBody] RefreshTokenDto model)
+        public async Task<IActionResult> RevokeToken([FromBody] RefreshTokenRequest model)
         {
             if (string.IsNullOrEmpty(model.RefreshToken))
             {
-                return BadRequest(new { message = "Refresh token is required" });
+                return BadRequest(ApiResponse<object>.ErrorResponse("Refresh token is required", "Validation failed"));
             }
 
             var (success, message) = await _authService.RevokeTokenAsync(model.RefreshToken);
 
             if (!success)
             {
-                return BadRequest(new { message });
+                return BadRequest(ApiResponse<object>.ErrorResponse(message, message));
             }
 
-            return Ok(new { message });
+            return Ok(ApiResponse<object>.SuccessResponse(null!, message));
         }
 
       
@@ -158,10 +154,10 @@ namespace AISEP.Controllers
 
             if (!success)
             {
-                return BadRequest(new { message });
+                return BadRequest(ApiResponse<object>.ErrorResponse(message, message));
             }
 
-            return Ok(new { message });
+            return Ok(ApiResponse<object>.SuccessResponse(null!, message));
         }
 
     

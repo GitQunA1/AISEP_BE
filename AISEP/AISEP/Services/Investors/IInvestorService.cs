@@ -1,14 +1,16 @@
 using AISEP.DTOs;
+using AISEP.DTOs.Requests;
+using AISEP.DTOs.Responses;
 using Sieve.Models;
 
 namespace AISEP.Services.Investors
 {
     public interface IInvestorService
     {
-        Task<PagedResultDto<InvestorResponseDto>> GetAllAsync(SieveModel model);
-        Task<InvestorResponseDto?> GetByIdAsync(int investorId);
-        Task<InvestorResponseDto?> GetMyProfileAsync(int userId);
-        Task<InvestorResponseDto?> CreateAsync(int userId, InvestorDto dto);
-        Task<InvestorResponseDto?> UpdateAsync(int userId, InvestorDto dto);
+        Task<PagedResult<InvestorResponse>> GetAllAsync(SieveModel model);
+        Task<InvestorResponse?> GetByIdAsync(int investorId);
+        Task<InvestorResponse?> GetMyProfileAsync(int userId);
+        Task<InvestorResponse?> CreateAsync(int userId, InvestorRequest dto);
+        Task<InvestorResponse?> UpdateAsync(int userId, InvestorRequest dto);
     }
 }

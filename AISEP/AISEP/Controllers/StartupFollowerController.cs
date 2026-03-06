@@ -1,5 +1,4 @@
 using AISEP.Common;
-using AISEP.DTOs;
 using AISEP.Services.StartupFollowers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -27,9 +26,9 @@ namespace AISEP.Controllers
         {
             var result = await _followerService.FollowStartupAsync(startupId);
             if (!result)
-                return Conflict(ApiResponse.Fail("You already follow this startup."));
+                return Conflict(ApiResponse<object>.ErrorResponse("You already follow this startup.", "Conflict", 409));
 
-            return Ok(ApiResponse.Success());
+            return Ok(ApiResponse<object>.SuccessResponse(null!, "Followed successfully"));
         }
 
         [HttpDelete("{startupId:int}/follow")]
@@ -37,9 +36,9 @@ namespace AISEP.Controllers
         {
             var result = await _followerService.UnfollowStartupAsync(startupId);
             if (!result)
-                return NotFound(ApiResponse.Fail("You are not following this startup."));
+                return NotFound(ApiResponse<object>.ErrorResponse("You are not following this startup.", "Not found", 404));
 
-            return Ok(ApiResponse.Success());
+            return Ok(ApiResponse<object>.SuccessResponse(null!, "Unfollowed successfully"));
         }
 
         
@@ -76,11 +75,11 @@ namespace AISEP.Controllers
             try
             {
                 var result = await _followerService.GetMyFollowedStartupsAsync(model);
-                return Ok(result);
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
             }
             catch (UnauthorizedAccessException ex)
             {
-                return Unauthorized(new { message = ex.Message });
+                return Unauthorized(ApiResponse<object>.ErrorResponse(ex.Message, ex.Message, 401));
             }
         }
 
