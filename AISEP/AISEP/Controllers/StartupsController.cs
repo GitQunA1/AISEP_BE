@@ -27,7 +27,7 @@ namespace AISEP.Controllers
         public async Task<IActionResult> GetAll([FromQuery] SieveModel model)
         {
             var result = await _startupService.GetAllStartupsAsync(model);
-            return Ok(ApiResponse.Success(result));
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
         }
 
         [HttpGet("{id:int}")]
@@ -35,22 +35,22 @@ namespace AISEP.Controllers
         {
             var startup = await _startupService.GetStartupByIdAsync(id);
             if (startup is null)
-                return NotFound(ApiResponse.Fail("Startup not found."));
-            return Ok(ApiResponse.Success(startup));
+                return NotFound(ApiResponse<object>.ErrorResponse("Startup not found.", "Not found", 404));
+            return Ok(ApiResponse<object>.SuccessResponse(startup, "Success"));
         }
 
         [HttpGet("search")]
         public async Task<IActionResult> Search([FromQuery] SieveModel model, [FromQuery] string? industry = null, [FromQuery] DevelopmentStage? stage = null)
         {
             var result = await _startupService.SearchStartupsAsync(model, industry, stage);
-            return Ok(ApiResponse.Success(result));
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
         }
 
         [HttpGet("by-status")]
         public async Task<IActionResult> GetByStatus([FromQuery] SieveModel model, [FromQuery] ApprovalStatus? status = null)
         {
             var result = await _startupService.GetStartupsByStatusAsync(model, status);
-            return Ok(ApiResponse.Success(result));
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
         }
 
         // Startup user
@@ -60,7 +60,7 @@ namespace AISEP.Controllers
         {
             var userId = _currentUserService.GetUserId();
             var data = await _startupService.CreateStartupAsync(userId, dto);
-            return CreatedAtAction(nameof(GetById), new { id = data.Id }, ApiResponse.Success(data));
+            return CreatedAtAction(nameof(GetById), new { id = data.Id }, ApiResponse<object>.SuccessResponse(data, "Startup created successfully", 201));
         }
 
         //[HttpGet("me")]
@@ -78,7 +78,7 @@ namespace AISEP.Controllers
         {
             var userId = _currentUserService.GetUserId();
             await _startupService.ApproveStartupAsync(userId);
-            return Ok(ApiResponse.Success("Approving Startup Successfully."));
+            return Ok(ApiResponse<object>.SuccessResponse(null!, "Approving Startup Successfully."));
         }
 
         //// Staff / Admin

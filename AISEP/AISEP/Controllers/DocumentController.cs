@@ -22,10 +22,10 @@ namespace AISEP.Controllers
         public async Task<IActionResult> Upload([FromForm] UploadDocumentDto dto)
         {
             if (dto.File == null || dto.File.Length == 0)
-                return BadRequest(ApiResponse.Fail("File is required."));
+                return BadRequest(ApiResponse<object>.ErrorResponse("File is required.", "Validation failed"));
 
             var result = await _documentService.UploadDocumentAsync(dto);
-            return Ok(ApiResponse.Success(result));
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Document uploaded successfully"));
         }
 
         [HttpGet("{id:int}")]
@@ -33,16 +33,16 @@ namespace AISEP.Controllers
         {
             var result = await _documentService.GetByIdAsync(id);
             if (result is null)
-                return NotFound(ApiResponse.Fail($"Document with Id {id} not found."));
+                return NotFound(ApiResponse<object>.ErrorResponse($"Document with Id {id} not found.", "Not found", 404));
 
-            return Ok(ApiResponse.Success(result));
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
         }
 
         [HttpGet("startup/{startupId:int}")]
         public async Task<IActionResult> GetByStartupId(int startupId)
         {
             var result = await _documentService.GetByStartupIdAsync(startupId);
-            return Ok(ApiResponse.Success(result));
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
         }
 
         [HttpDelete("{id:int}")]
@@ -50,9 +50,9 @@ namespace AISEP.Controllers
         {
             var deleted = await _documentService.DeleteAsync(id);
             if (!deleted)
-                return NotFound(ApiResponse.Fail($"Document with Id {id} not found."));
+                return NotFound(ApiResponse<object>.ErrorResponse($"Document with Id {id} not found.", "Not found", 404));
 
-            return Ok(ApiResponse.Success());
+            return Ok(ApiResponse<object>.SuccessResponse(null!, "Deleted successfully"));
         }
     }
 }
