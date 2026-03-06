@@ -1,5 +1,6 @@
 using AISEP.Settings;
 using Microsoft.Extensions.Options;
+using Nethereum.Hex.HexTypes;
 using Nethereum.Web3;
 using Nethereum.Web3.Accounts;
 using System.Numerics;
@@ -48,23 +49,35 @@ namespace AISEP.Services.Blockchain
         {
             _logger.LogInformation("Storing hash on Sepolia for entityId {EntityId}...", entityId);
 
-            // Connect to Sepolia via RPC with the admin wallet
+            // Connect to Sepolia via RPC
             var account = new Account(_settings.AdminPrivateKey, 11155111); // Sepolia chain ID
             var web3 = new Web3(account, _settings.RpcUrl);
 
             // Load the smart contract
             var contract = web3.Eth.GetContract(_contractAbi, _settings.ContractAddress);
-
-            // Get the storeDocument function
             var storeFunction = contract.GetFunction("storeDocument");
 
-            // Call storeDocument(string _fileHash, uint256 _startupId) and wait for receipt
+            // 1. ƯỚC LƯỢNG LƯỢNG GAS THỰC TẾ (Estimate Gas)
+            // Nethereum sẽ chạy thử dưới local node để xem hàm này tốn bao nhiêu Gas
+            var estimatedGas = await storeFunction.EstimateGasAsync(
+                account.Address,
+                null, // Không giới hạn Gas khi estimate
+                null, // Không gửi kèm ETH
+                fileHash,
+                new BigInteger(entityId)
+            );
+
+            _logger.LogInformation("Estimated Gas for transaction: {Gas}", estimatedGas.Value);
+
+            // 2. GỬI GIAO DỊCH VỚI LƯỢNG GAS ĐÃ ƯỚC LƯỢNG
             var receipt = await storeFunction.SendTransactionAndWaitForReceiptAsync(
                 account.Address,
-                null, // gas (auto-estimate)
-                null, // value (no ETH sent)
+                estimatedGas,         // Truyền lượng Gas vừa tính được vào đây
+                new HexBigInteger(0), // Value = 0 ETH (Chỉ lưu data, không chuyển tiền)
+                null,                 // CancellationTokenSource (no timeout)
                 fileHash,
-                new BigInteger(entityId));
+                new BigInteger(entityId)
+            );
 
             if (receipt.Status.Value == 0)
             {
