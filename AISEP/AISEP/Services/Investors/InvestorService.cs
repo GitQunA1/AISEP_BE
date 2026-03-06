@@ -1,3 +1,4 @@
+using AISEP.Common;
 using AISEP.DTOs;
 using AISEP.Models.Entities;
 using AISEP.Repositories.Investors;
@@ -10,20 +11,20 @@ namespace AISEP.Services.Investors
 {
     public class InvestorService : IInvestorService
     {
-        private readonly IInvestorRepository _repository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly ISieveProcessor _sieveProcessor;
         private readonly IMapper _mapper;
 
-        public InvestorService(IInvestorRepository repository, ISieveProcessor sieveProcessor, IMapper mapper)
+        public InvestorService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper)
         {
-            _repository = repository;
+            _unitOfWork = unitOfWork;
             _sieveProcessor = sieveProcessor;
             _mapper = mapper;
         }
 
         public async Task<PagedResultDto<InvestorResponseDto>> GetAllAsync(SieveModel model)
         {
-            var query = _repository.GetAllQuery();
+            var query = _unitOfWork.Investors.GetAllQuery();
 
             var totalCount = await _sieveProcessor
                 .Apply(model, query, applyPagination: false, applySorting: false)
@@ -48,42 +49,42 @@ namespace AISEP.Services.Investors
 
         public async Task<InvestorResponseDto?> GetByIdAsync(int investorId)
         {
-            var investor = await _repository.GetByIdAsync(investorId);
+            var investor = await _unitOfWork.Investors.GetByIdAsync(investorId);
             return investor is null ? null : _mapper.Map<InvestorResponseDto>(investor);
         }
 
         public async Task<InvestorResponseDto?> GetMyProfileAsync(int userId)
         {
-            var investor = await _repository.GetByUserIdAsync(userId);
+            var investor = await _unitOfWork.Investors.GetByUserIdAsync(userId);
             return investor is null ? null : _mapper.Map<InvestorResponseDto>(investor);
         }
 
         public async Task<InvestorResponseDto?> CreateAsync(int userId, InvestorDto dto)
         {
-            var existing = await _repository.GetByUserIdAsync(userId);
+            var existing = await _unitOfWork.Investors.GetByUserIdAsync(userId);
             if (existing is not null)
                 return null;
 
             var investor = _mapper.Map<Investor>(dto);
             investor.UserId = userId;
 
-            await _repository.AddAsync(investor);
-            await _repository.SaveChangesAsync();
+            await _unitOfWork.Investors.AddAsync(investor);
+            await _unitOfWork.Investors.SaveChangesAsync();
 
-            var created = await _repository.GetByIdAsync(investor.InvestorId);
+            var created = await _unitOfWork.Investors.GetByIdAsync(investor.InvestorId);
             return _mapper.Map<InvestorResponseDto>(created!);
         }
 
         public async Task<InvestorResponseDto?> UpdateAsync(int userId, InvestorDto dto)
         {
-            var investor = await _repository.GetByUserIdAsync(userId);
+            var investor = await _unitOfWork.Investors.GetByUserIdAsync(userId);
             if (investor is null)
                 return null;
 
             _mapper.Map(dto, investor);
 
-            _repository.Update(investor);
-            await _repository.SaveChangesAsync();
+            _unitOfWork.Investors.Update(investor);
+            await _unitOfWork.Investors.SaveChangesAsync();
 
             return _mapper.Map<InvestorResponseDto>(investor);
         }

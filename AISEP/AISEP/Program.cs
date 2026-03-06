@@ -1,10 +1,11 @@
 using AISEP.Common;
 using AISEP.Data;
+
 using AISEP.Models.Entities;
 using AISEP.Repositories.Investors;
+using AISEP.Repositories.Projects;
 using AISEP.Repositories.Startups;
 using AISEP.Models;
-using AISEP.Models.Entities;
 using AISEP.Services.Auth;
 using AISEP.Services.Blockchain;
 using AISEP.Services.Bookings;
@@ -13,6 +14,7 @@ using AISEP.Services.Documents;
 using AISEP.Services.Email;
 using AISEP.Services.Investors;
 using AISEP.Services.Jwt;
+using AISEP.Services.Projects;
 using AISEP.Services.Reviews;
 using AISEP.Services.Startups;
 using AISEP.Services.StartupFollowers;
@@ -22,6 +24,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
 using Sieve.Models;
 using Sieve.Services;
@@ -32,6 +35,18 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers();
+
+// [ApiController] tự động validate ModelState, configure lại format response cho khớp ApiResponse
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var errors = context.ModelState.Values
+            .SelectMany(v => v.Errors)
+            .Select(e => e.ErrorMessage);
+        return new BadRequestObjectResult(ApiResponse.Fail(string.Join(" | ", errors)));
+    };
+});
 
 // Add HttpContextAccessor (required for CurrentUserService)
 builder.Services.AddHttpContextAccessor();
@@ -112,9 +127,9 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddScoped<Sieve.Services.ISieveProcessor, ApplicationSieveProcessor>();
 builder.Services.Configure<Sieve.Models.SieveOptions>(builder.Configuration.GetSection("Sieve"));
 
-// Add Repositories
-builder.Services.AddScoped<IStartupRepository, StartupRepository>();
-builder.Services.AddScoped<IInvestorRepository, InvestorRepository>();
+//// Add Repositories
+//builder.Services.AddScoped<IStartupRepository, StartupRepository>();
+//builder.Services.AddScoped<IInvestorRepository, InvestorRepository>();
 
 // Add Services
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
@@ -126,9 +141,22 @@ builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IStartupFollowerService, StartupFollowerService>();
 builder.Services.AddScoped<IStartupService, StartupService>();
 builder.Services.AddScoped<IInvestorService, InvestorService>();
+builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IStorageService, CloudinaryStorageService>();
 builder.Services.AddScoped<IBlockchainService, SepoliaBlockchainService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
+
+// Customize validation response format (no middleware needed)
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var errors = context.ModelState.Values
+            .SelectMany(v => v.Errors)
+            .Select(e => e.ErrorMessage);
+        return new BadRequestObjectResult(ApiResponse.Fail(string.Join(" | ", errors)));
+    };
+});
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -169,12 +197,14 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthentication(); // Add Authentication middleware
+
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
 // Seed data mẫu
-//await DataSeeder.SeedAsync(app.Services);
+await DataSeeder.SeedAsync(app.Services);
 
 app.Run();

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace AISEP.Models.DTOs
+namespace AISEP.DTOs
 {
     public class ReviewDto
     {

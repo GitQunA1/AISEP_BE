@@ -1,3 +1,4 @@
+using AISEP.Common;
 using AISEP.Data;
 using AISEP.DTOs;
 using AISEP.Models.Entities;
@@ -12,42 +13,42 @@ namespace AISEP.Services.Startups
 {
     public class StartupService : IStartupService
     {
-        private readonly IStartupRepository _repository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly ISieveProcessor _sieveProcessor;
         private readonly IMapper _mapper;
-        private readonly ApplicationDbContext _context;
+     
 
-        public StartupService(IStartupRepository repository, ISieveProcessor sieveProcessor, IMapper mapper, ApplicationDbContext context)
+        public StartupService(IStartupRepository repository, ISieveProcessor sieveProcessor, IMapper mapper, IUnitOfWork unitOfWork)
         {
-            _repository = repository;
+            _unitOfWork = unitOfWork;
             _sieveProcessor = sieveProcessor;
             _mapper = mapper;
-            _context = context;
+           
         }
 
-        // ── Public ────────────────────────────────────────────────────────
+       
 
         public async Task<PagedResultDto<StartupResponseDto>> SearchStartupsAsync(SieveModel model, string? industry = null, DevelopmentStage? stage = null)
         {
-            var query = _repository.SearchStartupsQuery(industry, stage);
+            var query = _unitOfWork.Startups.SearchStartupsQuery(industry, stage);
             return await ApplySieveAndPaginateAsync(query, model);
         }
 
         public async Task<StartupResponseDto?> GetStartupByIdAsync(int id)
         {
-            var startup = await _repository.GetByIdAsync(id);
+            var startup = await _unitOfWork.Startups.GetByIdAsync(id);
             return startup is null ? null : _mapper.Map<StartupResponseDto>(startup);
         }
 
         public async Task<PagedResultDto<StartupResponseDto>> GetAllStartupsAsync(SieveModel model)
         {
-            var query = _repository.GetStartupQuery();
+            var query = _unitOfWork.Startups.GetStartupQuery();
             return await ApplySieveAndPaginateAsync(query, model);
         }
 
         public async Task<PagedResultDto<StartupResponseDto>> GetStartupsByStatusAsync(SieveModel model, ApprovalStatus? status = null)
         {
-            var query = _repository.GetByStatusQuery(status);
+            var query = _unitOfWork.Startups.GetByStatusQuery(status);
             return await ApplySieveAndPaginateAsync(query, model);
         }
 
@@ -55,7 +56,7 @@ namespace AISEP.Services.Startups
 
         public async Task<StartupResponseDto> CreateStartupAsync(int userId, CreateStartupDto dto)
         {
-            var existing = await _repository.GetByUserIdAsync(userId);
+            var existing = await _unitOfWork.Startups.GetByUserIdAsync(userId);
             if (existing is not null)
                 throw new InvalidOperationException("Startup profile already exists for this account.");
 
@@ -74,15 +75,15 @@ namespace AISEP.Services.Startups
                 CreatedAt = DateTime.UtcNow
             };
 
-            await _repository.AddAsync(startup);
-            await _context.SaveChangesAsync();
+            await _unitOfWork.Startups.AddAsync(startup);
+            await _unitOfWork.SaveChangesAsync();
 
             return _mapper.Map<StartupResponseDto>(startup);
         }
 
         public async Task ApproveStartupAsync(int userId)
         {
-            var startup = await _repository.GetByUserIdAsync(userId);
+            var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
             if (startup is null)
                 throw new KeyNotFoundException("Startup profile not found.");
 
@@ -93,8 +94,8 @@ namespace AISEP.Services.Startups
                 throw new InvalidOperationException("Startup is already pending review.");
 
             startup.ApprovalStatus = ApprovalStatus.Approved;
-            _repository.Update(startup);
-            await _context.SaveChangesAsync();
+            _unitOfWork.Startups.Update(startup);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         //public async Task<StartupResponseDto?> GetMyProfileAsync(int userId)

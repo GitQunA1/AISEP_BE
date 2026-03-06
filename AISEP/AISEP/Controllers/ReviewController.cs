@@ -1,5 +1,5 @@
 using AISEP.Common;
-using AISEP.Models.DTOs;
+using AISEP.DTOs;
 using AISEP.Services.Reviews;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

@@ -88,6 +88,20 @@ namespace AISEP.Common
                 .CanFilter()
                 .CanSort();
 
+            // Project
+            mapper.Property<Project>(p => p.ProjectName)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Project>(p => p.Status)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Project>(p => p.DevelopmentStage)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Project>(p => p.CreatedAt)
+                .CanFilter()
+                .CanSort();
+
             return mapper;
         }
     }

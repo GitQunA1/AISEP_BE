@@ -31,18 +31,18 @@ namespace AISEP.Services.CurrentUser
         }
 
         
-        public string GetUserEmail()
+        public string? GetUserEmail()
         {
             return _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Email);
         }
 
      
-        public string GetUserName()
+        public string? GetUserName()
         {
             return _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Name);
         }
 
-        public string GetUserRole()
+        public string? GetUserRole()
         {
             return _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Role);
         }

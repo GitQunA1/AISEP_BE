@@ -9,13 +9,11 @@ namespace AISEP.Services.CurrentUser
         int GetUserId();
 
       
-        string GetUserEmail();
+        string? GetUserEmail();
 
-      
-        string GetUserName();
+        string? GetUserName();
 
-      
-        string GetUserRole();
+        string? GetUserRole();
 
       
         bool IsAuthenticated();

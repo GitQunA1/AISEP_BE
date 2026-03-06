@@ -1,4 +1,4 @@
-﻿using AISEP.Common;
+using AISEP.Common;
 using AISEP.DTOs;
 using AISEP.Models.Enums;
 using AISEP.Services.CurrentUser;
@@ -20,8 +20,6 @@ namespace AISEP.Controllers
             _startupService = startupService;
             _currentUserService = currentUserService;
         }
-
-        
 
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] SieveModel model)
@@ -53,8 +51,6 @@ namespace AISEP.Controllers
             return Ok(ApiResponse.Success(result));
         }
 
-        // Startup user
-
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateStartupDto dto)
         {
@@ -63,16 +59,6 @@ namespace AISEP.Controllers
             return CreatedAtAction(nameof(GetById), new { id = data.Id }, ApiResponse.Success(data));
         }
 
-        //[HttpGet("me")]
-        //public async Task<IActionResult> GetMyProfile()
-        //{
-        //    var userId = _currentUserService.GetUserId();
-        //    var startup = await _startupService.GetMyProfileAsync(userId);
-        //    if (startup is null)
-        //        return NotFound(ApiResponse.Fail("Startup profile not found."));
-        //    return Ok(ApiResponse.Success(startup));
-        //}
-
         [HttpPut("submit")]
         public async Task<IActionResult> ApproveStartup()
         {
@@ -80,21 +66,5 @@ namespace AISEP.Controllers
             await _startupService.ApproveStartupAsync(userId);
             return Ok(ApiResponse.Success("Approving Startup Successfully."));
         }
-
-        //// Staff / Admin
-
-        //[HttpGet("pending")]
-        //public async Task<IActionResult> GetPending([FromQuery] SieveModel model)
-        //{
-        //    var result = await _startupService.GetPendingStartupsAsync(model);
-        //    return Ok(ApiResponse.Success(result));
-        //}
-
-        //[HttpPut("{id:int}/review")]
-        //public async Task<IActionResult> Review(int id, [FromBody] ReviewStartupDto dto)
-        //{
-        //    await _startupService.ReviewStartupAsync(id, dto);
-        //    return Ok(ApiResponse.Success("Startup reviewed successfully."));
-        //}
     }
 }

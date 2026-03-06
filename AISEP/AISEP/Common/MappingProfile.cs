@@ -2,6 +2,7 @@ using AutoMapper;
 using AISEP.Models.DTOs;
 using AISEP.Models.Entities;
 using AISEP.DTOs;
+using AISEP.Models.Enums;
 
 namespace AISEP.Common
 {
@@ -74,6 +75,13 @@ namespace AISEP.Common
                     opt => opt.MapFrom(src => src.Startup != null ? src.Startup.LogoUrl : null))
                 .ForMember(dest => dest.Industry,
                     opt => opt.MapFrom(src => src.Startup != null ? src.Startup.Industry : null));
+
+            // Project Entity → ProjectResponseDto
+            CreateMap<Project, ProjectResponseDto>()
+                .ForMember(dest => dest.DevelopmentStage,
+                    opt => opt.MapFrom(src => src.DevelopmentStage != null ? src.DevelopmentStage.ToString() : null))
+                .ForMember(dest => dest.Status,
+                    opt => opt.MapFrom(src => src.Status.ToString()));
         }
     }
 }
