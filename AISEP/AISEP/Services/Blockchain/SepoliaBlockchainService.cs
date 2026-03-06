@@ -75,5 +75,22 @@ namespace AISEP.Services.Blockchain
             _logger.LogInformation("Blockchain TX confirmed: {TxHash}", receipt.TransactionHash);
             return receipt.TransactionHash;
         }
+
+        public async Task<(int EntityId, long Timestamp)> VerifyDocumentAsync(string fileHash)
+        {
+            _logger.LogInformation("Verifying document on blockchain — FileHash: {Hash}", fileHash);
+
+            var web3 = new Web3(_settings.RpcUrl);
+            var contract = web3.Eth.GetContract(_contractAbi, _settings.ContractAddress);
+
+            var verifyFunction = contract.GetFunction("verifyDocument");
+            var result = await verifyFunction.CallDeserializingToObjectAsync<VerifyDocumentOutput>(fileHash);
+
+            _logger.LogInformation("Blockchain verify result — EntityId: {EntityId}, Timestamp: {Timestamp}",
+                result.EntityId, result.Timestamp);
+
+            return ((int)result.EntityId, (long)result.Timestamp);
+        }
     }
+
 }

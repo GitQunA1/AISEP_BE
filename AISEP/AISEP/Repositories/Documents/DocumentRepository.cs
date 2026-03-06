@@ -20,10 +20,10 @@ namespace AISEP.Repositories.Documents
                 .FirstOrDefaultAsync(d => d.DocumentId == id);
         }
 
-        public async Task<IEnumerable<Document>> GetByStartupIdAsync(int startupId)
+        public async Task<IEnumerable<Document>> GetByProjectIdAsync(int projectId)
         {
             return await _context.Documents
-                .Where(d => d.ProjectId == startupId)
+                .Where(d => d.ProjectId == projectId)
                 .OrderByDescending(d => d.VerifiedAt)
                 .ToListAsync();
         }
@@ -41,10 +41,10 @@ namespace AISEP.Repositories.Documents
             await _context.Documents.AddAsync(document);
         }
 
-        public void Update(Document document)
-        {
-            _context.Documents.Update(document);
-        }
+        //public void Update(Document document)
+        //{
+        //    _context.Documents.Update(document);
+        //}
 
         public void Delete(Document document)
         {

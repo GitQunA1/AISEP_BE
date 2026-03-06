@@ -2,6 +2,7 @@ using AISEP.Common;
 using AISEP.DTOs.Requests;
 using AISEP.DTOs.Responses;
 using AISEP.Models.Entities;
+using AISEP.Models.Enums;
 using AISEP.Services.Blockchain;
 using AISEP.Services.Storage;
 using AutoMapper;
@@ -9,15 +10,8 @@ using AutoMapper;
 namespace AISEP.Services.Documents
 {
     /// <summary>
-    /// Service chính cho Document.
     /// - Gọi IStorageService để upload file lên Cloudinary.
     /// - Gọi IBlockchainService để lưu hash lên Sepolia (nếu IsIpProtected).
-    /// - Lưu thông tin cuối cùng vào SQL Database (bảng Documents) qua UnitOfWork.
-    /// 
-    /// Logger tối ưu:
-    /// - Chỉ log ở đầu và cuối hàm chính.
-    /// - Log chi tiết nằm trong các service con (StorageService, BlockchainService).
-    /// - Chỉ log Error khi có Exception.
     /// </summary>
     public class DocumentService : IDocumentService
     {
@@ -41,55 +35,32 @@ namespace AISEP.Services.Documents
             _mapper = mapper;
         }
 
-        public async Task<DocumentResponse> UploadDocumentAsync(UploadDocumentRequest dto)
+        public async Task<DocumentResponse> UploadDocumentAsync(int projectId, UploadDocumentRequest request)
         {
-            _logger.LogInformation("UploadDocument started — StartupId: {StartupId}, FileName: {FileName}, IpProtected: {IpProtected}",
-                dto.StartupId, dto.File.FileName, dto.IsIpProtected);
+            // 1. Upload file lên Cloudinary
+            var fileUrl = await _storageService.UploadFileAsync(request.File);
 
-            try
+            // 2. Tính hash + lưu Blockchain (mọi document đều được bảo vệ IP)
+            var fileHash = await _blockchainService.ComputeFileHashAsync(request.File);
+            var txHash = await _blockchainService.StoreHashAsync(fileHash, projectId);
+
+            // 3. Lưu vào Database
+            var document = new Document
             {
-                // 1. Upload file lên Cloudinary (log chi tiết ở trong StorageService)
-                var fileUrl = await _storageService.UploadFileAsync(dto.File);
+                ProjectId = projectId,
+                DocumentType = request.DocumentType,
+                FileName = request.File.FileName,
+                FileUrl = fileUrl,
+                FileHash = fileHash,
+                BlockchainTxHash = txHash,
+                IsIpProtected = true,
+                VerifiedAt = DateTime.UtcNow
+            };
 
-                // 2. Nếu cần IP Protection → tính hash + lưu Blockchain
-                string? fileHash = null;
-                string? txHash = null;
-                DateTime? verifiedAt = null;
+            await _unitOfWork.Documents.AddAsync(document);
+            await _unitOfWork.SaveChangesAsync();
 
-                if (dto.IsIpProtected)
-                {
-                    fileHash = await _blockchainService.ComputeFileHashAsync(dto.File);
-                    txHash = await _blockchainService.StoreHashAsync(fileHash, dto.StartupId);
-                    verifiedAt = DateTime.UtcNow;
-                }
-
-                // 3. Lưu vào Database
-                var document = new Document
-                {
-                    ProjectId = dto.StartupId,
-                    DocumentType = dto.DocumentType,
-                    FileName = dto.File.FileName,
-                    FileUrl = fileUrl,
-                    FileHash = fileHash,
-                    BlockchainTxHash = txHash,
-                    IsIpProtected = dto.IsIpProtected,
-                    VerifiedAt = verifiedAt
-                };
-
-                await _unitOfWork.Documents.AddAsync(document);
-                await _unitOfWork.SaveChangesAsync();
-
-                var result = _mapper.Map<DocumentResponse>(document);
-
-                _logger.LogInformation("UploadDocument completed — DocumentId: {DocumentId}", document.DocumentId);
-                return result;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "UploadDocument failed — StartupId: {StartupId}, FileName: {FileName}",
-                    dto.StartupId, dto.File.FileName);
-                throw;
-            }
+            return _mapper.Map<DocumentResponse>(document);
         }
 
         public async Task<DocumentResponse?> GetByIdAsync(int id)
@@ -101,9 +72,9 @@ namespace AISEP.Services.Documents
             return _mapper.Map<DocumentResponse>(document);
         }
 
-        public async Task<IEnumerable<DocumentResponse>> GetByStartupIdAsync(int startupId)
+        public async Task<IEnumerable<DocumentResponse>> GetByProjectIdAsync(int projectId)
         {
-            var documents = await _unitOfWork.Documents.GetByStartupIdAsync(startupId);
+            var documents = await _unitOfWork.Documents.GetByProjectIdAsync(projectId);
             return documents.Select(d => _mapper.Map<DocumentResponse>(d));
         }
 
@@ -114,11 +85,41 @@ namespace AISEP.Services.Documents
             if (document == null)
                 return false;
 
+            // Block deletion if the project is already submitted/approved/published
+            var lockedStatuses = new[] { ProjectStatus.Submitted, ProjectStatus.Approved, ProjectStatus.Published };
+            if (lockedStatuses.Contains(document.Project.Status))
+                throw new InvalidOperationException(
+                    $"Cannot delete document: project is in '{document.Project.Status}' status and is locked.");
+
             _unitOfWork.Documents.Delete(document);
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.LogInformation("Document deleted — DocumentId: {DocumentId}", id);
             return true;
+        }
+
+        public async Task<BlockchainVerificationResponse> VerifyDocumentAsync(int documentId)
+        {
+            var document = await _unitOfWork.Documents.GetByIdAsync(documentId);
+            if (document is null)
+                throw new KeyNotFoundException($"Document with Id {documentId} not found.");
+
+            if (string.IsNullOrEmpty(document.FileHash) || string.IsNullOrEmpty(document.BlockchainTxHash))
+                throw new InvalidOperationException("This document was not registered on the blockchain.");
+
+            // Gọi Smart Contract (view function — miễn phí gas)
+            var (entityId, timestamp) = await _blockchainService.VerifyDocumentAsync(document.FileHash);
+
+            var isAuthentic = timestamp > 0 && entityId == document.ProjectId;
+
+            return new BlockchainVerificationResponse
+            {
+                IsAuthentic = isAuthentic,
+                TxHash = document.BlockchainTxHash,
+                TimestampOnBlockchain = DateTimeOffset.FromUnixTimeSeconds(timestamp).UtcDateTime.ToString("yyyy-MM-dd HH:mm:ss UTC"),
+                Message = isAuthentic
+                    ? "Document is authentic and protected on the Blockchain."
+                    : "Document does not match blockchain data. It may have been tampered with."
+            };
         }
 
     }
