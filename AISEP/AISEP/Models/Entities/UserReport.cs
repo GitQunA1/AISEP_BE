@@ -4,7 +4,7 @@ namespace AISEP.Models.Entities
 {
     public class UserReport
     {
-        public int ReportId { get; set; }
+        public int UserReportId { get; set; }
         public int ReporterId { get; set; }
         public int ReportedUserId { get; set; }
         public string? Reason { get; set; }

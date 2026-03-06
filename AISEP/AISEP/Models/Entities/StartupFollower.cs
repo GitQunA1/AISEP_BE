@@ -10,6 +10,6 @@ namespace AISEP.Models.Entities
         public int StartupId { get; set; }
         public Startup Startup { get; set; } = null!;
 
-        public DateTime FollowedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

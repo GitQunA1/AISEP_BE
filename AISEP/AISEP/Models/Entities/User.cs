@@ -13,6 +13,8 @@ namespace AISEP.Models.Entities
 
         public bool IsVerified { get; set; }
 
+        public bool IsPremium { get; set; }
+
         public DateTime? DateOfBirth { get; set; }
 
         public DateTime CreatedAt { get; set; }
@@ -21,6 +23,8 @@ namespace AISEP.Models.Entities
         public Startup? Startup { get; set; }
         public Investor? Investor { get; set; }
         public Advisor? Advisor { get; set; }
+
+        //1-N
         public ICollection<Booking> CustomerBookings { get; set; } = new List<Booking>();
         public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
         public ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();

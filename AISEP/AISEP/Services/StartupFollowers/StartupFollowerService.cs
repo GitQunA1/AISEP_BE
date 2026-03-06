@@ -40,7 +40,7 @@ namespace AISEP.Services.StartupFollowers
             {
                 UserId = userId,
                 StartupId = startupId,
-                FollowedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow
             };
 
             await _unitOfWork.StartupFollowers.AddAsync(follow);
@@ -126,7 +126,7 @@ namespace AISEP.Services.StartupFollowers
                 CompanyName = sf.Startup?.CompanyName ?? "Unknown",
                 LogoUrl = sf.Startup?.LogoUrl,
                 Industry = sf.Startup?.Industry.ToString(),
-                FollowedAt = sf.FollowedAt
+                FollowedAt = sf.CreatedAt
             };
         }
 
