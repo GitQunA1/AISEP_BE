@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace AISEP.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
     [Authorize]
     public class DocumentController : ControllerBase
     {
@@ -18,41 +17,62 @@ namespace AISEP.Controllers
             _documentService = documentService;
         }
 
-        [HttpPost("upload")]
-        public async Task<IActionResult> Upload([FromForm] UploadDocumentRequest dto)
+        // 1. UPLOAD (Nested under project)
+        [HttpPost("api/projects/{projectId}/documents")]
+        public async Task<IActionResult> Upload([FromRoute] int projectId, [FromForm] UploadDocumentRequest request)
         {
-            if (dto.File == null || dto.File.Length == 0)
+            if (request.File == null || request.File.Length == 0)
                 return BadRequest(ApiResponse<object>.ErrorResponse("File is required.", "Validation failed"));
 
-            var result = await _documentService.UploadDocumentAsync(dto);
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Document uploaded successfully"));
+            var result = await _documentService.UploadDocumentAsync(projectId, request);
+            return CreatedAtAction(nameof(GetById), new { documentId = result.DocumentId },
+                ApiResponse<object>.SuccessResponse(result, "Document uploaded successfully", 201));
         }
 
-        [HttpGet("{id:int}")]
-        public async Task<IActionResult> GetById(int id)
+        // 2. GET LIST (Nested under project)
+        [HttpGet("api/projects/{projectId}/documents")]
+        public async Task<IActionResult> GetByProjectId([FromRoute] int projectId)
         {
-            var result = await _documentService.GetByIdAsync(id);
+            var result = await _documentService.GetByProjectIdAsync(projectId);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
+        }
+
+        // 3. GET DETAILS (Direct)
+        [HttpGet("api/documents/{documentId}")]
+        public async Task<IActionResult> GetById([FromRoute] int documentId)
+        {
+            var result = await _documentService.GetByIdAsync(documentId);
             if (result is null)
-                return NotFound(ApiResponse<object>.ErrorResponse($"Document with Id {id} not found.", "Not found", 404));
+                return NotFound(ApiResponse<object>.ErrorResponse($"Document {documentId} not found.", "Not found", 404));
 
             return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
         }
 
-        [HttpGet("startup/{startupId:int}")]
-        public async Task<IActionResult> GetByStartupId(int startupId)
+        // 4. DELETE (Direct — service guards project đã Submit/Publish)
+        [HttpDelete("api/documents/{documentId}")]
+        public async Task<IActionResult> Delete([FromRoute] int documentId)
         {
-            var result = await _documentService.GetByStartupIdAsync(startupId);
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
+            try
+            {
+                var deleted = await _documentService.DeleteAsync(documentId);
+                if (!deleted)
+                    return NotFound(ApiResponse<object>.ErrorResponse($"Document {documentId} not found.", "Not found", 404));
+
+                return Ok(ApiResponse<object>.SuccessResponse(null!, "Deleted successfully"));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Operation not allowed", 409));
+            }
         }
 
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> Delete(int id)
+        // 5. VERIFY BLOCKCHAIN (Direct + Action)
+        [HttpGet("api/documents/{documentId}/verify")]
+        [AllowAnonymous]
+        public async Task<IActionResult> VerifyDocument([FromRoute] int documentId)
         {
-            var deleted = await _documentService.DeleteAsync(id);
-            if (!deleted)
-                return NotFound(ApiResponse<object>.ErrorResponse($"Document with Id {id} not found.", "Not found", 404));
-
-            return Ok(ApiResponse<object>.SuccessResponse(null!, "Deleted successfully"));
+            var result = await _documentService.VerifyDocumentAsync(documentId);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Verification completed"));
         }
     }
 }

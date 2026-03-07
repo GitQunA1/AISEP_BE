@@ -17,7 +17,7 @@ namespace AISEP.Repositories.StartupFollowers
         public async Task RemoveAsync(int userId, int startupId)
         {
             var follower = await _context.StartupFollowers
-                .FirstOrDefaultAsync(sf => sf.UserId == userId && sf.StartupId == startupId);
+                .FirstOrDefaultAsync(sf => sf.FollowerId == userId && sf.FollowedId == startupId);
             if (follower != null)
             {
                 _context.StartupFollowers.Remove(follower);
@@ -27,7 +27,7 @@ namespace AISEP.Repositories.StartupFollowers
         public async Task<bool> IsFollowingAsync(int userId, int startupId)
         {
             return await _context.StartupFollowers
-                .AnyAsync(sf => sf.UserId == userId && sf.StartupId == startupId);
+                .AnyAsync(sf => sf.FollowerId == userId && sf.FollowedId == startupId);
         }
 
         public IQueryable<StartupFollower> GetFollowerQuery()
@@ -45,7 +45,7 @@ namespace AISEP.Repositories.StartupFollowers
                 .Include(sf => sf.User)
                 .Include(sf => sf.Startup)
                     .ThenInclude(s => s.User)
-                .FirstOrDefaultAsync(sf => sf.UserId == userId && sf.StartupId == startupId);
+                .FirstOrDefaultAsync(sf => sf.FollowerId == userId && sf.FollowedId == startupId);
         }
     }
 }

@@ -193,7 +193,6 @@ namespace AISEP.Data
                 entity.ToTable("connection_requests");
                 entity.HasKey(e => e.ConnectionRequestId);
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
-                entity.Property(e => e.RequestDate).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                 entity.HasOne(cr => cr.Investor)
                     .WithMany(i => i.ConnectionRequests)
@@ -498,16 +497,16 @@ namespace AISEP.Data
             modelBuilder.Entity<StartupFollower>(entity =>
             {
                 entity.ToTable("startup_followers");
-                entity.HasKey(sf => new { sf.UserId, sf.StartupId });
+                entity.HasKey(sf => sf.StartupFollowerId);
 
                 entity.HasOne(sf => sf.User)
                     .WithMany(u => u.FollowedStartups)
-                    .HasForeignKey(sf => sf.UserId)
+                    .HasForeignKey(sf => sf.FollowerId)
                     .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasOne(sf => sf.Startup)
                     .WithMany(s => s.Followers)
-                    .HasForeignKey(sf => sf.StartupId)
+                    .HasForeignKey(sf => sf.FollowedId)
                     .OnDelete(DeleteBehavior.Cascade);
 
                 entity.Property(sf => sf.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");

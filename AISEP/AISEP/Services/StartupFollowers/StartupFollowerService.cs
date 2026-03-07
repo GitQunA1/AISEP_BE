@@ -38,8 +38,8 @@ namespace AISEP.Services.StartupFollowers
 
             var follow = new StartupFollower
             {
-                UserId = userId,
-                StartupId = startupId,
+                FollowerId = userId,
+                FollowedId = startupId,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -79,7 +79,7 @@ namespace AISEP.Services.StartupFollowers
             var userId = _currentUserService.GetUserId();
 
             var query = _unitOfWork.StartupFollowers.GetFollowerQuery()
-                .Where(sf => sf.UserId == userId);
+                .Where(sf => sf.FollowerId == userId);
 
             return await ApplySieveAndPaginateAsync(query, model);
         }
@@ -122,7 +122,7 @@ namespace AISEP.Services.StartupFollowers
         {
             return new FollowedStartupResponse
             {
-                StartupId = sf.StartupId,
+                StartupId = sf.FollowedId,
                 CompanyName = sf.Startup?.CompanyName ?? "Unknown",
                 LogoUrl = sf.Startup?.LogoUrl,
                 Industry = sf.Startup?.Industry.ToString(),

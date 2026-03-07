@@ -10,9 +10,6 @@ namespace AISEP.Models.Entities
         public UserRole Role { get; set; }
 
         public UserStatus Status { get; set; }
-
-        public bool IsVerified { get; set; }
-
         public bool IsPremium { get; set; }
 
         public DateTime? DateOfBirth { get; set; }
