@@ -2,7 +2,7 @@ using AISEP.Common;
 using AISEP.DTOs.Requests;
 using AISEP.DTOs.Responses;
 using AISEP.Services.Auth;
-using AISEP.Services.CurrentUser;
+using AISEP.Services.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -14,9 +14,9 @@ namespace AISEP.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
-        private readonly ICurrentUserService _currentUserService;
+        private readonly IUserService _currentUserService;
 
-        public AuthController(IAuthService authService, ICurrentUserService currentUserService)
+        public AuthController(IAuthService authService, IUserService currentUserService)
         {
             _authService = authService;
             _currentUserService = currentUserService;

@@ -2,7 +2,7 @@ using AISEP.Common;
 using AISEP.DTOs.Requests;
 using AISEP.DTOs.Responses;
 using AISEP.Models.Entities;
-using AISEP.Services.CurrentUser;
+using AISEP.Services.Users;
 using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
 using Sieve.Services;
@@ -12,10 +12,15 @@ namespace AISEP.Services.Reviews
     public class ReviewService : IReviewService
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly ICurrentUserService _currentUserService;
+        private readonly IUserService _currentUserService;
         private readonly ISieveProcessor _sieveProcessor;
 
-        public ReviewService(IUnitOfWork unitOfWork, ICurrentUserService currentUserService, ISieveProcessor sieveProcessor) { _unitOfWork = unitOfWork; _currentUserService = currentUserService; _sieveProcessor = sieveProcessor; }
+        public ReviewService(IUnitOfWork unitOfWork, IUserService currentUserService, ISieveProcessor sieveProcessor)
+        {
+            _unitOfWork = unitOfWork;
+            _currentUserService = currentUserService;
+            _sieveProcessor = sieveProcessor;
+        }
 
         public async Task<ReviewResponse?> CreateReviewAsync(CreateReviewRequest dto)
         {

@@ -23,9 +23,11 @@ namespace AISEP.Services.Startups
             _mapper = mapper;
         }
 
-        public async Task<PagedResult<StartupResponse>> SearchStartupsAsync(SieveModel model, string? industry = null, DevelopmentStage? stage = null)
+        public async Task<PagedResult<StartupResponse>> SearchStartupsAsync(SieveModel model, string? industry = null, string? stage = null)
         {
-            var query = _unitOfWork.Startups.SearchStartupsQuery(industry, stage);
+            DevelopmentStage? parsedStage = Enum.TryParse<DevelopmentStage>(stage, ignoreCase: true, out var stageResult)
+                ? stageResult : null;
+            var query = _unitOfWork.Startups.SearchStartupsQuery(industry, parsedStage);
             return await ApplySieveAndPaginateAsync(query, model);
         }
 
@@ -41,9 +43,11 @@ namespace AISEP.Services.Startups
             return await ApplySieveAndPaginateAsync(query, model);
         }
 
-        public async Task<PagedResult<StartupResponse>> GetStartupsByStatusAsync(SieveModel model, ApprovalStatus? status = null)
+        public async Task<PagedResult<StartupResponse>> GetStartupsByStatusAsync(SieveModel model, string? status = null)
         {
-            var query = _unitOfWork.Startups.GetByStatusQuery(status);
+            ApprovalStatus? parsedStatus = Enum.TryParse<ApprovalStatus>(status, ignoreCase: true, out var statusResult)
+                ? statusResult : null;
+            var query = _unitOfWork.Startups.GetByStatusQuery(parsedStatus);
             return await ApplySieveAndPaginateAsync(query, model);
         }
 

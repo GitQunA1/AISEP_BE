@@ -43,6 +43,11 @@ namespace AISEP.Services.Projects
             return await PaginateAsync(_unitOfWork.Projects.GetByStartupIdQuery(startup.StartupId), model);
         }
 
+        public async Task<PagedResult<ProjectResponse>> GetDraftProjectsAsync(SieveModel model)
+        {
+            return await PaginateAsync(_unitOfWork.Projects.GetByStatusQuery(ProjectStatus.Draft), model);
+        }
+
         public async Task<ProjectResponse> CreateProjectAsync(int userId, CreateProjectRequest dto)
         {
             var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);

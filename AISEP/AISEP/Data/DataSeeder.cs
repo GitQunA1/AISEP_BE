@@ -58,7 +58,7 @@ namespace AISEP.Data
                     Email          = u.Email,
                     Role           = u.Role,
                     Status         = UserStatus.Active,
-                    IsVerified     = true,
+                    //IsVerified     = true,
                     CreatedAt      = DateTime.UtcNow,
                     EmailConfirmed = true
                 };
@@ -446,20 +446,20 @@ namespace AISEP.Data
                     InvestorId      = investor.InvestorId,
                     ProjectId       = projects[0].ProjectId,
                     Status          = ConnectionRequestStatus.Accepted,
-                    RequestDate     = DateTime.UtcNow.AddDays(-10),
+                    //RequestDate     = DateTime.UtcNow.AddDays(-10),
                     ResponseDate    = DateTime.UtcNow.AddDays(-8),
                     Message         = "Chúng tôi rất quan tâm đến giải pháp thanh toán của các bạn",
-                    ResponseMessage = "Cảm ơn bạn, chúng tôi rất vui được hợp tác!",
-                    CreatedAt       = DateTime.UtcNow.AddDays(-10)
+                    //ResponseMessage = "Cảm ơn bạn, chúng tôi rất vui được hợp tác!",
+                    //CreatedAt       = DateTime.UtcNow.AddDays(-10)
                 },
                 new ConnectionRequest
                 {
                     InvestorId  = investor.InvestorId,
                     ProjectId   = projects[1].ProjectId,
                     Status      = ConnectionRequestStatus.Pending,
-                    RequestDate = DateTime.UtcNow.AddDays(-2),
+                    //RequestDate = DateTime.UtcNow.AddDays(-2),
                     Message     = "AgriTech là lĩnh vực chúng tôi đang tập trung đầu tư",
-                    CreatedAt   = DateTime.UtcNow.AddDays(-2)
+                    //CreatedAt   = DateTime.UtcNow.AddDays(-2)
                 }
             };
 
@@ -578,28 +578,28 @@ namespace AISEP.Data
             if (investorUsers.Count > 0)
             {
                 if (startups.Count > 0)
-                    followers.Add(new StartupFollower { UserId = investorUsers[0].Id, StartupId = startups[0].StartupId, CreatedAt = DateTime.UtcNow.AddDays(-15) });
+                    followers.Add(new StartupFollower { FollowerId = investorUsers[0].Id, FollowedId = startups[0].StartupId, CreatedAt = DateTime.UtcNow.AddDays(-15) });
                 if (startups.Count > 2)
-                    followers.Add(new StartupFollower { UserId = investorUsers[0].Id, StartupId = startups[2].StartupId, CreatedAt = DateTime.UtcNow.AddDays(-10) });
+                    followers.Add(new StartupFollower { FollowerId = investorUsers[0].Id, FollowedId = startups[2].StartupId, CreatedAt = DateTime.UtcNow.AddDays(-10) });
             }
 
             if (investorUsers.Count > 1)
                 foreach (var s in startups)
-                    followers.Add(new StartupFollower { UserId = investorUsers[1].Id, StartupId = s.StartupId, CreatedAt = DateTime.UtcNow.AddDays(-7) });
+                    followers.Add(new StartupFollower { FollowerId = investorUsers[1].Id, FollowedId = s.StartupId, CreatedAt = DateTime.UtcNow.AddDays(-7) });
 
             if (advisorUsers.Count > 0)
             {
                 if (startups.Count > 0)
-                    followers.Add(new StartupFollower { UserId = advisorUsers[0].Id, StartupId = startups[0].StartupId, CreatedAt = DateTime.UtcNow.AddDays(-5) });
+                    followers.Add(new StartupFollower { FollowerId = advisorUsers[0].Id, FollowedId = startups[0].StartupId, CreatedAt = DateTime.UtcNow.AddDays(-5) });
                 if (startups.Count > 1)
-                    followers.Add(new StartupFollower { UserId = advisorUsers[0].Id, StartupId = startups[1].StartupId, CreatedAt = DateTime.UtcNow.AddDays(-5) });
+                    followers.Add(new StartupFollower { FollowerId = advisorUsers[0].Id, FollowedId = startups[1].StartupId, CreatedAt = DateTime.UtcNow.AddDays(-5) });
             }
 
             if (advisorUsers.Count > 1 && startups.Count > 2)
-                followers.Add(new StartupFollower { UserId = advisorUsers[1].Id, StartupId = startups[2].StartupId, CreatedAt = DateTime.UtcNow.AddDays(-3) });
+                followers.Add(new StartupFollower { FollowerId = advisorUsers[1].Id, FollowedId = startups[2].StartupId, CreatedAt = DateTime.UtcNow.AddDays(-3) });
 
             if (staffUsers.Count > 0 && startups.Count > 0)
-                followers.Add(new StartupFollower { UserId = staffUsers[0].Id, StartupId = startups[0].StartupId, CreatedAt = DateTime.UtcNow.AddDays(-2) });
+                followers.Add(new StartupFollower { FollowerId = staffUsers[0].Id, FollowedId = startups[0].StartupId, CreatedAt = DateTime.UtcNow.AddDays(-2) });
 
             if (followers.Any())
             {

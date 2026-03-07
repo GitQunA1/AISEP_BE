@@ -3,7 +3,7 @@ using AISEP.DTOs.Requests;
 using AISEP.DTOs.Responses;
 using AISEP.Models.Entities;
 using AISEP.Models.Enums;
-using AISEP.Services.CurrentUser;
+using AISEP.Services.Users;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
@@ -15,13 +15,13 @@ namespace AISEP.Services.Bookings
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ISieveProcessor _sieveProcessor;
-        private readonly ICurrentUserService _currentUserService;
+        private readonly IUserService _currentUserService;
         private readonly IMapper _mapper;
 
         public BookingService(
             IUnitOfWork unitOfWork, 
             ISieveProcessor sieveProcessor,
-            ICurrentUserService currentUserService,
+            IUserService currentUserService,
             IMapper mapper)
         {
             _unitOfWork = unitOfWork;

@@ -1,7 +1,6 @@
 using AISEP.Common;
 using AISEP.DTOs.Requests;
 using AISEP.DTOs.Responses;
-using AISEP.Models.Enums;
 using Sieve.Models;
 
 namespace AISEP.Services.Startups
@@ -10,8 +9,8 @@ namespace AISEP.Services.Startups
     {
        
         Task<PagedResult<StartupResponse>> GetAllStartupsAsync(SieveModel model);
-        Task<PagedResult<StartupResponse>> GetStartupsByStatusAsync(SieveModel model, ApprovalStatus? status = null);
-        Task<PagedResult<StartupResponse>> SearchStartupsAsync(SieveModel model, string? industry = null, DevelopmentStage? stage = null);
+        Task<PagedResult<StartupResponse>> GetStartupsByStatusAsync(SieveModel model, string? status = null);
+        Task<PagedResult<StartupResponse>> SearchStartupsAsync(SieveModel model, string? industry = null, string? stage = null);
         Task<StartupResponse?> GetStartupByIdAsync(int id);
 
      

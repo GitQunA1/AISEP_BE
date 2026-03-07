@@ -1,7 +1,6 @@
 using AISEP.Common;
 using AISEP.DTOs.Requests;
-using AISEP.Models.Enums;
-using AISEP.Services.CurrentUser;
+using AISEP.Services.Users;
 using AISEP.Services.Startups;
 using Microsoft.AspNetCore.Mvc;
 using Sieve.Models;
@@ -13,9 +12,9 @@ namespace AISEP.Controllers
     public class StartupsController : ControllerBase
     {
         private readonly IStartupService _startupService;
-        private readonly ICurrentUserService _currentUserService;
+        private readonly IUserService _currentUserService;
 
-        public StartupsController(IStartupService startupService, ICurrentUserService currentUserService)
+        public StartupsController(IStartupService startupService, IUserService currentUserService)
         {
             _startupService = startupService;
             _currentUserService = currentUserService;
@@ -38,14 +37,14 @@ namespace AISEP.Controllers
         }
 
         [HttpGet("search")]
-        public async Task<IActionResult> Search([FromQuery] SieveModel model, [FromQuery] string? industry = null, [FromQuery] DevelopmentStage? stage = null)
+        public async Task<IActionResult> Search([FromQuery] SieveModel model, [FromQuery] string? industry = null, [FromQuery] string? stage = null)
         {
             var result = await _startupService.SearchStartupsAsync(model, industry, stage);
             return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
         }
 
         [HttpGet("by-status")]
-        public async Task<IActionResult> GetByStatus([FromQuery] SieveModel model, [FromQuery] ApprovalStatus? status = null)
+        public async Task<IActionResult> GetByStatus([FromQuery] SieveModel model, [FromQuery] string? status = null)
         {
             var result = await _startupService.GetStartupsByStatusAsync(model, status);
             return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));

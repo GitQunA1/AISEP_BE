@@ -1,7 +1,6 @@
 using AISEP.Common;
 using AISEP.DTOs.Requests;
 using AISEP.Services.Bookings;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sieve.Models;
 
@@ -9,7 +8,6 @@ namespace AISEP.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
     public class BookingController : ControllerBase
     {
         private readonly IBookingService _bookingService;
@@ -22,18 +20,15 @@ namespace AISEP.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateBooking([FromBody] CreateBookingRequest dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ApiResponse<object>.ErrorResponse("Invalid request data.", "Validation failed"));
-
             var booking = await _bookingService.CreateBookingAsync(dto);
             if (booking is null)
-                return BadRequest(ApiResponse<object>.ErrorResponse("Could not create booking.", "Failed to create booking"));
+                return BadRequest(ApiResponse<object>.ErrorResponse("Could not create booking.", "Failed"));
 
             return CreatedAtAction(nameof(GetBookingById), new { id = booking.Id },
                 ApiResponse<object>.SuccessResponse(booking, "Booking created successfully", 201));
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public async Task<IActionResult> GetBookingById(int id)
         {
             var booking = await _bookingService.GetBookingByIdAsync(id);
@@ -50,7 +45,21 @@ namespace AISEP.Controllers
             return Ok(ApiResponse<object>.SuccessResponse(bookings, "Success"));
         }
 
-        [HttpDelete("{id}")]
+        [HttpGet("advisor/{advisorId:int}")]
+        public async Task<IActionResult> GetByAdvisor(int advisorId, [FromQuery] SieveModel model)
+        {
+            var bookings = await _bookingService.GetBookingsByAdvisorIdAsync(advisorId, model);
+            return Ok(ApiResponse<object>.SuccessResponse(bookings, "Success"));
+        }
+
+        [HttpGet("customer/{customerId:int}")]
+        public async Task<IActionResult> GetByCustomer(int customerId, [FromQuery] SieveModel model)
+        {
+            var bookings = await _bookingService.GetBookingsByCustomerIdAsync(customerId, model);
+            return Ok(ApiResponse<object>.SuccessResponse(bookings, "Success"));
+        }
+
+        [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteBooking(int id)
         {
             var result = await _bookingService.DeleteBookingAsync(id);

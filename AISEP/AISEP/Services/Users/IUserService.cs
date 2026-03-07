@@ -1,24 +1,14 @@
-using AISEP.DTOs;
+using AISEP.DTOs.Responses;
 
-namespace AISEP.Services.CurrentUser
+namespace AISEP.Services.Users
 {
-
-    public interface ICurrentUserService
+    public interface IUserService
     {
-
         int GetUserId();
-
-      
         string? GetUserEmail();
-
         string? GetUserName();
-
         string? GetUserRole();
-
-      
         bool IsAuthenticated();
-
-      
-        
+        Task<UserResponse> GetByProjectId(int id);
     }
 }

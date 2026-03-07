@@ -1,5 +1,6 @@
 using AISEP.Data;
 using AISEP.Models.Entities;
+using AISEP.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace AISEP.Repositories.Projects
@@ -25,6 +26,14 @@ namespace AISEP.Repositories.Projects
             return _context.Projects
                 .Include(p => p.Startup)
                 .Where(p => p.StartupId == startupId)
+                .AsQueryable();
+        }
+
+        public IQueryable<Project> GetByStatusQuery(ProjectStatus status)
+        {
+            return _context.Projects
+                .Include(p => p.Startup)
+                .Where(p => p.Status == status)
                 .AsQueryable();
         }
 

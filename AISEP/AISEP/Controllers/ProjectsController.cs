@@ -1,6 +1,6 @@
 using AISEP.Common;
 using AISEP.DTOs.Requests;
-using AISEP.Services.CurrentUser;
+using AISEP.Services.Users;
 using AISEP.Services.Projects;
 using Microsoft.AspNetCore.Mvc;
 using Sieve.Models;
@@ -12,9 +12,9 @@ namespace AISEP.Controllers
     public class ProjectsController : ControllerBase
     {
         private readonly IProjectService _projectService;
-        private readonly ICurrentUserService _currentUserService;
+        private readonly IUserService _currentUserService;
 
-        public ProjectsController(IProjectService projectService, ICurrentUserService currentUserService)
+        public ProjectsController(IProjectService projectService, IUserService currentUserService)
         {
             _projectService = projectService;
             _currentUserService = currentUserService;
@@ -44,6 +44,13 @@ namespace AISEP.Controllers
             return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
         }
 
+        [HttpGet("drafts")]
+        public async Task<IActionResult> GetDraftProjects([FromQuery] SieveModel model)
+        {
+            var result = await _projectService.GetDraftProjectsAsync(model);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
+        }
+
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateProjectRequest dto)
         {
@@ -53,14 +60,7 @@ namespace AISEP.Controllers
                 ApiResponse<object>.SuccessResponse(data, "Project created successfully", 201));
         }
 
-        [HttpPut("{id:int}/submit")]
-        public async Task<IActionResult> Submit(int id)
-        {
-            var userId = _currentUserService.GetUserId();
-            await _projectService.SubmitProjectAsync(id, userId);
-            return Ok(ApiResponse<object>.SuccessResponse(null, "Project submitted for review successfully."));
-        }
-
+      
         [HttpPut("{id:int}/approve")]
         public async Task<IActionResult> Approve(int id, [FromBody] ApproveProjectRequest dto)
         {

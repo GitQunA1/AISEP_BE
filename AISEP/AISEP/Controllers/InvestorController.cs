@@ -1,6 +1,6 @@
 ﻿using AISEP.Common;
 using AISEP.DTOs.Requests;
-using AISEP.Services.CurrentUser;
+using AISEP.Services.Users;
 using AISEP.Services.Investors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,15 +13,15 @@ namespace AISEP.Controllers
     public class InvestorController : ControllerBase
     {
         private readonly IInvestorService _investorService;
-        private readonly ICurrentUserService _currentUserService;
+        private readonly IUserService _currentUserService;
 
-        public InvestorController(IInvestorService investorService, ICurrentUserService currentUserService)
+        public InvestorController(IInvestorService investorService, IUserService currentUserService)
         {
             _investorService = investorService;
             _currentUserService = currentUserService;
         }
 
-        // GET api/investor
+       
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] SieveModel model)
         {
@@ -29,7 +29,7 @@ namespace AISEP.Controllers
             return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
         }
 
-        // GET api/investor/{id}
+        
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -40,8 +40,8 @@ namespace AISEP.Controllers
             return Ok(ApiResponse<object>.SuccessResponse(investor, "Success"));
         }
 
-        // GET api/investor/me
-        [Authorize]
+       
+     
         [HttpGet("me")]
         public async Task<IActionResult> GetMyProfile()
         {
@@ -53,8 +53,8 @@ namespace AISEP.Controllers
             return Ok(ApiResponse<object>.SuccessResponse(investor, "Success"));
         }
 
-        // POST api/investor
-        [Authorize]
+      
+       
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] InvestorRequest dto)
         {
@@ -68,8 +68,7 @@ namespace AISEP.Controllers
                 ApiResponse<object>.SuccessResponse(data, "Investor created successfully", 201));
         }
 
-        // PUT api/investor
-        [Authorize]
+       
         [HttpPut]
         public async Task<IActionResult> Update([FromBody] InvestorRequest dto)
         {

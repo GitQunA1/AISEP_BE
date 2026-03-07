@@ -8,6 +8,7 @@ using AISEP.Repositories.Reviews;
 using AISEP.Repositories.Startups;
 using AISEP.Repositories.StartupFollowers;
 using AISEP.Repositories.Investors;
+using AISEP.Repositories.Users;
 
 namespace AISEP.Common
 {
@@ -23,7 +24,7 @@ namespace AISEP.Common
         private IProjectRepository? _projects;
         private IStartupRepository? _startups;
         private IInvestorRepository? _investors;
-
+        private IUserRepository? _users;
         public UnitOfWork(ApplicationDbContext context)
         {
             _context = context;
@@ -37,6 +38,7 @@ namespace AISEP.Common
         public IProjectRepository Projects          => _projects         ??= new ProjectRepository(_context);
         public IStartupRepository Startups          => _startups         ??= new StartupRepository(_context);
         public IInvestorRepository Investors        => _investors        ??= new InvestorRepository(_context);
+        public IUserRepository Users                    => _users            ??= new UserRepository(_context);
 
         public async Task<int> SaveChangesAsync()
         {

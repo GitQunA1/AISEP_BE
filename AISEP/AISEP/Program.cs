@@ -1,6 +1,5 @@
 using AISEP.Common;
 using AISEP.Data;
-
 using AISEP.Models.Entities;
 using AISEP.Repositories.Investors;
 using AISEP.Repositories.Projects;
@@ -9,7 +8,7 @@ using AISEP.Models;
 using AISEP.Services.Auth;
 using AISEP.Services.Blockchain;
 using AISEP.Services.Bookings;
-using AISEP.Services.CurrentUser;
+using AISEP.Services.Users;
 using AISEP.Services.Documents;
 using AISEP.Services.Email;
 using AISEP.Services.Investors;
@@ -20,6 +19,9 @@ using AISEP.Services.Startups;
 using AISEP.Services.StartupFollowers;
 using AISEP.Services.Storage;
 using AISEP.Settings;
+using AISEP.Validators.Auth;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -35,6 +37,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers();
+
+// Add FluentValidation
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 
 // Add HttpContextAccessor (required for CurrentUserService)
 builder.Services.AddHttpContextAccessor();
@@ -120,7 +126,7 @@ builder.Services.Configure<Sieve.Models.SieveOptions>(builder.Configuration.GetS
 //builder.Services.AddScoped<IInvestorRepository, InvestorRepository>();
 
 // Add Services
-builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
