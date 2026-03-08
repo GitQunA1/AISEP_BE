@@ -25,6 +25,14 @@ namespace AISEP.Models.Entities
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? PublishedAt { get; set; }
 
+        // Approval / Rejection info
+        public int? ApprovedById { get; set; }
+        public DateTime? ApprovedAt { get; set; }
+
+        public int? RejectedById { get; set; }
+        public DateTime? RejectedAt { get; set; }
+        public string? RejectionReason { get; set; }
+
         // Navigation properties
         public Startup Startup { get; set; } = null!;
         public ICollection<Document> Documents { get; set; } = new List<Document>();

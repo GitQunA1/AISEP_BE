@@ -4,6 +4,7 @@ namespace AISEP.Models.Enums
     {
         Draft,
         IpProtected,
+        Pending,
         Submitted,
         Approved,
         Published,

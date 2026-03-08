@@ -6,6 +6,7 @@ using AISEP.Models.Enums;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
+using AISEP.Services.Users;
 using Sieve.Services;
 
 namespace AISEP.Services.Projects
@@ -15,12 +16,14 @@ namespace AISEP.Services.Projects
         private readonly IUnitOfWork _unitOfWork;
         private readonly ISieveProcessor _sieveProcessor;
         private readonly IMapper _mapper;
+        private readonly IUserService _userService;
 
-        public ProjectService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper)
+        public ProjectService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IUserService userService)
         {
             _unitOfWork = unitOfWork;
             _sieveProcessor = sieveProcessor;
             _mapper = mapper;
+            _userService = userService;
         }
 
         public async Task<PagedResult<ProjectResponse>> GetAllProjectsAsync(SieveModel model)
@@ -71,7 +74,7 @@ namespace AISEP.Services.Projects
                 TeamMembers            = dto.TeamMembers,
                 KeySkills              = dto.KeySkills,
                 TeamExperience         = dto.TeamExperience,
-                Status                 = ProjectStatus.Draft,
+                Status                 = ProjectStatus.Pending,
                 CreatedAt              = DateTime.UtcNow
             };
 
@@ -81,35 +84,20 @@ namespace AISEP.Services.Projects
             return _mapper.Map<ProjectResponse>(project);
         }
 
-        public async Task SubmitProjectAsync(int projectId, int userId)
-        {
-            var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
-            if (project is null)
-                throw new KeyNotFoundException("Project not found.");
-
-            var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
-            if (startup is null || project.StartupId != startup.StartupId)
-                throw new UnauthorizedAccessException("You do not have permission to submit this project.");
-
-            if (project.Status != ProjectStatus.Draft)
-                throw new InvalidOperationException($"Only Draft projects can be submitted. Current status: {project.Status}.");
-
-            project.Status = ProjectStatus.Submitted;
-            _unitOfWork.Projects.Update(project);
-            await _unitOfWork.SaveChangesAsync();
-        }
-
+     
         public async Task ApproveProjectAsync(int projectId, ApproveProjectRequest dto)
         {
             var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
             if (project is null)
                 throw new KeyNotFoundException("Project not found.");
 
-            if (project.Status != ProjectStatus.Submitted)
-                throw new InvalidOperationException($"Only Submitted projects can be approved. Current status: {project.Status}.");
+            if (project.Status != ProjectStatus.Pending)
+                throw new InvalidOperationException($"Only Pending projects can be approved. Current status: {project.Status}.");
 
             project.Status      = ProjectStatus.Approved;
             project.PublishedAt = DateTime.UtcNow;
+            project.ApprovedAt  = DateTime.UtcNow;
+            project.ApprovedById = _userService.GetUserId();
             _unitOfWork.Projects.Update(project);
             await _unitOfWork.SaveChangesAsync();
         }
@@ -120,10 +108,13 @@ namespace AISEP.Services.Projects
             if (project is null)
                 throw new KeyNotFoundException("Project not found.");
 
-            if (project.Status != ProjectStatus.Submitted)
-                throw new InvalidOperationException($"Only Submitted projects can be rejected. Current status: {project.Status}.");
+            if (project.Status != ProjectStatus.Pending)
+                throw new InvalidOperationException($"Only Pending projects can be rejected. Current status: {project.Status}.");
 
             project.Status = ProjectStatus.Rejected;
+            project.RejectedAt = DateTime.UtcNow;
+            project.RejectionReason = dto.Reason?.Trim();
+            project.RejectedById = _userService.GetUserId();
             _unitOfWork.Projects.Update(project);
             await _unitOfWork.SaveChangesAsync();
         }

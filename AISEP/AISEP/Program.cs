@@ -140,7 +140,7 @@ builder.Services.AddScoped<IStorageService, CloudinaryStorageService>();
 builder.Services.AddScoped<IBlockchainService, SepoliaBlockchainService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 
-// Customize validation response format (no middleware needed)
+
 builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
     options.InvalidModelStateResponseFactory = context =>

@@ -80,7 +80,12 @@ namespace AISEP.Common
                 .ForMember(dest => dest.DevelopmentStage,
                     opt => opt.MapFrom(src => src.DevelopmentStage != null ? src.DevelopmentStage.ToString() : null))
                 .ForMember(dest => dest.Status,
-                    opt => opt.MapFrom(src => src.Status.ToString()));
+                    opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.ApprovedById, opt => opt.MapFrom(src => src.ApprovedById))
+                .ForMember(dest => dest.ApprovedAt, opt => opt.MapFrom(src => src.ApprovedAt))
+                .ForMember(dest => dest.RejectedById, opt => opt.MapFrom(src => src.RejectedById))
+                .ForMember(dest => dest.RejectedAt, opt => opt.MapFrom(src => src.RejectedAt))
+                .ForMember(dest => dest.RejectionReason, opt => opt.MapFrom(src => src.RejectionReason));
         }
     }
 }

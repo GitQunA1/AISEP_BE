@@ -22,5 +22,13 @@ namespace AISEP.DTOs.Responses
         public string Status { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public DateTime? PublishedAt { get; set; }
+
+        // Approval / rejection info
+        public int? ApprovedById { get; set; }
+        public DateTime? ApprovedAt { get; set; }
+
+        public int? RejectedById { get; set; }
+        public DateTime? RejectedAt { get; set; }
+        public string? RejectionReason { get; set; }
     }
 }
