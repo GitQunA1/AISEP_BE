@@ -5,6 +5,7 @@ using AISEP.Repositories.Projects;
 using AISEP.Repositories.RefreshTokens;
 using AISEP.Repositories.Reviews;
 using AISEP.Repositories.Startups;
+using AISEP.Repositories.StartupAIAnalyses;
 using AISEP.Repositories.StartupFollowers;
 using AISEP.Repositories.Investors;
 using AISEP.Repositories.Users;
@@ -22,6 +23,7 @@ namespace AISEP.Common
         IStartupRepository Startups { get; }
         IInvestorRepository Investors { get; }
         IUserRepository Users { get; }
+        IStartupAIAnalysisRepository StartupAIAnalyses { get; }
 
 
         Task<int> SaveChangesAsync();

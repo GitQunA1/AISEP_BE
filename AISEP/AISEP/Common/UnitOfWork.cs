@@ -6,6 +6,7 @@ using AISEP.Repositories.Projects;
 using AISEP.Repositories.RefreshTokens;
 using AISEP.Repositories.Reviews;
 using AISEP.Repositories.Startups;
+using AISEP.Repositories.StartupAIAnalyses;
 using AISEP.Repositories.StartupFollowers;
 using AISEP.Repositories.Investors;
 using AISEP.Repositories.Users;
@@ -25,20 +26,23 @@ namespace AISEP.Common
         private IStartupRepository? _startups;
         private IInvestorRepository? _investors;
         private IUserRepository? _users;
+        private IStartupAIAnalysisRepository? _startupAIAnalyses;
+
         public UnitOfWork(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        public IBookingRepository Bookings         => _bookings         ??= new BookingRepository(_context);
-        public IRefreshTokenRepository RefreshTokens => _refreshTokens  ??= new RefreshTokenRepository(_context);
-        public IDocumentRepository Documents        => _documents        ??= new DocumentRepository(_context);
-        public IReviewRepository Reviews            => _reviews          ??= new ReviewRepository(_context);
-        public IStartupFollowerRepository StartupFollowers => _startupFollowers ??= new StartupFollowerRepository(_context);
-        public IProjectRepository Projects          => _projects         ??= new ProjectRepository(_context);
-        public IStartupRepository Startups          => _startups         ??= new StartupRepository(_context);
-        public IInvestorRepository Investors        => _investors        ??= new InvestorRepository(_context);
-        public IUserRepository Users                    => _users            ??= new UserRepository(_context);
+        public IBookingRepository Bookings                     => _bookings             ??= new BookingRepository(_context);
+        public IRefreshTokenRepository RefreshTokens           => _refreshTokens        ??= new RefreshTokenRepository(_context);
+        public IDocumentRepository Documents                   => _documents            ??= new DocumentRepository(_context);
+        public IReviewRepository Reviews                       => _reviews              ??= new ReviewRepository(_context);
+        public IStartupFollowerRepository StartupFollowers     => _startupFollowers     ??= new StartupFollowerRepository(_context);
+        public IProjectRepository Projects                     => _projects             ??= new ProjectRepository(_context);
+        public IStartupRepository Startups                     => _startups             ??= new StartupRepository(_context);
+        public IInvestorRepository Investors                   => _investors            ??= new InvestorRepository(_context);
+        public IUserRepository Users                           => _users                ??= new UserRepository(_context);
+        public IStartupAIAnalysisRepository StartupAIAnalyses => _startupAIAnalyses    ??= new StartupAIAnalysisRepository(_context);
 
         public async Task<int> SaveChangesAsync()
         {
