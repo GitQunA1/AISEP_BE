@@ -18,6 +18,7 @@ using AISEP.Services.Reviews;
 using AISEP.Services.Startups;
 using AISEP.Services.StartupFollowers;
 using AISEP.Services.Storage;
+using AISEP.Services.AI;
 using AISEP.Settings;
 using AISEP.Validators.Auth;
 using FluentValidation;
@@ -57,6 +58,11 @@ builder.Services.Configure<BlockchainSettings>(builder.Configuration.GetSection(
 
 // Configure CloudinarySettings
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
+
+// Configure GeminiSettings
+builder.Services.Configure<GeminiSettings>(builder.Configuration.GetSection("GeminiSettings"));
+builder.Services.AddHttpClient<IGeminiAiService, GeminiAiService>();
+builder.Services.AddScoped<IStartupAIAnalysisService, StartupAIAnalysisService>();
 
 // Add DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>

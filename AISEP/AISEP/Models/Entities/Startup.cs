@@ -17,7 +17,7 @@ namespace AISEP.Models.Entities
         public ApprovalStatus ApprovalStatus { get; set; } = ApprovalStatus.Unverified;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // Approval / Rejection info
+       
         public int? ApprovedById { get; set; }
         public DateTime? ApprovedAt { get; set; }
 
