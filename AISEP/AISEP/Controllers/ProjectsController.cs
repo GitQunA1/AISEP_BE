@@ -60,7 +60,14 @@ namespace AISEP.Controllers
                 ApiResponse<object>.SuccessResponse(data, "Project created successfully", 201));
         }
 
-      
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateProjectRequest dto)
+        {
+            var data = await _projectService.UpdateProjectAsync(id, dto);
+            return Ok(ApiResponse<object>.SuccessResponse(data, "Project updated successfully."));
+        }
+
+
         [HttpPut("{id:int}/approve")]
         public async Task<IActionResult> Approve(int id, [FromBody] ApproveProjectRequest dto)
         {

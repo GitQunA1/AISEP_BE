@@ -81,7 +81,7 @@ namespace AISEP.Services.StartupFollowers
             var query = _unitOfWork.StartupFollowers.GetFollowerQuery()
                 .Where(sf => sf.FollowerId == userId);
 
-            return await ApplySieveAndPaginateAsync(query, model);
+            return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, sf => _mapper.Map<FollowedStartupResponse>(sf));
         }
 
         //public async Task<PagedResultDto<StartupFollowerResponseDto>> GetStartupFollowersAsync(Guid startupId, SieveModel model)
@@ -91,32 +91,6 @@ namespace AISEP.Services.StartupFollowers
 
         //    return await ApplySieveAndPaginateFollowersAsync(query, model);
         //}
-
-        private async Task<PagedResult<FollowedStartupResponse>> ApplySieveAndPaginateAsync(
-            IQueryable<StartupFollower> query, 
-            SieveModel sieveModel)
-        {
-            var totalCount = await _sieveProcessor
-                .Apply(sieveModel, query, applyPagination: false, applySorting: false)
-                .CountAsync();
-
-            var items = await _sieveProcessor
-                .Apply(sieveModel, query)
-                .ToListAsync();
-
-            var page = sieveModel.Page ?? 1;
-            var pageSize = sieveModel.PageSize ?? 10;
-            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-
-            return new PagedResult<FollowedStartupResponse>
-            {
-                Page = page,
-                PageSize = pageSize,
-                TotalCount = totalCount,
-                TotalPages = totalPages,
-                Items = items.Select(sf => _mapper.Map<FollowedStartupResponse>(sf))
-            };
-        }
 
         private FollowedStartupResponse MapToFollowedStartupResponse(StartupFollower sf)
         {

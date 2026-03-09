@@ -3,6 +3,7 @@ using AISEP.DTOs.Requests;
 using AISEP.DTOs.Responses;
 using AISEP.Models.Entities;
 using AISEP.Models.Enums;
+using AISEP.Services.Users;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
@@ -15,12 +16,14 @@ namespace AISEP.Services.Startups
         private readonly IUnitOfWork _unitOfWork;
         private readonly ISieveProcessor _sieveProcessor;
         private readonly IMapper _mapper;
+        private readonly IUserService _userService;
 
-        public StartupService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper)
+        public StartupService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IUserService userService)
         {
             _unitOfWork = unitOfWork;
             _sieveProcessor = sieveProcessor;
             _mapper = mapper;
+            _userService = userService;
         }
 
         public async Task<PagedResult<StartupResponse>> SearchStartupsAsync(SieveModel model, string? industry = null, string? stage = null)
@@ -28,7 +31,7 @@ namespace AISEP.Services.Startups
             DevelopmentStage? parsedStage = Enum.TryParse<DevelopmentStage>(stage, ignoreCase: true, out var stageResult)
                 ? stageResult : null;
             var query = _unitOfWork.Startups.SearchStartupsQuery(industry, parsedStage);
-            return await ApplySieveAndPaginateAsync(query, model);
+            return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, s => _mapper.Map<StartupResponse>(s));
         }
 
         public async Task<StartupResponse?> GetStartupByIdAsync(int id)
@@ -40,7 +43,7 @@ namespace AISEP.Services.Startups
         public async Task<PagedResult<StartupResponse>> GetAllStartupsAsync(SieveModel model)
         {
             var query = _unitOfWork.Startups.GetStartupQuery();
-            return await ApplySieveAndPaginateAsync(query, model);
+            return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, s => _mapper.Map<StartupResponse>(s));
         }
 
         public async Task<PagedResult<StartupResponse>> GetStartupsByStatusAsync(SieveModel model, string? status = null)
@@ -48,7 +51,7 @@ namespace AISEP.Services.Startups
             ApprovalStatus? parsedStatus = Enum.TryParse<ApprovalStatus>(status, ignoreCase: true, out var statusResult)
                 ? statusResult : null;
             var query = _unitOfWork.Startups.GetByStatusQuery(parsedStatus);
-            return await ApplySieveAndPaginateAsync(query, model);
+            return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, s => _mapper.Map<StartupResponse>(s));
         }
 
         public async Task<StartupResponse> CreateStartupAsync(int userId, CreateStartupRequest dto)
@@ -78,6 +81,28 @@ namespace AISEP.Services.Startups
             return _mapper.Map<StartupResponse>(startup);
         }
 
+        public async Task<StartupResponse> UpdateStartupAsync(UpdateStartupRequest dto)
+        {
+            var userId  = _userService.GetUserId();
+            var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
+            if (startup is null)
+                throw new KeyNotFoundException("Startup profile not found for this account.");
+
+            startup.CompanyName        = dto.CompanyName;
+            startup.LogoUrl            = dto.LogoUrl;
+            startup.Founder            = dto.Founder;
+            startup.ContactInfo        = dto.ContactInfo;
+            startup.CountryCity        = dto.CountryCity;
+            startup.Website            = dto.Website;
+            startup.Industry           = dto.Industry;
+            startup.BusinessLicenseUrl = dto.BusinessLicenseUrl;
+
+            _unitOfWork.Startups.Update(startup);
+            await _unitOfWork.SaveChangesAsync();
+
+            return _mapper.Map<StartupResponse>(startup);
+        }
+
         public async Task ApproveStartupAsync(int userId)
         {
             var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
@@ -90,8 +115,8 @@ namespace AISEP.Services.Startups
                 throw new InvalidOperationException($"Only Pending startups can be approved. Current status: {startup.ApprovalStatus}.");
 
             startup.ApprovalStatus = ApprovalStatus.Approved;
-            startup.ApprovedAt = DateTime.UtcNow;
-            startup.ApprovedById = userId;
+            startup.ApprovedAt     = DateTime.UtcNow;
+            startup.ApprovedById   = userId;
 
             _unitOfWork.Startups.Update(startup);
             await _unitOfWork.SaveChangesAsync();
@@ -117,29 +142,5 @@ namespace AISEP.Services.Startups
             await _unitOfWork.SaveChangesAsync();
         }
 
-        private async Task<PagedResult<StartupResponse>> ApplySieveAndPaginateAsync(
-            IQueryable<Startup> query,
-            SieveModel sieveModel)
-        {
-            var totalCount = await _sieveProcessor
-                .Apply(sieveModel, query, applyPagination: false, applySorting: false)
-                .CountAsync();
-
-            var items = await _sieveProcessor
-                .Apply(sieveModel, query)
-                .ToListAsync();
-
-            var page = sieveModel.Page ?? 1;
-            var pageSize = sieveModel.PageSize ?? 10;
-
-            return new PagedResult<StartupResponse>
-            {
-                Page = page,
-                PageSize = pageSize,
-                TotalCount = totalCount,
-                TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
-                Items = items.Select(s => _mapper.Map<StartupResponse>(s))
-            };
+            }
         }
-    }
-}

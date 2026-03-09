@@ -26,26 +26,7 @@ namespace AISEP.Services.Investors
         public async Task<PagedResult<InvestorResponse>> GetAllAsync(SieveModel model)
         {
             var query = _unitOfWork.Investors.GetAllQuery();
-
-            var totalCount = await _sieveProcessor
-                .Apply(model, query, applyPagination: false, applySorting: false)
-                .CountAsync();
-
-            var items = await _sieveProcessor
-                .Apply(model, query)
-                .ToListAsync();
-
-            var page = model.Page ?? 1;
-            var pageSize = model.PageSize ?? 10;
-
-            return new PagedResult<InvestorResponse>
-            {
-                Page = page,
-                PageSize = pageSize,
-                TotalCount = totalCount,
-                TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
-                Items = items.Select(i => _mapper.Map<InvestorResponse>(i))
-            };
+            return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, i => _mapper.Map<InvestorResponse>(i));
         }
 
         public async Task<InvestorResponse?> GetByIdAsync(int investorId)

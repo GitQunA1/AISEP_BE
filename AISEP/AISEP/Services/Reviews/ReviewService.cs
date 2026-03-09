@@ -44,7 +44,7 @@ namespace AISEP.Services.Reviews
         public async Task<PagedResult<ReviewResponse>> GetAllReviewsAsync(SieveModel model)
         {
             var query = _unitOfWork.Reviews.GetReviewQuery();
-            return await ApplySieveAndPaginateAsync(query, model);
+            return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, MapToResponseDto);
         }
 
         public async Task<ReviewResponse?> GetReviewByIdAsync(int id)
@@ -57,7 +57,7 @@ namespace AISEP.Services.Reviews
         {
             var query = _unitOfWork.Reviews.GetReviewQuery()
                 .Where(r => r.AdvisorId == advisorId);
-            return await ApplySieveAndPaginateAsync(query, model);
+            return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, MapToResponseDto);
         }
 
         public async Task<PagedResult<ReviewResponse>> GetMyReviewsAsync(SieveModel model)
@@ -66,7 +66,7 @@ namespace AISEP.Services.Reviews
 
             var query = _unitOfWork.Reviews.GetReviewQuery()
                 .Where(r => r.ReviewerId == userId);
-            return await ApplySieveAndPaginateAsync(query, model);
+            return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, MapToResponseDto);
         }
 
         public async Task<bool> DeleteReviewAsync(int id)
@@ -85,33 +85,6 @@ namespace AISEP.Services.Reviews
             return true;
         }
 
-        private async Task<PagedResult<ReviewResponse>> ApplySieveAndPaginateAsync(
-         IQueryable<Review> query,
-         SieveModel sieveModel)
-        {
-
-            var totalCount = await _sieveProcessor
-                .Apply(sieveModel, query, applyPagination: false, applySorting: false)
-                .CountAsync();
-
-
-            var items = await _sieveProcessor
-                .Apply(sieveModel, query)
-                .ToListAsync();
-
-            var page = sieveModel.Page ?? 1;
-            var pageSize = sieveModel.PageSize ?? 10;
-            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-
-            return new PagedResult<ReviewResponse>
-            {
-                Page = page,
-                PageSize = pageSize,
-                TotalCount = totalCount,
-                TotalPages = totalPages,
-                Items = items.Select(MapToResponseDto)
-            };
-        }
         private ReviewResponse MapToResponseDto(Review? review)
         {
             if (review == null)

@@ -57,21 +57,21 @@ namespace AISEP.Services.Bookings
         public async Task<PagedResult<BookingResponse>> GetAllBookingsAsync(SieveModel sieveModel)
         {
             var query = _unitOfWork.Bookings.GetBookingQuery();
-            return await ApplySieveAndPaginateAsync(query, sieveModel);
+            return await PaginationHelper.PaginateAsync(query, sieveModel, _sieveProcessor, b => _mapper.Map<BookingResponse>(b));
         }
 
         public async Task<PagedResult<BookingResponse>> GetBookingsByAdvisorIdAsync(int advisorId, SieveModel sieveModel)
         {
             var query = _unitOfWork.Bookings.GetBookingQuery()
                 .Where(b => b.AdvisorId == advisorId);
-            return await ApplySieveAndPaginateAsync(query, sieveModel);
+            return await PaginationHelper.PaginateAsync(query, sieveModel, _sieveProcessor, b => _mapper.Map<BookingResponse>(b));
         }
 
         public async Task<PagedResult<BookingResponse>> GetBookingsByCustomerIdAsync(int customerId, SieveModel sieveModel)
         {
             var query = _unitOfWork.Bookings.GetBookingQuery()
                 .Where(b => b.CustomerId == customerId);
-            return await ApplySieveAndPaginateAsync(query, sieveModel);
+            return await PaginationHelper.PaginateAsync(query, sieveModel, _sieveProcessor, b => _mapper.Map<BookingResponse>(b));
         }
 
         public async Task<bool> DeleteBookingAsync(int id)
@@ -87,33 +87,5 @@ namespace AISEP.Services.Bookings
             return true;
         }
 
-     
-        private async Task<PagedResult<BookingResponse>> ApplySieveAndPaginateAsync(
-            IQueryable<Booking> query, 
-            SieveModel sieveModel)
-        {
-       
-            var totalCount = await _sieveProcessor
-                .Apply(sieveModel, query, applyPagination: false, applySorting: false)
-                .CountAsync();
-
-         
-            var items = await _sieveProcessor
-                .Apply(sieveModel, query)
-                .ToListAsync();
-
-            var page = sieveModel.Page ?? 1;
-            var pageSize = sieveModel.PageSize ?? 10;
-            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-
-            return new PagedResult<BookingResponse>
-            {
-                Page = page,
-                PageSize = pageSize,
-                TotalCount = totalCount,
-                TotalPages = totalPages,
-                Items = items.Select(b => _mapper.Map<BookingResponse>(b))
-            };
+            }
         }
-    }
-}

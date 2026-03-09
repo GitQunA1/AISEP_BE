@@ -28,7 +28,7 @@ namespace AISEP.Services.Projects
 
         public async Task<PagedResult<ProjectResponse>> GetAllProjectsAsync(SieveModel model)
         {
-            return await PaginateAsync(_unitOfWork.Projects.GetAllQuery(), model);
+            return await PaginationHelper.PaginateAsync(_unitOfWork.Projects.GetAllQuery(), model, _sieveProcessor, p => _mapper.Map<ProjectResponse>(p));
         }
 
         public async Task<ProjectResponse?> GetProjectByIdAsync(int id)
@@ -43,12 +43,12 @@ namespace AISEP.Services.Projects
             if (startup is null)
                 throw new KeyNotFoundException("Startup profile not found for this account.");
 
-            return await PaginateAsync(_unitOfWork.Projects.GetByStartupIdQuery(startup.StartupId), model);
+            return await PaginationHelper.PaginateAsync(_unitOfWork.Projects.GetByStartupIdQuery(startup.StartupId), model, _sieveProcessor, p => _mapper.Map<ProjectResponse>(p));
         }
 
         public async Task<PagedResult<ProjectResponse>> GetDraftProjectsAsync(SieveModel model)
         {
-            return await PaginateAsync(_unitOfWork.Projects.GetByStatusQuery(ProjectStatus.Draft), model);
+            return await PaginationHelper.PaginateAsync(_unitOfWork.Projects.GetByStatusQuery(ProjectStatus.Draft), model, _sieveProcessor, p => _mapper.Map<ProjectResponse>(p));
         }
 
         public async Task<ProjectResponse> CreateProjectAsync(int userId, CreateProjectRequest dto)
@@ -79,6 +79,41 @@ namespace AISEP.Services.Projects
             };
 
             await _unitOfWork.Projects.AddAsync(project);
+            await _unitOfWork.SaveChangesAsync();
+
+            return _mapper.Map<ProjectResponse>(project);
+        }
+
+        public async Task<ProjectResponse> UpdateProjectAsync(int projectId, UpdateProjectRequest dto)
+        {
+            var userId  = _userService.GetUserId();
+            var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
+            if (project is null)
+                throw new KeyNotFoundException("Project not found.");
+
+            var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
+            if (startup is null || project.StartupId != startup.StartupId)
+                throw new UnauthorizedAccessException("You do not have permission to update this project.");
+
+            if (project.Status == ProjectStatus.Published)
+                throw new InvalidOperationException("Published projects cannot be updated.");
+
+            project.ProjectName            = dto.ProjectName;
+            project.ShortDescription       = dto.ShortDescription;
+            project.DevelopmentStage       = dto.DevelopmentStage;
+            project.ProblemStatement       = dto.ProblemStatement;
+            project.SolutionDescription    = dto.SolutionDescription;
+            project.TargetCustomers        = dto.TargetCustomers;
+            project.UniqueValueProposition = dto.UniqueValueProposition;
+            project.MarketSize             = dto.MarketSize;
+            project.BusinessModel          = dto.BusinessModel;
+            project.Revenue                = dto.Revenue;
+            project.Competitors            = dto.Competitors;
+            project.TeamMembers            = dto.TeamMembers;
+            project.KeySkills              = dto.KeySkills;
+            project.TeamExperience         = dto.TeamExperience;
+
+            _unitOfWork.Projects.Update(project);
             await _unitOfWork.SaveChangesAsync();
 
             return _mapper.Map<ProjectResponse>(project);
@@ -117,29 +152,6 @@ namespace AISEP.Services.Projects
             project.RejectedById = _userService.GetUserId();
             _unitOfWork.Projects.Update(project);
             await _unitOfWork.SaveChangesAsync();
-        }
-
-        private async Task<PagedResult<ProjectResponse>> PaginateAsync(IQueryable<Project> query, SieveModel model)
-        {
-            var totalCount = await _sieveProcessor
-                .Apply(model, query, applyPagination: false, applySorting: false)
-                .CountAsync();
-
-            var items = await _sieveProcessor
-                .Apply(model, query)
-                .ToListAsync();
-
-            var page     = model.Page ?? 1;
-            var pageSize = model.PageSize ?? 10;
-
-            return new PagedResult<ProjectResponse>
-            {
-                Page       = page,
-                PageSize   = pageSize,
-                TotalCount = totalCount,
-                TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
-                Items      = items.Select(p => _mapper.Map<ProjectResponse>(p))
-            };
         }
     }
 }
