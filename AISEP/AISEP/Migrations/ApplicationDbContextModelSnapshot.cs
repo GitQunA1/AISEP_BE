@@ -22,82 +22,52 @@ namespace AISEP.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("AISEP.Models.AIReport", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.ActionLog", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("ActionLogId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
 
-                    b.Property<string>("AiStatus")
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ActionLogId"));
+
+                    b.Property<string>("ActionType")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<string>("AnalysisResult")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<int?>("ChaosScore")
+                    b.Property<int>("ActorId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("PotentialScore")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("ProjectId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("VerifiedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProjectId");
-
-                    b.ToTable("aireports", (string)null);
-                });
-
-            modelBuilder.Entity("AISEP.Models.ActionLog", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ActionType")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("EntityId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("EntityType")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<DateTime>("Timestamp")
+                    b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("Reason")
+                        .HasColumnType("text");
 
-                    b.HasKey("Id");
+                    b.Property<int?>("TargetId")
+                        .HasColumnType("integer");
 
-                    b.HasIndex("UserId");
+                    b.HasKey("ActionLogId");
 
-                    b.ToTable("actionlogs", (string)null);
+                    b.HasIndex("ActorId");
+
+                    b.ToTable("action_logs", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.Models.Advisor", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.Advisor", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("AdvisorId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("AdvisorId"));
+
+                    b.Property<string>("ApprovalStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Bio")
                         .HasColumnType("text");
@@ -108,6 +78,9 @@ namespace AISEP.Migrations
                     b.Property<string>("Expertise")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<decimal?>("HourlyRate")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("LanguagesSpoken")
                         .HasMaxLength(255)
@@ -127,10 +100,10 @@ namespace AISEP.Migrations
                     b.Property<decimal?>("Rating")
                         .HasColumnType("decimal(3,2)");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                    b.HasKey("AdvisorId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -138,48 +111,19 @@ namespace AISEP.Migrations
                     b.ToTable("advisors", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.Models.BlockchainProof", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.Booking", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("BookingId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
 
-                    b.Property<Guid>("DocumentId")
-                        .HasColumnType("uuid");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("BookingId"));
 
-                    b.Property<DateTime>("Timestamp")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                    b.Property<int>("AdvisorId")
+                        .HasColumnType("integer");
 
-                    b.Property<string>("TransactionHash")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("VerificationStatus")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DocumentId");
-
-                    b.ToTable("blockchainproof", (string)null);
-                });
-
-            modelBuilder.Entity("AISEP.Models.Booking", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("AdvisorId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("CustomerId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("timestamp with time zone");
@@ -195,7 +139,7 @@ namespace AISEP.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.HasKey("Id");
+                    b.HasKey("BookingId");
 
                     b.HasIndex("AdvisorId");
 
@@ -204,44 +148,48 @@ namespace AISEP.Migrations
                     b.ToTable("bookings", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.Models.ChatMessage", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.ChatMessage", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("ChatMessageId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ChatMessageId"));
+
+                    b.Property<int>("ChatSessionId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid>("SenderId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("SenderId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("SentAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("SessionId")
-                        .HasColumnType("uuid");
+                    b.HasKey("ChatMessageId");
 
-                    b.HasKey("Id");
+                    b.HasIndex("ChatSessionId");
 
                     b.HasIndex("SenderId");
 
-                    b.HasIndex("SessionId");
-
-                    b.ToTable("chatmessages", (string)null);
+                    b.ToTable("chat_messages", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.Models.ChatSession", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.ChatSession", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("ChatSessionId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
 
-                    b.Property<Guid>("BookingId")
-                        .HasColumnType("uuid");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ChatSessionId"));
+
+                    b.Property<int>("BookingId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("EndTime")
                         .HasColumnType("timestamp with time zone");
@@ -254,61 +202,58 @@ namespace AISEP.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.HasKey("Id");
+                    b.HasKey("ChatSessionId");
 
-                    b.HasIndex("BookingId");
+                    b.HasIndex("BookingId")
+                        .IsUnique();
 
-                    b.ToTable("chatsessions", (string)null);
+                    b.ToTable("chat_sessions", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.Models.ConnectionRequest", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.ConnectionRequest", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("ConnectionRequestId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
 
-                    b.Property<Guid>("InvestorId")
-                        .HasColumnType("uuid");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ConnectionRequestId"));
+
+                    b.Property<int>("InvestorId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Message")
                         .HasColumnType("text");
 
-                    b.Property<string>("Reason")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("RequestDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("ResponseDate")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("StartupId")
-                        .HasColumnType("uuid");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.HasKey("Id");
+                    b.HasKey("ConnectionRequestId");
 
                     b.HasIndex("InvestorId");
 
-                    b.HasIndex("StartupId");
+                    b.HasIndex("ProjectId");
 
-                    b.ToTable("connectionrequests", (string)null);
+                    b.ToTable("connection_requests", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.Models.ConsultingReport", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.ConsultingReport", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("ConsultingReportId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
 
-                    b.Property<Guid>("BookingId")
-                        .HasColumnType("uuid");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ConsultingReportId"));
+
+                    b.Property<int>("BookingId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Content")
                         .HasColumnType("text");
@@ -336,18 +281,21 @@ namespace AISEP.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.HasKey("Id");
+                    b.HasKey("ConsultingReportId");
 
-                    b.HasIndex("BookingId");
+                    b.HasIndex("BookingId")
+                        .IsUnique();
 
-                    b.ToTable("consultingreports", (string)null);
+                    b.ToTable("consulting_reports", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.Models.Deal", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.Deal", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("DealId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DealId"));
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
@@ -366,8 +314,8 @@ namespace AISEP.Migrations
                     b.Property<bool>("InvestorConfirmed")
                         .HasColumnType("boolean");
 
-                    b.Property<Guid>("InvestorId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("InvestorId")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("IsCompleted")
                         .HasColumnType("boolean");
@@ -376,8 +324,8 @@ namespace AISEP.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<Guid>("ProjectId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("StartupConfirmed")
                         .HasColumnType("boolean");
@@ -391,7 +339,7 @@ namespace AISEP.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.HasKey("Id");
+                    b.HasKey("DealId");
 
                     b.HasIndex("InvestorId");
 
@@ -400,11 +348,13 @@ namespace AISEP.Migrations
                     b.ToTable("deals", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.Models.Document", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.Document", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("DocumentId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DocumentId"));
 
                     b.Property<string>("BlockchainTxHash")
                         .HasMaxLength(255)
@@ -432,26 +382,36 @@ namespace AISEP.Migrations
                     b.Property<bool>("IsIpProtected")
                         .HasColumnType("boolean");
 
-                    b.Property<Guid>("ProjectId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("VerifiedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("Id");
+                    b.HasKey("DocumentId");
 
                     b.HasIndex("ProjectId");
 
                     b.ToTable("documents", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.Models.Investor", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.Investor", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("InvestorId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("InvestorId"));
+
+                    b.Property<string>("ApprovalStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("FocusIndustry")
+                        .HasColumnType("text");
+
+                    b.Property<string>("IdentityDocumentUrl")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
@@ -485,14 +445,14 @@ namespace AISEP.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("WalletAddress")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.HasKey("Id");
+                    b.HasKey("InvestorId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -500,14 +460,47 @@ namespace AISEP.Migrations
                     b.ToTable("investors", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.Models.NFTRecord", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.InvestorAIAnalysis", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("AnalysisId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
 
-                    b.Property<Guid>("DealId")
-                        .HasColumnType("uuid");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("AnalysisId"));
+
+                    b.Property<string>("AnalysisJson")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("InvestorId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("AnalysisId");
+
+                    b.HasIndex("InvestorId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("investor_ai_analyses", (string)null);
+                });
+
+            modelBuilder.Entity("AISEP.Models.Entities.NFTRecord", b =>
+                {
+                    b.Property<int>("NFTRecordId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("NFTRecordId"));
+
+                    b.Property<int>("DealId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("MintedAt")
                         .ValueGeneratedOnAdd()
@@ -541,53 +534,64 @@ namespace AISEP.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.HasKey("Id");
+                    b.HasKey("NFTRecordId");
 
-                    b.HasIndex("DealId");
+                    b.HasIndex("DealId")
+                        .IsUnique();
 
-                    b.ToTable("nftrecords", (string)null);
+                    b.ToTable("nft_records", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.Models.Notification", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.Notification", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("NotificationId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("NotificationId"));
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Message")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
+                    b.Property<string>("Title")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Type")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                    b.HasKey("NotificationId");
 
                     b.HasIndex("UserId");
 
                     b.ToTable("notifications", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.Models.Package", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.Package", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("PackageId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PackageId"));
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
-                    b.Property<int>("Duration")
+                    b.Property<int>("DurationMonths")
                         .HasColumnType("integer");
 
                     b.Property<string>("PackageName")
@@ -598,116 +602,76 @@ namespace AISEP.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
 
-                    b.HasKey("Id");
+                    b.HasKey("PackageId");
 
                     b.ToTable("packages", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.Models.Project", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.PostPr", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("PostPrId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
 
-                    b.Property<string>("Description")
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PostPrId"));
+
+                    b.Property<int>("ConnectionId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Content")
                         .HasColumnType("text");
 
-                    b.Property<string>("FullDescription")
-                        .HasColumnType("text");
+                    b.Property<bool>("InvestorApproved")
+                        .HasColumnType("boolean");
 
-                    b.Property<string>("ProjectName")
-                        .IsRequired()
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("StartupApproved")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Title")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                    b.HasKey("PostPrId");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                    b.HasIndex("ConnectionId");
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("projects", (string)null);
+                    b.ToTable("postprs", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.Models.Review", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.Project", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("ProjectId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
 
-                    b.Property<Guid>("AdvisorId")
-                        .HasColumnType("uuid");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ProjectId"));
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ApprovedById")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("BusinessModel")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Competitors")
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Rating")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("ReviewContent")
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("ReviewerId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AdvisorId");
-
-                    b.HasIndex("ReviewerId");
-
-                    b.ToTable("reviews", (string)null);
-                });
-
-            modelBuilder.Entity("AISEP.Models.Startup", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("BusinessModel")
-                        .HasColumnType("text");
-
-                    b.Property<string>("CompanyName")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("Competitors")
-                        .HasColumnType("text");
-
-                    b.Property<string>("ContactInfo")
-                        .HasColumnType("text");
-
-                    b.Property<string>("CountryCity")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
                     b.Property<string>("DevelopmentStage")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<string>("Founder")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("Industry")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
                     b.Property<string>("KeySkills")
                         .HasColumnType("text");
-
-                    b.Property<string>("LogoUrl")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
 
                     b.Property<decimal?>("MarketSize")
                         .HasColumnType("decimal(18,2)");
@@ -715,11 +679,39 @@ namespace AISEP.Migrations
                     b.Property<string>("ProblemStatement")
                         .HasColumnType("text");
 
+                    b.Property<string>("ProjectName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("RejectedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("RejectedById")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("text");
+
                     b.Property<decimal?>("Revenue")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("ShortDescription")
+                        .HasColumnType("text");
+
                     b.Property<string>("SolutionDescription")
                         .HasColumnType("text");
+
+                    b.Property<int>("StartupId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("TargetCustomers")
                         .HasColumnType("text");
@@ -733,14 +725,174 @@ namespace AISEP.Migrations
                     b.Property<string>("UniqueValueProposition")
                         .HasColumnType("text");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("ViewCount")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ProjectId");
+
+                    b.HasIndex("StartupId");
+
+                    b.ToTable("projects", (string)null);
+                });
+
+            modelBuilder.Entity("AISEP.Models.Entities.RefreshToken", b =>
+                {
+                    b.Property<int>("RefreshTokenId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("RefreshTokenId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("CreatedByIp")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsRevoked")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ReplacedByToken")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RevokedByIp")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("RefreshTokenId");
+
+                    b.HasIndex("Token");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("refresh_tokens", (string)null);
+                });
+
+            modelBuilder.Entity("AISEP.Models.Entities.Review", b =>
+                {
+                    b.Property<int>("ReviewId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ReviewId"));
+
+                    b.Property<int>("AdvisorId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("BookingId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ReviewContent")
+                        .HasColumnType("text");
+
+                    b.Property<int>("ReviewerId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ReviewId");
+
+                    b.HasIndex("AdvisorId");
+
+                    b.HasIndex("BookingId")
+                        .IsUnique();
+
+                    b.HasIndex("ReviewerId");
+
+                    b.ToTable("reviews", (string)null);
+                });
+
+            modelBuilder.Entity("AISEP.Models.Entities.Startup", b =>
+                {
+                    b.Property<int>("StartupId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("StartupId"));
+
+                    b.Property<string>("ApprovalStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ApprovedById")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("BusinessLicenseUrl")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("CompanyName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("ContactInfo")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CountryCity")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Founder")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Industry")
+                        .HasColumnType("text");
+
+                    b.Property<string>("LogoUrl")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime?>("RejectedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("RejectedById")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Website")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.HasKey("Id");
+                    b.HasKey("StartupId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -748,17 +900,86 @@ namespace AISEP.Migrations
                     b.ToTable("startups", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.Models.Subscription", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.StartupAIAnalysis", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("EvaluationId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("EvaluationId"));
+
+                    b.Property<string>("AnalysisJson")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("ChaosScore")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("EligibilityReason")
+                        .HasColumnType("text");
+
+                    b.Property<bool?>("IsEligibleStartup")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("PotentialScore")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("EvaluationId");
+
+                    b.HasIndex("ProjectId")
+                        .IsUnique();
+
+                    b.ToTable("project_ai_evaluations", (string)null);
+                });
+
+            modelBuilder.Entity("AISEP.Models.Entities.StartupFollower", b =>
+                {
+                    b.Property<int>("StartupFollowerId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("StartupFollowerId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("FollowedId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("FollowerId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("StartupFollowerId");
+
+                    b.HasIndex("FollowedId");
+
+                    b.HasIndex("FollowerId");
+
+                    b.ToTable("startup_followers", (string)null);
+                });
+
+            modelBuilder.Entity("AISEP.Models.Entities.Subscription", b =>
+                {
+                    b.Property<int>("SubscriptionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SubscriptionId"));
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("PackageId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("PackageId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("timestamp with time zone");
@@ -768,10 +989,10 @@ namespace AISEP.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                    b.HasKey("SubscriptionId");
 
                     b.HasIndex("PackageId");
 
@@ -780,70 +1001,60 @@ namespace AISEP.Migrations
                     b.ToTable("subscriptions", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.Models.SuccessStory", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.Transaction", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("TransactionId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
 
-                    b.Property<Guid>("ConnectionId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Content")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("InvestorApproved")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("StartupApproved")
-                        .HasColumnType("boolean");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ConnectionId");
-
-                    b.ToTable("successstories", (string)null);
-                });
-
-            modelBuilder.Entity("AISEP.Models.Transaction", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("TransactionId"));
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("PayosOrderCode")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<DateTime>("TransactionDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                    b.HasKey("TransactionId");
 
                     b.HasIndex("UserId");
 
                     b.ToTable("transactions", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.Models.User", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.User", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -854,38 +1065,118 @@ namespace AISEP.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
-                    b.Property<bool>("IsEmailVerified")
+                    b.Property<bool>("EmailConfirmed")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsPremium")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
                     b.Property<string>("PasswordHash")
-                        .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Role")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("Email")
-                        .IsUnique();
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("users", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.Models.Wallet", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.UserReport", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("UserReportId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("UserReportId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("EvidenceUrl")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text");
+
+                    b.Property<int>("ReportedUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ReporterId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("UserReportId");
+
+                    b.HasIndex("ReportedUserId");
+
+                    b.HasIndex("ReporterId");
+
+                    b.ToTable("user_reports", (string)null);
+                });
+
+            modelBuilder.Entity("AISEP.Models.Entities.Wallet", b =>
+                {
+                    b.Property<int>("WalletId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("WalletId"));
+
+                    b.Property<int>("AdvisorId")
+                        .HasColumnType("integer");
 
                     b.Property<decimal>("Balance")
                         .HasColumnType("decimal(18,2)");
@@ -898,21 +1189,21 @@ namespace AISEP.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                    b.HasKey("WalletId");
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
+                    b.HasIndex("AdvisorId")
+                        .IsUnique();
 
                     b.ToTable("wallets", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.Models.WalletTransaction", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.WalletTransaction", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("WalletTransactionId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("WalletTransactionId"));
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
@@ -932,24 +1223,38 @@ namespace AISEP.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<Guid>("WalletId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("WalletId")
+                        .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                    b.HasKey("WalletTransactionId");
 
                     b.HasIndex("WalletId");
 
-                    b.ToTable("wallettransactions", (string)null);
+                    b.ToTable("wallet_transactions", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.Models.WithdrawRequest", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.WithdrawRequest", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("WithdrawRequestId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("WithdrawRequestId"));
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("BankAccount")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("BankName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("ProofImageUrl")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<DateTime>("RequestedAt")
                         .ValueGeneratedOnAdd()
@@ -961,69 +1266,179 @@ namespace AISEP.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<Guid>("WalletId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("WalletId")
+                        .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                    b.HasKey("WithdrawRequestId");
 
                     b.HasIndex("WalletId");
 
-                    b.ToTable("withdrawrequests", (string)null);
+                    b.ToTable("withdraw_requests", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.Models.AIReport", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
                 {
-                    b.HasOne("AISEP.Models.Project", "Project")
-                        .WithMany("AIReports")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
 
-                    b.Navigation("Project");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex");
+
+                    b.ToTable("roles", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.Models.ActionLog", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
                 {
-                    b.HasOne("AISEP.Models.User", "User")
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("text");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("role_claims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("user_claims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
+                {
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProviderKey")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProviderDisplayName")
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("LoginProvider", "ProviderKey");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("user_logins", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("user_roles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("text");
+
+                    b.HasKey("UserId", "LoginProvider", "Name");
+
+                    b.ToTable("user_tokens", (string)null);
+                });
+
+            modelBuilder.Entity("AISEP.Models.Entities.ActionLog", b =>
+                {
+                    b.HasOne("AISEP.Models.Entities.User", "Actor")
                         .WithMany("ActionLogs")
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("ActorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.Navigation("Actor");
                 });
 
-            modelBuilder.Entity("AISEP.Models.Advisor", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.Advisor", b =>
                 {
-                    b.HasOne("AISEP.Models.User", "User")
+                    b.HasOne("AISEP.Models.Entities.User", "User")
                         .WithOne("Advisor")
-                        .HasForeignKey("AISEP.Models.Advisor", "UserId")
+                        .HasForeignKey("AISEP.Models.Entities.Advisor", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("AISEP.Models.BlockchainProof", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.Booking", b =>
                 {
-                    b.HasOne("AISEP.Models.Document", "Document")
-                        .WithMany("BlockchainProofs")
-                        .HasForeignKey("DocumentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Document");
-                });
-
-            modelBuilder.Entity("AISEP.Models.Booking", b =>
-                {
-                    b.HasOne("AISEP.Models.Advisor", "Advisor")
+                    b.HasOne("AISEP.Models.Entities.Advisor", "Advisor")
                         .WithMany("Bookings")
                         .HasForeignKey("AdvisorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("AISEP.Models.User", "Customer")
+                    b.HasOne("AISEP.Models.Entities.User", "Customer")
                         .WithMany("CustomerBookings")
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1034,18 +1449,18 @@ namespace AISEP.Migrations
                     b.Navigation("Customer");
                 });
 
-            modelBuilder.Entity("AISEP.Models.ChatMessage", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.ChatMessage", b =>
                 {
-                    b.HasOne("AISEP.Models.User", "Sender")
+                    b.HasOne("AISEP.Models.Entities.ChatSession", "ChatSession")
+                        .WithMany("ChatMessages")
+                        .HasForeignKey("ChatSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AISEP.Models.Entities.User", "Sender")
                         .WithMany("ChatMessages")
                         .HasForeignKey("SenderId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("AISEP.Models.ChatSession", "ChatSession")
-                        .WithMany("ChatMessages")
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("ChatSession");
@@ -1053,56 +1468,56 @@ namespace AISEP.Migrations
                     b.Navigation("Sender");
                 });
 
-            modelBuilder.Entity("AISEP.Models.ChatSession", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.ChatSession", b =>
                 {
-                    b.HasOne("AISEP.Models.Booking", "Booking")
-                        .WithMany("ChatSessions")
-                        .HasForeignKey("BookingId")
+                    b.HasOne("AISEP.Models.Entities.Booking", "Booking")
+                        .WithOne("ChatSession")
+                        .HasForeignKey("AISEP.Models.Entities.ChatSession", "BookingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Booking");
                 });
 
-            modelBuilder.Entity("AISEP.Models.ConnectionRequest", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.ConnectionRequest", b =>
                 {
-                    b.HasOne("AISEP.Models.Investor", "Investor")
+                    b.HasOne("AISEP.Models.Entities.Investor", "Investor")
                         .WithMany("ConnectionRequests")
                         .HasForeignKey("InvestorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("AISEP.Models.Startup", "Startup")
+                    b.HasOne("AISEP.Models.Entities.Project", "Project")
                         .WithMany("ConnectionRequests")
-                        .HasForeignKey("StartupId")
+                        .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Investor");
 
-                    b.Navigation("Startup");
+                    b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("AISEP.Models.ConsultingReport", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.ConsultingReport", b =>
                 {
-                    b.HasOne("AISEP.Models.Booking", "Booking")
-                        .WithMany("ConsultingReports")
-                        .HasForeignKey("BookingId")
+                    b.HasOne("AISEP.Models.Entities.Booking", "Booking")
+                        .WithOne("ConsultingReport")
+                        .HasForeignKey("AISEP.Models.Entities.ConsultingReport", "BookingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Booking");
                 });
 
-            modelBuilder.Entity("AISEP.Models.Deal", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.Deal", b =>
                 {
-                    b.HasOne("AISEP.Models.Investor", "Investor")
+                    b.HasOne("AISEP.Models.Entities.Investor", "Investor")
                         .WithMany("Deals")
                         .HasForeignKey("InvestorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("AISEP.Models.Project", "Project")
+                    b.HasOne("AISEP.Models.Entities.Project", "Project")
                         .WithMany("Deals")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1113,9 +1528,9 @@ namespace AISEP.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("AISEP.Models.Document", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.Document", b =>
                 {
-                    b.HasOne("AISEP.Models.Project", "Project")
+                    b.HasOne("AISEP.Models.Entities.Project", "Project")
                         .WithMany("Documents")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1124,31 +1539,50 @@ namespace AISEP.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("AISEP.Models.Investor", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.Investor", b =>
                 {
-                    b.HasOne("AISEP.Models.User", "User")
+                    b.HasOne("AISEP.Models.Entities.User", "User")
                         .WithOne("Investor")
-                        .HasForeignKey("AISEP.Models.Investor", "UserId")
+                        .HasForeignKey("AISEP.Models.Entities.Investor", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("AISEP.Models.NFTRecord", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.InvestorAIAnalysis", b =>
                 {
-                    b.HasOne("AISEP.Models.Deal", "Deal")
-                        .WithMany("NFTRecords")
-                        .HasForeignKey("DealId")
+                    b.HasOne("AISEP.Models.Entities.Investor", "Investor")
+                        .WithMany("InvestorAIAnalyses")
+                        .HasForeignKey("InvestorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AISEP.Models.Entities.Project", "Project")
+                        .WithMany("InvestorAIAnalyses")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Investor");
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("AISEP.Models.Entities.NFTRecord", b =>
+                {
+                    b.HasOne("AISEP.Models.Entities.Deal", "Deal")
+                        .WithOne("NFTRecord")
+                        .HasForeignKey("AISEP.Models.Entities.NFTRecord", "DealId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Deal");
                 });
 
-            modelBuilder.Entity("AISEP.Models.Notification", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.Notification", b =>
                 {
-                    b.HasOne("AISEP.Models.User", "User")
+                    b.HasOne("AISEP.Models.Entities.User", "User")
                         .WithMany("Notifications")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1157,10 +1591,32 @@ namespace AISEP.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("AISEP.Models.Project", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.PostPr", b =>
                 {
-                    b.HasOne("AISEP.Models.User", "User")
+                    b.HasOne("AISEP.Models.Entities.ConnectionRequest", "ConnectionRequest")
+                        .WithMany("PostPrs")
+                        .HasForeignKey("ConnectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ConnectionRequest");
+                });
+
+            modelBuilder.Entity("AISEP.Models.Entities.Project", b =>
+                {
+                    b.HasOne("AISEP.Models.Entities.Startup", "Startup")
                         .WithMany("Projects")
+                        .HasForeignKey("StartupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Startup");
+                });
+
+            modelBuilder.Entity("AISEP.Models.Entities.RefreshToken", b =>
+                {
+                    b.HasOne("AISEP.Models.Entities.User", "User")
+                        .WithMany("RefreshTokens")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1168,15 +1624,21 @@ namespace AISEP.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("AISEP.Models.Review", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.Review", b =>
                 {
-                    b.HasOne("AISEP.Models.Advisor", "Advisor")
+                    b.HasOne("AISEP.Models.Entities.Advisor", "Advisor")
                         .WithMany("Reviews")
                         .HasForeignKey("AdvisorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("AISEP.Models.User", "Reviewer")
+                    b.HasOne("AISEP.Models.Entities.Booking", "Booking")
+                        .WithOne("Review")
+                        .HasForeignKey("AISEP.Models.Entities.Review", "BookingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AISEP.Models.Entities.User", "Reviewer")
                         .WithMany("Reviews")
                         .HasForeignKey("ReviewerId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1184,29 +1646,61 @@ namespace AISEP.Migrations
 
                     b.Navigation("Advisor");
 
+                    b.Navigation("Booking");
+
                     b.Navigation("Reviewer");
                 });
 
-            modelBuilder.Entity("AISEP.Models.Startup", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.Startup", b =>
                 {
-                    b.HasOne("AISEP.Models.User", "User")
+                    b.HasOne("AISEP.Models.Entities.User", "User")
                         .WithOne("Startup")
-                        .HasForeignKey("AISEP.Models.Startup", "UserId")
+                        .HasForeignKey("AISEP.Models.Entities.Startup", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("AISEP.Models.Subscription", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.StartupAIAnalysis", b =>
                 {
-                    b.HasOne("AISEP.Models.Package", "Package")
+                    b.HasOne("AISEP.Models.Entities.Project", "Project")
+                        .WithOne("StartupAIAnalysis")
+                        .HasForeignKey("AISEP.Models.Entities.StartupAIAnalysis", "ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("AISEP.Models.Entities.StartupFollower", b =>
+                {
+                    b.HasOne("AISEP.Models.Entities.Startup", "Startup")
+                        .WithMany("Followers")
+                        .HasForeignKey("FollowedId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AISEP.Models.Entities.User", "User")
+                        .WithMany("FollowedStartups")
+                        .HasForeignKey("FollowerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Startup");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("AISEP.Models.Entities.Subscription", b =>
+                {
+                    b.HasOne("AISEP.Models.Entities.Package", "Package")
                         .WithMany("Subscriptions")
                         .HasForeignKey("PackageId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("AISEP.Models.User", "User")
+                    b.HasOne("AISEP.Models.Entities.User", "User")
                         .WithMany("Subscriptions")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1217,20 +1711,9 @@ namespace AISEP.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("AISEP.Models.SuccessStory", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.Transaction", b =>
                 {
-                    b.HasOne("AISEP.Models.ConnectionRequest", "ConnectionRequest")
-                        .WithMany("SuccessStories")
-                        .HasForeignKey("ConnectionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ConnectionRequest");
-                });
-
-            modelBuilder.Entity("AISEP.Models.Transaction", b =>
-                {
-                    b.HasOne("AISEP.Models.User", "User")
+                    b.HasOne("AISEP.Models.Entities.User", "User")
                         .WithMany("Transactions")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1239,20 +1722,39 @@ namespace AISEP.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("AISEP.Models.Wallet", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.UserReport", b =>
                 {
-                    b.HasOne("AISEP.Models.User", "User")
-                        .WithMany("Wallets")
-                        .HasForeignKey("UserId")
+                    b.HasOne("AISEP.Models.Entities.User", "ReportedUser")
+                        .WithMany("ReportsReceived")
+                        .HasForeignKey("ReportedUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AISEP.Models.Entities.User", "Reporter")
+                        .WithMany("ReportsMade")
+                        .HasForeignKey("ReporterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ReportedUser");
+
+                    b.Navigation("Reporter");
+                });
+
+            modelBuilder.Entity("AISEP.Models.Entities.Wallet", b =>
+                {
+                    b.HasOne("AISEP.Models.Entities.Advisor", "Advisor")
+                        .WithOne("Wallet")
+                        .HasForeignKey("AISEP.Models.Entities.Wallet", "AdvisorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.Navigation("Advisor");
                 });
 
-            modelBuilder.Entity("AISEP.Models.WalletTransaction", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.WalletTransaction", b =>
                 {
-                    b.HasOne("AISEP.Models.Wallet", "Wallet")
+                    b.HasOne("AISEP.Models.Entities.Wallet", "Wallet")
                         .WithMany("WalletTransactions")
                         .HasForeignKey("WalletId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1261,9 +1763,9 @@ namespace AISEP.Migrations
                     b.Navigation("Wallet");
                 });
 
-            modelBuilder.Entity("AISEP.Models.WithdrawRequest", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.WithdrawRequest", b =>
                 {
-                    b.HasOne("AISEP.Models.Wallet", "Wallet")
+                    b.HasOne("AISEP.Models.Entities.Wallet", "Wallet")
                         .WithMany("WithdrawRequests")
                         .HasForeignKey("WalletId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1272,67 +1774,125 @@ namespace AISEP.Migrations
                     b.Navigation("Wallet");
                 });
 
-            modelBuilder.Entity("AISEP.Models.Advisor", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
+                {
+                    b.HasOne("AISEP.Models.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
+                {
+                    b.HasOne("AISEP.Models.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AISEP.Models.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
+                {
+                    b.HasOne("AISEP.Models.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AISEP.Models.Entities.Advisor", b =>
                 {
                     b.Navigation("Bookings");
 
                     b.Navigation("Reviews");
+
+                    b.Navigation("Wallet");
                 });
 
-            modelBuilder.Entity("AISEP.Models.Booking", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.Booking", b =>
                 {
-                    b.Navigation("ChatSessions");
+                    b.Navigation("ChatSession");
 
-                    b.Navigation("ConsultingReports");
+                    b.Navigation("ConsultingReport");
+
+                    b.Navigation("Review");
                 });
 
-            modelBuilder.Entity("AISEP.Models.ChatSession", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.ChatSession", b =>
                 {
                     b.Navigation("ChatMessages");
                 });
 
-            modelBuilder.Entity("AISEP.Models.ConnectionRequest", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.ConnectionRequest", b =>
                 {
-                    b.Navigation("SuccessStories");
+                    b.Navigation("PostPrs");
                 });
 
-            modelBuilder.Entity("AISEP.Models.Deal", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.Deal", b =>
                 {
-                    b.Navigation("NFTRecords");
+                    b.Navigation("NFTRecord");
                 });
 
-            modelBuilder.Entity("AISEP.Models.Document", b =>
-                {
-                    b.Navigation("BlockchainProofs");
-                });
-
-            modelBuilder.Entity("AISEP.Models.Investor", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.Investor", b =>
                 {
                     b.Navigation("ConnectionRequests");
 
                     b.Navigation("Deals");
+
+                    b.Navigation("InvestorAIAnalyses");
                 });
 
-            modelBuilder.Entity("AISEP.Models.Package", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.Package", b =>
                 {
                     b.Navigation("Subscriptions");
                 });
 
-            modelBuilder.Entity("AISEP.Models.Project", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.Project", b =>
                 {
-                    b.Navigation("AIReports");
+                    b.Navigation("ConnectionRequests");
 
                     b.Navigation("Deals");
 
                     b.Navigation("Documents");
+
+                    b.Navigation("InvestorAIAnalyses");
+
+                    b.Navigation("StartupAIAnalysis");
                 });
 
-            modelBuilder.Entity("AISEP.Models.Startup", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.Startup", b =>
                 {
-                    b.Navigation("ConnectionRequests");
+                    b.Navigation("Followers");
+
+                    b.Navigation("Projects");
                 });
 
-            modelBuilder.Entity("AISEP.Models.User", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.User", b =>
                 {
                     b.Navigation("ActionLogs");
 
@@ -1342,11 +1902,17 @@ namespace AISEP.Migrations
 
                     b.Navigation("CustomerBookings");
 
+                    b.Navigation("FollowedStartups");
+
                     b.Navigation("Investor");
 
                     b.Navigation("Notifications");
 
-                    b.Navigation("Projects");
+                    b.Navigation("RefreshTokens");
+
+                    b.Navigation("ReportsMade");
+
+                    b.Navigation("ReportsReceived");
 
                     b.Navigation("Reviews");
 
@@ -1355,11 +1921,9 @@ namespace AISEP.Migrations
                     b.Navigation("Subscriptions");
 
                     b.Navigation("Transactions");
-
-                    b.Navigation("Wallets");
                 });
 
-            modelBuilder.Entity("AISEP.Models.Wallet", b =>
+            modelBuilder.Entity("AISEP.Models.Entities.Wallet", b =>
                 {
                     b.Navigation("WalletTransactions");
 

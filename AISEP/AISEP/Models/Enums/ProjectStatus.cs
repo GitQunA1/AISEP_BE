@@ -3,7 +3,11 @@ namespace AISEP.Models.Enums
     public enum ProjectStatus
     {
         Draft,
-        InProgress,
-        Completed
+        IpProtected,
+        Pending,
+        Submitted,
+        Approved,
+        Published,
+        Rejected
     }
 }
