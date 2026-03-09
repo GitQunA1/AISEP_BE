@@ -83,14 +83,36 @@ namespace AISEP.Services.Startups
             var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
             if (startup is null)
                 throw new KeyNotFoundException("Startup profile not found.");
-
             if (startup.ApprovalStatus == ApprovalStatus.Approved)
                 throw new InvalidOperationException("Startup is already approved.");
 
-            if (startup.ApprovalStatus == ApprovalStatus.Pending)
-                throw new InvalidOperationException("Startup is already pending review.");
+            if (startup.ApprovalStatus != ApprovalStatus.Pending)
+                throw new InvalidOperationException($"Only Pending startups can be approved. Current status: {startup.ApprovalStatus}.");
 
             startup.ApprovalStatus = ApprovalStatus.Approved;
+            startup.ApprovedAt = DateTime.UtcNow;
+            startup.ApprovedById = userId;
+
+            _unitOfWork.Startups.Update(startup);
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        public async Task RejectStartupAsync(int userId, RejectStartupRequest dto)
+        {
+            var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
+            if (startup is null)
+                throw new KeyNotFoundException("Startup profile not found.");
+            if (startup.ApprovalStatus == ApprovalStatus.Rejected)
+                throw new InvalidOperationException("Startup is already rejected.");
+
+            if (startup.ApprovalStatus != ApprovalStatus.Pending)
+                throw new InvalidOperationException($"Only Pending startups can be rejected. Current status: {startup.ApprovalStatus}.");
+
+            startup.ApprovalStatus = ApprovalStatus.Rejected;
+            startup.RejectedAt = DateTime.UtcNow;
+            startup.RejectionReason = dto.Reason?.Trim();
+            startup.RejectedById = userId;
+
             _unitOfWork.Startups.Update(startup);
             await _unitOfWork.SaveChangesAsync();
         }

@@ -49,6 +49,20 @@ namespace AISEP.Common
                     opt => opt.MapFrom(src => src.ApprovalStatus.ToString()))
                 .ForMember(dest => dest.FollowerCount,
                     opt => opt.MapFrom(src => src.Followers != null ? src.Followers.Count : 0));
+            // map approval/rejection fields
+            CreateMap<Startup, StartupResponse>()
+                .ForMember(dest => dest.ApprovedById, opt => opt.MapFrom(src => src.ApprovedById))
+                .ForMember(dest => dest.ApprovedAt, opt => opt.MapFrom(src => src.ApprovedAt))
+                .ForMember(dest => dest.RejectedById, opt => opt.MapFrom(src => src.RejectedById))
+                .ForMember(dest => dest.RejectedAt, opt => opt.MapFrom(src => src.RejectedAt))
+                .ForMember(dest => dest.RejectionReason, opt => opt.MapFrom(src => src.RejectionReason));
+            // Map approval/rejection fields for Startup
+            CreateMap<Startup, StartupResponse>()
+                .ForMember(dest => dest.ApprovedById, opt => opt.MapFrom(src => src.ApprovedById))
+                .ForMember(dest => dest.ApprovedAt, opt => opt.MapFrom(src => src.ApprovedAt))
+                .ForMember(dest => dest.RejectedById, opt => opt.MapFrom(src => src.RejectedById))
+                .ForMember(dest => dest.RejectedAt, opt => opt.MapFrom(src => src.RejectedAt))
+                .ForMember(dest => dest.RejectionReason, opt => opt.MapFrom(src => src.RejectionReason));
 
             // Investor Entity → InvestorResponse
             CreateMap<Investor, InvestorResponse>()

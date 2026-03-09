@@ -65,5 +65,12 @@ namespace AISEP.Controllers
             await _startupService.ApproveStartupAsync(userId);
             return Ok(ApiResponse<object>.SuccessResponse(null!, "Approving Startup Successfully."));
         }
+        [HttpPut("reject")]
+        public async Task<IActionResult> RejectStartup([FromBody] RejectStartupRequest dto)
+        {
+            var userId = _currentUserService.GetUserId();
+            await _startupService.RejectStartupAsync(userId, dto);
+            return Ok(ApiResponse<object>.SuccessResponse(null!, "Startup rejected successfully."));
+        }
     }
 }
