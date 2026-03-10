@@ -1,0 +1,25 @@
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using AISEP.DAL.Enums;
+
+namespace AISEP.DAL.Entities
+{
+    public class Subscription
+    {
+        public int SubscriptionId { get; set; }
+
+        public int PackageId { get; set; }
+
+        public int UserId { get; set; }
+
+        public DateTime StartDate { get; set; }
+
+        public DateTime EndDate { get; set; }
+
+        public SubscriptionStatus Status { get; set; }
+
+        // Navigation properties
+        public Package Package { get; set; } = null!;
+
+        public User User { get; set; } = null!;
+    }
+}

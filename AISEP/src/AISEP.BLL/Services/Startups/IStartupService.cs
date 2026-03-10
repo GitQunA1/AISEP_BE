@@ -1,0 +1,28 @@
+﻿using AISEP.BLL.Common;
+using AISEP.DAL.Common;
+using AISEP.BLL.DTOs.Requests;
+using AISEP.BLL.DTOs.Responses;
+using Sieve.Models;
+
+namespace AISEP.BLL.Services.Startups
+{
+    public interface IStartupService
+    {
+       
+        Task<PagedResult<StartupResponse>> GetAllStartupsAsync(SieveModel model);
+        Task<PagedResult<StartupResponse>> GetStartupsByStatusAsync(SieveModel model, string? status = null);
+        Task<PagedResult<StartupResponse>> SearchStartupsAsync(SieveModel model, string? industry = null, string? stage = null);
+        Task<StartupResponse?> GetStartupByIdAsync(int id);
+
+     
+        Task<StartupResponse> CreateStartupAsync(int userId, CreateStartupRequest dto);
+        Task<StartupResponse> UpdateStartupAsync(UpdateStartupRequest dto);
+        Task ApproveStartupAsync(int userId);
+        Task RejectStartupAsync(int userId, RejectStartupRequest dto);
+        //Task<StartupResponseDto?> GetMyProfileAsync(int userId);
+
+    
+        //Task<PagedResultDto<StartupResponseDto>> GetPendingStartupsAsync(SieveModel model);
+        //Task ReviewStartupAsync(int startupId, ReviewStartupDto dto);
+    }
+}
