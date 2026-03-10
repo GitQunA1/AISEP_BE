@@ -9,22 +9,38 @@ namespace AISEP.Services.AI
 {
     public class GeminiAiService : IGeminiAiService
     {
-        private readonly GeminiSettings _settings;
-        private readonly HttpClient     _httpClient;
+        private readonly GeminiSettings          _settings;
+        private readonly HttpClient              _httpClient;
+        private readonly ILogger<GeminiAiService> _logger;
 
-        public GeminiAiService(IOptions<GeminiSettings> settings, HttpClient httpClient)
+        public GeminiAiService(IOptions<GeminiSettings> settings, HttpClient httpClient, ILogger<GeminiAiService> logger)
         {
             _settings   = settings.Value;
             _httpClient = httpClient;
+            _logger     = logger;
         }
 
         public async Task<GeminiAnalysisResult> AnalyzeProjectAsync(Project project, IEnumerable<Document> documents)
         {
-            var docList       = documents.ToList();
-            var prompt        = BuildPrompt(project, docList);
-            var inlineParts   = await BuildInlinePartsAsync(docList);
-            var responseJson  = await CallGeminiAsync(prompt, inlineParts);
-            return ParseResponse(responseJson);
+            var docList     = documents.ToList();
+            var prompt      = BuildPrompt(project, docList);
+            var inlineParts = await BuildInlinePartsAsync(docList);
+
+            _logger.LogInformation("Calling Gemini: model={Model}, inlineParts={Count}",
+                _settings.Model, inlineParts.Count);
+
+            try
+            {
+                var responseJson = await CallGeminiAsync(prompt, inlineParts);
+                return ParseResponse(responseJson);
+            }
+            catch (HttpRequestException ex) when (inlineParts.Count > 0)
+            {
+                // Fallback: retry text-only if inline_data caused the error
+                _logger.LogWarning("Inline_data call failed ({Msg}). Retrying text-only...", ex.Message);
+                var responseJson = await CallGeminiAsync(prompt, []);
+                return ParseResponse(responseJson);
+            }
         }
 
       
@@ -118,15 +134,35 @@ namespace AISEP.Services.AI
                     temperature     = 0.2,
                     topK            = 40,
                     topP            = 0.95,
-                    maxOutputTokens = 2048
+                    maxOutputTokens = 8192
                 }
             };
 
-            var url     = $"https://generativelanguage.googleapis.com/v1beta/models/{_settings.Model}:generateContent?key={_settings.ApiKey}";
-            var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
+            var url         = $"{_settings.BaseUrl}/models/{_settings.Model}:generateContent?key={_settings.ApiKey}";
+            var bodyJson    = JsonSerializer.Serialize(requestBody);
+            var content     = new StringContent(bodyJson, Encoding.UTF8, "application/json");
+
+            _logger.LogDebug("Gemini URL: {Url}", $"{_settings.BaseUrl}/models/{_settings.Model}:generateContent?key=***");
+            _logger.LogDebug("Gemini request body size: {Size} bytes", Encoding.UTF8.GetByteCount(bodyJson));
 
             var response = await _httpClient.PostAsync(url, content);
-            response.EnsureSuccessStatusCode();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Content.ReadAsStringAsync();
+                var statusCode = (int)response.StatusCode;
+
+                var message = statusCode switch
+                {
+                    401 => "Gemini API key không hợp lệ hoặc chưa được cấp quyền.",
+                    404 => $"Model '{_settings.Model}' không tồn tại hoặc không được hỗ trợ. Kiểm tra lại GeminiSettings.Model trong appsettings.json.",
+                    429 => "Gemini API vượt quá quota. Free tier giới hạn số request/phút và token/ngày. Vui lòng chờ hoặc nâng cấp plan.",
+                    500 => "Gemini API lỗi phía server. Thử lại sau.",
+                    _   => $"Gemini API trả về lỗi {statusCode}."
+                };
+
+                throw new HttpRequestException($"{message}\nChi tiết: {errorBody}");
+            }
 
             return await response.Content.ReadAsStringAsync();
         }
@@ -181,7 +217,7 @@ namespace AISEP.Services.AI
             };
         }
 
-        private static GeminiAnalysisResult ParseResponse(string responseJson)
+        private GeminiAnalysisResult ParseResponse(string responseJson)
         {
             var doc  = JsonDocument.Parse(responseJson);
             var text = doc.RootElement
@@ -194,9 +230,26 @@ namespace AISEP.Services.AI
             // Strip markdown code blocks Gemini sometimes wraps around JSON
             text = Regex.Replace(text, @"```json\s*", "").Replace("```", "").Trim();
 
-            return JsonSerializer.Deserialize<GeminiAnalysisResult>(text,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-                ?? new GeminiAnalysisResult();
+            _logger.LogDebug("Gemini raw text response: {Text}", text);
+
+            // Handle truncated JSON: attempt to auto-close the object
+            if (!text.TrimEnd().EndsWith('}'))
+            {
+                _logger.LogWarning("Gemini response appears truncated. Attempting auto-repair...");
+                text = text.TrimEnd().TrimEnd(',') + "}";
+            }
+
+            try
+            {
+                return JsonSerializer.Deserialize<GeminiAnalysisResult>(text,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                    ?? new GeminiAnalysisResult();
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError("Failed to parse Gemini response. Raw text: {Text}\nError: {Error}", text, ex.Message);
+                return new GeminiAnalysisResult();
+            }
         }
     }
 }
