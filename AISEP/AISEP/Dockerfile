@@ -20,3 +20,5 @@ EXPOSE 8080
 
 # Entry point
 ENTRYPOINT ["dotnet", "AISEP.dll"]
+
+# Test CI/CD
