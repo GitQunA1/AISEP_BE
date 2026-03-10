@@ -208,3 +208,6 @@ app.MapControllers();
 await DataSeeder.SeedAsync(app.Services);
 
 app.Run();
+
+
+// Test CI/CD on Program.cs
