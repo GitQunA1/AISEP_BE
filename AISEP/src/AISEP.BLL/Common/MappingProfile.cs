@@ -10,6 +10,26 @@ namespace AISEP.BLL.Common
     {
         public MappingProfile()
         {
+            // Advisor Entity → AdvisorResponse
+            CreateMap<Advisor, AdvisorResponse>()
+                .ForMember(dest => dest.UserName,
+                    opt => opt.MapFrom(src => src.User != null ? src.User.UserName : null))
+                .ForMember(dest => dest.Email,
+                    opt => opt.MapFrom(src => src.User != null ? src.User.Email : null))
+                .ForMember(dest => dest.ApprovalStatus,
+                    opt => opt.MapFrom(src => src.ApprovalStatus.ToString()));
+
+            // AdvisorRequest → Advisor Entity
+            CreateMap<AdvisorRequest, Advisor>()
+                .ForMember(dest => dest.AdvisorId,      opt => opt.Ignore())
+                .ForMember(dest => dest.UserId,         opt => opt.Ignore())
+                .ForMember(dest => dest.Rating,         opt => opt.Ignore())
+                .ForMember(dest => dest.ApprovalStatus, opt => opt.Ignore())
+                .ForMember(dest => dest.User,           opt => opt.Ignore())
+                .ForMember(dest => dest.Bookings,       opt => opt.Ignore())
+                .ForMember(dest => dest.Reviews,        opt => opt.Ignore())
+                .ForMember(dest => dest.Wallet,         opt => opt.Ignore());
+
             // Document Entity → DocumentResponse
             CreateMap<Document, DocumentResponse>()
                 .ForMember(dest => dest.DocumentType,
@@ -49,20 +69,11 @@ namespace AISEP.BLL.Common
                 .ForMember(dest => dest.ApprovalStatus,
                     opt => opt.MapFrom(src => src.ApprovalStatus.ToString()))
                 .ForMember(dest => dest.FollowerCount,
-                    opt => opt.MapFrom(src => src.Followers != null ? src.Followers.Count : 0));
-            // map approval/rejection fields
-            CreateMap<Startup, StartupResponse>()
-                .ForMember(dest => dest.ApprovedById, opt => opt.MapFrom(src => src.ApprovedById))
-                .ForMember(dest => dest.ApprovedAt, opt => opt.MapFrom(src => src.ApprovedAt))
-                .ForMember(dest => dest.RejectedById, opt => opt.MapFrom(src => src.RejectedById))
-                .ForMember(dest => dest.RejectedAt, opt => opt.MapFrom(src => src.RejectedAt))
-                .ForMember(dest => dest.RejectionReason, opt => opt.MapFrom(src => src.RejectionReason));
-            // Map approval/rejection fields for Startup
-            CreateMap<Startup, StartupResponse>()
-                .ForMember(dest => dest.ApprovedById, opt => opt.MapFrom(src => src.ApprovedById))
-                .ForMember(dest => dest.ApprovedAt, opt => opt.MapFrom(src => src.ApprovedAt))
-                .ForMember(dest => dest.RejectedById, opt => opt.MapFrom(src => src.RejectedById))
-                .ForMember(dest => dest.RejectedAt, opt => opt.MapFrom(src => src.RejectedAt))
+                    opt => opt.MapFrom(src => src.Followers != null ? src.Followers.Count : 0))
+                .ForMember(dest => dest.ApprovedById,    opt => opt.MapFrom(src => src.ApprovedById))
+                .ForMember(dest => dest.ApprovedAt,      opt => opt.MapFrom(src => src.ApprovedAt))
+                .ForMember(dest => dest.RejectedById,    opt => opt.MapFrom(src => src.RejectedById))
+                .ForMember(dest => dest.RejectedAt,      opt => opt.MapFrom(src => src.RejectedAt))
                 .ForMember(dest => dest.RejectionReason, opt => opt.MapFrom(src => src.RejectionReason));
 
             // Investor Entity → InvestorResponse

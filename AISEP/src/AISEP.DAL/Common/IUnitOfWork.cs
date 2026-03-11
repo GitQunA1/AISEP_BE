@@ -1,5 +1,6 @@
 ﻿using AISEP.DAL.Repositories.Advisors;
 using AISEP.DAL.Repositories.Bookings;
+using AISEP.DAL.Repositories.Chats;
 using AISEP.DAL.Repositories.Documents;
 using AISEP.DAL.Repositories.Projects;
 using AISEP.DAL.Repositories.RefreshTokens;
@@ -14,17 +15,19 @@ namespace AISEP.DAL.Common
 {
     public interface IUnitOfWork : IDisposable
     {
-        IBookingRepository Bookings { get; }
-        IRefreshTokenRepository RefreshTokens { get; }
-        IDocumentRepository Documents { get; }
-        IReviewRepository Reviews { get; }
-        IStartupFollowerRepository StartupFollowers { get; }
-        IProjectRepository Projects { get; }
-        IStartupRepository Startups { get; }
-        IInvestorRepository Investors { get; }
-        IUserRepository Users { get; }
+        IBookingRepository           Bookings         { get; }
+        IRefreshTokenRepository      RefreshTokens    { get; }
+        IDocumentRepository          Documents        { get; }
+        IReviewRepository            Reviews          { get; }
+        IStartupFollowerRepository   StartupFollowers { get; }
+        IProjectRepository           Projects         { get; }
+        IStartupRepository           Startups         { get; }
+        IInvestorRepository          Investors        { get; }
+        IUserRepository              Users            { get; }
         IStartupAIAnalysisRepository StartupAIAnalyses { get; }
-
+        IAdvisorsRepository          Advisors         { get; }
+        IChatSessionRepository       ChatSessions     { get; }
+        IChatMessageRepository       ChatMessages     { get; }
 
         Task<int> SaveChangesAsync();
     }

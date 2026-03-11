@@ -1,0 +1,97 @@
+using AISEP.BLL.Common;
+using AISEP.BLL.DTOs.Requests;
+using AISEP.BLL.Services.Advisors;
+using AISEP.BLL.Services.Users;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Sieve.Models;
+
+namespace AISEP.API.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    [Authorize]
+    public class AdvisorController : ControllerBase
+    {
+        private readonly IAdvisorService _advisorService;
+        private readonly IUserService    _userService;
+
+        public AdvisorController(IAdvisorService advisorService, IUserService userService)
+        {
+            _advisorService = advisorService;
+            _userService    = userService;
+        }
+
+       
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetAll([FromQuery] SieveModel model)
+        {
+            var result = await _advisorService.GetAllAsync(model);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
+        }
+
+       
+        [HttpGet("{id:int}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var advisor = await _advisorService.GetByIdAsync(id);
+            if (advisor is null)
+                return NotFound(ApiResponse<object>.ErrorResponse("Advisor not found.", "Not found", 404));
+
+            return Ok(ApiResponse<object>.SuccessResponse(advisor, "Success"));
+        }
+
+       
+        [HttpGet("me")]
+        public async Task<IActionResult> GetMyProfile()
+        {
+            var userId  = _userService.GetUserId();
+            var advisor = await _advisorService.GetMyProfileAsync(userId);
+            if (advisor is null)
+                return NotFound(ApiResponse<object>.ErrorResponse("Advisor profile not found.", "Not found", 404));
+
+            return Ok(ApiResponse<object>.SuccessResponse(advisor, "Success"));
+        }
+
+  
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] AdvisorRequest dto)
+        {
+            var userId = _userService.GetUserId();
+            var data   = await _advisorService.CreateAsync(userId, dto);
+
+            if (data is null)
+                return Conflict(ApiResponse<object>.ErrorResponse("Advisor profile already exists.", "Conflict", 409));
+
+            return CreatedAtAction(nameof(GetById), new { id = data.AdvisorId },
+                ApiResponse<object>.SuccessResponse(data, "Advisor created successfully.", 201));
+        }
+
+      
+        [HttpPut]
+        public async Task<IActionResult> Update([FromBody] AdvisorRequest dto)
+        {
+            var userId = _userService.GetUserId();
+            var data   = await _advisorService.UpdateAsync(userId, dto);
+
+            if (data is null)
+                return NotFound(ApiResponse<object>.ErrorResponse("Advisor profile not found.", "Not found", 404));
+
+            return Ok(ApiResponse<object>.SuccessResponse(data, "Advisor updated successfully."));
+        }
+
+  
+        //[HttpDelete("{id:int}")]
+        //[Authorize(Roles = "Admin")]
+        //public async Task<IActionResult> Delete(int id)
+        //{
+        //    var deleted = await _advisorService.DeleteAsync(id);
+        //    if (!deleted)
+        //        return NotFound(ApiResponse<object>.ErrorResponse("Advisor not found.", "Not found", 404));
+
+        //    return Ok(ApiResponse<object>.SuccessResponse(null!, "Advisor deleted successfully."));
+        //}
+    }
+}
