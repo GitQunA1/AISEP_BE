@@ -62,11 +62,20 @@ namespace AISEP.BLL.Services.Investors
 
         public async Task<InvestorResponse?> UpdateAsync(int userId, UpdateInvestorRequest dto)
         {
-            var investor = await _unitOfWork.Investors.GetByUserIdAsync(userId);
+            var investor = await _unitOfWork.Investors.GetByIdAsync(userId);
             if (investor is null)
                 return null;
 
-            _mapper.Map(dto, investor);
+            investor.OrganizationName    = dto.OrganizationName    ?? investor.OrganizationName;
+            investor.InvestmentTaste     = dto.InvestmentTaste     ?? investor.InvestmentTaste;
+            investor.WalletAddress       = dto.WalletAddress       ?? investor.WalletAddress;
+            investor.InvestmentAmount    = (dto.InvestmentAmount > 0) ? dto.InvestmentAmount : investor.InvestmentAmount;
+            investor.InvestmentDate      = dto.InvestmentDate      ?? investor.InvestmentDate;
+            investor.RiskTolerance       = dto.RiskTolerance       ?? investor.RiskTolerance;
+            investor.InvestmentRegion    = dto.InvestmentRegion    ?? investor.InvestmentRegion;
+            investor.FocusIndustry       = dto.FocusIndustry       ?? investor.FocusIndustry;
+            investor.PreferredStage      = dto.PreferredStage      ?? investor.PreferredStage;
+            investor.PreviousInvestments = dto.PreviousInvestments ?? investor.PreviousInvestments;
 
             _unitOfWork.Investors.Update(investor);
             await _unitOfWork.Investors.SaveChangesAsync();

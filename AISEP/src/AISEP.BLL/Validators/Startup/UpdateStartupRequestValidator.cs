@@ -14,8 +14,8 @@ namespace AISEP.BLL.Validators.Startup
         public UpdateStartupRequestValidator()
         {
             RuleFor(x => x.CompanyName)
-                .NotEmpty().WithMessage("Company name is required.")
-                .MaximumLength(255).WithMessage("Company name must not exceed 255 characters.");
+                .MaximumLength(255).WithMessage("Company name must not exceed 255 characters.")
+                .When(x => x.CompanyName is not null);
 
             RuleFor(x => x.Founder)
                 .MaximumLength(255).WithMessage("Founder must not exceed 255 characters.")
@@ -27,9 +27,7 @@ namespace AISEP.BLL.Validators.Startup
 
             RuleFor(x => x.Website)
                 .MaximumLength(255).WithMessage("Website must not exceed 255 characters.")
-                .Must(url => Uri.TryCreate(url, UriKind.Absolute, out _))
-                .WithMessage("Website must be a valid URL.")
-                .When(x => !string.IsNullOrEmpty(x.Website));
+                .When(x => !string.IsNullOrWhiteSpace(x.Website));
 
             RuleFor(x => x.Industry)
                 .IsInEnum().WithMessage("Industry is not valid. Allowed: Fintech, Edtech, Healthtech, Agritech, E_Commerce, Logistics, Proptech, Cleantech, SaaS, AI_BigData, Web3_Crypto, Food_Beverage, Manufacturing, Media_Entertainment, Other.")

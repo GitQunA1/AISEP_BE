@@ -1,10 +1,19 @@
 ﻿using AISEP.BLL.Common;
 using AISEP.BLL.DTOs.Requests;
-using AISEP.BLL.Services.Users;
 using AISEP.BLL.Services.Investors;
+using AISEP.BLL.Services.Users;
+using AISEP.DAL.Entities;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Nethereum.Contracts.QueryHandlers.MultiCall;
+using Newtonsoft.Json.Linq;
+using Org.BouncyCastle.Asn1.Ocsp;
 using Sieve.Models;
+using Swashbuckle.AspNetCore.Swagger;
+using System.Collections;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace AISEP.API.Controllers
 {
@@ -57,7 +66,10 @@ namespace AISEP.API.Controllers
       
        
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateInvestorRequest dto)
+        //fix lai
+      
+        //
+        public async Task<IActionResult> Create([FromForm] CreateInvestorRequest dto)
         {
             var userId = _currentUserService.GetUserId();
             var data = await _investorService.CreateAsync(userId, dto);
@@ -70,11 +82,12 @@ namespace AISEP.API.Controllers
         }
 
        
-        [HttpPut]
-        public async Task<IActionResult> Update([FromBody] UpdateInvestorRequest dto)
+        [HttpPut("{id:int}")]
+        //thieu id
+        public async Task<IActionResult> Update(int id,[FromForm] UpdateInvestorRequest dto)
         {
-            var userId = _currentUserService.GetUserId();
-            var data = await _investorService.UpdateAsync(userId, dto);
+           
+            var data = await _investorService.UpdateAsync(id, dto);
 
             if (data is null)
                 return NotFound(ApiResponse<object>.ErrorResponse("Investor profile not found.", "Not found", 404));

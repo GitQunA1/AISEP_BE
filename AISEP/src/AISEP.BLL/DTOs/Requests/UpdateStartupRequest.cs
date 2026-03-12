@@ -4,7 +4,7 @@ namespace AISEP.BLL.DTOs.Requests
 {
     public class UpdateStartupRequest
     {
-        public string     CompanyName         { get; set; } = string.Empty;
+        public string?    CompanyName         { get; set; }
         public string?    Founder             { get; set; }
         public string?    ContactInfo         { get; set; }
         public string?    CountryCity         { get; set; }

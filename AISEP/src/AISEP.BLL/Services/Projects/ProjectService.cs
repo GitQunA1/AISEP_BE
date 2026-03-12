@@ -92,27 +92,27 @@ namespace AISEP.BLL.Services.Projects
             if (project is null)
                 throw new KeyNotFoundException("Project not found.");
 
-            var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
-            if (startup is null || project.StartupId != startup.StartupId)
-                throw new UnauthorizedAccessException("You do not have permission to update this project.");
+            //var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
+            //if (startup is null || project.StartupId != startup.StartupId)
+            //    throw new UnauthorizedAccessException("You do not have permission to update this project.");
 
             if (project.Status == ProjectStatus.Published)
                 throw new InvalidOperationException("Published projects cannot be updated.");
 
-            project.ProjectName            = dto.ProjectName;
-            project.ShortDescription       = dto.ShortDescription;
-            project.DevelopmentStage       = dto.DevelopmentStage ?? project.DevelopmentStage;
-            project.ProblemStatement       = dto.ProblemStatement;
-            project.SolutionDescription    = dto.SolutionDescription;
-            project.TargetCustomers        = dto.TargetCustomers;
-            project.UniqueValueProposition = dto.UniqueValueProposition;
-            project.MarketSize             = dto.MarketSize;
-            project.BusinessModel          = dto.BusinessModel;
-            project.Revenue                = dto.Revenue;
-            project.Competitors            = dto.Competitors;
-            project.TeamMembers            = dto.TeamMembers;
-            project.KeySkills              = dto.KeySkills;
-            project.TeamExperience         = dto.TeamExperience;
+            project.ProjectName            = dto.ProjectName            ?? project.ProjectName;
+            project.ShortDescription       = dto.ShortDescription       ?? project.ShortDescription;
+            project.DevelopmentStage       = dto.DevelopmentStage       ?? project.DevelopmentStage;
+            project.ProblemStatement       = dto.ProblemStatement       ?? project.ProblemStatement;
+            project.SolutionDescription    = dto.SolutionDescription    ?? project.SolutionDescription;
+            project.TargetCustomers        = dto.TargetCustomers        ?? project.TargetCustomers;
+            project.UniqueValueProposition = dto.UniqueValueProposition ?? project.UniqueValueProposition;
+            project.MarketSize             = dto.MarketSize             ?? project.MarketSize;
+            project.BusinessModel          = dto.BusinessModel          ?? project.BusinessModel;
+            project.Revenue                = dto.Revenue                ?? project.Revenue;
+            project.Competitors            = dto.Competitors            ?? project.Competitors;
+            project.TeamMembers            = dto.TeamMembers            ?? project.TeamMembers;
+            project.KeySkills              = dto.KeySkills              ?? project.KeySkills;
+            project.TeamExperience         = dto.TeamExperience         ?? project.TeamExperience;
 
             _unitOfWork.Projects.Update(project);
             await _unitOfWork.SaveChangesAsync();

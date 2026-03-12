@@ -69,12 +69,13 @@ namespace AISEP.API.Controllers
                 ApiResponse<object>.SuccessResponse(data, "Advisor created successfully.", 201));
         }
 
-      
-        [HttpPut]
-        public async Task<IActionResult> Update([FromForm] UpdateAdvisorRequest dto)
+
+        [HttpPut("{id:int}")]
+        //Thiếu check null từng trường nêu null thì trw ko đổi
+        public async Task<IActionResult> Update(int id, [FromForm] UpdateAdvisorRequest dto)
         {
-            var userId = _userService.GetUserId();
-            var data   = await _advisorService.UpdateAsync(userId, dto);
+            
+            var data   = await _advisorService.UpdateAsync(id, dto);
 
             if (data is null)
                 return NotFound(ApiResponse<object>.ErrorResponse("Advisor profile not found.", "Not found", 404));

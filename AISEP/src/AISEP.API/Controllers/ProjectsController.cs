@@ -54,7 +54,8 @@ namespace AISEP.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateProjectRequest dto)
+        //check validate
+        public async Task<IActionResult> Create([FromForm] CreateProjectRequest dto)
         {
             var userId = _currentUserService.GetUserId();
             var data   = await _projectService.CreateProjectAsync(userId, dto);
@@ -63,7 +64,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateProjectRequest dto)
+        public async Task<IActionResult> Update(int id, [FromForm] UpdateProjectRequest dto)
         {
             var data = await _projectService.UpdateProjectAsync(id, dto);
             return Ok(ApiResponse<object>.SuccessResponse(data, "Project updated successfully."));

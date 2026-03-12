@@ -11,7 +11,7 @@ namespace AISEP.BLL.DTOs.Requests
         public DateTime?       InvestmentDate      { get; set; }
         public RiskTolerance?  RiskTolerance       { get; set; }
         public string?         InvestmentRegion    { get; set; }
-        public string?         FocusIndustry       { get; set; }
+        public Industry?       FocusIndustry       { get; set; }
         public PreferredStage? PreferredStage      { get; set; }
         public string?         PreviousInvestments { get; set; }
     }

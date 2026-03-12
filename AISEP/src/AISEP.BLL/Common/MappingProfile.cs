@@ -30,7 +30,9 @@ namespace AISEP.BLL.Common
                 .ForMember(dest => dest.Reviews,         opt => opt.Ignore())
                 .ForMember(dest => dest.Wallet,          opt => opt.Ignore())
                 .ForMember(dest => dest.ProfileImage,    opt => opt.Ignore())
-                .ForMember(dest => dest.Certifications,  opt => opt.Ignore());
+                .ForMember(dest => dest.Certifications,  opt => opt.Ignore())
+                .ForMember(dest => dest.HourlyRate,
+                    opt => opt.MapFrom(src => src.HourlyRate > 0 ? src.HourlyRate : null));
 
             // UpdateAdvisorRequest → Advisor Entity
             CreateMap<UpdateAdvisorRequest, Advisor>()
@@ -105,7 +107,9 @@ namespace AISEP.BLL.Common
                 .ForMember(dest => dest.User,               opt => opt.Ignore())
                 .ForMember(dest => dest.ConnectionRequests, opt => opt.Ignore())
                 .ForMember(dest => dest.Deals,              opt => opt.Ignore())
-                .ForMember(dest => dest.InvestorAIAnalyses, opt => opt.Ignore());
+                .ForMember(dest => dest.InvestorAIAnalyses, opt => opt.Ignore())
+                .ForMember(dest => dest.InvestmentAmount,
+                    opt => opt.MapFrom(src => src.InvestmentAmount > 0 ? src.InvestmentAmount : null));
 
             // UpdateInvestorRequest → Investor Entity
             CreateMap<UpdateInvestorRequest, Investor>()

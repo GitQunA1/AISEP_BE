@@ -14,7 +14,7 @@ namespace AISEP.BLL.Validators.Investor
 
             RuleFor(x => x.InvestmentAmount)
                 .GreaterThan(0).WithMessage("Investment amount must be greater than 0.")
-                .When(x => x.InvestmentAmount.HasValue);
+                .When(x => x.InvestmentAmount is not null && x.InvestmentAmount != 0);
 
             RuleFor(x => x.InvestmentRegion)
                 .MaximumLength(255).WithMessage("Investment region must not exceed 255 characters.")
@@ -31,6 +31,10 @@ namespace AISEP.BLL.Validators.Investor
             RuleFor(x => x.RiskTolerance)
                 .IsInEnum().WithMessage("Risk tolerance is not valid. Allowed: Low, Medium, High.")
                 .When(x => x.RiskTolerance.HasValue);
+
+            RuleFor(x => x.FocusIndustry)
+                .IsInEnum().WithMessage("Focus industry is not valid.")
+                .When(x => x.FocusIndustry.HasValue);
 
             RuleFor(x => x.PreferredStage)
                 .IsInEnum().WithMessage("Preferred stage is not valid. Allowed: Idea, MVP, Growth, Scale.")

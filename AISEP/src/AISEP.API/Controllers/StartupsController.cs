@@ -60,10 +60,11 @@ namespace AISEP.API.Controllers
             return CreatedAtAction(nameof(GetById), new { id = data.Id }, ApiResponse<object>.SuccessResponse(data, "Startup created successfully", 201));
         }
 
-        [HttpPut]
-        public async Task<IActionResult> Update([FromForm] UpdateStartupRequest dto)
+        [HttpPut("{id:int}")]
+        //thieu id startup
+        public async Task<IActionResult> Update(int id,[FromForm] UpdateStartupRequest dto)
         {
-            var data = await _startupService.UpdateStartupAsync(dto);
+            var data = await _startupService.UpdateStartupAsync(id,dto);
             return Ok(ApiResponse<object>.SuccessResponse(data, "Startup updated successfully."));
         }
 

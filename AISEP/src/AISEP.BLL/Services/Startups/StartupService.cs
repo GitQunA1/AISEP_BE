@@ -58,7 +58,7 @@ namespace AISEP.BLL.Services.Startups
         }
 
         public async Task<StartupResponse> CreateStartupAsync(int userId, CreateStartupRequest dto)
-        {
+        {  //bat loi tren api
             var existing = await _unitOfWork.Startups.GetByUserIdAsync(userId);
             if (existing is not null)
                 throw new InvalidOperationException("Startup profile already exists for this account.");
@@ -84,19 +84,21 @@ namespace AISEP.BLL.Services.Startups
             return _mapper.Map<StartupResponse>(startup);
         }
 
-        public async Task<StartupResponse> UpdateStartupAsync(UpdateStartupRequest dto)
+        public async Task<StartupResponse> UpdateStartupAsync(int id,UpdateStartupRequest dto)
         {
-            var userId  = _userService.GetUserId();
-            var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
+            
+            var startup = await _unitOfWork.Startups.GetByUserIdAsync(id);
             if (startup is null)
                 throw new KeyNotFoundException("Startup profile not found for this account.");
 
-            startup.CompanyName = dto.CompanyName;
-            startup.Founder     = dto.Founder;
-            startup.ContactInfo = dto.ContactInfo;
-            startup.CountryCity = dto.CountryCity;
-            startup.Website     = dto.Website;
-            startup.Industry    = dto.Industry;
+            startup.CompanyName = string.IsNullOrWhiteSpace(dto.CompanyName) ? startup.CompanyName : dto.CompanyName;
+            startup.Founder     = string.IsNullOrWhiteSpace(dto.Founder)     ? startup.Founder     : dto.Founder;
+            startup.ContactInfo = string.IsNullOrWhiteSpace(dto.ContactInfo) ? startup.ContactInfo : dto.ContactInfo;
+            startup.CountryCity = string.IsNullOrWhiteSpace(dto.CountryCity) ? startup.CountryCity : dto.CountryCity;
+            startup.Website     = (!string.IsNullOrWhiteSpace(dto.Website) && Uri.TryCreate(dto.Website, UriKind.Absolute, out _))
+                                   ? dto.Website
+                                   : startup.Website;
+            startup.Industry    = dto.Industry ?? startup.Industry;
 
             if (dto.LogoFile is not null)
                 startup.LogoUrl = await _storage.UploadFileAsync(dto.LogoFile, "startup-logos");
@@ -149,7 +151,7 @@ namespace AISEP.BLL.Services.Startups
             await _unitOfWork.SaveChangesAsync();
         }
 
-        // ── Helpers ──────────────────────────────────────────────────────
+
 
         private async Task<string?> UploadIfPresent(IFormFile? file, string folder)
             => file is not null ? await _storage.UploadFileAsync(file, folder) : null;

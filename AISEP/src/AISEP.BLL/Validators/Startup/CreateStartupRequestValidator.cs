@@ -31,9 +31,12 @@ namespace AISEP.BLL.Validators.Startup
 
             RuleFor(x => x.Website)
                 .MaximumLength(255).WithMessage("Website must not exceed 255 characters.")
+                .When(x => !string.IsNullOrWhiteSpace(x.Website));
+
+            RuleFor(x => x.Website)
                 .Must(url => Uri.TryCreate(url, UriKind.Absolute, out _))
                 .WithMessage("Website must be a valid URL.")
-                .When(x => !string.IsNullOrEmpty(x.Website));
+                .When(x => !string.IsNullOrWhiteSpace(x.Website));
 
             RuleFor(x => x.Industry)
                 .IsInEnum().WithMessage("Industry is not valid. Allowed: Fintech, Edtech, Healthtech, Agritech, E_Commerce, Logistics, Proptech, Cleantech, SaaS, AI_BigData, Web3_Crypto, Food_Beverage, Manufacturing, Media_Entertainment, Other.")

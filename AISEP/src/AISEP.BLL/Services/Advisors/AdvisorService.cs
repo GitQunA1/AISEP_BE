@@ -66,7 +66,12 @@ namespace AISEP.BLL.Services.Advisors
             var advisor = await _unitOfWork.Advisors.GetByUserIdAsync(userId);
             if (advisor is null) return null;
 
-            _mapper.Map(dto, advisor);
+            advisor.Bio                = string.IsNullOrWhiteSpace(dto.Bio)                ? advisor.Bio                : dto.Bio;
+            advisor.Expertise          = string.IsNullOrWhiteSpace(dto.Expertise)          ? advisor.Expertise          : dto.Expertise;
+            advisor.PreviousExperience = string.IsNullOrWhiteSpace(dto.PreviousExperience) ? advisor.PreviousExperience : dto.PreviousExperience;
+            advisor.LanguagesSpoken    = string.IsNullOrWhiteSpace(dto.LanguagesSpoken)    ? advisor.LanguagesSpoken    : dto.LanguagesSpoken;
+            advisor.Location           = string.IsNullOrWhiteSpace(dto.Location)           ? advisor.Location           : dto.Location;
+            advisor.HourlyRate         = (dto.HourlyRate > 0) ? dto.HourlyRate : advisor.HourlyRate;
 
             if (dto.ProfileImageFile is not null)
                 advisor.ProfileImage = await _storage.UploadFileAsync(dto.ProfileImageFile, "advisor-profiles");

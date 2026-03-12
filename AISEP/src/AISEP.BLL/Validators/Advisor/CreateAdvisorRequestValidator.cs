@@ -13,8 +13,8 @@ namespace AISEP.BLL.Validators.Advisor
         public CreateAdvisorRequestValidator()
         {
             RuleFor(x => x.HourlyRate)
-                .GreaterThan(0).WithMessage("Hourly rate must be greater than 0.")
-                .When(x => x.HourlyRate.HasValue);
+                .GreaterThan(0m).WithMessage("Hourly rate must be greater than 0.")
+                .When(x => x.HourlyRate is not null && x.HourlyRate != 0);
 
             RuleFor(x => x.ProfileImageFile)
                 .Must(f => f!.Length <= MaxImageSize)
