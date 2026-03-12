@@ -4,8 +4,11 @@ namespace AISEP.DAL.Repositories.Advisors
 {
     public interface IAdvisorsRepository
     {
-        Task<Advisor?> GetByIdAsync(Guid id);
-        Task DeleteAsync(Guid id);
-        IQueryable<Booking> GetBookingQuery();
+        IQueryable<Advisor> GetAllQuery();
+        Task<Advisor?> GetByIdAsync(int id);
+        Task<Advisor?> GetByUserIdAsync(int userId);
+        Task AddAsync(Advisor advisor);
+        void Update(Advisor advisor);
+        Task DeleteAsync(int id);
     }
 }

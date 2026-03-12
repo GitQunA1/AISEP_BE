@@ -35,7 +35,8 @@ namespace AISEP.DAL.Repositories.Reviews
             return _context.Reviews
                 .Include(r => r.Advisor)
                     .ThenInclude(a => a.User)  
-                .Include(r => r.Reviewer)       
+                .Include(r => r.Reviewer)
+                .OrderBy(r => r.ReviewId)
                 .AsNoTracking();
         }
     }

@@ -1,6 +1,7 @@
 ﻿using AISEP.DAL.Data;
 using AISEP.DAL.Repositories.Advisors;
 using AISEP.DAL.Repositories.Bookings;
+using AISEP.DAL.Repositories.Chats;
 using AISEP.DAL.Repositories.Documents;
 using AISEP.DAL.Repositories.Projects;
 using AISEP.DAL.Repositories.RefreshTokens;
@@ -19,6 +20,8 @@ namespace AISEP.DAL.Common
         private IBookingRepository? _bookings;
         private IRefreshTokenRepository? _refreshTokens;
         private IAdvisorsRepository? _advisors;
+        private IChatSessionRepository? _chatSessions;
+        private IChatMessageRepository? _chatMessages;
         private IReviewRepository? _reviews;
         private IStartupFollowerRepository? _startupFollowers;
         private IDocumentRepository? _documents;
@@ -43,6 +46,9 @@ namespace AISEP.DAL.Common
         public IInvestorRepository Investors                   => _investors            ??= new InvestorRepository(_context);
         public IUserRepository Users                           => _users                ??= new UserRepository(_context);
         public IStartupAIAnalysisRepository StartupAIAnalyses => _startupAIAnalyses    ??= new StartupAIAnalysisRepository(_context);
+        public IAdvisorsRepository Advisors      => _advisors      ??= new AdvisorRepository(_context);
+        public IChatSessionRepository ChatSessions => _chatSessions  ??= new ChatSessionRepository(_context);
+        public IChatMessageRepository ChatMessages => _chatMessages  ??= new ChatMessageRepository(_context);
 
         public async Task<int> SaveChangesAsync()
         {

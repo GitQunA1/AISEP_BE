@@ -1,5 +1,4 @@
-﻿using AISEP.BLL.Common;
-using AISEP.DAL.Entities;
+﻿using AISEP.DAL.Entities;
 using Microsoft.Extensions.Options;
 using Sieve.Models;
 using Sieve.Services;
@@ -12,9 +11,7 @@ namespace AISEP.BLL.Common
         {
 
         }
-        /// <summary>
-        /// Map properties của các models để có thể filter/sort
-        /// </summary>
+
         protected override SievePropertyMapper MapProperties(SievePropertyMapper mapper)
         {
             // Booking
@@ -100,6 +97,19 @@ namespace AISEP.BLL.Common
                 .CanFilter()
                 .CanSort();
             mapper.Property<Project>(p => p.CreatedAt)
+                .CanFilter()
+                .CanSort();
+
+            // Document
+            mapper.Property<Document>(d => d.DocumentType)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Document>(d => d.FileName)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Document>(d => d.IsIpProtected)
+                .CanFilter();
+            mapper.Property<Document>(d => d.VerifiedAt)
                 .CanFilter()
                 .CanSort();
 

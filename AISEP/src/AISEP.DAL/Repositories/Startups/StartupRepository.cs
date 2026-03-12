@@ -24,6 +24,7 @@ namespace AISEP.DAL.Repositories.Startups
                     (string.IsNullOrWhiteSpace(industry) || (s.Industry != null && s.Industry.ToString()!.ToLower().Contains(industry.ToLower()))) &&
                     (string.IsNullOrWhiteSpace(searchTerm) || (s.CompanyName != null && s.CompanyName.ToLower().Contains(searchTerm.ToLower())))
                 )
+                .OrderBy(s => s.StartupId)
                 .AsQueryable();
         }
 
@@ -48,6 +49,7 @@ namespace AISEP.DAL.Repositories.Startups
             return _context.Startups
                 .Include(s => s.Followers)
                 .Include(s => s.User)
+                .OrderBy(s => s.StartupId)
                 .AsQueryable();
         }
 
@@ -56,6 +58,7 @@ namespace AISEP.DAL.Repositories.Startups
             return _context.Startups
                 .Include(s => s.User)
                 .Where(s => s.ApprovalStatus == ApprovalStatus.Pending)
+                .OrderBy(s => s.StartupId)
                 .AsQueryable();
         }
 
@@ -64,6 +67,7 @@ namespace AISEP.DAL.Repositories.Startups
             var query = _context.Startups
                 .Include(s => s.Followers)
                 .Include(s => s.User)
+                .OrderBy(s => s.StartupId)
                 .AsQueryable();
 
             if (status.HasValue)

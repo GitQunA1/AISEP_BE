@@ -15,7 +15,9 @@ using AISEP.BLL.Services.Reviews;
 using AISEP.BLL.Services.Startups;
 using AISEP.BLL.Services.StartupFollowers;
 using AISEP.BLL.Services.Storage;
+using AISEP.BLL.Services.Advisors;
 using AISEP.BLL.Services.AI;
+using AISEP.BLL.Services.Chats;
 using AISEP.BLL.Settings;
 using AISEP.BLL.Validators.Auth;
 using FluentValidation;
@@ -33,8 +35,11 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 
 // Add FluentValidation
 builder.Services.AddFluentValidationAutoValidation();
@@ -141,7 +146,10 @@ builder.Services.AddScoped<IInvestorService, InvestorService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IStorageService, CloudinaryStorageService>();
 builder.Services.AddScoped<IBlockchainService, SepoliaBlockchainService>();
+builder.Services.AddScoped<IAdvisorService, AdvisorService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<IChatSessionService, ChatSessionService>();
+builder.Services.AddScoped<IChatMessageService, ChatMessageService>();
 
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>

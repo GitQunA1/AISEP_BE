@@ -11,7 +11,7 @@ namespace AISEP.DAL.Data
         public static async Task SeedAsync(IServiceProvider serviceProvider)
         {
             using var scope = serviceProvider.CreateScope();
-            var context     = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
 
             await context.Database.MigrateAsync();
@@ -55,12 +55,12 @@ namespace AISEP.DAL.Data
             {
                 var user = new User
                 {
-                    UserName       = u.Name,
-                    Email          = u.Email,
-                    Role           = u.Role,
-                    Status         = UserStatus.Active,
+                    UserName = u.Name,
+                    Email = u.Email,
+                    Role = u.Role,
+                    Status = UserStatus.Active,
                     //IsVerified     = true,
-                    CreatedAt      = DateTime.UtcNow,
+                    CreatedAt = DateTime.UtcNow,
                     EmailConfirmed = true
                 };
 
@@ -281,9 +281,9 @@ namespace AISEP.DAL.Data
             var wallets = advisors.Select(a => new Wallet
             {
                 AdvisorId = a.AdvisorId,
-                Balance   = 5000000m,
-                Currency  = "VND",
-                IsActive  = true
+                Balance = 5000000m,
+                Currency = "VND",
+                IsActive = true
             }).ToList();
 
             await context.Wallets.AddRangeAsync(wallets);
@@ -383,7 +383,7 @@ namespace AISEP.DAL.Data
         {
             if (await context.Bookings.AnyAsync()) return;
 
-            var advisor   = await context.Advisors.FirstOrDefaultAsync();
+            var advisor = await context.Advisors.FirstOrDefaultAsync();
             var customers = await context.Users
                 .Where(u => u.Role == UserRole.Startup)
                 .ToListAsync();
@@ -483,12 +483,12 @@ namespace AISEP.DAL.Data
 
             var review = new Review
             {
-                AdvisorId     = completedBooking.AdvisorId,
-                ReviewerId    = completedBooking.CustomerId,
-                BookingId     = completedBooking.BookingId,
-                Rating        = 5,
+                AdvisorId = completedBooking.AdvisorId,
+                ReviewerId = completedBooking.CustomerId,
+                BookingId = completedBooking.BookingId,
+                Rating = 5,
                 ReviewContent = "Advisor rất chuyên nghiệp, giúp chúng tôi định hình được chiến lược kinh doanh rõ ràng",
-                CreatedAt     = DateTime.UtcNow.AddDays(-1)
+                CreatedAt = DateTime.UtcNow.AddDays(-1)
             };
 
             await context.Reviews.AddAsync(review);
@@ -539,7 +539,7 @@ namespace AISEP.DAL.Data
         {
             if (await context.Subscriptions.AnyAsync()) return;
 
-            var package      = await context.Packages.FirstOrDefaultAsync(p => p.PackageName == "Pro");
+            var package = await context.Packages.FirstOrDefaultAsync(p => p.PackageName == "Pro");
             var startupUsers = await context.Users
                 .Where(u => u.Role == UserRole.Startup)
                 .ToListAsync();
@@ -549,10 +549,10 @@ namespace AISEP.DAL.Data
             var subscriptions = startupUsers.Take(2).Select(u => new Subscription
             {
                 PackageId = package.PackageId,
-                UserId    = u.Id,
+                UserId = u.Id,
                 StartDate = DateTime.UtcNow,
-                EndDate   = DateTime.UtcNow.AddMonths(1),
-                Status    = SubscriptionStatus.Active
+                EndDate = DateTime.UtcNow.AddMonths(1),
+                Status = SubscriptionStatus.Active
             }).ToList();
 
             await context.Subscriptions.AddRangeAsync(subscriptions);
@@ -568,9 +568,9 @@ namespace AISEP.DAL.Data
             if (await context.StartupFollowers.AnyAsync()) return;
 
             var investorUsers = await context.Users.Where(u => u.Role == UserRole.Investor).ToListAsync();
-            var advisorUsers  = await context.Users.Where(u => u.Role == UserRole.Advisor).ToListAsync();
-            var staffUsers    = await context.Users.Where(u => u.Role == UserRole.Staff).ToListAsync();
-            var startups      = await context.Startups.ToListAsync();
+            var advisorUsers = await context.Users.Where(u => u.Role == UserRole.Advisor).ToListAsync();
+            var staffUsers = await context.Users.Where(u => u.Role == UserRole.Staff).ToListAsync();
+            var startups = await context.Startups.ToListAsync();
 
             if (!startups.Any()) return;
 

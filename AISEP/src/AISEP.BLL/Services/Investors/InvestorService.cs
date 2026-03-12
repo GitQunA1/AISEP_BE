@@ -3,6 +3,7 @@ using AISEP.DAL.Common;
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.DAL.Entities;
+using AISEP.DAL.Enums;
 using AISEP.DAL.Repositories.Investors;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -43,7 +44,7 @@ namespace AISEP.BLL.Services.Investors
            
         }
 
-        public async Task<InvestorResponse?> CreateAsync(int userId, InvestorRequest dto)
+        public async Task<InvestorResponse?> CreateAsync(int userId, CreateInvestorRequest dto)
         {
             var existing = await _unitOfWork.Investors.GetByUserIdAsync(userId);
             if (existing is not null)
@@ -57,17 +58,24 @@ namespace AISEP.BLL.Services.Investors
 
             var created = await _unitOfWork.Investors.GetByIdAsync(investor.InvestorId);
             return _mapper.Map<InvestorResponse>(created!);
-            
-           
         }
 
-        public async Task<InvestorResponse?> UpdateAsync(int userId, InvestorRequest dto)
+        public async Task<InvestorResponse?> UpdateAsync(int userId, UpdateInvestorRequest dto)
         {
-            var investor = await _unitOfWork.Investors.GetByUserIdAsync(userId);
+            var investor = await _unitOfWork.Investors.GetByIdAsync(userId);
             if (investor is null)
                 return null;
 
-            _mapper.Map(dto, investor);
+            investor.OrganizationName    = dto.OrganizationName    ?? investor.OrganizationName;
+            investor.InvestmentTaste     = dto.InvestmentTaste     ?? investor.InvestmentTaste;
+            investor.WalletAddress       = dto.WalletAddress       ?? investor.WalletAddress;
+            investor.InvestmentAmount    = (dto.InvestmentAmount > 0) ? dto.InvestmentAmount : investor.InvestmentAmount;
+            investor.InvestmentDate      = dto.InvestmentDate      ?? investor.InvestmentDate;
+            investor.RiskTolerance       = dto.RiskTolerance       ?? investor.RiskTolerance;
+            investor.InvestmentRegion    = dto.InvestmentRegion    ?? investor.InvestmentRegion;
+            investor.FocusIndustry       = dto.FocusIndustry       ?? investor.FocusIndustry;
+            investor.PreferredStage      = dto.PreferredStage      ?? investor.PreferredStage;
+            investor.PreviousInvestments = dto.PreviousInvestments ?? investor.PreviousInvestments;
 
             _unitOfWork.Investors.Update(investor);
             await _unitOfWork.Investors.SaveChangesAsync();

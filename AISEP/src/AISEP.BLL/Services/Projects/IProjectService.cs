@@ -16,7 +16,7 @@ namespace AISEP.BLL.Services.Projects
         Task<ProjectResponse> CreateProjectAsync(int userId, CreateProjectRequest dto);
         Task<ProjectResponse> UpdateProjectAsync(int projectId, UpdateProjectRequest dto);
 
-        Task ApproveProjectAsync(int projectId, ApproveProjectRequest dto);
+        Task ApproveProjectAsync(int projectId);
         Task RejectProjectAsync(int projectId, RejectProjectRequest dto);
     }
 }

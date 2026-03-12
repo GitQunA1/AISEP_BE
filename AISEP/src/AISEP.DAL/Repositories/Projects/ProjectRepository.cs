@@ -18,6 +18,7 @@ namespace AISEP.DAL.Repositories.Projects
         {
             return _context.Projects
                 .Include(p => p.Startup)
+                .OrderBy(p => p.ProjectId)
                 .AsQueryable();
         }
 
@@ -26,6 +27,7 @@ namespace AISEP.DAL.Repositories.Projects
             return _context.Projects
                 .Include(p => p.Startup)
                 .Where(p => p.StartupId == startupId)
+                .OrderBy(p => p.ProjectId)
                 .AsQueryable();
         }
 
@@ -34,6 +36,7 @@ namespace AISEP.DAL.Repositories.Projects
             return _context.Projects
                 .Include(p => p.Startup)
                 .Where(p => p.Status == status)
+                .OrderBy(p => p.ProjectId)
                 .AsQueryable();
         }
 

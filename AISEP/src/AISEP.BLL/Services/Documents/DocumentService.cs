@@ -1,4 +1,5 @@
 ﻿using AISEP.DAL.Common;
+using AISEP.BLL.Common;
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.DAL.Entities;
@@ -6,55 +7,57 @@ using AISEP.DAL.Enums;
 using AISEP.BLL.Services.Blockchain;
 using AISEP.BLL.Services.Storage;
 using AutoMapper;
+using Sieve.Models;
+using Sieve.Services;
 
 namespace AISEP.BLL.Services.Documents
 {
-    /// <summary>
-    /// - Gọi IStorageService để upload file lên Cloudinary.
-    /// - Gọi IBlockchainService để lưu hash lên Sepolia (nếu IsIpProtected).
-    /// </summary>
     public class DocumentService : IDocumentService
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IStorageService _storageService;
         private readonly IBlockchainService _blockchainService;
-        private readonly ILogger<DocumentService> _logger;
+        private readonly ISieveProcessor _sieveProcessor;
         private readonly IMapper _mapper;
 
         public DocumentService(
             IUnitOfWork unitOfWork,
             IStorageService storageService,
             IBlockchainService blockchainService,
-            ILogger<DocumentService> logger,
+            ISieveProcessor sieveProcessor,
             IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             _storageService = storageService;
             _blockchainService = blockchainService;
-            _logger = logger;
+            _sieveProcessor = sieveProcessor;
             _mapper = mapper;
         }
 
-        public async Task<DocumentResponse> UploadDocumentAsync(int projectId, UploadDocumentRequest request)
+        public async Task<DocumentResponse> UploadDocumentAsync(int projectId, int userId, UploadDocumentRequest request)
         {
-            // 1. Upload file lên Cloudinary
-            var fileUrl = await _storageService.UploadFileAsync(request.File);
+            var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
+            if (project is null)
+                throw new KeyNotFoundException("Project not found.");
 
-            // 2. Tính hash + lưu Blockchain (mọi document đều được bảo vệ IP)
+            var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
+            if (startup is null || project.StartupId != startup.StartupId)
+                throw new UnauthorizedAccessException("You do not have permission to upload documents to this project.");
+
+            var fileUrl = await _storageService.UploadFileAsync(request.File);
             var fileHash = await _blockchainService.ComputeFileHashAsync(request.File);
             var txHash = await _blockchainService.StoreHashAsync(fileHash, projectId);
 
-            // 3. Lưu vào Database
             var document = new Document
             {
-                ProjectId = projectId,
-                DocumentType = request.DocumentType,
-                FileName = request.File.FileName,
-                FileUrl = fileUrl,
-                FileHash = fileHash,
+                ProjectId        = projectId,
+                DocumentType     = request.DocumentType,
+                FileName         = request.File.FileName,
+                FileUrl          = fileUrl,
+                FileHash         = fileHash,
                 BlockchainTxHash = txHash,
-                IsIpProtected = true,
-                VerifiedAt = DateTime.UtcNow
+                IsIpProtected    = true,
+                VerifiedAt       = DateTime.UtcNow
             };
 
             await _unitOfWork.Documents.AddAsync(document);
@@ -63,29 +66,55 @@ namespace AISEP.BLL.Services.Documents
             return _mapper.Map<DocumentResponse>(document);
         }
 
-        public async Task<DocumentResponse?> GetByIdAsync(int id)
+        public async Task<DocumentResponse?> GetByIdAsync(int id, int userId, string role)
         {
             var document = await _unitOfWork.Documents.GetByIdAsync(id);
             if (document is null)
                 return null;
 
+            if (role == "Startup")
+            {
+                var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
+                if (startup is null || document.Project.StartupId != startup.StartupId)
+                    throw new UnauthorizedAccessException("You do not have permission to access this document.");
+            }
+
             return _mapper.Map<DocumentResponse>(document);
         }
 
-        public async Task<IEnumerable<DocumentResponse>> GetByProjectIdAsync(int projectId)
+        public async Task<PagedResult<DocumentResponse>> GetByProjectIdAsync(int projectId, int userId, string role, SieveModel model)
         {
-            var documents = await _unitOfWork.Documents.GetByProjectIdAsync(projectId);
-            return documents.Select(d => _mapper.Map<DocumentResponse>(d));
+            if (role == "Startup")
+            {
+                var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
+                if (project is null)
+                    throw new KeyNotFoundException("Project not found.");
+
+                var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
+                if (startup is null || project.StartupId != startup.StartupId)
+                    throw new UnauthorizedAccessException("You do not have permission to access documents of this project.");
+            }
+
+            var query = _unitOfWork.Documents.GetQueryable()
+                .Where(d => d.ProjectId == projectId);
+
+            return await PaginationHelper.PaginateAsync(
+                query, model, _sieveProcessor, d => _mapper.Map<DocumentResponse>(d));
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id, int userId, string role)
         {
             var document = await _unitOfWork.Documents.GetByIdAsync(id);
-
-            if (document == null)
+            if (document is null)
                 return false;
 
-            // Block deletion if the project is already submitted/approved/published
+            if (role == "Startup")
+            {
+                var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
+                if (startup is null || document.Project.StartupId != startup.StartupId)
+                    throw new UnauthorizedAccessException("You do not have permission to delete this document.");
+            }
+
             var lockedStatuses = new[] { ProjectStatus.Submitted, ProjectStatus.Approved, ProjectStatus.Published };
             if (lockedStatuses.Contains(document.Project.Status))
                 throw new InvalidOperationException(
@@ -106,9 +135,7 @@ namespace AISEP.BLL.Services.Documents
             if (string.IsNullOrEmpty(document.FileHash) || string.IsNullOrEmpty(document.BlockchainTxHash))
                 throw new InvalidOperationException("This document was not registered on the blockchain.");
 
-            // Gọi Smart Contract (view function — miễn phí gas)
             var (entityId, timestamp) = await _blockchainService.VerifyDocumentAsync(document.FileHash);
-
             var isAuthentic = timestamp > 0 && entityId == document.ProjectId;
 
             return new BlockchainVerificationResponse
@@ -121,7 +148,5 @@ namespace AISEP.BLL.Services.Documents
                     : "Document does not match blockchain data. It may have been tampered with."
             };
         }
-
     }
 }
-

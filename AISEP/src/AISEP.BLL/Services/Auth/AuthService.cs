@@ -165,6 +165,11 @@ namespace AISEP.BLL.Services.Auth
                 return (false, null, "Account has been banned");
             }
 
+            if (!user.EmailConfirmed)
+            {
+                return (false, null, "Email has not been confirmed. Please check your inbox and confirm your email before logging in.");
+            }
+
             var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, lockoutOnFailure: true);
 
             if (result.IsLockedOut)

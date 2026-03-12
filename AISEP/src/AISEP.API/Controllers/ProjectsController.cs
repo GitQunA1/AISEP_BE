@@ -1,7 +1,8 @@
 ﻿using AISEP.BLL.Common;
 using AISEP.BLL.DTOs.Requests;
-using AISEP.BLL.Services.Users;
 using AISEP.BLL.Services.Projects;
+using AISEP.BLL.Services.Users;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sieve.Models;
 
@@ -9,6 +10,7 @@ namespace AISEP.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class ProjectsController : ControllerBase
     {
         private readonly IProjectService _projectService;
@@ -52,7 +54,8 @@ namespace AISEP.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateProjectRequest dto)
+        //check validate
+        public async Task<IActionResult> Create([FromForm] CreateProjectRequest dto)
         {
             var userId = _currentUserService.GetUserId();
             var data   = await _projectService.CreateProjectAsync(userId, dto);
@@ -61,21 +64,23 @@ namespace AISEP.API.Controllers
         }
 
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateProjectRequest dto)
+        public async Task<IActionResult> Update(int id, [FromForm] UpdateProjectRequest dto)
         {
             var data = await _projectService.UpdateProjectAsync(id, dto);
             return Ok(ApiResponse<object>.SuccessResponse(data, "Project updated successfully."));
         }
 
 
-        [HttpPut("{id:int}/approve")]
-        public async Task<IActionResult> Approve(int id, [FromBody] ApproveProjectRequest dto)
+        [HttpPatch("{id:int}/approve")]
+       
+        public async Task<IActionResult> Approve(int id)
         {
-            await _projectService.ApproveProjectAsync(id, dto);
+            await _projectService.ApproveProjectAsync(id);
             return Ok(ApiResponse<object>.SuccessResponse(null, "Project approved successfully."));
         }
 
-        [HttpPut("{id:int}/reject")]
+        [HttpPatch("{id:int}/reject")]
+        
         public async Task<IActionResult> Reject(int id, [FromBody] RejectProjectRequest dto)
         {
             await _projectService.RejectProjectAsync(id, dto);

@@ -6,10 +6,10 @@ WORKDIR /src
 COPY . ./
 
 # Restore packages
-RUN dotnet restore "AISEP.csproj"
+RUN dotnet restore "AISEP.API.csproj"
 
 # Build and publish
-RUN dotnet publish "AISEP.csproj" -c Release -o /app/publish
+RUN dotnet publish "AISEP.API.csproj" -c Release -o /app/publish
 
 # ===== STAGE 2: Run =====
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
@@ -19,4 +19,4 @@ COPY --from=build /app/publish .
 EXPOSE 8080
 
 # Entry point
-ENTRYPOINT ["dotnet", "AISEP.dll"]
+ENTRYPOINT ["dotnet", "AISEP.API.dll"]

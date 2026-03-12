@@ -1,6 +1,7 @@
 ﻿using AISEP.BLL.Common;
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.Services.Bookings;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sieve.Models;
 
@@ -8,6 +9,7 @@ namespace AISEP.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class BookingController : ControllerBase
     {
         private readonly IBookingService _bookingService;
