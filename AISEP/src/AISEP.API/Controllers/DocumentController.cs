@@ -1,8 +1,11 @@
 ﻿using AISEP.BLL.Common;
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.Services.Documents;
+using AISEP.BLL.Services.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Sieve.Models;
+using System.Security.Claims;
 
 namespace AISEP.API.Controllers
 {
@@ -11,54 +14,96 @@ namespace AISEP.API.Controllers
     public class DocumentController : ControllerBase
     {
         private readonly IDocumentService _documentService;
+        private readonly IUserService _currentUserService;
 
-        public DocumentController(IDocumentService documentService)
+        public DocumentController(IDocumentService documentService, IUserService currentUserService)
         {
             _documentService = documentService;
+            _currentUserService = currentUserService;
         }
 
-        // 1. UPLOAD (Nested under project)
         [HttpPost("api/projects/{projectId}/documents")]
+        [Authorize(Roles = "Startup")]
         public async Task<IActionResult> Upload([FromRoute] int projectId, [FromForm] UploadDocumentRequest request)
         {
             if (request.File == null || request.File.Length == 0)
                 return BadRequest(ApiResponse<object>.ErrorResponse("File is required.", "Validation failed"));
 
-            var result = await _documentService.UploadDocumentAsync(projectId, request);
-            return CreatedAtAction(nameof(GetById), new { documentId = result.DocumentId },
-                ApiResponse<object>.SuccessResponse(result, "Document uploaded successfully", 201));
+            try
+            {
+                var userId = _currentUserService.GetUserId();
+                var result = await _documentService.UploadDocumentAsync(projectId, userId, request);
+                return CreatedAtAction(nameof(GetById), new { documentId = result.DocumentId },
+                    ApiResponse<object>.SuccessResponse(result, "Document uploaded successfully", 201));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not found", 404));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(403, ApiResponse<object>.ErrorResponse(ex.Message, "Forbidden", 403));
+            }
         }
 
-        // 2. GET LIST (Nested under project)
         [HttpGet("api/projects/{projectId}/documents")]
-        public async Task<IActionResult> GetByProjectId([FromRoute] int projectId)
+        [Authorize(Roles = "Startup, Staff, Admin")]
+        public async Task<IActionResult> GetByProjectId([FromRoute] int projectId, [FromQuery] SieveModel model)
         {
-            var result = await _documentService.GetByProjectIdAsync(projectId);
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
+            try
+            {
+                var userId = _currentUserService.GetUserId();
+                var role = User.FindFirstValue(ClaimTypes.Role)!;
+                var result = await _documentService.GetByProjectIdAsync(projectId, userId, role, model);
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not found", 404));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(403, ApiResponse<object>.ErrorResponse(ex.Message, "Forbidden", 403));
+            }
         }
 
-        // 3. GET DETAILS (Direct)
         [HttpGet("api/documents/{documentId}")]
+        [Authorize(Roles = "Startup, Staff, Admin")]
         public async Task<IActionResult> GetById([FromRoute] int documentId)
         {
-            var result = await _documentService.GetByIdAsync(documentId);
-            if (result is null)
-                return NotFound(ApiResponse<object>.ErrorResponse($"Document {documentId} not found.", "Not found", 404));
+            try
+            {
+                var userId = _currentUserService.GetUserId();
+                var role = User.FindFirstValue(ClaimTypes.Role)!;
+                var result = await _documentService.GetByIdAsync(documentId, userId, role);
+                if (result is null)
+                    return NotFound(ApiResponse<object>.ErrorResponse("Document not found.", "Not found", 404));
 
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(403, ApiResponse<object>.ErrorResponse(ex.Message, "Forbidden", 403));
+            }
         }
 
-        // 4. DELETE (Direct — service guards project đã Submit/Publish)
         [HttpDelete("api/documents/{documentId}")]
+        [Authorize(Roles = "Startup, Admin")]
         public async Task<IActionResult> Delete([FromRoute] int documentId)
         {
             try
             {
-                var deleted = await _documentService.DeleteAsync(documentId);
+                var userId = _currentUserService.GetUserId();
+                var role = User.FindFirstValue(ClaimTypes.Role)!;
+                var deleted = await _documentService.DeleteAsync(documentId, userId, role);
                 if (!deleted)
-                    return NotFound(ApiResponse<object>.ErrorResponse($"Document {documentId} not found.", "Not found", 404));
+                    return NotFound(ApiResponse<object>.ErrorResponse("Document not found.", "Not found", 404));
 
-                return Ok(ApiResponse<object>.SuccessResponse(null!, "Deleted successfully"));
+                return Ok(ApiResponse<object>.SuccessResponse(null!, "Document deleted successfully"));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(403, ApiResponse<object>.ErrorResponse(ex.Message, "Forbidden", 403));
             }
             catch (InvalidOperationException ex)
             {
@@ -66,13 +111,23 @@ namespace AISEP.API.Controllers
             }
         }
 
-        // 5. VERIFY BLOCKCHAIN (Direct + Action)
         [HttpGet("api/documents/{documentId}/verify")]
         [AllowAnonymous]
         public async Task<IActionResult> VerifyDocument([FromRoute] int documentId)
         {
-            var result = await _documentService.VerifyDocumentAsync(documentId);
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Verification completed"));
+            try
+            {
+                var result = await _documentService.VerifyDocumentAsync(documentId);
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Verification completed"));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not found", 404));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message, "Invalid operation", 400));
+            }
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using AISEP.BLL.Common;
-namespace AISEP.BLL.Common
+﻿namespace AISEP.BLL.DTOs.Responses
 {
     public class PagedResult<T>
     {

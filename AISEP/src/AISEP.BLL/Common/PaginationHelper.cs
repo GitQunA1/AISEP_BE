@@ -1,4 +1,4 @@
-﻿using AISEP.BLL.Common;
+﻿using AISEP.BLL.DTOs.Responses;
 using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
 using Sieve.Services;
