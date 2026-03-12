@@ -16,7 +16,7 @@ namespace AISEP.BLL.Validators.Project
                 .MaximumLength(500).WithMessage("Short description must not exceed 500 characters.");
 
             RuleFor(x => x.DevelopmentStage)
-                .IsInEnum().WithMessage("Development stage is required.");
+                .IsInEnum().WithMessage("Development stage is not valid. Allowed: Idea, MVP, Growth.");
 
             RuleFor(x => x.ProblemStatement)
                 .NotEmpty().WithMessage("Problem statement is required.")

@@ -101,7 +101,7 @@ namespace AISEP.BLL.Services.Projects
 
             project.ProjectName            = dto.ProjectName;
             project.ShortDescription       = dto.ShortDescription;
-            project.DevelopmentStage       = dto.DevelopmentStage;
+            project.DevelopmentStage       = dto.DevelopmentStage ?? project.DevelopmentStage;
             project.ProblemStatement       = dto.ProblemStatement;
             project.SolutionDescription    = dto.SolutionDescription;
             project.TargetCustomers        = dto.TargetCustomers;
@@ -121,7 +121,7 @@ namespace AISEP.BLL.Services.Projects
         }
 
      
-        public async Task ApproveProjectAsync(int projectId, ApproveProjectRequest dto)
+        public async Task ApproveProjectAsync(int projectId)
         {
             var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
             if (project is null)

@@ -19,16 +19,31 @@ namespace AISEP.BLL.Common
                 .ForMember(dest => dest.ApprovalStatus,
                     opt => opt.MapFrom(src => src.ApprovalStatus.ToString()));
 
-            // AdvisorRequest → Advisor Entity
-            CreateMap<AdvisorRequest, Advisor>()
-                .ForMember(dest => dest.AdvisorId,      opt => opt.Ignore())
-                .ForMember(dest => dest.UserId,         opt => opt.Ignore())
-                .ForMember(dest => dest.Rating,         opt => opt.Ignore())
-                .ForMember(dest => dest.ApprovalStatus, opt => opt.Ignore())
-                .ForMember(dest => dest.User,           opt => opt.Ignore())
-                .ForMember(dest => dest.Bookings,       opt => opt.Ignore())
-                .ForMember(dest => dest.Reviews,        opt => opt.Ignore())
-                .ForMember(dest => dest.Wallet,         opt => opt.Ignore());
+            // CreateAdvisorRequest → Advisor Entity
+            CreateMap<CreateAdvisorRequest, Advisor>()
+                .ForMember(dest => dest.AdvisorId,       opt => opt.Ignore())
+                .ForMember(dest => dest.UserId,          opt => opt.Ignore())
+                .ForMember(dest => dest.Rating,          opt => opt.Ignore())
+                .ForMember(dest => dest.ApprovalStatus,  opt => opt.Ignore())
+                .ForMember(dest => dest.User,            opt => opt.Ignore())
+                .ForMember(dest => dest.Bookings,        opt => opt.Ignore())
+                .ForMember(dest => dest.Reviews,         opt => opt.Ignore())
+                .ForMember(dest => dest.Wallet,          opt => opt.Ignore())
+                .ForMember(dest => dest.ProfileImage,    opt => opt.Ignore())
+                .ForMember(dest => dest.Certifications,  opt => opt.Ignore());
+
+            // UpdateAdvisorRequest → Advisor Entity
+            CreateMap<UpdateAdvisorRequest, Advisor>()
+                .ForMember(dest => dest.AdvisorId,       opt => opt.Ignore())
+                .ForMember(dest => dest.UserId,          opt => opt.Ignore())
+                .ForMember(dest => dest.Rating,          opt => opt.Ignore())
+                .ForMember(dest => dest.ApprovalStatus,  opt => opt.Ignore())
+                .ForMember(dest => dest.User,            opt => opt.Ignore())
+                .ForMember(dest => dest.Bookings,        opt => opt.Ignore())
+                .ForMember(dest => dest.Reviews,         opt => opt.Ignore())
+                .ForMember(dest => dest.Wallet,          opt => opt.Ignore())
+                .ForMember(dest => dest.ProfileImage,    opt => opt.Ignore())
+                .ForMember(dest => dest.Certifications,  opt => opt.Ignore());
 
             // Document Entity → DocumentResponse
             CreateMap<Document, DocumentResponse>()
@@ -83,13 +98,22 @@ namespace AISEP.BLL.Common
                 .ForMember(dest => dest.Email,
                     opt => opt.MapFrom(src => src.User != null ? src.User.Email : null));
 
-            // InvestorRequest → Investor Entity
-            CreateMap<InvestorRequest, Investor>()
-                .ForMember(dest => dest.InvestorId, opt => opt.Ignore())
-                .ForMember(dest => dest.UserId, opt => opt.Ignore())
-                .ForMember(dest => dest.User, opt => opt.Ignore())
+            // CreateInvestorRequest → Investor Entity
+            CreateMap<CreateInvestorRequest, Investor>()
+                .ForMember(dest => dest.InvestorId,         opt => opt.Ignore())
+                .ForMember(dest => dest.UserId,             opt => opt.Ignore())
+                .ForMember(dest => dest.User,               opt => opt.Ignore())
                 .ForMember(dest => dest.ConnectionRequests, opt => opt.Ignore())
-                .ForMember(dest => dest.Deals, opt => opt.Ignore())
+                .ForMember(dest => dest.Deals,              opt => opt.Ignore())
+                .ForMember(dest => dest.InvestorAIAnalyses, opt => opt.Ignore());
+
+            // UpdateInvestorRequest → Investor Entity
+            CreateMap<UpdateInvestorRequest, Investor>()
+                .ForMember(dest => dest.InvestorId,         opt => opt.Ignore())
+                .ForMember(dest => dest.UserId,             opt => opt.Ignore())
+                .ForMember(dest => dest.User,               opt => opt.Ignore())
+                .ForMember(dest => dest.ConnectionRequests, opt => opt.Ignore())
+                .ForMember(dest => dest.Deals,              opt => opt.Ignore())
                 .ForMember(dest => dest.InvestorAIAnalyses, opt => opt.Ignore());
 
             // StartupFollower Entity → FollowedStartupResponse

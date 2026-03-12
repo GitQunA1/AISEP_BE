@@ -17,6 +17,7 @@ namespace AISEP.DAL.Repositories.Investors
         {
             return _context.Investors
                 .Include(i => i.User)
+                .OrderBy(i => i.InvestorId)
                 .AsQueryable();
         }
 

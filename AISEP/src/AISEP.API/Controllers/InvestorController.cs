@@ -10,6 +10,7 @@ namespace AISEP.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class InvestorController : ControllerBase
     {
         private readonly IInvestorService _investorService;
@@ -56,7 +57,7 @@ namespace AISEP.API.Controllers
       
        
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] InvestorRequest dto)
+        public async Task<IActionResult> Create([FromBody] CreateInvestorRequest dto)
         {
             var userId = _currentUserService.GetUserId();
             var data = await _investorService.CreateAsync(userId, dto);
@@ -70,7 +71,7 @@ namespace AISEP.API.Controllers
 
        
         [HttpPut]
-        public async Task<IActionResult> Update([FromBody] InvestorRequest dto)
+        public async Task<IActionResult> Update([FromBody] UpdateInvestorRequest dto)
         {
             var userId = _currentUserService.GetUserId();
             var data = await _investorService.UpdateAsync(userId, dto);

@@ -24,7 +24,7 @@ namespace AISEP.API.Controllers
 
        
         [HttpGet]
-        [AllowAnonymous]
+     
         public async Task<IActionResult> GetAll([FromQuery] SieveModel model)
         {
             var result = await _advisorService.GetAllAsync(model);
@@ -33,7 +33,7 @@ namespace AISEP.API.Controllers
 
        
         [HttpGet("{id:int}")]
-        [AllowAnonymous]
+        
         public async Task<IActionResult> GetById(int id)
         {
             var advisor = await _advisorService.GetByIdAsync(id);
@@ -57,7 +57,7 @@ namespace AISEP.API.Controllers
 
   
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] AdvisorRequest dto)
+        public async Task<IActionResult> Create([FromForm] CreateAdvisorRequest dto)
         {
             var userId = _userService.GetUserId();
             var data   = await _advisorService.CreateAsync(userId, dto);
@@ -71,7 +71,7 @@ namespace AISEP.API.Controllers
 
       
         [HttpPut]
-        public async Task<IActionResult> Update([FromBody] AdvisorRequest dto)
+        public async Task<IActionResult> Update([FromForm] UpdateAdvisorRequest dto)
         {
             var userId = _userService.GetUserId();
             var data   = await _advisorService.UpdateAsync(userId, dto);

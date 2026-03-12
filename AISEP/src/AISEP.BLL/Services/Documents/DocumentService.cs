@@ -47,14 +47,14 @@ namespace AISEP.BLL.Services.Documents
             // 3. Lưu vào Database
             var document = new Document
             {
-                ProjectId = projectId,
-                DocumentType = request.DocumentType,
-                FileName = request.File.FileName,
-                FileUrl = fileUrl,
-                FileHash = fileHash,
+                ProjectId        = projectId,
+                DocumentType     = request.DocumentType,
+                FileName         = request.File.FileName,
+                FileUrl          = fileUrl,
+                FileHash         = fileHash,
                 BlockchainTxHash = txHash,
-                IsIpProtected = true,
-                VerifiedAt = DateTime.UtcNow
+                IsIpProtected    = true,
+                VerifiedAt       = DateTime.UtcNow
             };
 
             await _unitOfWork.Documents.AddAsync(document);

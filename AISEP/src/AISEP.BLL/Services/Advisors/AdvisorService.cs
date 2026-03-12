@@ -1,6 +1,7 @@
 using AISEP.BLL.Common;
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
+using AISEP.BLL.Services.Storage;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AutoMapper;
@@ -11,15 +12,17 @@ namespace AISEP.BLL.Services.Advisors
 {
     public class AdvisorService : IAdvisorService
     {
-        private readonly IUnitOfWork    _unitOfWork;
+        private readonly IUnitOfWork     _unitOfWork;
         private readonly ISieveProcessor _sieveProcessor;
-        private readonly IMapper        _mapper;
+        private readonly IMapper         _mapper;
+        private readonly IStorageService _storage;
 
-        public AdvisorService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper)
+        public AdvisorService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IStorageService storage)
         {
             _unitOfWork     = unitOfWork;
             _sieveProcessor = sieveProcessor;
             _mapper         = mapper;
+            _storage        = storage;
         }
 
         public async Task<PagedResult<AdvisorResponse>> GetAllAsync(SieveModel model)
@@ -41,14 +44,15 @@ namespace AISEP.BLL.Services.Advisors
             return advisor is null ? null : _mapper.Map<AdvisorResponse>(advisor);
         }
 
-        public async Task<AdvisorResponse?> CreateAsync(int userId, AdvisorRequest dto)
+        public async Task<AdvisorResponse?> CreateAsync(int userId, CreateAdvisorRequest dto)
         {
             var existing = await _unitOfWork.Advisors.GetByUserIdAsync(userId);
-            if (existing is not null)
-                return null;
+            if (existing is not null) return null;
 
-            var advisor = _mapper.Map<Advisor>(dto);
-            advisor.UserId = userId;
+            var advisor        = _mapper.Map<Advisor>(dto);
+            advisor.UserId     = userId;
+            advisor.ProfileImage   = await UploadIfPresent(dto.ProfileImageFile,  "advisor-profiles");
+            advisor.Certifications = await UploadIfPresent(dto.CertificationFile, "advisor-certifications");
 
             await _unitOfWork.Advisors.AddAsync(advisor);
             await _unitOfWork.SaveChangesAsync();
@@ -57,13 +61,19 @@ namespace AISEP.BLL.Services.Advisors
             return _mapper.Map<AdvisorResponse>(created!);
         }
 
-        public async Task<AdvisorResponse?> UpdateAsync(int userId, AdvisorRequest dto)
+        public async Task<AdvisorResponse?> UpdateAsync(int userId, UpdateAdvisorRequest dto)
         {
             var advisor = await _unitOfWork.Advisors.GetByUserIdAsync(userId);
-            if (advisor is null)
-                return null;
+            if (advisor is null) return null;
 
             _mapper.Map(dto, advisor);
+
+            if (dto.ProfileImageFile is not null)
+                advisor.ProfileImage = await _storage.UploadFileAsync(dto.ProfileImageFile, "advisor-profiles");
+
+            if (dto.CertificationFile is not null)
+                advisor.Certifications = await _storage.UploadFileAsync(dto.CertificationFile, "advisor-certifications");
+
             _unitOfWork.Advisors.Update(advisor);
             await _unitOfWork.SaveChangesAsync();
 
@@ -73,12 +83,16 @@ namespace AISEP.BLL.Services.Advisors
         public async Task<bool> DeleteAsync(int advisorId)
         {
             var advisor = await _unitOfWork.Advisors.GetByIdAsync(advisorId);
-            if (advisor is null)
-                return false;
+            if (advisor is null) return false;
 
             await _unitOfWork.Advisors.DeleteAsync(advisorId);
             await _unitOfWork.SaveChangesAsync();
             return true;
         }
+
+        // ── Helpers ──────────────────────────────────────────────────────
+
+        private async Task<string?> UploadIfPresent(IFormFile? file, string folder)
+            => file is not null ? await _storage.UploadFileAsync(file, folder) : null;
     }
 }

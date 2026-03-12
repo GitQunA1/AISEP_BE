@@ -3,6 +3,7 @@ using AISEP.DAL.Common;
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.DAL.Entities;
+using AISEP.DAL.Enums;
 using AISEP.DAL.Repositories.Investors;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -43,7 +44,7 @@ namespace AISEP.BLL.Services.Investors
            
         }
 
-        public async Task<InvestorResponse?> CreateAsync(int userId, InvestorRequest dto)
+        public async Task<InvestorResponse?> CreateAsync(int userId, CreateInvestorRequest dto)
         {
             var existing = await _unitOfWork.Investors.GetByUserIdAsync(userId);
             if (existing is not null)
@@ -57,11 +58,9 @@ namespace AISEP.BLL.Services.Investors
 
             var created = await _unitOfWork.Investors.GetByIdAsync(investor.InvestorId);
             return _mapper.Map<InvestorResponse>(created!);
-            
-           
         }
 
-        public async Task<InvestorResponse?> UpdateAsync(int userId, InvestorRequest dto)
+        public async Task<InvestorResponse?> UpdateAsync(int userId, UpdateInvestorRequest dto)
         {
             var investor = await _unitOfWork.Investors.GetByUserIdAsync(userId);
             if (investor is null)

@@ -1,11 +1,13 @@
 ﻿using AISEP.BLL.Common;
 using AISEP.BLL.Services.AI;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AISEP.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class StartupAIAnalysisController : ControllerBase
     {
         private readonly IStartupAIAnalysisService _analysisService;

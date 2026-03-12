@@ -5,8 +5,8 @@ using AISEP.BLL.DTOs.Responses;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using AISEP.BLL.Services.Users;
+using AISEP.BLL.Services.Storage;
 using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
 using Sieve.Services;
 
@@ -14,17 +14,19 @@ namespace AISEP.BLL.Services.Startups
 {
     public class StartupService : IStartupService
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IUnitOfWork     _unitOfWork;
         private readonly ISieveProcessor _sieveProcessor;
-        private readonly IMapper _mapper;
-        private readonly IUserService _userService;
+        private readonly IMapper         _mapper;
+        private readonly IUserService    _userService;
+        private readonly IStorageService _storage;
 
-        public StartupService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IUserService userService)
+        public StartupService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IUserService userService, IStorageService storage)
         {
-            _unitOfWork = unitOfWork;
+            _unitOfWork     = unitOfWork;
             _sieveProcessor = sieveProcessor;
-            _mapper = mapper;
-            _userService = userService;
+            _mapper         = mapper;
+            _userService    = userService;
+            _storage        = storage;
         }
 
         public async Task<PagedResult<StartupResponse>> SearchStartupsAsync(SieveModel model, string? industry = null, string? stage = null)
@@ -63,17 +65,17 @@ namespace AISEP.BLL.Services.Startups
 
             var startup = new Startup
             {
-                UserId = userId,
-                CompanyName = dto.CompanyName,
-                LogoUrl = dto.LogoUrl,
-                Founder = dto.Founder,
-                ContactInfo = dto.ContactInfo,
-                CountryCity = dto.CountryCity,
-                Website = dto.Website,
-                Industry = dto.Industry,
-                BusinessLicenseUrl = dto.BusinessLicenseUrl,
-                ApprovalStatus = ApprovalStatus.Pending,
-                CreatedAt = DateTime.UtcNow
+                UserId             = userId,
+                CompanyName        = dto.CompanyName,
+                Founder            = dto.Founder,
+                ContactInfo        = dto.ContactInfo,
+                CountryCity        = dto.CountryCity,
+                Website            = dto.Website,
+                Industry           = dto.Industry,
+                LogoUrl            = await UploadIfPresent(dto.LogoFile,            "startup-logos"),
+                BusinessLicenseUrl = await UploadIfPresent(dto.BusinessLicenseFile, "startup-licenses"),
+                ApprovalStatus     = ApprovalStatus.Pending,
+                CreatedAt          = DateTime.UtcNow
             };
 
             await _unitOfWork.Startups.AddAsync(startup);
@@ -89,14 +91,18 @@ namespace AISEP.BLL.Services.Startups
             if (startup is null)
                 throw new KeyNotFoundException("Startup profile not found for this account.");
 
-            startup.CompanyName        = dto.CompanyName;
-            startup.LogoUrl            = dto.LogoUrl;
-            startup.Founder            = dto.Founder;
-            startup.ContactInfo        = dto.ContactInfo;
-            startup.CountryCity        = dto.CountryCity;
-            startup.Website            = dto.Website;
-            startup.Industry           = dto.Industry;
-            startup.BusinessLicenseUrl = dto.BusinessLicenseUrl;
+            startup.CompanyName = dto.CompanyName;
+            startup.Founder     = dto.Founder;
+            startup.ContactInfo = dto.ContactInfo;
+            startup.CountryCity = dto.CountryCity;
+            startup.Website     = dto.Website;
+            startup.Industry    = dto.Industry;
+
+            if (dto.LogoFile is not null)
+                startup.LogoUrl = await _storage.UploadFileAsync(dto.LogoFile, "startup-logos");
+
+            if (dto.BusinessLicenseFile is not null)
+                startup.BusinessLicenseUrl = await _storage.UploadFileAsync(dto.BusinessLicenseFile, "startup-licenses");
 
             _unitOfWork.Startups.Update(startup);
             await _unitOfWork.SaveChangesAsync();
@@ -104,14 +110,14 @@ namespace AISEP.BLL.Services.Startups
             return _mapper.Map<StartupResponse>(startup);
         }
 
-        public async Task ApproveStartupAsync(int userId)
+        public async Task ApproveStartupAsync(int startupId)
         {
-            var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
+            var userId = _userService.GetUserId();
+            var startup = await _unitOfWork.Startups.GetByIdAsync(startupId);
             if (startup is null)
-                throw new KeyNotFoundException("Startup profile not found.");
+                throw new KeyNotFoundException("Startup not found.");
             if (startup.ApprovalStatus == ApprovalStatus.Approved)
                 throw new InvalidOperationException("Startup is already approved.");
-
             if (startup.ApprovalStatus != ApprovalStatus.Pending)
                 throw new InvalidOperationException($"Only Pending startups can be approved. Current status: {startup.ApprovalStatus}.");
 
@@ -123,25 +129,29 @@ namespace AISEP.BLL.Services.Startups
             await _unitOfWork.SaveChangesAsync();
         }
 
-        public async Task RejectStartupAsync(int userId, RejectStartupRequest dto)
+        public async Task RejectStartupAsync(int startupId, RejectStartupRequest dto)
         {
-            var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
+            var userId = _userService.GetUserId();
+            var startup = await _unitOfWork.Startups.GetByIdAsync(startupId);
             if (startup is null)
-                throw new KeyNotFoundException("Startup profile not found.");
+                throw new KeyNotFoundException("Startup not found.");
             if (startup.ApprovalStatus == ApprovalStatus.Rejected)
                 throw new InvalidOperationException("Startup is already rejected.");
-
             if (startup.ApprovalStatus != ApprovalStatus.Pending)
                 throw new InvalidOperationException($"Only Pending startups can be rejected. Current status: {startup.ApprovalStatus}.");
 
-            startup.ApprovalStatus = ApprovalStatus.Rejected;
-            startup.RejectedAt = DateTime.UtcNow;
+            startup.ApprovalStatus  = ApprovalStatus.Rejected;
+            startup.RejectedAt      = DateTime.UtcNow;
             startup.RejectionReason = dto.Reason?.Trim();
-            startup.RejectedById = userId;
+            startup.RejectedById    = userId;
 
             _unitOfWork.Startups.Update(startup);
             await _unitOfWork.SaveChangesAsync();
         }
 
+        // ── Helpers ──────────────────────────────────────────────────────
+
+        private async Task<string?> UploadIfPresent(IFormFile? file, string folder)
+            => file is not null ? await _storage.UploadFileAsync(file, folder) : null;
             }
         }

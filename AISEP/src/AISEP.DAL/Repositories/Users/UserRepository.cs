@@ -15,7 +15,7 @@ namespace AISEP.DAL.Repositories.Users
         {
             return await _context.Users
                 .Include(u => u.Startup)
-                    .ThenInclude(s => s.Projects)
+                    .ThenInclude(s => s!.Projects)
                 .FirstOrDefaultAsync(u => u.Startup != null &&
                                           u.Startup.Projects.Any(p => p.ProjectId == id));
         }

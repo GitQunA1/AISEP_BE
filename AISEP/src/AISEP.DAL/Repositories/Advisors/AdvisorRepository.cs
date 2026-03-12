@@ -14,7 +14,7 @@ namespace AISEP.DAL.Repositories.Advisors
         }
 
         public IQueryable<Advisor> GetAllQuery()
-            => _context.Advisors.Include(a => a.User).AsQueryable();
+            => _context.Advisors.Include(a => a.User).OrderBy(a => a.AdvisorId).AsQueryable();
 
         public async Task<Advisor?> GetByIdAsync(int id)
             => await _context.Advisors

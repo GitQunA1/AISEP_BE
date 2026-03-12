@@ -1,17 +1,17 @@
-﻿using AISEP.BLL.DTOs.Requests;
+using AISEP.BLL.DTOs.Requests;
 using AISEP.DAL.Enums;
 using FluentValidation;
 
 namespace AISEP.BLL.Validators.Startup
 {
-    public class UpdateStartupRequestValidator : AbstractValidator<UpdateStartupRequest>
+    public class CreateStartupRequestValidator : AbstractValidator<CreateStartupRequest>
     {
         private static readonly string[] AllowedImageTypes = ["image/jpeg", "image/png", "image/webp"];
         private static readonly string[] AllowedDocTypes   = ["application/pdf", "image/jpeg", "image/png"];
-        private const long MaxImageSize = 5  * 1024 * 1024;  
-        private const long MaxDocSize   = 10 * 1024 * 1024;  
+        private const long MaxImageSize = 5  * 1024 * 1024;  // 5 MB
+        private const long MaxDocSize   = 10 * 1024 * 1024;  // 10 MB
 
-        public UpdateStartupRequestValidator()
+        public CreateStartupRequestValidator()
         {
             RuleFor(x => x.CompanyName)
                 .NotEmpty().WithMessage("Company name is required.")
@@ -20,6 +20,10 @@ namespace AISEP.BLL.Validators.Startup
             RuleFor(x => x.Founder)
                 .MaximumLength(255).WithMessage("Founder must not exceed 255 characters.")
                 .When(x => x.Founder is not null);
+
+            RuleFor(x => x.ContactInfo)
+                .MaximumLength(500).WithMessage("Contact info must not exceed 500 characters.")
+                .When(x => x.ContactInfo is not null);
 
             RuleFor(x => x.CountryCity)
                 .MaximumLength(255).WithMessage("Country/City must not exceed 255 characters.")

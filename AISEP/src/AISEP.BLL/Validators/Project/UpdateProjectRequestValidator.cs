@@ -11,6 +11,10 @@ namespace AISEP.BLL.Validators.Project
                 .NotEmpty().WithMessage("Project name is required.")
                 .MaximumLength(255).WithMessage("Project name must not exceed 255 characters.");
 
+            RuleFor(x => x.DevelopmentStage)
+                .IsInEnum().WithMessage("Development stage is not valid. Allowed: Idea, MVP, Growth.")
+                .When(x => x.DevelopmentStage.HasValue);
+
             RuleFor(x => x.ShortDescription)
                 .MaximumLength(500).WithMessage("Short description must not exceed 500 characters.")
                 .When(x => x.ShortDescription is not null);

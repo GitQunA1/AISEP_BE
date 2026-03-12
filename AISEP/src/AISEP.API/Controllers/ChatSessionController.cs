@@ -6,11 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AISEP.API.Controllers
 {
-    /// <summary>
-    /// Quản lý Chat Session — mở, xem, đóng phiên chat giữa Advisor và Customer.
-    /// </summary>
+    
     [ApiController]
-    [Route("api/chat-sessions")]
+    [Route("api/[controller]")]
     [Authorize]
     public class ChatSessionController : ControllerBase
     {
@@ -23,7 +21,7 @@ namespace AISEP.API.Controllers
             _userService        = userService;
         }
 
-        /// <summary>Mở hoặc lấy lại chat session của một Booking.</summary>
+       
         [HttpPost("{bookingId:int}")]
         public async Task<IActionResult> OpenSession(int bookingId)
         {

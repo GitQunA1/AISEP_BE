@@ -1,7 +1,8 @@
 ﻿using AISEP.BLL.Common;
 using AISEP.BLL.DTOs.Requests;
-using AISEP.BLL.Services.Users;
 using AISEP.BLL.Services.Startups;
+using AISEP.BLL.Services.Users;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sieve.Models;
 
@@ -9,6 +10,7 @@ namespace AISEP.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class StartupsController : ControllerBase
     {
         private readonly IStartupService _startupService;
@@ -51,7 +53,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateStartupRequest dto)
+        public async Task<IActionResult> Create([FromForm] CreateStartupRequest dto)
         {
             var userId = _currentUserService.GetUserId();
             var data = await _startupService.CreateStartupAsync(userId, dto);
@@ -59,24 +61,25 @@ namespace AISEP.API.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update([FromBody] UpdateStartupRequest dto)
+        public async Task<IActionResult> Update([FromForm] UpdateStartupRequest dto)
         {
             var data = await _startupService.UpdateStartupAsync(dto);
             return Ok(ApiResponse<object>.SuccessResponse(data, "Startup updated successfully."));
         }
 
-        [HttpPut("submit")]
-        public async Task<IActionResult> ApproveStartup()
+        [HttpPatch("{startupId:int}/approve")]
+       
+        public async Task<IActionResult> ApproveStartup(int startupId)
         {
-            var userId = _currentUserService.GetUserId();
-            await _startupService.ApproveStartupAsync(userId);
-            return Ok(ApiResponse<object>.SuccessResponse(null!, "Approving Startup Successfully."));
+            await _startupService.ApproveStartupAsync(startupId);
+            return Ok(ApiResponse<object>.SuccessResponse(null!, "Startup approved successfully."));
         }
-        [HttpPut("reject")]
-        public async Task<IActionResult> RejectStartup([FromBody] RejectStartupRequest dto)
+
+        [HttpPatch("{startupId:int}/reject")]
+        
+        public async Task<IActionResult> RejectStartup(int startupId, [FromBody] RejectStartupRequest dto)
         {
-            var userId = _currentUserService.GetUserId();
-            await _startupService.RejectStartupAsync(userId, dto);
+            await _startupService.RejectStartupAsync(startupId, dto);
             return Ok(ApiResponse<object>.SuccessResponse(null!, "Startup rejected successfully."));
         }
     }

@@ -1,7 +1,8 @@
 ﻿using AISEP.BLL.Common;
 using AISEP.BLL.DTOs.Requests;
-using AISEP.BLL.Services.Users;
 using AISEP.BLL.Services.Projects;
+using AISEP.BLL.Services.Users;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sieve.Models;
 
@@ -9,6 +10,7 @@ namespace AISEP.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class ProjectsController : ControllerBase
     {
         private readonly IProjectService _projectService;
@@ -68,14 +70,16 @@ namespace AISEP.API.Controllers
         }
 
 
-        [HttpPut("{id:int}/approve")]
-        public async Task<IActionResult> Approve(int id, [FromBody] ApproveProjectRequest dto)
+        [HttpPatch("{id:int}/approve")]
+       
+        public async Task<IActionResult> Approve(int id)
         {
-            await _projectService.ApproveProjectAsync(id, dto);
+            await _projectService.ApproveProjectAsync(id);
             return Ok(ApiResponse<object>.SuccessResponse(null, "Project approved successfully."));
         }
 
-        [HttpPut("{id:int}/reject")]
+        [HttpPatch("{id:int}/reject")]
+        
         public async Task<IActionResult> Reject(int id, [FromBody] RejectProjectRequest dto)
         {
             await _projectService.RejectProjectAsync(id, dto);

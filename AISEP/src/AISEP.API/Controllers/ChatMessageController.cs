@@ -9,7 +9,7 @@ namespace AISEP.API.Controllers
 {
     
     [ApiController]
-    [Route("api/chat-sessions/{sessionId:int}/messages")]
+    [Route("api/[controller]")]
     [Authorize]
     public class ChatMessageController : ControllerBase
     {
