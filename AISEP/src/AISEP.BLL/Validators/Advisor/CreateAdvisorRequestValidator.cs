@@ -13,10 +13,12 @@ namespace AISEP.BLL.Validators.Advisor
         public CreateAdvisorRequestValidator()
         {
             RuleFor(x => x.HourlyRate)
+                .NotEmpty().WithMessage("Hourly rate is required.")
                 .GreaterThan(0m).WithMessage("Hourly rate must be greater than 0.")
                 .When(x => x.HourlyRate is not null && x.HourlyRate != 0);
 
             RuleFor(x => x.ProfileImageFile)
+                .NotEmpty().WithMessage("Profile image file is required.")
                 .Must(f => f!.Length <= MaxImageSize)
                     .WithMessage("Profile image must not exceed 5MB.")
                 .Must(f => AllowedImageTypes.Contains(f!.ContentType))
@@ -24,6 +26,7 @@ namespace AISEP.BLL.Validators.Advisor
                 .When(x => x.ProfileImageFile is not null);
 
             RuleFor(x => x.CertificationFile)
+                .NotEmpty().WithMessage("Certification file is required.")
                 .Must(f => f!.Length <= MaxDocSize)
                     .WithMessage("Certification file must not exceed 10MB.")
                 .Must(f => AllowedDocTypes.Contains(f!.ContentType))

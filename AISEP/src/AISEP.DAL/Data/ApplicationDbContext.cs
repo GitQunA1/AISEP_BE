@@ -70,6 +70,8 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.CompanyName).HasMaxLength(255);
                 entity.Property(e => e.LogoUrl).HasMaxLength(255);
                 entity.Property(e => e.Founder).HasMaxLength(255);
+                entity.Property(e => e.Email).HasMaxLength(255);
+                entity.Property(e => e.PhoneNumber).HasMaxLength(50);
                 entity.Property(e => e.CountryCity).HasMaxLength(255);
                 entity.Property(e => e.Website).HasMaxLength(255);
                 entity.Property(e => e.Industry).HasConversion<string>();

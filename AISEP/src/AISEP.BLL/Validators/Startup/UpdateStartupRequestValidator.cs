@@ -25,6 +25,15 @@ namespace AISEP.BLL.Validators.Startup
                 .MaximumLength(255).WithMessage("Country/City must not exceed 255 characters.")
                 .When(x => x.CountryCity is not null);
 
+            RuleFor(x => x.Email)
+                .MaximumLength(255).WithMessage("Email must not exceed 255 characters.")
+                .EmailAddress().WithMessage("Email must be a valid email address.")
+                .When(x => !string.IsNullOrWhiteSpace(x.Email));
+
+            RuleFor(x => x.PhoneNumber)
+                .MaximumLength(50).WithMessage("Phone number must not exceed 50 characters.")
+                .When(x => !string.IsNullOrWhiteSpace(x.PhoneNumber));
+
             RuleFor(x => x.Website)
                 .MaximumLength(255).WithMessage("Website must not exceed 255 characters.")
                 .When(x => !string.IsNullOrWhiteSpace(x.Website));

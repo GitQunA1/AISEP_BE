@@ -53,6 +53,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Startup")]
         public async Task<IActionResult> Create([FromForm] CreateStartupRequest dto)
         {
             var userId = _currentUserService.GetUserId();
@@ -61,7 +62,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpPut("{id:int}")]
-        //thieu id startup
+        [Authorize(Roles = "Startup")]
         public async Task<IActionResult> Update(int id,[FromForm] UpdateStartupRequest dto)
         {
             var data = await _startupService.UpdateStartupAsync(id,dto);
