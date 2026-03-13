@@ -9,7 +9,6 @@ namespace AISEP.DAL.Entities
         public decimal Amount { get; set; }
         public TransactionType Type { get; set; }
         public TransactionStatus Status { get; set; }
-        public string? PayosOrderCode { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // SePay fields
