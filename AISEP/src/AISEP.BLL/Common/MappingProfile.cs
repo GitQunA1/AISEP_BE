@@ -81,6 +81,8 @@ namespace AISEP.BLL.Common
             CreateMap<Startup, StartupResponse>()
                 .ForMember(dest => dest.Id,
                     opt => opt.MapFrom(src => src.StartupId))
+                .ForMember(dest => dest.UserId,
+                    opt => opt.MapFrom(src => src.UserId))
                 .ForMember(dest => dest.Industry,
                     opt => opt.MapFrom(src => src.Industry != null ? src.Industry.ToString() : null))
                 .ForMember(dest => dest.ApprovalStatus,

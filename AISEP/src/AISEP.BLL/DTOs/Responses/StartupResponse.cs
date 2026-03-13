@@ -3,6 +3,7 @@
     public class StartupResponse
     {
         public int Id { get; set; }
+        public int UserId { get; set; }
         public string? CompanyName { get; set; }
         public string? LogoUrl { get; set; }
         public string? Founder { get; set; }
