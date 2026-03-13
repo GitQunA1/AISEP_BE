@@ -3,7 +3,7 @@ using Microsoft.Extensions.Options;
 using Sieve.Models;
 using Sieve.Services;
 
-namespace AISEP.BLL.Common
+namespace AISEP.BLL.Helpers
 {
     public class ApplicationSieveProcessor : SieveProcessor
     {

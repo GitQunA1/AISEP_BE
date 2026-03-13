@@ -1,10 +1,10 @@
-﻿using AISEP.BLL.Common;
+﻿using AISEP.BLL.Helpers;
 using AutoMapper;
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.DAL.Entities;
 
-namespace AISEP.BLL.Common
+namespace AISEP.BLL.Helpers
 {
     public class MappingProfile : Profile
     {
