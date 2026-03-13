@@ -18,6 +18,7 @@ using AISEP.BLL.Services.Storage;
 using AISEP.BLL.Services.Advisors;
 using AISEP.BLL.Services.AI;
 using AISEP.BLL.Services.Chats;
+using AISEP.BLL.Services.Payments;
 using AISEP.BLL.Settings;
 using AISEP.BLL.Validators.Auth;
 using FluentValidation;
@@ -63,6 +64,10 @@ builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection(
 
 // Configure GeminiSettings
 builder.Services.Configure<GeminiSettings>(builder.Configuration.GetSection("GeminiSettings"));
+
+// Configure SePaySettings
+builder.Services.Configure<SePaySettings>(builder.Configuration.GetSection("SePaySettings"));
+
 builder.Services.AddHttpClient<IGeminiAiService, GeminiAiService>();
 builder.Services.AddScoped<IStartupAIAnalysisService, StartupAIAnalysisService>();
 
@@ -150,6 +155,7 @@ builder.Services.AddScoped<IAdvisorService, AdvisorService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IChatSessionService, ChatSessionService>();
 builder.Services.AddScoped<IChatMessageService, ChatMessageService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
 
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>
