@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
 using Sieve.Services;
 
-namespace AISEP.BLL.Common
+namespace AISEP.BLL.Helpers
 {
     public static class PaginationHelper
     {
