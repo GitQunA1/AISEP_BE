@@ -201,10 +201,12 @@ namespace AISEP.BLL.Services.Auth
 
             var tokenResponse = new TokenResponse
             {
+                UserId = user.Id,
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
                 AccessTokenExpiration = DateTime.UtcNow.AddMinutes(15),
                 RefreshTokenExpiration = refreshTokenEntity.ExpiryDate
+
             };
 
             return (true, tokenResponse, "Login successful");
