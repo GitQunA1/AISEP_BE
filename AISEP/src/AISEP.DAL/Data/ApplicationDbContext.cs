@@ -421,8 +421,14 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.Amount).HasColumnType("decimal(18,2)").IsRequired();
                 entity.Property(e => e.Type).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
-                entity.Property(e => e.PayosOrderCode).HasMaxLength(255);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                // SePay fields
+                entity.Property(e => e.PaymentCode).HasMaxLength(50);
+                entity.HasIndex(e => e.PaymentCode).IsUnique().HasFilter("\"PaymentCode\" IS NOT NULL");
+                entity.Property(e => e.SepayTransactionId).HasMaxLength(255);
+                entity.Property(e => e.PaymentContent);
+                entity.Property(e => e.CompletedAt);
 
                 entity.HasOne(t => t.User)
                     .WithMany(u => u.Transactions)

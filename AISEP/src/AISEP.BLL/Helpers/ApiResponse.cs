@@ -1,5 +1,5 @@
-﻿using AISEP.BLL.Common;
-namespace AISEP.BLL.Common
+﻿using AISEP.BLL.Helpers;
+namespace AISEP.BLL.Helpers
 {
     public class ApiResponse<T>
     {

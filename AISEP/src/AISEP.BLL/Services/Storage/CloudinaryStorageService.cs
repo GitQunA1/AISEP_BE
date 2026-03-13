@@ -26,7 +26,7 @@ namespace AISEP.BLL.Services.Storage
                 Folder = folder
             };
 
-            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+            var uploadResult = await _cloudinary.UploadAsync(uploadParams, "auto");
 
             if (uploadResult.StatusCode != System.Net.HttpStatusCode.OK)
             {
