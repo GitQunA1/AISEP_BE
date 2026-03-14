@@ -71,7 +71,6 @@ builder.Services.Configure<SePaySettings>(builder.Configuration.GetSection("SePa
 builder.Services.AddHttpClient<IGeminiAiService, GeminiAiService>();
 builder.Services.AddScoped<IStartupAIAnalysisService, StartupAIAnalysisService>();
 
-// Add DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
  options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -169,7 +168,6 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
     };
 });
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -199,7 +197,6 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.UseSwagger();
@@ -208,14 +205,9 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 
 app.UseHttpsRedirection();
 
-
-
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
-// Seed data mẫu
-//await DataSeeder.SeedAsync(app.Services);
 
 app.Run();

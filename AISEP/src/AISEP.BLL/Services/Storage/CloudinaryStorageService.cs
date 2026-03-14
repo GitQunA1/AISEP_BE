@@ -19,14 +19,28 @@ namespace AISEP.BLL.Services.Storage
         public async Task<string> UploadFileAsync(IFormFile file, string folder = "aisep-documents")
         {
             using var stream = file.OpenReadStream();
+            var contentType = file.ContentType?.ToLowerInvariant() ?? "";
 
-            var uploadParams = new RawUploadParams
+            RawUploadParams uploadParams;
+
+            if (contentType.StartsWith("image/") || contentType == "application/pdf")
             {
-                File = new FileDescription(file.FileName, stream),
-                Folder = folder
-            };
+                uploadParams = new ImageUploadParams
+                {
+                    File = new FileDescription(file.FileName, stream),
+                    Folder = folder
+                };
+            }
+            else
+            {
+                uploadParams = new RawUploadParams
+                {
+                    File = new FileDescription(file.FileName, stream),
+                    Folder = folder
+                };
+            }
 
-            var uploadResult = await _cloudinary.UploadAsync(uploadParams, "auto");
+            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
 
             if (uploadResult.StatusCode != System.Net.HttpStatusCode.OK)
             {
