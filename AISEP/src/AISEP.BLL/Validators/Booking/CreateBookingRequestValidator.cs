@@ -17,9 +17,9 @@ namespace AISEP.BLL.Validators.Booking
 
             RuleFor(x => x.EndTime)
                 .NotEmpty().WithMessage("EndTime is required.")
-                .GreaterThan(x => x.StartTime).WithMessage("EndTime must be after StartTime.")
-                .Must((req, end) => (end - req.StartTime).TotalMinutes >= 30)
-                .WithMessage("Booking duration must be at least 30 minutes.");
+                .GreaterThan(x => x.StartTime).WithMessage("EndTime must be after StartTime.");
+                // .Must((req, end) => (end - req.StartTime).TotalMinutes >= 30)
+                // .WithMessage("Booking duration must be at least 30 minutes.");
         }
     }
 }

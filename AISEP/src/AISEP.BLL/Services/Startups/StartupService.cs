@@ -58,7 +58,7 @@ namespace AISEP.BLL.Services.Startups
         }
 
         public async Task<StartupResponse> CreateStartupAsync(int userId, CreateStartupRequest dto)
-        {  //bat loi tren api
+        { 
             var existing = await _unitOfWork.Startups.GetByUserIdAsync(userId);
             if (existing is not null)
                 throw new InvalidOperationException("Startup profile already exists for this account.");

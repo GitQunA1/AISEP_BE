@@ -1,4 +1,7 @@
 ﻿using AISEP.BLL.DTOs.Responses;
+using AISEP.BLL.DTOs.Requests;
+using AISEP.BLL.Helpers;
+using Sieve.Models;
 
 namespace AISEP.BLL.Services.Users
 {
@@ -9,6 +12,10 @@ namespace AISEP.BLL.Services.Users
         string? GetUserName();
         string? GetUserRole();
         bool IsAuthenticated();
+        Task<PagedResult<UserResponse>> GetAllAsync(SieveModel model);
+        Task<UserResponse?> GetByIdAsync(int id);
+        Task<UserResponse?> UpdateAsync(int id, UpdateUserRequest request);
+        Task<bool> DeleteAsync(int id);
         Task<UserResponse> GetByProjectId(int id);
     }
 }

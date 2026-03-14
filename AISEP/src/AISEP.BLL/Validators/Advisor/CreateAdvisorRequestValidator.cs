@@ -32,6 +32,26 @@ namespace AISEP.BLL.Validators.Advisor
                 .Must(f => AllowedDocTypes.Contains(f!.ContentType))
                     .WithMessage("Certification only supports PDF, JPG, PNG.")
                 .When(x => x.CertificationFile is not null);
+
+            RuleFor(x => x.Bio)
+                .NotEmpty().WithMessage("Bio is required.")
+                .Matches("^[a-zA-Z0-9 .,!?'-]*$").WithMessage("Bio contains invalid characters.");
+
+            RuleFor(x => x.Expertise)
+                .NotEmpty().WithMessage("Expertise is required.")
+                .Matches("^[a-zA-Z0-9 .,!?'-]*$").WithMessage("Expertise contains invalid characters.");
+
+            RuleFor(x => x.PreviousExperience)
+                .NotEmpty().WithMessage("Previous experience is required.")
+                .Matches("^[a-zA-Z0-9 .,!?'-]*$").WithMessage("Previous experience contains invalid characters.");
+
+            RuleFor(x => x.LanguagesSpoken)
+                .NotEmpty().WithMessage("Languages spoken is required.")
+                .Matches("^[a-zA-Z .,!?'-]*$").WithMessage("Languages spoken must not contain numbers or special characters.");
+
+            RuleFor(x => x.Location)
+                .NotEmpty().WithMessage("Location is required.")
+                .Matches("^[a-zA-Z .,!?'-]*$").WithMessage("Location must not contain numbers or special characters.");
         }
     }
 }
