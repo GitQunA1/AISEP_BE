@@ -58,7 +58,7 @@ namespace AISEP.BLL.Services.Startups
         }
 
         public async Task<StartupResponse> CreateStartupAsync(int userId, CreateStartupRequest dto)
-        {  //bat loi tren api
+        { 
             var existing = await _unitOfWork.Startups.GetByUserIdAsync(userId);
             if (existing is not null)
                 throw new InvalidOperationException("Startup profile already exists for this account.");
@@ -68,7 +68,8 @@ namespace AISEP.BLL.Services.Startups
                 UserId             = userId,
                 CompanyName        = dto.CompanyName,
                 Founder            = dto.Founder,
-                ContactInfo        = dto.ContactInfo,
+                Email              = dto.Email,
+                PhoneNumber        = dto.PhoneNumber,
                 CountryCity        = dto.CountryCity,
                 Website            = dto.Website,
                 Industry           = dto.Industry,
@@ -93,7 +94,8 @@ namespace AISEP.BLL.Services.Startups
 
             startup.CompanyName = string.IsNullOrWhiteSpace(dto.CompanyName) ? startup.CompanyName : dto.CompanyName;
             startup.Founder     = string.IsNullOrWhiteSpace(dto.Founder)     ? startup.Founder     : dto.Founder;
-            startup.ContactInfo = string.IsNullOrWhiteSpace(dto.ContactInfo) ? startup.ContactInfo : dto.ContactInfo;
+            startup.Email       = string.IsNullOrWhiteSpace(dto.Email)       ? startup.Email       : dto.Email;
+            startup.PhoneNumber = string.IsNullOrWhiteSpace(dto.PhoneNumber) ? startup.PhoneNumber : dto.PhoneNumber;
             startup.CountryCity = string.IsNullOrWhiteSpace(dto.CountryCity) ? startup.CountryCity : dto.CountryCity;
             startup.Website     = (!string.IsNullOrWhiteSpace(dto.Website) && Uri.TryCreate(dto.Website, UriKind.Absolute, out _))
                                    ? dto.Website

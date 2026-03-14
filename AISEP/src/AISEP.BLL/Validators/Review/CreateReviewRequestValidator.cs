@@ -8,14 +8,16 @@ namespace AISEP.BLL.Validators.Review
         public CreateReviewRequestValidator()
         {
             RuleFor(x => x.AdvisorId)
+                .NotEmpty().WithMessage("AdvisorId is required.")
                 .GreaterThan(0).WithMessage("AdvisorId must be a positive number.");
 
             RuleFor(x => x.Rating)
+                .NotEmpty().WithMessage("Rating is required.")
                 .InclusiveBetween(1, 5).WithMessage("Rating must be between 1 and 5.");
 
             RuleFor(x => x.ReviewContent)
-                .MaximumLength(2000).WithMessage("Review content must not exceed 2000 characters.")
-                .When(x => x.ReviewContent is not null);
+                .NotEmpty().WithMessage("Review content is required.")
+                .MaximumLength(2000).WithMessage("Review content must not exceed 2000 characters.");
         }
     }
 }

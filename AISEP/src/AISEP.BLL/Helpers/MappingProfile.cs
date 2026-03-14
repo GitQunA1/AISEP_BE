@@ -83,6 +83,10 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.StartupId))
                 .ForMember(dest => dest.UserId,
                     opt => opt.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.Email,
+                    opt => opt.MapFrom(src => src.Email))
+                .ForMember(dest => dest.PhoneNumber,
+                    opt => opt.MapFrom(src => src.PhoneNumber))
                 .ForMember(dest => dest.Industry,
                     opt => opt.MapFrom(src => src.Industry != null ? src.Industry.ToString() : null))
                 .ForMember(dest => dest.ApprovalStatus,
