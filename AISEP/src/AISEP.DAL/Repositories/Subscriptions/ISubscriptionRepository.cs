@@ -5,5 +5,8 @@ namespace AISEP.DAL.Repositories.Subscriptions
     public interface ISubscriptionRepository
     {
         Task AddAsync(Subscription subscription);
+        void Update(Subscription subscription);
+        Task<IEnumerable<Subscription>> GetExpiredActiveAsync();
+        Task<bool> HasActiveAsync(int userId);
     }
 }
