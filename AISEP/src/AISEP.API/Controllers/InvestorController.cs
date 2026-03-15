@@ -19,7 +19,7 @@ namespace AISEP.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    
     public class InvestorController : ControllerBase
     {
         private readonly IInvestorService _investorService;
@@ -41,6 +41,7 @@ namespace AISEP.API.Controllers
 
         
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<IActionResult> GetById(int id)
         {
             var investor = await _investorService.GetByIdAsync(id);
@@ -53,6 +54,7 @@ namespace AISEP.API.Controllers
        
      
         [HttpGet("me")]
+        [Authorize(Roles ="Investor")]
         public async Task<IActionResult> GetMyProfile()
         {
             var userId = _currentUserService.GetUserId();
@@ -66,9 +68,7 @@ namespace AISEP.API.Controllers
       
        
         [HttpPost]
-        //fix lai
-      
-        //
+        [Authorize(Roles = "Investor")]
         public async Task<IActionResult> Create([FromForm] CreateInvestorRequest dto)
         {
             var userId = _currentUserService.GetUserId();
@@ -83,7 +83,7 @@ namespace AISEP.API.Controllers
 
        
         [HttpPut("{id:int}")]
-        //thieu id
+        [Authorize(Roles = "Investor")]
         public async Task<IActionResult> Update(int id,[FromForm] UpdateInvestorRequest dto)
         {
            

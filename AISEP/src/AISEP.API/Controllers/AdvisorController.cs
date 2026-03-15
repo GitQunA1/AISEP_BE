@@ -10,7 +10,7 @@ namespace AISEP.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    
     public class AdvisorController : ControllerBase
     {
         private readonly IAdvisorService _advisorService;
@@ -33,7 +33,7 @@ namespace AISEP.API.Controllers
 
        
         [HttpGet("{id:int}")]
-        
+        [Authorize]
         public async Task<IActionResult> GetById(int id)
         {
             var advisor = await _advisorService.GetByIdAsync(id);
@@ -45,6 +45,7 @@ namespace AISEP.API.Controllers
 
        
         [HttpGet("me")]
+        [Authorize(Roles ="Advisor")]
         public async Task<IActionResult> GetMyProfile()
         {
             var userId  = _userService.GetUserId();
@@ -57,6 +58,7 @@ namespace AISEP.API.Controllers
 
   
         [HttpPost]
+        [Authorize(Roles = "Advisor")]
         public async Task<IActionResult> Create([FromForm] CreateAdvisorRequest dto)
         {
             var userId = _userService.GetUserId();
@@ -71,7 +73,7 @@ namespace AISEP.API.Controllers
 
 
         [HttpPut("{id:int}")]
-        //Thiếu check null từng trường nêu null thì trw ko đổi
+        [Authorize(Roles = "Advisor")]
         public async Task<IActionResult> Update(int id, [FromForm] UpdateAdvisorRequest dto)
         {
             

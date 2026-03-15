@@ -19,6 +19,7 @@ namespace AISEP.BLL.Services.Startups
         Task<StartupResponse> UpdateStartupAsync(int id,UpdateStartupRequest dto);
         Task ApproveStartupAsync(int startupId);
         Task RejectStartupAsync(int startupId, RejectStartupRequest dto);
+       
         //Task<StartupResponseDto?> GetMyProfileAsync(int userId);
 
     

@@ -157,5 +157,7 @@ namespace AISEP.BLL.Services.Startups
 
         private async Task<string?> UploadIfPresent(IFormFile? file, string folder)
             => file is not null ? await _storage.UploadFileAsync(file, folder) : null;
-            }
+
+       
+    }
         }

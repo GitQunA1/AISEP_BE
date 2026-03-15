@@ -13,11 +13,6 @@ namespace AISEP.BLL.Validators.Auth
                 .MinimumLength(2).WithMessage("Name must be at least 2 characters.")
                 .MaximumLength(100).WithMessage("Name must not exceed 100 characters.");
 
-            RuleFor(x => x.FullName)
-                .NotEmpty().WithMessage("Full name is required.")
-                .MinimumLength(2).WithMessage("Full name must be at least 2 characters.")
-                .MaximumLength(150).WithMessage("Full name must not exceed 150 characters.");
-
             RuleFor(x => x.Email)
                 .NotEmpty().WithMessage("Email is required.")
                 .EmailAddress().WithMessage("Invalid email format.");
