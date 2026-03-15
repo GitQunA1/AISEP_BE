@@ -7,12 +7,23 @@ namespace AISEP.DAL.Repositories.Users
     public class UserRepository : IUserRepository
     {
         private readonly ApplicationDbContext _context;
+
         public UserRepository(ApplicationDbContext context)
         {
             _context = context;
         }
+
+       
+
+        public IQueryable<User> GetAllQuery()
+        {
+            return _context.Users.AsQueryable();
+        }
+
         public async Task<User?> GetByIdAsync(int id)
-            => await _context.Users.FindAsync(id);
+        {
+            return await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+        }
 
         public async Task<User?> GetByProjectId(int id)
         {

@@ -10,8 +10,10 @@ namespace AISEP.BLL.Services.Advisors
         Task<PagedResult<AdvisorResponse>> GetAllAsync(SieveModel model);
         Task<AdvisorResponse?> GetByIdAsync(int advisorId);
         Task<AdvisorResponse?> GetMyProfileAsync(int userId);
-        Task<AdvisorResponse?> CreateAsync(int userId, CreateAdvisorRequest dto);
-        Task<AdvisorResponse?> UpdateAsync(int userId, UpdateAdvisorRequest dto);
+        Task<AdvisorResponse?> CreateAsync( CreateAdvisorRequest dto);
+        Task<AdvisorResponse?> UpdateAsync(int id, UpdateAdvisorRequest dto);
+        Task ApproveAdvisorAsync(int advisorId);
+        Task RejectAdvisorAsync(int advisorId, string rejectionReason);
         Task<bool> DeleteAsync(int advisorId);
     }
 }

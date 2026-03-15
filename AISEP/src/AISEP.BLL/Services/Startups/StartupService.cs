@@ -57,8 +57,9 @@ namespace AISEP.BLL.Services.Startups
             return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, s => _mapper.Map<StartupResponse>(s));
         }
 
-        public async Task<StartupResponse> CreateStartupAsync(int userId, CreateStartupRequest dto)
-        {  //bat loi tren api
+        public async Task<StartupResponse> CreateStartupAsync(CreateStartupRequest dto)
+        { 
+            var userId = _userService.GetUserId();
             var existing = await _unitOfWork.Startups.GetByUserIdAsync(userId);
             if (existing is not null)
                 throw new InvalidOperationException("Startup profile already exists for this account.");
@@ -66,16 +67,19 @@ namespace AISEP.BLL.Services.Startups
             var startup = new Startup
             {
                 UserId             = userId,
+             
                 CompanyName        = dto.CompanyName,
                 Founder            = dto.Founder,
-                ContactInfo        = dto.ContactInfo,
+                Email              = dto.Email,
+                PhoneNumber        = dto.PhoneNumber,
                 CountryCity        = dto.CountryCity,
                 Website            = dto.Website,
                 Industry           = dto.Industry,
                 LogoUrl            = await UploadIfPresent(dto.LogoFile,            "startup-logos"),
                 BusinessLicenseUrl = await UploadIfPresent(dto.BusinessLicenseFile, "startup-licenses"),
                 ApprovalStatus     = ApprovalStatus.Pending,
-                CreatedAt          = DateTime.UtcNow
+                CreatedAt          = DateTime.UtcNow,
+                CreatedBy          = userId
             };
 
             await _unitOfWork.Startups.AddAsync(startup);
@@ -84,16 +88,20 @@ namespace AISEP.BLL.Services.Startups
             return _mapper.Map<StartupResponse>(startup);
         }
 
-        public async Task<StartupResponse> UpdateStartupAsync(int id,UpdateStartupRequest dto)
+        public async Task<StartupResponse> UpdateStartupAsync(int id, UpdateStartupRequest dto)
         {
-            
-            var startup = await _unitOfWork.Startups.GetByUserIdAsync(id);
+            var userId = _userService.GetUserId(); 
+            var startup = await _unitOfWork.Startups.GetByIdAsync(id);
             if (startup is null)
-                throw new KeyNotFoundException("Startup profile not found for this account.");
+                throw new KeyNotFoundException("Startup profile not found.");
+
+            if (startup.CreatedBy != userId)
+                throw new UnauthorizedAccessException("You are not authorized to update this startup.");
 
             startup.CompanyName = string.IsNullOrWhiteSpace(dto.CompanyName) ? startup.CompanyName : dto.CompanyName;
             startup.Founder     = string.IsNullOrWhiteSpace(dto.Founder)     ? startup.Founder     : dto.Founder;
-            startup.ContactInfo = string.IsNullOrWhiteSpace(dto.ContactInfo) ? startup.ContactInfo : dto.ContactInfo;
+            startup.Email       = string.IsNullOrWhiteSpace(dto.Email)       ? startup.Email       : dto.Email;
+            startup.PhoneNumber = string.IsNullOrWhiteSpace(dto.PhoneNumber) ? startup.PhoneNumber : dto.PhoneNumber;
             startup.CountryCity = string.IsNullOrWhiteSpace(dto.CountryCity) ? startup.CountryCity : dto.CountryCity;
             startup.Website     = (!string.IsNullOrWhiteSpace(dto.Website) && Uri.TryCreate(dto.Website, UriKind.Absolute, out _))
                                    ? dto.Website
@@ -125,7 +133,7 @@ namespace AISEP.BLL.Services.Startups
 
             startup.ApprovalStatus = ApprovalStatus.Approved;
             startup.ApprovedAt     = DateTime.UtcNow;
-            startup.ApprovedById   = userId;
+            startup.ApprovedById   = userId; 
 
             _unitOfWork.Startups.Update(startup);
             await _unitOfWork.SaveChangesAsync();
@@ -145,7 +153,7 @@ namespace AISEP.BLL.Services.Startups
             startup.ApprovalStatus  = ApprovalStatus.Rejected;
             startup.RejectedAt      = DateTime.UtcNow;
             startup.RejectionReason = dto.Reason?.Trim();
-            startup.RejectedById    = userId;
+            startup.RejectedById    = userId; 
 
             _unitOfWork.Startups.Update(startup);
             await _unitOfWork.SaveChangesAsync();
@@ -155,5 +163,7 @@ namespace AISEP.BLL.Services.Startups
 
         private async Task<string?> UploadIfPresent(IFormFile? file, string folder)
             => file is not null ? await _storage.UploadFileAsync(file, folder) : null;
-            }
+
+       
+    }
         }

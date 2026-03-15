@@ -10,7 +10,7 @@ namespace AISEP.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    
     public class AdvisorController : ControllerBase
     {
         private readonly IAdvisorService _advisorService;
@@ -33,7 +33,7 @@ namespace AISEP.API.Controllers
 
        
         [HttpGet("{id:int}")]
-        
+        [Authorize]
         public async Task<IActionResult> GetById(int id)
         {
             var advisor = await _advisorService.GetByIdAsync(id);
@@ -45,6 +45,7 @@ namespace AISEP.API.Controllers
 
        
         [HttpGet("me")]
+        [Authorize(Roles ="Advisor")]
         public async Task<IActionResult> GetMyProfile()
         {
             var userId  = _userService.GetUserId();
@@ -57,10 +58,11 @@ namespace AISEP.API.Controllers
 
   
         [HttpPost]
+        [Authorize(Roles = "Advisor")]
         public async Task<IActionResult> Create([FromForm] CreateAdvisorRequest dto)
         {
-            var userId = _userService.GetUserId();
-            var data   = await _advisorService.CreateAsync(userId, dto);
+            //var userId = _userService.GetUserId();
+            var data   = await _advisorService.CreateAsync( dto);
 
             if (data is null)
                 return Conflict(ApiResponse<object>.ErrorResponse("Advisor profile already exists.", "Conflict", 409));
@@ -71,7 +73,7 @@ namespace AISEP.API.Controllers
 
 
         [HttpPut("{id:int}")]
-        //Thiếu check null từng trường nêu null thì trw ko đổi
+        [Authorize(Roles = "Advisor")]
         public async Task<IActionResult> Update(int id, [FromForm] UpdateAdvisorRequest dto)
         {
             
@@ -84,6 +86,23 @@ namespace AISEP.API.Controllers
         }
 
   
+        [HttpPatch("{advisorId:int}/approve")]
+        [Authorize(Roles = "Staff")]
+        public async Task<IActionResult> ApproveAdvisor(int advisorId)
+        {
+            await _advisorService.ApproveAdvisorAsync(advisorId);
+            return Ok(ApiResponse<object>.SuccessResponse(null, "Advisor approved successfully."));
+        }
+
+        [HttpPatch("{advisorId:int}/reject")]
+        [Authorize(Roles = "Staff")]
+        public async Task<IActionResult> RejectAdvisor(int advisorId, [FromBody] RejectRequest dto)
+        {
+            
+            await _advisorService.RejectAdvisorAsync(advisorId, dto.Reason);
+            return Ok(ApiResponse<object>.SuccessResponse(null, "Advisor rejected successfully."));
+        }
+
         //[HttpDelete("{id:int}")]
         //[Authorize(Roles = "Admin")]
         //public async Task<IActionResult> Delete(int id)

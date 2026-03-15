@@ -7,6 +7,8 @@ using AISEP.DAL.Entities;
 using AutoMapper;
 using Sieve.Models;
 using Sieve.Services;
+using AISEP.BLL.Services.Users;
+using AISEP.DAL.Enums;
 
 namespace AISEP.BLL.Services.Advisors
 {
@@ -16,13 +18,15 @@ namespace AISEP.BLL.Services.Advisors
         private readonly ISieveProcessor _sieveProcessor;
         private readonly IMapper         _mapper;
         private readonly IStorageService _storage;
+        private readonly IUserService _userService;
 
-        public AdvisorService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IStorageService storage)
+        public AdvisorService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IStorageService storage, IUserService userService)
         {
             _unitOfWork     = unitOfWork;
             _sieveProcessor = sieveProcessor;
             _mapper         = mapper;
             _storage        = storage;
+            _userService = userService;
         }
 
         public async Task<PagedResult<AdvisorResponse>> GetAllAsync(SieveModel model)
@@ -44,8 +48,9 @@ namespace AISEP.BLL.Services.Advisors
             return advisor is null ? null : _mapper.Map<AdvisorResponse>(advisor);
         }
 
-        public async Task<AdvisorResponse?> CreateAsync(int userId, CreateAdvisorRequest dto)
+        public async Task<AdvisorResponse?> CreateAsync(CreateAdvisorRequest dto)
         {
+            var userId =  _userService.GetUserId();
             var existing = await _unitOfWork.Advisors.GetByUserIdAsync(userId);
             if (existing is not null) return null;
 
@@ -53,7 +58,9 @@ namespace AISEP.BLL.Services.Advisors
             advisor.UserId     = userId;
             advisor.ProfileImage   = await UploadIfPresent(dto.ProfileImageFile,  "advisor-profiles");
             advisor.Certifications = await UploadIfPresent(dto.CertificationFile, "advisor-certifications");
-
+            advisor.ApprovalStatus = ApprovalStatus.Pending;
+            //advisor.CreatedAt      = DateTime.UtcNow;
+            advisor.CreatedBy      = userId;
             await _unitOfWork.Advisors.AddAsync(advisor);
             await _unitOfWork.SaveChangesAsync();
 
@@ -61,10 +68,13 @@ namespace AISEP.BLL.Services.Advisors
             return _mapper.Map<AdvisorResponse>(created!);
         }
 
-        public async Task<AdvisorResponse?> UpdateAsync(int userId, UpdateAdvisorRequest dto)
-        {
-            var advisor = await _unitOfWork.Advisors.GetByUserIdAsync(userId);
+        public async Task<AdvisorResponse?> UpdateAsync(int id, UpdateAdvisorRequest dto)
+        {   
+            var userId = _userService.GetUserId();
+            var advisor = await _unitOfWork.Advisors.GetByIdAsync(id);
             if (advisor is null) return null;
+            if (advisor.CreatedBy != userId)
+                throw new UnauthorizedAccessException("You are not authorized to update this advisor.");
 
             advisor.Bio                = string.IsNullOrWhiteSpace(dto.Bio)                ? advisor.Bio                : dto.Bio;
             advisor.Expertise          = string.IsNullOrWhiteSpace(dto.Expertise)          ? advisor.Expertise          : dto.Expertise;
@@ -95,7 +105,46 @@ namespace AISEP.BLL.Services.Advisors
             return true;
         }
 
-        // ── Helpers ──────────────────────────────────────────────────────
+        public async Task ApproveAdvisorAsync(int advisorId)
+        {
+            var userId = _userService.GetUserId();
+            var advisor = await _unitOfWork.Advisors.GetByIdAsync(advisorId);
+            if (advisor is null)
+                throw new KeyNotFoundException("Advisor not found.");
+            if (advisor.ApprovalStatus == ApprovalStatus.Approved)
+                throw new InvalidOperationException("Advisor is already approved.");
+            if (advisor.ApprovalStatus != ApprovalStatus.Pending)
+                throw new InvalidOperationException($"Only Pending advisors can be approved. Current status: {advisor.ApprovalStatus}.");
+
+            advisor.ApprovalStatus = ApprovalStatus.Approved;
+            advisor.ApprovedAt     = DateTime.UtcNow;
+            advisor.ApprovedById   = userId;
+
+            _unitOfWork.Advisors.Update(advisor);
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        public async Task RejectAdvisorAsync(int advisorId, string rejectionReason)
+        {
+            var userId = _userService.GetUserId();
+            var advisor = await _unitOfWork.Advisors.GetByIdAsync(advisorId);
+            if (advisor is null)
+                throw new KeyNotFoundException("Advisor not found.");
+            if (advisor.ApprovalStatus == ApprovalStatus.Rejected)
+                throw new InvalidOperationException("Advisor is already rejected.");
+            if (advisor.ApprovalStatus != ApprovalStatus.Pending)
+                throw new InvalidOperationException($"Only Pending advisors can be rejected. Current status: {advisor.ApprovalStatus}.");
+
+            advisor.ApprovalStatus  = ApprovalStatus.Rejected;
+            advisor.RejectedAt      = DateTime.UtcNow;
+            advisor.RejectedById    = userId;
+            advisor.RejectionReason = rejectionReason;
+
+            _unitOfWork.Advisors.Update(advisor);
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        
 
         private async Task<string?> UploadIfPresent(IFormFile? file, string folder)
             => file is not null ? await _storage.UploadFileAsync(file, folder) : null;

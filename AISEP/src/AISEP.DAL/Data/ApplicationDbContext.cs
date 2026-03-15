@@ -70,17 +70,35 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.CompanyName).HasMaxLength(255);
                 entity.Property(e => e.LogoUrl).HasMaxLength(255);
                 entity.Property(e => e.Founder).HasMaxLength(255);
+                entity.Property(e => e.Email).HasMaxLength(255);
+                entity.Property(e => e.PhoneNumber).HasMaxLength(50);
                 entity.Property(e => e.CountryCity).HasMaxLength(255);
                 entity.Property(e => e.Website).HasMaxLength(255);
                 entity.Property(e => e.Industry).HasConversion<string>();
                 entity.Property(e => e.BusinessLicenseUrl).HasMaxLength(255);
                 entity.Property(e => e.ApprovalStatus).HasConversion<string>().HasMaxLength(50);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.RejectionReason).HasMaxLength(1000);
 
                 entity.HasOne(s => s.User)
                     .WithOne(u => u.Startup)
                     .HasForeignKey<Startup>(s => s.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(s => s.CreatedBy)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(s => s.ApprovedById)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(s => s.RejectedById)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<Investor>(entity =>
@@ -98,11 +116,27 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.PreviousInvestments).HasMaxLength(255);
                 entity.Property(e => e.IdentityDocumentUrl).HasMaxLength(255);
                 entity.Property(e => e.ApprovalStatus).HasConversion<string>().HasMaxLength(50);
+                entity.Property(e => e.RejectionReason).HasMaxLength(1000);
 
                 entity.HasOne(i => i.User)
                     .WithOne(u => u.Investor)
                     .HasForeignKey<Investor>(i => i.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(i => i.CreatedBy)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(i => i.ApprovedById)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(i => i.RejectedById)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<Advisor>(entity =>
@@ -116,11 +150,27 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.ProfileImage).HasMaxLength(255);
                 entity.Property(e => e.HourlyRate).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.ApprovalStatus).HasConversion<string>().HasMaxLength(50);
+                entity.Property(e => e.RejectionReason).HasMaxLength(1000);
 
                 entity.HasOne(a => a.User)
                     .WithOne(u => u.Advisor)
                     .HasForeignKey<Advisor>(a => a.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(a => a.CreatedBy)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(a => a.ApprovedById)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(a => a.RejectedById)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             // ── MODULE 2: PROJECTS & DOCUMENTS ────────────────────────────

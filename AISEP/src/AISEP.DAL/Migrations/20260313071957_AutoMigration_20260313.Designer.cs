@@ -3,6 +3,7 @@ using System;
 using AISEP.DAL.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AISEP.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260313071957_AutoMigration_20260313")]
+    partial class AutoMigration_20260313
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -69,20 +72,11 @@ namespace AISEP.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<DateTime?>("ApprovedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("ApprovedById")
-                        .HasColumnType("integer");
-
                     b.Property<string>("Bio")
                         .HasColumnType("text");
 
                     b.Property<string>("Certifications")
                         .HasColumnType("text");
-
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("integer");
 
                     b.Property<string>("Expertise")
                         .HasMaxLength(255)
@@ -109,26 +103,10 @@ namespace AISEP.Migrations
                     b.Property<decimal?>("Rating")
                         .HasColumnType("decimal(3,2)");
 
-                    b.Property<DateTime?>("RejectedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("RejectedById")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("RejectionReason")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
                     b.HasKey("AdvisorId");
-
-                    b.HasIndex("ApprovedById");
-
-                    b.HasIndex("CreatedBy");
-
-                    b.HasIndex("RejectedById");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -433,15 +411,6 @@ namespace AISEP.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<DateTime?>("ApprovedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("ApprovedById")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("integer");
-
                     b.Property<string>("FocusIndustry")
                         .HasColumnType("text");
 
@@ -475,16 +444,6 @@ namespace AISEP.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<DateTime?>("RejectedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("RejectedById")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("RejectionReason")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
                     b.Property<string>("RiskTolerance")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
@@ -497,12 +456,6 @@ namespace AISEP.Migrations
                         .HasColumnType("character varying(255)");
 
                     b.HasKey("InvestorId");
-
-                    b.HasIndex("ApprovedById");
-
-                    b.HasIndex("CreatedBy");
-
-                    b.HasIndex("RejectedById");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -912,9 +865,6 @@ namespace AISEP.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("integer");
-
                     b.Property<string>("Email")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
@@ -941,8 +891,7 @@ namespace AISEP.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("RejectionReason")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                        .HasColumnType("text");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -952,12 +901,6 @@ namespace AISEP.Migrations
                         .HasColumnType("character varying(255)");
 
                     b.HasKey("StartupId");
-
-                    b.HasIndex("ApprovedById");
-
-                    b.HasIndex("CreatedBy");
-
-                    b.HasIndex("RejectedById");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -1077,22 +1020,12 @@ namespace AISEP.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<string>("PaymentCode")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("PaymentContent")
-                        .HasColumnType("text");
-
-                    b.Property<string>("SepayTransactionId")
+                    b.Property<string>("PayosOrderCode")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
@@ -1110,10 +1043,6 @@ namespace AISEP.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("TransactionId");
-
-                    b.HasIndex("PaymentCode")
-                        .IsUnique()
-                        .HasFilter("\"PaymentCode\" IS NOT NULL");
 
                     b.HasIndex("UserId");
 
@@ -1500,21 +1429,6 @@ namespace AISEP.Migrations
 
             modelBuilder.Entity("AISEP.DAL.Entities.Advisor", b =>
                 {
-                    b.HasOne("AISEP.DAL.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("ApprovedById")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("AISEP.DAL.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("AISEP.DAL.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("RejectedById")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("AISEP.DAL.Entities.User", "User")
                         .WithOne("Advisor")
                         .HasForeignKey("AISEP.DAL.Entities.Advisor", "UserId")
@@ -1635,21 +1549,6 @@ namespace AISEP.Migrations
 
             modelBuilder.Entity("AISEP.DAL.Entities.Investor", b =>
                 {
-                    b.HasOne("AISEP.DAL.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("ApprovedById")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("AISEP.DAL.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("AISEP.DAL.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("RejectedById")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("AISEP.DAL.Entities.User", "User")
                         .WithOne("Investor")
                         .HasForeignKey("AISEP.DAL.Entities.Investor", "UserId")
@@ -1762,21 +1661,6 @@ namespace AISEP.Migrations
 
             modelBuilder.Entity("AISEP.DAL.Entities.Startup", b =>
                 {
-                    b.HasOne("AISEP.DAL.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("ApprovedById")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("AISEP.DAL.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("AISEP.DAL.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("RejectedById")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("AISEP.DAL.Entities.User", "User")
                         .WithOne("Startup")
                         .HasForeignKey("AISEP.DAL.Entities.Startup", "UserId")
