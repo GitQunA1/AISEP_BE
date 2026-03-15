@@ -10,7 +10,7 @@ namespace AISEP.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    
     public class StartupsController : ControllerBase
     {
         private readonly IStartupService _startupService;
@@ -30,6 +30,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("{id:int}")]
+        [Authorize]
         public async Task<IActionResult> GetById(int id)
         {
             var startup = await _startupService.GetStartupByIdAsync(id);
@@ -39,6 +40,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("search")]
+        [Authorize]
         public async Task<IActionResult> Search([FromQuery] SieveModel model, [FromQuery] string? industry = null, [FromQuery] string? stage = null)
         {
             var result = await _startupService.SearchStartupsAsync(model, industry, stage);
@@ -46,6 +48,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("by-status")]
+        [Authorize]
         public async Task<IActionResult> GetByStatus([FromQuery] SieveModel model, [FromQuery] string? status = null)
         {
             var result = await _startupService.GetStartupsByStatusAsync(model, status);
@@ -54,10 +57,11 @@ namespace AISEP.API.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Startup")]
+       
         public async Task<IActionResult> Create([FromForm] CreateStartupRequest dto)
         {
-            var userId = _currentUserService.GetUserId();
-            var data = await _startupService.CreateStartupAsync(userId, dto);
+            
+            var data = await _startupService.CreateStartupAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = data.Id }, ApiResponse<object>.SuccessResponse(data, "Startup created successfully", 201));
         }
 
@@ -70,7 +74,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpPatch("{startupId:int}/approve")]
-       
+        [Authorize(Roles = "Staff")]
         public async Task<IActionResult> ApproveStartup(int startupId)
         {
             await _startupService.ApproveStartupAsync(startupId);
@@ -78,7 +82,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpPatch("{startupId:int}/reject")]
-        
+        [Authorize(Roles = "Staff")]
         public async Task<IActionResult> RejectStartup(int startupId, [FromBody] RejectStartupRequest dto)
         {
             await _startupService.RejectStartupAsync(startupId, dto);

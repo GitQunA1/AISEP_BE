@@ -40,5 +40,6 @@ namespace AISEP.DAL.Entities
         public ICollection<InvestorAIAnalysis> InvestorAIAnalyses { get; set; } = new List<InvestorAIAnalysis>();
         public ICollection<ConnectionRequest> ConnectionRequests { get; set; } = new List<ConnectionRequest>();
         public ICollection<Deal> Deals { get; set; } = new List<Deal>();
+        //public int? CreatedBy { get; set; }
     }
 }

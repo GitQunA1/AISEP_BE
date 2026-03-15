@@ -10,7 +10,7 @@ namespace AISEP.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    
     public class ProjectsController : ControllerBase
     {
         private readonly IProjectService _projectService;
@@ -30,6 +30,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("{id:int}")]
+        [Authorize]
         public async Task<IActionResult> GetById(int id)
         {
             var project = await _projectService.GetProjectByIdAsync(id);
@@ -39,6 +40,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("my")]
+        [Authorize(Roles = "Startup")]
         public async Task<IActionResult> GetMyProjects([FromQuery] SieveModel model)
         {
             var userId = _currentUserService.GetUserId();
@@ -47,6 +49,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("drafts")]
+        [Authorize]
         public async Task<IActionResult> GetDraftProjects([FromQuery] SieveModel model)
         {
             var result = await _projectService.GetDraftProjectsAsync(model);
@@ -54,16 +57,17 @@ namespace AISEP.API.Controllers
         }
 
         [HttpPost]
-        //check validate
+        [Authorize(Roles ="Startup")]
         public async Task<IActionResult> Create([FromForm] CreateProjectRequest dto)
         {
-            var userId = _currentUserService.GetUserId();
-            var data   = await _projectService.CreateProjectAsync(userId, dto);
+            //var userId = _currentUserService.GetUserId();
+            var data   = await _projectService.CreateProjectAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = data.ProjectId },
                 ApiResponse<object>.SuccessResponse(data, "Project created successfully", 201));
         }
 
         [HttpPut("{id:int}")]
+        [Authorize(Roles = "Startup")]
         public async Task<IActionResult> Update(int id, [FromForm] UpdateProjectRequest dto)
         {
             var data = await _projectService.UpdateProjectAsync(id, dto);
@@ -72,7 +76,7 @@ namespace AISEP.API.Controllers
 
 
         [HttpPatch("{id:int}/approve")]
-       
+        [Authorize(Roles = "Staff")]
         public async Task<IActionResult> Approve(int id)
         {
             await _projectService.ApproveProjectAsync(id);
@@ -80,7 +84,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpPatch("{id:int}/reject")]
-        
+        [Authorize(Roles = "Staff")]
         public async Task<IActionResult> Reject(int id, [FromBody] RejectProjectRequest dto)
         {
             await _projectService.RejectProjectAsync(id, dto);

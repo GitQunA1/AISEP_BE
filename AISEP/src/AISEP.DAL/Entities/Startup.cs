@@ -17,6 +17,7 @@ namespace AISEP.DAL.Entities
         public string? BusinessLicenseUrl { get; set; }
         public ApprovalStatus ApprovalStatus { get; set; } = ApprovalStatus.Unverified;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public int? CreatedBy { get; set; }
 
        
         public int? ApprovedById { get; set; }
