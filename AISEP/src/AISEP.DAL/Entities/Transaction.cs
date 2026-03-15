@@ -1,4 +1,4 @@
-﻿using AISEP.DAL.Enums;
+using AISEP.DAL.Enums;
 
 namespace AISEP.DAL.Entities
 {
@@ -10,6 +10,10 @@ namespace AISEP.DAL.Entities
         public TransactionType Type { get; set; }
         public TransactionStatus Status { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // Reference to what this payment is for
+        public string? ReferenceType { get; set; }  // "Subscription" or "Booking"
+        public int? ReferenceId { get; set; }        // PackageId or BookingId
 
         // SePay fields
         public string? PaymentCode { get; set; }

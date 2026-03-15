@@ -421,6 +421,10 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                // Reference fields
+                entity.Property(e => e.ReferenceType).HasMaxLength(50);
+                entity.Property(e => e.ReferenceId);
+
                 // SePay fields
                 entity.Property(e => e.PaymentCode).HasMaxLength(50);
                 entity.HasIndex(e => e.PaymentCode).IsUnique().HasFilter("\"PaymentCode\" IS NOT NULL");
