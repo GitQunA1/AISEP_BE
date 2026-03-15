@@ -71,8 +71,8 @@ namespace AISEP.API.Controllers
         [Authorize(Roles = "Investor")]
         public async Task<IActionResult> Create([FromForm] CreateInvestorRequest dto)
         {
-            var userId = _currentUserService.GetUserId();
-            var data = await _investorService.CreateAsync(userId, dto);
+           
+            var data = await _investorService.CreateAsync(dto);
 
             if (data is null)
                 return Conflict(ApiResponse<object>.ErrorResponse("Investor profile already exists.", "Conflict", 409));
@@ -93,6 +93,24 @@ namespace AISEP.API.Controllers
                 return NotFound(ApiResponse<object>.ErrorResponse("Investor profile not found.", "Not found", 404));
 
             return Ok(ApiResponse<object>.SuccessResponse(data, "Investor updated successfully"));
+        }
+
+        [HttpPatch("{investorId:int}/approve")]
+        [Authorize(Roles = "Staff")]
+        public async Task<IActionResult> ApproveInvestor(int investorId)
+        {
+
+            await _investorService.ApproveInvestorAsync(investorId);
+            return Ok(ApiResponse<object>.SuccessResponse(null, "Investor approved successfully."));
+        }
+
+        [HttpPatch("{investorId:int}/reject")]
+        [Authorize(Roles = "Staff")]
+        public async Task<IActionResult> RejectInvestor(int investorId, [FromBody] RejectRequest dto)
+        {
+            
+            await _investorService.RejectInvestorAsync(investorId, dto.Reason);
+            return Ok(ApiResponse<object>.SuccessResponse(null, "Investor rejected successfully."));
         }
     }
 }

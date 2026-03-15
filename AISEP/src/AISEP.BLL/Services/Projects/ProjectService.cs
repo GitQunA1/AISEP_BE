@@ -52,8 +52,9 @@ namespace AISEP.BLL.Services.Projects
             return await PaginationHelper.PaginateAsync(_unitOfWork.Projects.GetByStatusQuery(ProjectStatus.Draft), model, _sieveProcessor, p => _mapper.Map<ProjectResponse>(p));
         }
 
-        public async Task<ProjectResponse> CreateProjectAsync(int userId, CreateProjectRequest dto)
+        public async Task<ProjectResponse> CreateProjectAsync( CreateProjectRequest dto)
         {
+            var userId = _userService.GetUserId();
             var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
             if (startup is null)
                 throw new KeyNotFoundException("Startup profile not found. Please create a startup profile first.");
@@ -76,7 +77,9 @@ namespace AISEP.BLL.Services.Projects
                 KeySkills              = dto.KeySkills,
                 TeamExperience         = dto.TeamExperience,
                 Status                 = ProjectStatus.Pending,
-                CreatedAt              = DateTime.UtcNow
+                CreatedAt              = DateTime.UtcNow,
+                //CreatedBy              = userId
+
             };
 
             await _unitOfWork.Projects.AddAsync(project);
@@ -92,12 +95,14 @@ namespace AISEP.BLL.Services.Projects
             if (project is null)
                 throw new KeyNotFoundException("Project not found.");
 
-            //var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
-            //if (startup is null || project.StartupId != startup.StartupId)
-            //    throw new UnauthorizedAccessException("You do not have permission to update this project.");
+            var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
+            if (startup is null || project.StartupId != startup.StartupId)
+                throw new UnauthorizedAccessException("You do not have permission to update this project.");
 
             if (project.Status == ProjectStatus.Published)
                 throw new InvalidOperationException("Published projects cannot be updated.");
+            
+          
 
             project.ProjectName            = dto.ProjectName            ?? project.ProjectName;
             project.ShortDescription       = dto.ShortDescription       ?? project.ShortDescription;

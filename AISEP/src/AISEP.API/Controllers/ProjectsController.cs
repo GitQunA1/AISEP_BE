@@ -60,8 +60,8 @@ namespace AISEP.API.Controllers
         [Authorize(Roles ="Startup")]
         public async Task<IActionResult> Create([FromForm] CreateProjectRequest dto)
         {
-            var userId = _currentUserService.GetUserId();
-            var data   = await _projectService.CreateProjectAsync(userId, dto);
+            //var userId = _currentUserService.GetUserId();
+            var data   = await _projectService.CreateProjectAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = data.ProjectId },
                 ApiResponse<object>.SuccessResponse(data, "Project created successfully", 201));
         }

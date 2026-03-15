@@ -60,8 +60,8 @@ namespace AISEP.API.Controllers
        
         public async Task<IActionResult> Create([FromForm] CreateStartupRequest dto)
         {
-            var userId = _currentUserService.GetUserId();
-            var data = await _startupService.CreateStartupAsync(userId, dto);
+            
+            var data = await _startupService.CreateStartupAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = data.Id }, ApiResponse<object>.SuccessResponse(data, "Startup created successfully", 201));
         }
 
