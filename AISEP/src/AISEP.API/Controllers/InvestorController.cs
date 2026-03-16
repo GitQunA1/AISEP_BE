@@ -43,6 +43,7 @@ namespace AISEP.API.Controllers
         
         [HttpGet("{id}")]
         [Authorize]
+        //check dưới service sửa lại log lỗi
         public async Task<IActionResult> GetById(int id)
         {
             var investor = await _investorService.GetByIdAsync(id);

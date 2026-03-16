@@ -11,27 +11,24 @@ namespace AISEP.API.Controllers
     public class EnumController : ControllerBase
     {
 
-        [HttpGet("enums/{enumName}")]
-      
-        public IActionResult GetEnumByName(string enumName)
+        [HttpGet("enums")]
+        public IActionResult GetEnumByName([FromQuery] EnumTypeName enumName)
         {
-          
             var enumType = Type.GetType($"AISEP.DAL.Enums.{enumName}, AISEP.DAL");
             if (enumType == null || !enumType.IsEnum)
             {
                 return NotFound(ApiResponse<object>.ErrorResponse($"Enum '{enumName}' not found.", $"Enum '{enumName}' not found.", 404));
             }
 
-           
-            var enumValues = Enum.GetValues(enumType)
-                                 .Cast<object>()
-                                 .Select(e => new
-                                 {
-                                     Name = e.ToString(),
-                                     Value = (int)e
-                                 });
+            var enumOptions = Enum.GetValues(enumType)
+                .Cast<object>()
+                .Select(e => new
+                {
+                    label = e.ToString(),
+                    value = (int)e
+                });
 
-            return Ok(ApiResponse<object>.SuccessResponse(enumValues, "Success"));
+            return Ok(ApiResponse<object>.SuccessResponse(enumOptions, "Success"));
         }
     }
 }
