@@ -20,8 +20,7 @@ namespace AISEP.BLL.Services.Startups
         Task ApproveStartupAsync(int startupId);
         Task RejectStartupAsync(int startupId, RejectStartupRequest dto);
        
-        //Task<StartupResponseDto?> GetMyProfileAsync(int userId);
-
+        Task<StartupResponse?> GetMyProfileAsync();
     
         //Task<PagedResultDto<StartupResponseDto>> GetPendingStartupsAsync(SieveModel model);
         //Task ReviewStartupAsync(int startupId, ReviewStartupDto dto);

@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
 using Sieve.Services;
 using AISEP.BLL.Services.Users;
+using AISEP.BLL.Exceptions;
 
 namespace AISEP.BLL.Services.Investors
 {
@@ -37,29 +38,33 @@ namespace AISEP.BLL.Services.Investors
         public async Task<InvestorResponse?> GetByIdAsync(int investorId)
         {
             var investor = await _unitOfWork.Investors.GetByIdAsync(investorId);
-            return investor is null ? null : _mapper.Map<InvestorResponse>(investor);
+            if (investor is null)
+                throw new KeyNotFoundException("Investor not found.");
+            return _mapper.Map<InvestorResponse>(investor);
         }
 
-        public async Task<InvestorResponse?> GetMyProfileAsync(int userId)
+        public async Task<InvestorResponse?> GetMyProfileAsync()
         {
+            var userId = _userService.GetUserId();
             var investor = await _unitOfWork.Investors.GetByUserIdAsync(userId);
-            return investor is null ? null : _mapper.Map<InvestorResponse>(investor);
-           
+            if (investor is null)
+                throw new KeyNotFoundException("Investor profile not found.");
+            return _mapper.Map<InvestorResponse>(investor);
         }
 
-        public async Task<InvestorResponse?> CreateAsync( CreateInvestorRequest dto)
-        {   var userId = _userService.GetUserId();
+        public async Task<InvestorResponse?> CreateAsync(CreateInvestorRequest dto)
+        {
+            var userId = _userService.GetUserId();
             var existing = await _unitOfWork.Investors.GetByUserIdAsync(userId);
             if (existing is not null)
-                return null;
+                throw new InvalidOperationException("Investor profile already exists for this account.");
 
             var investor = _mapper.Map<Investor>(dto);
             investor.UserId = userId;
-           // investor.CreatedAt = DateTime.UtcNow;
             investor.CreatedBy = userId;
             investor.ApprovalStatus = ApprovalStatus.Pending;
             await _unitOfWork.Investors.AddAsync(investor);
-            await _unitOfWork.Investors.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
 
             var created = await _unitOfWork.Investors.GetByIdAsync(investor.InvestorId);
             return _mapper.Map<InvestorResponse>(created!);
@@ -71,9 +76,10 @@ namespace AISEP.BLL.Services.Investors
 
             var investor = await _unitOfWork.Investors.GetByIdAsync(id);
             if (investor is null)
-                return null;
+                throw new KeyNotFoundException("Investor profile not found.");
             if (investor.CreatedBy != userId)
-                throw new UnauthorizedAccessException("You are not authorized to update this investor.");
+                throw new ForbiddenAccessException("You do not have permission to update this investor.");
+
             investor.OrganizationName    = dto.OrganizationName    ?? investor.OrganizationName;
             investor.InvestmentTaste     = dto.InvestmentTaste     ?? investor.InvestmentTaste;
             investor.WalletAddress       = dto.WalletAddress       ?? investor.WalletAddress;
@@ -86,7 +92,7 @@ namespace AISEP.BLL.Services.Investors
             investor.PreviousInvestments = dto.PreviousInvestments ?? investor.PreviousInvestments;
 
             _unitOfWork.Investors.Update(investor);
-            await _unitOfWork.Investors.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
 
             return _mapper.Map<InvestorResponse>(investor);
         }

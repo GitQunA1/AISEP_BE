@@ -9,6 +9,7 @@ using Sieve.Models;
 using Sieve.Services;
 using AISEP.BLL.Services.Users;
 using AISEP.DAL.Enums;
+using AISEP.BLL.Exceptions;
 
 namespace AISEP.BLL.Services.Advisors
 {
@@ -39,20 +40,28 @@ namespace AISEP.BLL.Services.Advisors
         public async Task<AdvisorResponse?> GetByIdAsync(int advisorId)
         {
             var advisor = await _unitOfWork.Advisors.GetByIdAsync(advisorId);
-            return advisor is null ? null : _mapper.Map<AdvisorResponse>(advisor);
+            if (advisor is null)
+                throw new KeyNotFoundException("Advisor not found.");
+            return _mapper.Map<AdvisorResponse>(advisor);
         }
 
-        public async Task<AdvisorResponse?> GetMyProfileAsync(int userId)
+        public async Task<AdvisorResponse?> GetMyProfileAsync()
         {
+            var userId = _userService.GetUserId();
             var advisor = await _unitOfWork.Advisors.GetByUserIdAsync(userId);
-            return advisor is null ? null : _mapper.Map<AdvisorResponse>(advisor);
+            if (advisor is null)
+                throw new KeyNotFoundException("Advisor profile not found.");
+            return _mapper.Map<AdvisorResponse>(advisor);
         }
 
         public async Task<AdvisorResponse?> CreateAsync(CreateAdvisorRequest dto)
         {
             var userId =  _userService.GetUserId();
             var existing = await _unitOfWork.Advisors.GetByUserIdAsync(userId);
-            if (existing is not null) return null;
+            if (existing is not null)
+            {
+                throw new InvalidOperationException("You already have an advisor profile.");
+            }
 
             var advisor        = _mapper.Map<Advisor>(dto);
             advisor.UserId     = userId;
@@ -72,9 +81,10 @@ namespace AISEP.BLL.Services.Advisors
         {   
             var userId = _userService.GetUserId();
             var advisor = await _unitOfWork.Advisors.GetByIdAsync(id);
-            if (advisor is null) return null;
+            if (advisor is null)
+                throw new KeyNotFoundException("Advisor profile not found.");
             if (advisor.CreatedBy != userId)
-                throw new UnauthorizedAccessException("You are not authorized to update this advisor.");
+                throw new ForbiddenAccessException("You do not have permission to update this advisor.");
 
             advisor.Bio                = string.IsNullOrWhiteSpace(dto.Bio)                ? advisor.Bio                : dto.Bio;
             advisor.Expertise          = string.IsNullOrWhiteSpace(dto.Expertise)          ? advisor.Expertise          : dto.Expertise;
