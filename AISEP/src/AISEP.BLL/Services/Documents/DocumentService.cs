@@ -115,7 +115,7 @@ namespace AISEP.BLL.Services.Documents
                     throw new UnauthorizedAccessException("You do not have permission to delete this document.");
             }
 
-            var lockedStatuses = new[] { ProjectStatus.Submitted, ProjectStatus.Approved};
+            var lockedStatuses = new[] { ProjectStatus.Approved};
             if (lockedStatuses.Contains(document.Project.Status))
                 throw new InvalidOperationException(
                     $"Cannot delete document: project is in '{document.Project.Status}' status and is locked.");

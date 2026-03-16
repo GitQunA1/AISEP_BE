@@ -329,7 +329,7 @@ namespace AISEP.DAL.Data
                     TeamExperience         = "10+ years combined experience",
                     Status                 = ProjectStatus.Approved,
                     CreatedAt              = DateTime.UtcNow.AddDays(-20),
-                    PublishedAt            = DateTime.UtcNow.AddDays(-10)
+                    //PublishedAt            = DateTime.UtcNow.AddDays(-10)
                 },
                 new Project
                 {
@@ -350,7 +350,7 @@ namespace AISEP.DAL.Data
                     TeamExperience         = "8+ years in agriculture and technology",
                     Status                 = ProjectStatus.Approved,
                     CreatedAt              = DateTime.UtcNow.AddDays(-15),
-                    PublishedAt            = DateTime.UtcNow.AddDays(-5)
+                    //PublishedAt            = DateTime.UtcNow.AddDays(-5)
                 },
                 new Project
                 {

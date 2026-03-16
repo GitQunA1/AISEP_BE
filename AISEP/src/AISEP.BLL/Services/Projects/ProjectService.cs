@@ -103,8 +103,8 @@ namespace AISEP.BLL.Services.Projects
             if (startup is null || project.StartupId != startup.StartupId)
                 throw new ForbiddenAccessException("You do not have permission to update this project.");
 
-            if (project.Status == ProjectStatus.Approved)
-                throw new InvalidOperationException("Approve projects cannot be updated.");
+            if (project.Status != ProjectStatus.Draft)
+                throw new InvalidOperationException("Only draft projects can update.");
             
           
 
@@ -129,7 +129,6 @@ namespace AISEP.BLL.Services.Projects
             return _mapper.Map<ProjectResponse>(project);
         }
 
-     
         public async Task ApproveProjectAsync(int projectId)
         {
             var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
@@ -139,10 +138,25 @@ namespace AISEP.BLL.Services.Projects
             if (project.Status != ProjectStatus.Pending)
                 throw new InvalidOperationException($"Only Pending projects can be approved. Current status: {project.Status}.");
 
-            project.Status      = ProjectStatus.Approved;
-            project.PublishedAt = DateTime.UtcNow;
-            project.ApprovedAt  = DateTime.UtcNow;
+            project.Status = ProjectStatus.Approved;
+            //project.PublishedAt = DateTime.UtcNow;
+            project.ApprovedAt = DateTime.UtcNow;
             project.ApprovedById = _userService.GetUserId();
+            _unitOfWork.Projects.Update(project);
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        public async Task SubmitProjectAsync(int projectId)
+        {
+            var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
+            if (project is null)
+                throw new KeyNotFoundException("Project not found.");
+
+            if (project.Status != ProjectStatus.Draft)
+                throw new InvalidOperationException($"Only draft projects can be submitted. Current status: {project.Status}.");
+
+            project.Status      = ProjectStatus.Pending;
+           
             _unitOfWork.Projects.Update(project);
             await _unitOfWork.SaveChangesAsync();
         }

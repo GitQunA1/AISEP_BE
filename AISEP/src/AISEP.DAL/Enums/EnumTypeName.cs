@@ -2,7 +2,7 @@ namespace AISEP.DAL.Enums
 {
     public enum EnumTypeName
     {
-        AIStatus,
+        //AIStatus,
         ApprovalStatus,
         BookingStatus,
         ConnectionRequestStatus,
