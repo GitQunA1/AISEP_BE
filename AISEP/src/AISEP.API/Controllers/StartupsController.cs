@@ -76,13 +76,13 @@ namespace AISEP.API.Controllers
             return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
         }
 
-        [HttpGet("by-status")]
-        [Authorize]
-        public async Task<IActionResult> GetByStatus([FromQuery] SieveModel model, [FromQuery] string? status = null)
-        {
-            var result = await _startupService.GetStartupsByStatusAsync(model, status);
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
-        }
+        //[HttpGet("by-status")]
+        //[Authorize]
+        //public async Task<IActionResult> GetByStatus([FromQuery] SieveModel model, [FromQuery] string? status = null)
+        //{
+        //    var result = await _startupService.GetStartupsByStatusAsync(model, status);
+        //    return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
+        //}
 
         [HttpPost]
         [Authorize(Roles = "Startup")]

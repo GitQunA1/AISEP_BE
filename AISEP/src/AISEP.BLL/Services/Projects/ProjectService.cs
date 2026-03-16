@@ -103,8 +103,8 @@ namespace AISEP.BLL.Services.Projects
             if (startup is null || project.StartupId != startup.StartupId)
                 throw new ForbiddenAccessException("You do not have permission to update this project.");
 
-            if (project.Status == ProjectStatus.Published)
-                throw new InvalidOperationException("Published projects cannot be updated.");
+            if (project.Status == ProjectStatus.Approved)
+                throw new InvalidOperationException("Approve projects cannot be updated.");
             
           
 

@@ -67,13 +67,13 @@ namespace AISEP.API.Controllers
             }
         }
 
-        [HttpGet("drafts")]
-        [Authorize]
-        public async Task<IActionResult> GetDraftProjects([FromQuery] SieveModel model)
-        {
-            var result = await _projectService.GetDraftProjectsAsync(model);
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
-        }
+        //[HttpGet("drafts")]
+        //[Authorize]
+        //public async Task<IActionResult> GetDraftProjects([FromQuery] SieveModel model)
+        //{
+        //    var result = await _projectService.GetDraftProjectsAsync(model);
+        //    return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
+        //}
 
         [HttpPost]
         [Authorize(Roles = "Startup")]
