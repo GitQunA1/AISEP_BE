@@ -1,8 +1,8 @@
 ﻿namespace AISEP.DAL.Enums
 {
-    public enum AIStatus
-    {
-        Pending,
-        Completed
-    }
+    //public enum AIStatus
+    //{
+    //    Pending,
+    //    Completed
+    //}
 }

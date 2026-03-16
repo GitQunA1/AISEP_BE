@@ -4,7 +4,7 @@
     {
         Idea,
         MVP,
-        Growth,
-        Scale
+        Growth
+        
     }
 }

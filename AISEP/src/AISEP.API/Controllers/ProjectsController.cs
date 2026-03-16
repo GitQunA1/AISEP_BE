@@ -183,5 +183,28 @@ namespace AISEP.API.Controllers
                 return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
             }
         }
+        [HttpPatch("{id:int}/submit")]
+        [Authorize(Roles = "Staff")]
+        public async Task<IActionResult> Submit(int id)
+        {
+
+            try
+            {
+                await _projectService.SubmitProjectAsync(id);
+                return Ok(ApiResponse<object>.SuccessResponse(null, "Project submitted successfully."));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not Found", 404));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Conflict", 409));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
+            }
+        }
     }
 }
