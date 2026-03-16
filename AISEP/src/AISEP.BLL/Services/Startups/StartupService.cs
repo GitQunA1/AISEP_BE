@@ -1,11 +1,12 @@
-﻿using AISEP.BLL.Helpers;
-using AISEP.DAL.Common;
-using AISEP.BLL.DTOs.Requests;
+﻿using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
+using AISEP.BLL.Exceptions;
+using AISEP.BLL.Helpers;
+using AISEP.BLL.Services.Storage;
+using AISEP.BLL.Services.Users;
+using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
-using AISEP.BLL.Services.Users;
-using AISEP.BLL.Services.Storage;
 using AutoMapper;
 using Sieve.Models;
 using Sieve.Services;
@@ -40,7 +41,18 @@ namespace AISEP.BLL.Services.Startups
         public async Task<StartupResponse?> GetStartupByIdAsync(int id)
         {
             var startup = await _unitOfWork.Startups.GetByIdAsync(id);
-            return startup is null ? null : _mapper.Map<StartupResponse>(startup);
+            if (startup is null)
+                throw new KeyNotFoundException("Startup not found.");
+            return _mapper.Map<StartupResponse>(startup);
+        }
+
+        public async Task<StartupResponse?> GetMyProfileAsync()
+        {
+            var userId = _userService.GetUserId();
+            var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
+            if (startup is null)
+                throw new KeyNotFoundException("Startup profile not found.");
+            return _mapper.Map<StartupResponse>(startup);
         }
 
         public async Task<PagedResult<StartupResponse>> GetAllStartupsAsync(SieveModel model)
@@ -96,7 +108,7 @@ namespace AISEP.BLL.Services.Startups
                 throw new KeyNotFoundException("Startup profile not found.");
 
             if (startup.CreatedBy != userId)
-                throw new UnauthorizedAccessException("You are not authorized to update this startup.");
+                throw new ForbiddenAccessException("You do not have permission to update this startup.");
 
             startup.CompanyName = string.IsNullOrWhiteSpace(dto.CompanyName) ? startup.CompanyName : dto.CompanyName;
             startup.Founder     = string.IsNullOrWhiteSpace(dto.Founder)     ? startup.Founder     : dto.Founder;

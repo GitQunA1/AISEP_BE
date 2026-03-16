@@ -10,7 +10,7 @@ namespace AISEP.BLL.Services.Investors
     {
         Task<PagedResult<InvestorResponse>> GetAllAsync(SieveModel model);
         Task<InvestorResponse?> GetByIdAsync(int investorId);
-        Task<InvestorResponse?> GetMyProfileAsync(int userId);
+        Task<InvestorResponse?> GetMyProfileAsync();
         Task<InvestorResponse?> CreateAsync(CreateInvestorRequest dto);
         Task<InvestorResponse?> UpdateAsync(int id, UpdateInvestorRequest dto);
         Task ApproveInvestorAsync(int investorId);

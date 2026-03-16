@@ -10,7 +10,7 @@ namespace AISEP.BLL.Services.Projects
     {
         Task<PagedResult<ProjectResponse>> GetAllProjectsAsync(SieveModel model);
         Task<ProjectResponse?> GetProjectByIdAsync(int id);
-        Task<PagedResult<ProjectResponse>> GetMyProjectsAsync(int userId, SieveModel model);
+        Task<PagedResult<ProjectResponse>> GetMyProjectsAsync(SieveModel model);
         Task<PagedResult<ProjectResponse>> GetDraftProjectsAsync(SieveModel model);
 
         Task<ProjectResponse> CreateProjectAsync(CreateProjectRequest dto);

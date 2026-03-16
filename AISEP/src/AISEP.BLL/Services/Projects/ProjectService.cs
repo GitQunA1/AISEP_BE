@@ -1,13 +1,14 @@
-﻿using AISEP.BLL.Helpers;
-using AISEP.DAL.Common;
-using AISEP.BLL.DTOs.Requests;
+﻿using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
+using AISEP.BLL.Exceptions;
+using AISEP.BLL.Helpers;
+using AISEP.BLL.Services.Users;
+using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
-using AISEP.BLL.Services.Users;
 using Sieve.Services;
 
 namespace AISEP.BLL.Services.Projects
@@ -35,11 +36,14 @@ namespace AISEP.BLL.Services.Projects
         public async Task<ProjectResponse?> GetProjectByIdAsync(int id)
         {
             var project = await _unitOfWork.Projects.GetByIdAsync(id);
-            return project is null ? null : _mapper.Map<ProjectResponse>(project);
+            if (project is null)
+                throw new KeyNotFoundException("Project not found.");
+            return _mapper.Map<ProjectResponse>(project);
         }
 
-        public async Task<PagedResult<ProjectResponse>> GetMyProjectsAsync(int userId, SieveModel model)
+        public async Task<PagedResult<ProjectResponse>> GetMyProjectsAsync(SieveModel model)
         {
+            var userId = _userService.GetUserId();
             var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
             if (startup is null)
                 throw new KeyNotFoundException("Startup profile not found for this account.");
@@ -97,7 +101,7 @@ namespace AISEP.BLL.Services.Projects
 
             var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
             if (startup is null || project.StartupId != startup.StartupId)
-                throw new UnauthorizedAccessException("You do not have permission to update this project.");
+                throw new ForbiddenAccessException("You do not have permission to update this project.");
 
             if (project.Status == ProjectStatus.Published)
                 throw new InvalidOperationException("Published projects cannot be updated.");
