@@ -1,5 +1,6 @@
-﻿using AISEP.BLL.Helpers;
-using AISEP.BLL.DTOs.Requests;
+﻿using AISEP.BLL.DTOs.Requests;
+using AISEP.BLL.Exceptions;
+using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.Investors;
 using AISEP.BLL.Services.Users;
 using AISEP.DAL.Entities;
@@ -57,12 +58,19 @@ namespace AISEP.API.Controllers
         [Authorize(Roles ="Investor")]
         public async Task<IActionResult> GetMyProfile()
         {
-            var userId = _currentUserService.GetUserId();
-            var investor = await _investorService.GetMyProfileAsync(userId);
-            if (investor is null)
+            try
+            {
+                var investor = await _investorService.GetMyProfileAsync();
+                return Ok(ApiResponse<object>.SuccessResponse(investor, "Success"));
+            }
+            catch (KeyNotFoundException ex)
+            {
                 return NotFound(ApiResponse<object>.ErrorResponse("Investor profile not found.", "Not found", 404));
-
-            return Ok(ApiResponse<object>.SuccessResponse(investor, "Success"));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
+            }
         }
 
       
@@ -71,14 +79,20 @@ namespace AISEP.API.Controllers
         [Authorize(Roles = "Investor")]
         public async Task<IActionResult> Create([FromForm] CreateInvestorRequest dto)
         {
-           
-            var data = await _investorService.CreateAsync(dto);
-
-            if (data is null)
-                return Conflict(ApiResponse<object>.ErrorResponse("Investor profile already exists.", "Conflict", 409));
-
-            return CreatedAtAction(nameof(GetById), new { id = data.InvestorId },
-                ApiResponse<object>.SuccessResponse(data, "Investor created successfully", 201));
+            try
+            {
+                var data = await _investorService.CreateAsync(dto);
+                return CreatedAtAction(nameof(GetById), new { id = data.InvestorId },
+                    ApiResponse<object>.SuccessResponse(data, "Investor created successfully", 201));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Conflict", 409));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
+            }
         }
 
        
@@ -86,31 +100,73 @@ namespace AISEP.API.Controllers
         [Authorize(Roles = "Investor")]
         public async Task<IActionResult> Update(int id,[FromForm] UpdateInvestorRequest dto)
         {
-           
-            var data = await _investorService.UpdateAsync(id, dto);
-
-            if (data is null)
+            try
+            {
+                var data = await _investorService.UpdateAsync(id, dto);
+                return Ok(ApiResponse<object>.SuccessResponse(data, "Investor updated successfully"));
+            }
+            catch (KeyNotFoundException ex)
+            {
                 return NotFound(ApiResponse<object>.ErrorResponse("Investor profile not found.", "Not found", 404));
-
-            return Ok(ApiResponse<object>.SuccessResponse(data, "Investor updated successfully"));
+            }
+            catch (ForbiddenAccessException ex)
+            {
+                return StatusCode(403,ApiResponse<object>.ErrorResponse(ex.Message, "Forbidden", 403));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
+            }
         }
 
         [HttpPatch("{investorId:int}/approve")]
         [Authorize(Roles = "Staff")]
         public async Task<IActionResult> ApproveInvestor(int investorId)
         {
-
-            await _investorService.ApproveInvestorAsync(investorId);
-            return Ok(ApiResponse<object>.SuccessResponse(null, "Investor approved successfully."));
+            try
+            {
+                await _investorService.ApproveInvestorAsync(investorId);
+                return Ok(ApiResponse<object>.SuccessResponse(null, "Investor approved successfully."));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not Found", 404));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Conflict", 409));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
+            }
         }
 
         [HttpPatch("{investorId:int}/reject")]
         [Authorize(Roles = "Staff")]
         public async Task<IActionResult> RejectInvestor(int investorId, [FromBody] RejectRequest dto)
         {
-            
-            await _investorService.RejectInvestorAsync(investorId, dto.Reason);
-            return Ok(ApiResponse<object>.SuccessResponse(null, "Investor rejected successfully."));
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse("Invalid input data.", "Bad Request", 400));
+            }
+            try
+            {
+                await _investorService.RejectInvestorAsync(investorId, dto.Reason);
+                return Ok(ApiResponse<object>.SuccessResponse(null, "Investor rejected successfully."));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not Found", 404));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Conflict", 409));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
+            }
         }
     }
 }

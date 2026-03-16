@@ -5,6 +5,7 @@ using AISEP.BLL.Services.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sieve.Models;
+using AISEP.BLL.Exceptions;
 
 namespace AISEP.API.Controllers
 {
@@ -36,11 +37,19 @@ namespace AISEP.API.Controllers
         [Authorize]
         public async Task<IActionResult> GetById(int id)
         {
-            var advisor = await _advisorService.GetByIdAsync(id);
-            if (advisor is null)
-                return NotFound(ApiResponse<object>.ErrorResponse("Advisor not found.", "Not found", 404));
-
-            return Ok(ApiResponse<object>.SuccessResponse(advisor, "Success"));
+            try
+            {
+                var advisor = await _advisorService.GetByIdAsync(id);
+                return Ok(ApiResponse<object>.SuccessResponse(advisor, "Success"));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not Found", 404));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
+            }
         }
 
        
@@ -48,12 +57,19 @@ namespace AISEP.API.Controllers
         [Authorize(Roles ="Advisor")]
         public async Task<IActionResult> GetMyProfile()
         {
-            var userId  = _userService.GetUserId();
-            var advisor = await _advisorService.GetMyProfileAsync(userId);
-            if (advisor is null)
-                return NotFound(ApiResponse<object>.ErrorResponse("Advisor profile not found.", "Not found", 404));
-
-            return Ok(ApiResponse<object>.SuccessResponse(advisor, "Success"));
+            try
+            {
+                var advisor = await _advisorService.GetMyProfileAsync();
+                return Ok(ApiResponse<object>.SuccessResponse(advisor, "Success"));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not Found", 404));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
+            }
         }
 
   
@@ -61,14 +77,20 @@ namespace AISEP.API.Controllers
         [Authorize(Roles = "Advisor")]
         public async Task<IActionResult> Create([FromForm] CreateAdvisorRequest dto)
         {
-            //var userId = _userService.GetUserId();
-            var data   = await _advisorService.CreateAsync( dto);
-
-            if (data is null)
-                return Conflict(ApiResponse<object>.ErrorResponse("Advisor profile already exists.", "Conflict", 409));
-
-            return CreatedAtAction(nameof(GetById), new { id = data.AdvisorId },
-                ApiResponse<object>.SuccessResponse(data, "Advisor created successfully.", 201));
+            try
+            {
+                var data = await _advisorService.CreateAsync(dto);
+                return CreatedAtAction(nameof(GetById), new { id = data.AdvisorId },
+                    ApiResponse<object>.SuccessResponse(data, "Advisor created successfully.", 201));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Conflict", 409));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
+            }
         }
 
 
@@ -76,31 +98,70 @@ namespace AISEP.API.Controllers
         [Authorize(Roles = "Advisor")]
         public async Task<IActionResult> Update(int id, [FromForm] UpdateAdvisorRequest dto)
         {
-            
-            var data   = await _advisorService.UpdateAsync(id, dto);
-
-            if (data is null)
+            try
+            {
+                var data = await _advisorService.UpdateAsync(id, dto);
+                return Ok(ApiResponse<object>.SuccessResponse(data, "Advisor updated successfully."));
+            }
+            catch (KeyNotFoundException ex)
+            {
                 return NotFound(ApiResponse<object>.ErrorResponse("Advisor profile not found.", "Not found", 404));
-
-            return Ok(ApiResponse<object>.SuccessResponse(data, "Advisor updated successfully."));
+            }
+            catch(ForbiddenAccessException ex)
+            {
+                return StatusCode(403, ApiResponse<object>.ErrorResponse(ex.Message, "Forbidden", 403));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
+            }
         }
 
-  
+
         [HttpPatch("{advisorId:int}/approve")]
         [Authorize(Roles = "Staff")]
         public async Task<IActionResult> ApproveAdvisor(int advisorId)
         {
-            await _advisorService.ApproveAdvisorAsync(advisorId);
-            return Ok(ApiResponse<object>.SuccessResponse(null, "Advisor approved successfully."));
+            try
+            {
+                await _advisorService.ApproveAdvisorAsync(advisorId);
+                return Ok(ApiResponse<object>.SuccessResponse(null, "Advisor approved successfully."));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not Found", 404));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Conflict", 409));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
+            }
         }
 
         [HttpPatch("{advisorId:int}/reject")]
         [Authorize(Roles = "Staff")]
         public async Task<IActionResult> RejectAdvisor(int advisorId, [FromBody] RejectRequest dto)
         {
-            
-            await _advisorService.RejectAdvisorAsync(advisorId, dto.Reason);
-            return Ok(ApiResponse<object>.SuccessResponse(null, "Advisor rejected successfully."));
+            try
+            {
+                await _advisorService.RejectAdvisorAsync(advisorId, dto.Reason);
+                return Ok(ApiResponse<object>.SuccessResponse(null, "Advisor rejected successfully."));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not Found", 404));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Conflict", 409));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
+            }
         }
 
         //[HttpDelete("{id:int}")]

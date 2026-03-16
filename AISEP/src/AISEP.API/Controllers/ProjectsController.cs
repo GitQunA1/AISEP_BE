@@ -33,19 +33,38 @@ namespace AISEP.API.Controllers
         [Authorize]
         public async Task<IActionResult> GetById(int id)
         {
-            var project = await _projectService.GetProjectByIdAsync(id);
-            if (project is null)
-                return NotFound(ApiResponse<object>.ErrorResponse("Project not found.", "Not found", 404));
-            return Ok(ApiResponse<object>.SuccessResponse(project, "Success"));
+            try
+            {
+                var project = await _projectService.GetProjectByIdAsync(id);
+                return Ok(ApiResponse<object>.SuccessResponse(project, "Success"));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not found", 404));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
+            }
         }
 
         [HttpGet("my")]
         [Authorize(Roles = "Startup")]
         public async Task<IActionResult> GetMyProjects([FromQuery] SieveModel model)
         {
-            var userId = _currentUserService.GetUserId();
-            var result = await _projectService.GetMyProjectsAsync(userId, model);
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
+            try
+            {
+                var result = await _projectService.GetMyProjectsAsync(model);
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not found", 404));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
+            }
         }
 
         [HttpGet("drafts")]
@@ -57,21 +76,60 @@ namespace AISEP.API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles ="Startup")]
+        [Authorize(Roles = "Startup")]
         public async Task<IActionResult> Create([FromForm] CreateProjectRequest dto)
         {
-            //var userId = _currentUserService.GetUserId();
-            var data   = await _projectService.CreateProjectAsync(dto);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse("Invalid input data.", "Bad Request", 400));
+            }
+            try { 
+            var data = await _projectService.CreateProjectAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = data.ProjectId },
                 ApiResponse<object>.SuccessResponse(data, "Project created successfully", 201));
+                }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not Found", 404));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Conflict", 409));
+            }
+           
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
+            }
+
+
         }
 
         [HttpPut("{id:int}")]
         [Authorize(Roles = "Startup")]
         public async Task<IActionResult> Update(int id, [FromForm] UpdateProjectRequest dto)
         {
-            var data = await _projectService.UpdateProjectAsync(id, dto);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse("Invalid input data.", "Bad Request", 400));
+            }
+            try
+            {
+                var data = await _projectService.UpdateProjectAsync(id, dto);
             return Ok(ApiResponse<object>.SuccessResponse(data, "Project updated successfully."));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not Found", 404));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Conflict", 409));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
+            }
         }
 
 
@@ -79,16 +137,51 @@ namespace AISEP.API.Controllers
         [Authorize(Roles = "Staff")]
         public async Task<IActionResult> Approve(int id)
         {
-            await _projectService.ApproveProjectAsync(id);
-            return Ok(ApiResponse<object>.SuccessResponse(null, "Project approved successfully."));
+           
+            try
+            {
+                await _projectService.ApproveProjectAsync(id);
+                return Ok(ApiResponse<object>.SuccessResponse(null, "Project approved successfully."));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not Found", 404));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Conflict", 409));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
+            }
         }
 
         [HttpPatch("{id:int}/reject")]
         [Authorize(Roles = "Staff")]
         public async Task<IActionResult> Reject(int id, [FromBody] RejectProjectRequest dto)
         {
-            await _projectService.RejectProjectAsync(id, dto);
-            return Ok(ApiResponse<object>.SuccessResponse(null, "Project rejected successfully."));
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse("Invalid input data.", "Bad Request", 400));
+            }
+            try
+            {
+                await _projectService.RejectProjectAsync(id, dto);
+                return Ok(ApiResponse<object>.SuccessResponse(null, "Project rejected successfully."));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not Found", 404));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Conflict", 409));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
+            }
         }
     }
 }
