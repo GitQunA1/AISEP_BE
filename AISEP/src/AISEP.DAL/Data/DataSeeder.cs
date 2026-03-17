@@ -327,9 +327,9 @@ namespace AISEP.DAL.Data
                     TeamMembers            = "Nguyen Van A (CEO), Tran Thi B (CTO), Le Van C (CFO)",
                     KeySkills              = "FinTech, Blockchain, Mobile Dev",
                     TeamExperience         = "10+ years combined experience",
-                    Status                 = ProjectStatus.Published,
+                    Status                 = ProjectStatus.Approved,
                     CreatedAt              = DateTime.UtcNow.AddDays(-20),
-                    PublishedAt            = DateTime.UtcNow.AddDays(-10)
+                    //PublishedAt            = DateTime.UtcNow.AddDays(-10)
                 },
                 new Project
                 {
@@ -348,9 +348,9 @@ namespace AISEP.DAL.Data
                     TeamMembers            = "Pham Thi B (CEO), Hoang Van D (CTO)",
                     KeySkills              = "AgriTech, IoT, Mobile Dev",
                     TeamExperience         = "8+ years in agriculture and technology",
-                    Status                 = ProjectStatus.Published,
+                    Status                 = ProjectStatus.Approved,
                     CreatedAt              = DateTime.UtcNow.AddDays(-15),
-                    PublishedAt            = DateTime.UtcNow.AddDays(-5)
+                    //PublishedAt            = DateTime.UtcNow.AddDays(-5)
                 },
                 new Project
                 {
@@ -438,7 +438,7 @@ namespace AISEP.DAL.Data
 
             var investor = await context.Investors.FirstOrDefaultAsync();
             var projects = await context.Projects
-                .Where(p => p.Status == ProjectStatus.Published)
+                .Where(p => p.Status == ProjectStatus.Approved)
                 .ToListAsync();
 
             if (investor == null || projects.Count < 2) return;

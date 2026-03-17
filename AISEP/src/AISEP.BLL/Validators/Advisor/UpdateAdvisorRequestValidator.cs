@@ -31,23 +31,23 @@ namespace AISEP.BLL.Validators.Advisor
                 .When(x => x.CertificationFile is not null);
 
             RuleFor(x => x.Bio)
-                .Matches("^[a-zA-Z0-9 .,!?'-]*$").WithMessage("Bio contains invalid characters.")
+                .Matches("^[a-zA-Z0-9 .,!?'-àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]*$").WithMessage("Bio contains invalid characters.")
                 .When(x => !string.IsNullOrWhiteSpace(x.Bio));
 
             RuleFor(x => x.Expertise)
-                .Matches("^[a-zA-Z0-9 .,!?'-]*$").WithMessage("Expertise contains invalid characters.")
+                .Matches("^[a-zA-Z0-9 .,!?'-àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]*$").WithMessage("Expertise contains invalid characters.")
                 .When(x => !string.IsNullOrWhiteSpace(x.Expertise));
 
             RuleFor(x => x.PreviousExperience)
-                .Matches("^[a-zA-Z0-9 .,!?'-]*$").WithMessage("Previous experience contains invalid characters.")
+               .Matches("^[a-zA-Z0-9 .,!?'-àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]*$").WithMessage("Previous experience contains invalid characters.")
                 .When(x => !string.IsNullOrWhiteSpace(x.PreviousExperience));
 
             RuleFor(x => x.LanguagesSpoken)
-                .Matches("^[a-zA-Z .,!?'-]*$").WithMessage("Languages spoken must not contain numbers or special characters.")
+               .Matches("^[a-zA-Z0-9 .,!?'-àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]*$").WithMessage("Languages spoken must not contain numbers or special characters.")
                 .When(x => !string.IsNullOrWhiteSpace(x.LanguagesSpoken));
 
             RuleFor(x => x.Location)
-                .Matches("^[a-zA-Z .,!?'-]*$").WithMessage("Location must not contain numbers or special characters.")
+                .Matches("^[a-zA-Z0-9 .,!?'-àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]*$").WithMessage("Location must not contain numbers or special characters.")
                 .When(x => !string.IsNullOrWhiteSpace(x.Location));
         }
     }

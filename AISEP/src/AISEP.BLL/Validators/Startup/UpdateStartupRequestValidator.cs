@@ -15,32 +15,32 @@ namespace AISEP.BLL.Validators.Startup
         {
             RuleFor(x => x.CompanyName)
                 .MaximumLength(255).WithMessage("Company name must not exceed 255 characters.")
-                .Matches("^[a-zA-Z0-9 .,!?'-]*$").WithMessage("Company name contains invalid characters.");
-            //.When(x => x.CompanyName is not null);
+                .Matches("^[a-zA-Z0-9 .,!?'-àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]*$").WithMessage("Company name contains invalid characters.")
+            .When(x => x.CompanyName is not null);
 
             RuleFor(x => x.Founder)
                 .MaximumLength(255).WithMessage("Founder must not exceed 255 characters.")
-                .Matches("^[a-zA-Z0-9 .,!?'-]*$").WithMessage("Founder contains invalid characters.");
-            //.When(x => x.Founder is not null);
+                .Matches("^[a-zA-Z0-9 .,!?'-àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]*$").WithMessage("Founder contains invalid characters.")
+            .When(x => x.Founder is not null);
 
             RuleFor(x => x.CountryCity)
                 .MaximumLength(255).WithMessage("Country/City must not exceed 255 characters.")
-                .Matches("^[a-zA-Z0-9 .,!?'-]*$").WithMessage("Country/City contains invalid characters.");
-            //.When(x => x.CountryCity is not null);
+                .Matches("^[a-zA-Z0-9 .,!?'-àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]*$").WithMessage("Country/City contains invalid characters.")
+            .When(x => x.CountryCity is not null);
 
             RuleFor(x => x.Email)
                 .MaximumLength(255).WithMessage("Email must not exceed 255 characters.")
-                .EmailAddress().WithMessage("Email must be a valid email address.");
-            //.When(x => !string.IsNullOrWhiteSpace(x.Email));
+                .EmailAddress().WithMessage("Email must be a valid email address.")
+            .When(x => !string.IsNullOrWhiteSpace(x.Email));
 
             RuleFor(x => x.PhoneNumber)
                 .MaximumLength(50).WithMessage("Phone number must not exceed 50 characters.")
-                .Matches("^(03|05|07|08|09)\\d{8}$").WithMessage("Phone number must start with 03, 05, 07, 08, or 09 and contain 10 digits.");
-            //.When(x => !string.IsNullOrWhiteSpace(x.PhoneNumber));
+                .Matches("^(03|05|07|08|09)\\d{8}$").WithMessage("Phone number must start with 03, 05, 07, 08, or 09 and contain 10 digits.")
+            .When(x => !string.IsNullOrWhiteSpace(x.PhoneNumber));
 
             RuleFor(x => x.Website)
-                .MaximumLength(255).WithMessage("Website must not exceed 255 characters.");
-                //.//When(x => !string.IsNullOrWhiteSpace(x.Website));
+                .MaximumLength(255).WithMessage("Website must not exceed 255 characters.")
+                .When(x => !string.IsNullOrWhiteSpace(x.Website));
 
             RuleFor(x => x.Industry)
                 .IsInEnum().WithMessage("Industry is not valid. Allowed: Fintech, Edtech, Healthtech, Agritech, E_Commerce, Logistics, Proptech, Cleantech, SaaS, AI_BigData, Web3_Crypto, Food_Beverage, Manufacturing, Media_Entertainment, Other.")

@@ -23,7 +23,6 @@ namespace AISEP.DAL.Entities
         public int ViewCount { get; set; } = 0;
         public ProjectStatus Status { get; set; } = ProjectStatus.Draft;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime? PublishedAt { get; set; }
 
         // Approval / Rejection info
         public int? ApprovedById { get; set; }
