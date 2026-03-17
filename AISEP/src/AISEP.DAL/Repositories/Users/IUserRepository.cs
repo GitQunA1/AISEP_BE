@@ -1,4 +1,4 @@
-﻿using AISEP.DAL.Entities;
+using AISEP.DAL.Entities;
 
 namespace AISEP.DAL.Repositories.Users
 {
