@@ -2,6 +2,7 @@
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Microsoft.Extensions.Options;
+using System.Net;
 
 namespace AISEP.BLL.Services.Storage
 {
@@ -19,36 +20,45 @@ namespace AISEP.BLL.Services.Storage
         public async Task<string> UploadFileAsync(IFormFile file, string folder = "aisep-documents")
         {
             using var stream = file.OpenReadStream();
-            var contentType = file.ContentType?.ToLowerInvariant() ?? "";
+            var contentType = file.ContentType?.Trim().ToLowerInvariant() ?? string.Empty;
+            var fileExtension = Path.GetExtension(file.FileName).Trim().ToLowerInvariant();
 
-            RawUploadParams uploadParams;
+            var isImage = contentType.StartsWith("image/") || fileExtension is ".jpg" or ".jpeg" or ".png" or ".webp";
 
-            if (contentType.StartsWith("image/") || contentType == "application/pdf")
+            if (isImage)
             {
-                uploadParams = new ImageUploadParams
+                var uploadParams = new ImageUploadParams
                 {
                     File = new FileDescription(file.FileName, stream),
                     Folder = folder
                 };
+
+                var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+                EnsureUploadSucceeded(uploadResult.StatusCode, uploadResult.Error?.Message);
+                return uploadResult.SecureUrl?.ToString()
+                    ?? throw new Exception("Cloudinary upload failed: missing secure URL for uploaded image.");
             }
-            else
+
+            var rawUploadParams = new RawUploadParams
             {
-                uploadParams = new RawUploadParams
-                {
-                    File = new FileDescription(file.FileName, stream),
-                    Folder = folder
-                };
-            }
+                File = new FileDescription(file.FileName, stream),
+                Folder = folder
+            };
 
-            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+            var rawUploadResult = await _cloudinary.UploadAsync(rawUploadParams);
+            EnsureUploadSucceeded(rawUploadResult.StatusCode, rawUploadResult.Error?.Message);
+            return rawUploadResult.SecureUrl?.ToString()
+                ?? throw new Exception("Cloudinary upload failed: missing secure URL for uploaded file.");
+        }
 
-            if (uploadResult.StatusCode != System.Net.HttpStatusCode.OK)
+        private static void EnsureUploadSucceeded(HttpStatusCode statusCode, string? errorMessage)
+        {
+            if (statusCode == HttpStatusCode.OK)
             {
-                var errorMsg = uploadResult.Error?.Message ?? "Unknown error";
-                throw new Exception($"Cloudinary upload failed: {errorMsg}");
+                return;
             }
 
-            return uploadResult.SecureUrl.ToString();
+            throw new Exception($"Cloudinary upload failed: {errorMessage ?? "Unknown error"}");
         }
     }
 }
