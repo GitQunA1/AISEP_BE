@@ -143,7 +143,7 @@ namespace AISEP.API.Controllers
 
         [HttpPatch("{advisorId:int}/reject")]
         [Authorize(Roles = "Staff")]
-        public async Task<IActionResult> RejectAdvisor(int advisorId, [FromBody] RejectRequest dto)
+        public async Task<IActionResult> RejectAdvisor(int advisorId, [FromBody] RejectAdvisorRequest dto)
         {
             try
             {

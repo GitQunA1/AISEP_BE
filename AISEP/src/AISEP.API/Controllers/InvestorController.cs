@@ -145,7 +145,7 @@ namespace AISEP.API.Controllers
 
         [HttpPatch("{investorId:int}/reject")]
         [Authorize(Roles = "Staff")]
-        public async Task<IActionResult> RejectInvestor(int investorId, [FromBody] RejectRequest dto)
+        public async Task<IActionResult> RejectInvestor(int investorId, [FromBody] RejectInvestorRequest dto)
         {
             if (!ModelState.IsValid)
             {

@@ -11,7 +11,7 @@ namespace AISEP.BLL.Validators.Investor
             RuleFor(x => x.OrganizationName)
                 .NotEmpty().WithMessage("Organization name is required.")
                 .MaximumLength(255).WithMessage("Organization name must not exceed 255 characters.")
-                .Matches("^[a-zA-Z0-9 .,!?'-]*$").WithMessage("Organization name contains invalid characters.");
+                .Matches("^[a-zA-Z0-9 .,!?'-àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]*$").WithMessage("Organization name contains invalid characters.");
 
 
             RuleFor(x => x.InvestmentAmount)
@@ -23,7 +23,7 @@ namespace AISEP.BLL.Validators.Investor
                 .NotEmpty().WithMessage("Investment region is required.")
                 .MaximumLength(255).WithMessage("Investment region must not exceed 255 characters.")
 
-                .Matches("^[a-zA-Z0-9 .,!?'-]*$").WithMessage("Investment region contains invalid characters.");
+                .Matches("^[a-zA-Z0-9 .,!?'-àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]*$").WithMessage("Investment region contains invalid characters.");
 
 
             RuleFor(x => x.WalletAddress)
@@ -35,7 +35,7 @@ namespace AISEP.BLL.Validators.Investor
                 .NotEmpty().WithMessage("Previous investments are required.")
                 .MaximumLength(1000).WithMessage("Previous investments must not exceed 1000 characters.")
                 // .When(x => x.PreviousInvestments is not null)
-                .Matches("^[a-zA-Z0-9 .,!?'-]*$").WithMessage("Previous investments contains invalid characters.");
+                .Matches("^[a-zA-Z0-9 .,!?'-àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]*$").WithMessage("Previous investments contains invalid characters.");
             // .When(x => !string.IsNullOrWhiteSpace(x.PreviousInvestments));
 
             RuleFor(x => x.RiskTolerance)

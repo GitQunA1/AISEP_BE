@@ -76,10 +76,12 @@ namespace AISEP.BLL.Services.Startups
             if (existing is not null)
                 throw new InvalidOperationException("Startup profile already exists for this account.");
 
+            var logoUrl = await UploadIfPresent(dto.LogoFile, "startup-logos");
+            var businessLicenseUrl = await UploadIfPresent(dto.BusinessLicenseFile, "startup-licenses");
+
             var startup = new Startup
             {
                 UserId             = userId,
-             
                 CompanyName        = dto.CompanyName,
                 Founder            = dto.Founder,
                 Email              = dto.Email,
@@ -87,11 +89,11 @@ namespace AISEP.BLL.Services.Startups
                 CountryCity        = dto.CountryCity,
                 Website            = dto.Website,
                 Industry           = dto.Industry,
-                LogoUrl            = await UploadIfPresent(dto.LogoFile,            "startup-logos"),
-                BusinessLicenseUrl = await UploadIfPresent(dto.BusinessLicenseFile, "startup-licenses"),
+                LogoUrl            = logoUrl,
+                BusinessLicenseUrl = businessLicenseUrl,
                 ApprovalStatus     = ApprovalStatus.Pending,
-                CreatedAt          = DateTime.UtcNow,
-                CreatedBy          = userId
+                CreatedAt          = DateTime.UtcNow
+               
             };
 
             await _unitOfWork.Startups.AddAsync(startup);
@@ -107,7 +109,7 @@ namespace AISEP.BLL.Services.Startups
             if (startup is null)
                 throw new KeyNotFoundException("Startup profile not found.");
 
-            if (startup.CreatedBy != userId)
+            if (startup.UserId != userId)
                 throw new ForbiddenAccessException("You do not have permission to update this startup.");
 
             startup.CompanyName = string.IsNullOrWhiteSpace(dto.CompanyName) ? startup.CompanyName : dto.CompanyName;

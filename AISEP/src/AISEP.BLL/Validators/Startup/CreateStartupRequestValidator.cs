@@ -16,12 +16,12 @@ namespace AISEP.BLL.Validators.Startup
             RuleFor(x => x.CompanyName)
                 .NotEmpty().WithMessage("Company name is required.")
                 .MaximumLength(255).WithMessage("Company name must not exceed 255 characters.")
-                .Matches("^[a-zA-Z0-9 .,!?'-]*$").WithMessage("Company name contains invalid characters.");
+                .Matches("^[a-zA-Z0-9 .,!?'-àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]*$").WithMessage("Company name contains invalid characters.");
 
             RuleFor(x => x.Founder)
                 .NotEmpty().WithMessage("Founder is required.")
                 .MaximumLength(255).WithMessage("Founder must not exceed 255 characters.")
-                .Matches("^[a-zA-Z0-9 .,!?'-]*$").WithMessage("Founder contains invalid characters.");
+                .Matches("^[a-zA-Z0-9 .,!?'-àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]*$").WithMessage("Founder contains invalid characters.");
                 //.When(x => x.Founder is not null);
 
             RuleFor(x => x.Email)
@@ -39,7 +39,7 @@ namespace AISEP.BLL.Validators.Startup
             RuleFor(x => x.CountryCity)
                 .NotEmpty().WithMessage("Country/City is required.")
                 .MaximumLength(255).WithMessage("Country/City must not exceed 255 characters.")
-                .Matches("^[a-zA-Z0-9 .,!?'-]*$").WithMessage("Country/City contains invalid characters.");
+                 .Matches("^[a-zA-Z0-9 .,!?'-àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]*$").WithMessage("Country/City contains invalid characters.");
             //.When(x => x.CountryCity is not null);
 
             RuleFor(x => x.Website)
@@ -47,28 +47,28 @@ namespace AISEP.BLL.Validators.Startup
                 .MaximumLength(255).WithMessage("Website must not exceed 255 characters.")
                 .Must(url => Uri.TryCreate(url, UriKind.Absolute, out _))
                 .WithMessage("Website must be a valid URL.");
-                //.When(x => !string.IsNullOrWhiteSpace(x.Website));
+            //.When(x => !string.IsNullOrWhiteSpace(x.Website));
 
             RuleFor(x => x.Industry)
                 .NotEmpty().WithMessage("Industry is required.")
-                .IsInEnum().WithMessage("Industry is not valid. Allowed: Fintech, Edtech, Healthtech, Agritech, E_Commerce, Logistics, Proptech, Cleantech, SaaS, AI_BigData, Web3_Crypto, Food_Beverage, Manufacturing, Media_Entertainment, Other.")
-                .When(x => x.Industry.HasValue);
+                .IsInEnum().WithMessage("Industry is not valid. Allowed: Fintech, Edtech, Healthtech, Agritech, E_Commerce, Logistics, Proptech, Cleantech, SaaS, AI_BigData, Web3_Crypto, Food_Beverage, Manufacturing, Media_Entertainment, Other.");
+                //.When(x => x.Industry.HasValue);
 
             RuleFor(x => x.LogoFile)
                 .NotEmpty().WithMessage("Logo file is required.")
                 .Must(f => f!.Length <= MaxImageSize)
                     .WithMessage("Logo must not exceed 5MB.")
                 .Must(f => AllowedImageTypes.Contains(f!.ContentType))
-                    .WithMessage("Logo only supports JPG, PNG, WEBP.")
-                .When(x => x.LogoFile is not null);
+                    .WithMessage("Logo only supports JPG, PNG, WEBP.");
+            //.When(x => x.LogoFile is not null);
 
             RuleFor(x => x.BusinessLicenseFile)
                 .NotEmpty().WithMessage("Business license file is required.")
                 .Must(f => f!.Length <= MaxDocSize)
                     .WithMessage("Business license must not exceed 10MB.")
                 .Must(f => AllowedDocTypes.Contains(f!.ContentType))
-                    .WithMessage("Business license only supports PDF, JPG, PNG.")
-                .When(x => x.BusinessLicenseFile is not null);
+                    .WithMessage("Business license only supports PDF, JPG, PNG.");
+                //.When(x => x.BusinessLicenseFile is not null);
         }
     }
 }
