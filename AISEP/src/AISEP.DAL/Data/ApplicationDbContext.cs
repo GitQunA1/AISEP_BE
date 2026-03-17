@@ -85,10 +85,6 @@ namespace AISEP.DAL.Data
                     .HasForeignKey<Startup>(s => s.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasOne<User>()
-                    .WithMany()
-                    .HasForeignKey(s => s.CreatedBy)
-                    .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne<User>()
                     .WithMany()
