@@ -44,6 +44,10 @@ namespace AISEP.API.Controllers
             {
                 return StatusCode(403, ApiResponse<object>.ErrorResponse(ex.Message, "Forbidden", 403));
             }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Operation not allowed", 409));
+            }
         }
 
         [HttpGet("api/projects/{projectId}/documents")]
@@ -127,6 +131,30 @@ namespace AISEP.API.Controllers
             catch (InvalidOperationException ex)
             {
                 return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message, "Invalid operation", 400));
+            }
+        }
+
+        [HttpPut("api/projects/{projectId}/approve")]
+        [Authorize(Roles = "Staff, Admin")]
+        public async Task<IActionResult> ApproveProject([FromRoute] int projectId)
+        {
+            try
+            {
+                var userId = _currentUserService.GetUserId();
+                var result = await _documentService.ApproveProjectAsync(projectId, userId);
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Project approved and document stored on blockchain successfully."));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not found", 404));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Operation not allowed", 409));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
             }
         }
     }

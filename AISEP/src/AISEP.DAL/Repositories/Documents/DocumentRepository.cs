@@ -41,10 +41,11 @@ namespace AISEP.DAL.Repositories.Documents
             await _context.Documents.AddAsync(document);
         }
 
-        //public void Update(Document document)
-        //{
-        //    _context.Documents.Update(document);
-        //}
+
+        public void Update(Document document)
+        {
+            _context.Documents.Update(document);
+        }
 
         public void Delete(Document document)
         {

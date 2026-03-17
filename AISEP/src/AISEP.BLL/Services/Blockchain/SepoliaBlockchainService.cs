@@ -34,6 +34,16 @@ namespace AISEP.BLL.Services.Blockchain
             return "0x" + BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
         }
 
+        public async Task<string> ComputeFileHashFromUrlAsync(string fileUrl)
+        {
+            using var httpClient = new HttpClient();
+            using var stream = await httpClient.GetStreamAsync(fileUrl);
+            using var sha256 = SHA256.Create();
+
+            var hashBytes = await sha256.ComputeHashAsync(stream);
+            return "0x" + BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
+        }
+
         public async Task<string> StoreHashAsync(string fileHash, int entityId)
         {
             var account = new Account(_settings.AdminPrivateKey, 11155111);
