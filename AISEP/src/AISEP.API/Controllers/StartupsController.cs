@@ -130,6 +130,10 @@ namespace AISEP.API.Controllers
             {
                 return StatusCode(403,ApiResponse<object>.ErrorResponse(ex.Message, "Forbidden", 403));
             }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Conflict", 409));
+            }
         }
 
         [HttpPatch("{id:int}/approve")]

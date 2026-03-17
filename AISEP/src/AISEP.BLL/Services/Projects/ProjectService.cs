@@ -80,7 +80,7 @@ namespace AISEP.BLL.Services.Projects
                 TeamMembers            = dto.TeamMembers,
                 KeySkills              = dto.KeySkills,
                 TeamExperience         = dto.TeamExperience,
-                Status                 = ProjectStatus.Pending,
+                Status                 = ProjectStatus.Draft,
                 CreatedAt              = DateTime.UtcNow,
                 //CreatedBy              = userId
 
@@ -103,10 +103,12 @@ namespace AISEP.BLL.Services.Projects
             if (startup is null || project.StartupId != startup.StartupId)
                 throw new ForbiddenAccessException("You do not have permission to update this project.");
 
-            if (project.Status != ProjectStatus.Draft)
-                throw new InvalidOperationException("Only draft projects can update.");
-            
-          
+            if (project.Status != ProjectStatus.Draft && project.Status != ProjectStatus.Rejected)
+                throw new InvalidOperationException("Only draft projects or rejected projects can update."); 
+            if (project.Status == ProjectStatus.Rejected)
+                 project.Status = ProjectStatus.Draft;
+
+
 
             project.ProjectName            = dto.ProjectName            ?? project.ProjectName;
             project.ShortDescription       = dto.ShortDescription       ?? project.ShortDescription;

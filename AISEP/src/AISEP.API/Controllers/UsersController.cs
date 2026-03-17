@@ -9,7 +9,7 @@ namespace AISEP.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -20,6 +20,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin, Staff")]
         public async Task<IActionResult> GetAll([FromQuery] SieveModel model)
         {
             var result = await _userService.GetAllAsync(model);
@@ -27,6 +28,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("{id:int}")]
+        [Authorize]
         public async Task<IActionResult> GetById(int id)
         {
             var user = await _userService.GetByIdAsync(id);
@@ -37,6 +39,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpPut("{id:int}")]
+        [Authorize]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateUserRequest request)
         {
             try
@@ -54,6 +57,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpPatch("{id:int}")]
+        [Authorize(Roles = "Admin, Staff")]
         public async Task<IActionResult> Ban(int id)
         {
             try

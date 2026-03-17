@@ -11,7 +11,7 @@ namespace AISEP.BLL.Validators.Document
         public UploadDocumentRequestValidator()
         {
             RuleFor(x => x.DocumentType)
-                .IsInEnum().WithMessage("Document type is not valid. Allowed: PitchDeck, BusinessPlan, Other.");
+                .IsInEnum().WithMessage("Document type is not valid.");
 
             RuleFor(x => x.File)
                 .NotNull().WithMessage("File is required.")

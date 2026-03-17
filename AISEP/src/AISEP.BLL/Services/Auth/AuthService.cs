@@ -46,12 +46,12 @@ namespace AISEP.BLL.Services.Auth
             }
 
             // Validate role (optional)
-            //if (model.Role == UserRole.Admin || model.Role == UserRole.Staff)
-            //{
-            //    return (false, "Cannot register as Admin or Staff through public registration", null, null);
-            //}
+            if (model.Role == UserRole.Admin || model.Role == UserRole.Staff)
+            {
+                return (false, "Cannot register as Admin or Staff through public registration", null, null);
+            }
 
-           
+
             var user = new User
             {
                 UserName = model.Name,

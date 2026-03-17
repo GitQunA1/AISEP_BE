@@ -133,29 +133,29 @@ namespace AISEP.API.Controllers
         }
 
 
-        [HttpPatch("{id:int}/approve")]
-        [Authorize(Roles = "Staff")]
-        public async Task<IActionResult> Approve(int id)
-        {
+        //[HttpPatch("{id:int}/approve")]
+        //[Authorize(Roles = "Staff")]
+        //public async Task<IActionResult> Approve(int id)
+        //{
 
-            try
-            {
-                await _projectService.ApproveProjectAsync(id);
-                return Ok(ApiResponse<object>.SuccessResponse(null, "Project approved successfully."));
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not Found", 404));
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Conflict", 409));
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
-            }
-        }
+        //    try
+        //    {
+        //        await _projectService.ApproveProjectAsync(id);
+        //        return Ok(ApiResponse<object>.SuccessResponse(null, "Project approved successfully."));
+        //    }
+        //    catch (KeyNotFoundException ex)
+        //    {
+        //        return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not Found", 404));
+        //    }
+        //    catch (InvalidOperationException ex)
+        //    {
+        //        return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Conflict", 409));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
+        //    }
+        //}
 
         [HttpPatch("{id:int}/reject")]
         [Authorize(Roles = "Staff")]
