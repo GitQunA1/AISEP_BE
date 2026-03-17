@@ -1,6 +1,8 @@
 using AISEP.BLL.Helpers;
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.Services.Payments;
+using AISEP.BLL.Services.Users;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AISEP.API.Controllers
@@ -10,12 +12,77 @@ namespace AISEP.API.Controllers
     public class PaymentController : ControllerBase
     {
         private readonly IPaymentService _paymentService;
+        private readonly IUserService _currentUserService;
 
-        public PaymentController(IPaymentService paymentService)
+        public PaymentController(IPaymentService paymentService, IUserService currentUserService)
         {
             _paymentService = paymentService;
+            _currentUserService = currentUserService;
         }
 
+        // List all available packages for Subscription checkout
+        [HttpGet("packages")]
+        [Authorize]
+        public async Task<IActionResult> GetPackages()
+        {
+            try
+            {
+                var result = await _paymentService.GetPackagesAsync();
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Packages retrieved successfully"));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal server error", 500));
+            }
+        }
+
+        // Create transaction + return VietQR code URL
+        [HttpPost("checkout")]
+        [Authorize]
+        public async Task<IActionResult> Checkout([FromForm] CheckoutRequest request)
+        {
+            try
+            {
+                var userId = _currentUserService.GetUserId();
+                var result = await _paymentService.CheckoutAsync(userId, request);
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Checkout created successfully"));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not found", 404));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message, "Bad request", 400));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal server error", 500));
+            }
+        }
+
+        // FE polls this every 3-5s to check payment status
+        [HttpGet("{transactionId}/status")]
+        [Authorize]
+        public async Task<IActionResult> GetTransactionStatus(int transactionId)
+        {
+            try
+            {
+                var userId = _currentUserService.GetUserId();
+                var result = await _paymentService.GetTransactionStatusAsync(userId, transactionId);
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Transaction status retrieved"));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not found", 404));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal server error", 500));
+            }
+        }
+
+        // SePay calls this webhook when money arrives
         [HttpPost("sepay-webhook")]
         public async Task<IActionResult> SePayWebhook([FromBody] SePayWebhookRequest request)
         {

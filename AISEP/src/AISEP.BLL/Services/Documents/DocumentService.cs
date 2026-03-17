@@ -44,9 +44,19 @@ namespace AISEP.BLL.Services.Documents
             if (startup is null || project.StartupId != startup.StartupId)
                 throw new UnauthorizedAccessException("You do not have permission to upload documents to this project.");
 
-            var fileUrl = await _storageService.UploadFileAsync(request.File);
+            if (project.Status != ProjectStatus.Draft)
+                throw new InvalidOperationException("Chỉ được phép upload tài liệu khi dự án ở trạng thái DRAFT.");
+
+            // Tính hash từ file đang trong memory (trước khi upload)
             var fileHash = await _blockchainService.ComputeFileHashAsync(request.File);
-            var txHash = await _blockchainService.StoreHashAsync(fileHash, projectId);
+
+            // Kiểm tra file đã tồn tại trong hệ thống chưa (chặn duplicate trước khi đẩy blockchain)
+            var isDuplicate = _unitOfWork.Documents.GetQueryable()
+                .Any(d => d.FileHash == fileHash);
+            if (isDuplicate)
+                throw new InvalidOperationException("Tài liệu này đã được upload trước đó. Vui lòng kiểm tra lại.");
+
+            var fileUrl = await _storageService.UploadFileAsync(request.File);
 
             var document = new Document
             {
@@ -54,10 +64,9 @@ namespace AISEP.BLL.Services.Documents
                 DocumentType     = request.DocumentType,
                 FileName         = request.File.FileName,
                 FileUrl          = fileUrl,
-                FileHash         = fileHash,
-                BlockchainTxHash = txHash,
-                IsIpProtected    = true,
-                VerifiedAt       = DateTime.UtcNow
+                FileHash         = fileHash,       // lưu hash ngay để dùng lúc approve
+                BlockchainTxHash = null,
+                IsIpProtected    = false
             };
 
             await _unitOfWork.Documents.AddAsync(document);
@@ -147,6 +156,44 @@ namespace AISEP.BLL.Services.Documents
                     ? "Document is authentic and protected on the Blockchain."
                     : "Document does not match blockchain data. It may have been tampered with."
             };
+        }
+
+        public async Task<DocumentResponse> ApproveProjectAsync(int projectId, int staffUserId)
+        {
+            var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
+            if (project is null)
+                throw new KeyNotFoundException("Project not found.");
+
+            if (project.Status != ProjectStatus.Pending)
+                throw new InvalidOperationException("Chỉ duyệt dự án đang chờ duyệt (Pending).");
+
+            // Find document attached to this project
+            var document = _unitOfWork.Documents.GetQueryable()
+                .FirstOrDefault(d => d.ProjectId == projectId);
+            if (document is null)
+                throw new InvalidOperationException("Không tìm thấy tài liệu gắn với dự án này. Vui lòng upload tài liệu trước khi duyệt.");
+
+            if (string.IsNullOrEmpty(document.FileHash))
+                throw new InvalidOperationException("Tài liệu chưa có thông tin hash. Vui lòng upload lại tài liệu.");
+
+            // Store hash trên blockchain (Sepolia) - dùng hash đã tính lúc upload
+            var txHash = await _blockchainService.StoreHashAsync(document.FileHash, projectId);
+
+            // Update document với thông tin blockchain
+            document.BlockchainTxHash = txHash;
+            document.IsIpProtected    = true;
+            document.VerifiedAt       = DateTime.UtcNow;
+            _unitOfWork.Documents.Update(document);
+
+            // Approve project
+            project.Status       = ProjectStatus.Approved;
+            project.ApprovedAt   = DateTime.UtcNow;
+            project.ApprovedById = staffUserId;
+            _unitOfWork.Projects.Update(project);
+
+            await _unitOfWork.SaveChangesAsync();
+
+            return _mapper.Map<DocumentResponse>(document);
         }
     }
 }

@@ -4,6 +4,7 @@
     {
         Task<string> StoreHashAsync(string fileHash, int entityId);
         Task<string> ComputeFileHashAsync(IFormFile file);
+        Task<string> ComputeFileHashFromUrlAsync(string fileUrl);
         Task<(int EntityId, long Timestamp)> VerifyDocumentAsync(string fileHash);
     }
 }

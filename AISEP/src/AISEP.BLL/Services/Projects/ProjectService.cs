@@ -141,7 +141,6 @@ namespace AISEP.BLL.Services.Projects
                 throw new InvalidOperationException($"Only Pending projects can be approved. Current status: {project.Status}.");
 
             project.Status = ProjectStatus.Approved;
-            //project.PublishedAt = DateTime.UtcNow;
             project.ApprovedAt = DateTime.UtcNow;
             project.ApprovedById = _userService.GetUserId();
             _unitOfWork.Projects.Update(project);

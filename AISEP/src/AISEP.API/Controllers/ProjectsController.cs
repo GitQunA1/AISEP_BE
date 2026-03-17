@@ -137,7 +137,7 @@ namespace AISEP.API.Controllers
         [Authorize(Roles = "Staff")]
         public async Task<IActionResult> Approve(int id)
         {
-           
+
             try
             {
                 await _projectService.ApproveProjectAsync(id);

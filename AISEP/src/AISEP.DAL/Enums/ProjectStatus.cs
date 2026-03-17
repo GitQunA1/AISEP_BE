@@ -4,7 +4,6 @@
     {
         Draft,
         Pending,
-        //Submitted,
         Approved,
         Rejected
     }

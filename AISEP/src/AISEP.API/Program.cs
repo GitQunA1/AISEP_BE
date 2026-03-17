@@ -19,6 +19,7 @@ using AISEP.BLL.Services.Advisors;
 using AISEP.BLL.Services.AI;
 using AISEP.BLL.Services.Chats;
 using AISEP.BLL.Services.Payments;
+using AISEP.BLL.Services.BackgroundServices;
 using AISEP.BLL.Settings;
 using AISEP.BLL.Validators.Auth;
 using FluentValidation;
@@ -155,6 +156,7 @@ builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IChatSessionService, ChatSessionService>();
 builder.Services.AddScoped<IChatMessageService, ChatMessageService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddHostedService<SubscriptionExpiryBackgroundService>();
 
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>

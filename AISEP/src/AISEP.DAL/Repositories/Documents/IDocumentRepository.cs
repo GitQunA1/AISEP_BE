@@ -9,7 +9,7 @@ namespace AISEP.DAL.Repositories.Documents
         Task<IEnumerable<Document>> GetAllAsync();
         Task AddAsync(Document document);
 
-        //void Update(Document document);
+        void Update(Document document);
         void Delete(Document document);
         IQueryable<Document> GetQueryable();
     }

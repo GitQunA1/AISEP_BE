@@ -2,7 +2,6 @@
 {
     public enum ApprovalStatus
     {
-       
         Unverified,
         Pending,
         Approved,
