@@ -493,3 +493,6 @@ $RECYCLE.BIN/
 
 # local files
 project-structure.txt
+AISEP/.dotnet/
+.dotnet/
+
