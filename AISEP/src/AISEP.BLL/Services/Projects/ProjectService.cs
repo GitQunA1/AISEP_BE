@@ -80,7 +80,7 @@ namespace AISEP.BLL.Services.Projects
                 TeamMembers            = dto.TeamMembers,
                 KeySkills              = dto.KeySkills,
                 TeamExperience         = dto.TeamExperience,
-                Status                 = ProjectStatus.Pending,
+                Status                 = ProjectStatus.Draft,
                 CreatedAt              = DateTime.UtcNow,
                 //CreatedBy              = userId
 
