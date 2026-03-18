@@ -7,7 +7,7 @@ namespace AISEP.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    //[Authorize]
     public class StartupAIAnalysisController : ControllerBase
     {
         //private readonly IStartupAIAnalysisService _analysisService;

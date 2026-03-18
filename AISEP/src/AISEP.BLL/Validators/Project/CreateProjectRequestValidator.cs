@@ -6,8 +6,8 @@ namespace AISEP.BLL.Validators.Project
 {
     public class CreateProjectRequestValidator : AbstractValidator<CreateProjectRequest>
     {
-        private const string TextPattern =
-            @"^[\p{L}\p{N}\s.,!?'-]*$";
+        private const string TextPattern = @"^[\p{L}\p{N}\s]*$";
+        private const string TeamMembersPattern = @"^[\p{L}\p{N}\s()]*$";
 
         public CreateProjectRequestValidator()
         {
@@ -43,7 +43,7 @@ namespace AISEP.BLL.Validators.Project
             RuleFor(x => x.TeamMembers)
                 .NotEmpty().WithMessage("Team members is required.")
                 .MaximumLength(1000).WithMessage("Team members must not exceed 1000 characters.")
-                .Matches(TextPattern).WithMessage("Team members contains invalid characters.");
+                .Matches(TeamMembersPattern).WithMessage("Team members contains invalid characters.");
 
             // Optional text fields: validate format only when provided
             RuleFor(x => x.UniqueValueProposition)

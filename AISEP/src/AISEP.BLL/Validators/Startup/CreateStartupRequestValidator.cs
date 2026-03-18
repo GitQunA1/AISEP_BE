@@ -56,17 +56,17 @@ namespace AISEP.BLL.Validators.Startup
 
             RuleFor(x => x.LogoFile)
                 .NotEmpty().WithMessage("Logo file is required.")
-                .Must(f => f!.Length <= MaxImageSize)
+                .Must(f => f != null && f.Length <= MaxImageSize)
                     .WithMessage("Logo must not exceed 5MB.")
-                .Must(f => AllowedImageTypes.Contains(f!.ContentType))
+                .Must(f => f != null && AllowedImageTypes.Contains(f.ContentType))
                     .WithMessage("Logo only supports JPG, PNG, WEBP.");
             //.When(x => x.LogoFile is not null);
 
             RuleFor(x => x.BusinessLicenseFile)
                 .NotEmpty().WithMessage("Business license file is required.")
-                .Must(f => f!.Length <= MaxDocSize)
+                .Must(f => f != null && f.Length <= MaxDocSize)
                     .WithMessage("Business license must not exceed 10MB.")
-                .Must(f => AllowedDocTypes.Contains(f!.ContentType))
+                .Must(f => f != null && AllowedDocTypes.Contains(f.ContentType))
                     .WithMessage("Business license only supports PDF, JPG, PNG.");
                 //.When(x => x.BusinessLicenseFile is not null);
         }

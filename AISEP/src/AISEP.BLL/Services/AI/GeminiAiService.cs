@@ -61,6 +61,7 @@ namespace AISEP.BLL.Services.AI
             return $$"""
                 You are an expert startup evaluator using the Bill Payne Scorecard Valuation Method.
                 Analyze the startup project below and score each component.
+                All attached files are documents belonging to this project. Read them to improve scoring evidence.
                 Return ONLY a valid JSON object — no markdown, no extra text.
 
                 --- PROJECT DATA ---
@@ -94,10 +95,11 @@ namespace AISEP.BLL.Services.AI
                   6. Investment Need    (5%): clarity of funding requirements
                   7. Other              (5%): document count, overall pitch quality
 
-                PotentialScore (0-100): weighted sum mapped to integer scale (100 = market average)
+                Do NOT compute weighted total score. Backend will compute PotentialScore using:
+                0.30*Team + 0.25*Opportunity + 0.15*Product + 0.10*Competition + 0.10*Marketing + 0.05*Investment + 0.05*Other,
+                then multiply by 100.
                 ChaosScore (0-100): risk/uncertainty level (0 = stable, 100 = very risky)
-                IsEligibleStartup: true if PotentialScore >= 60 and risks are manageable
-                Summary: brief analysis written in Vietnamese
+                Summary: brief analysis written in Vietnamese, mention which documents/slides influenced the scoring.
 
                 --- REQUIRED OUTPUT FORMAT (return ONLY this JSON) ---
                 {
@@ -108,10 +110,7 @@ namespace AISEP.BLL.Services.AI
                   "MarketingScore":    <decimal 0.0-2.0>,
                   "InvestmentScore":   <decimal 0.0-2.0>,
                   "OtherScore":        <decimal 0.0-2.0>,
-                  "PotentialScore":    <integer 0-100>,
                   "ChaosScore":        <integer 0-100>,
-                  "IsEligibleStartup": <true|false>,
-                  "EligibilityReason": "<string>",
                   "Summary":           "<string in Vietnamese>"
                 }
                 """;

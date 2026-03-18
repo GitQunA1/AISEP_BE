@@ -5,10 +5,15 @@ namespace AISEP.BLL.Validators.Project
 {
     public class UpdateProjectRequestValidator : AbstractValidator<UpdateProjectRequest>
     {
+        private const string TextPattern = @"^[\p{L}\p{N}\s]*$";
+        private const string TeamMembersPattern = @"^[\p{L}\p{N}\s()]*$";
+
         public UpdateProjectRequestValidator()
         {
             RuleFor(x => x.ProjectName)
-                .MaximumLength(255).WithMessage("Project name must not exceed 255 characters.");
+                .MaximumLength(255).WithMessage("Project name must not exceed 255 characters.")
+                .Matches(TextPattern).WithMessage("Project name contains invalid characters.")
+                .When(x => !string.IsNullOrWhiteSpace(x.ProjectName));
             //.When(x => x.ProjectName is not null);
 
             RuleFor(x => x.DevelopmentStage)
@@ -16,23 +21,33 @@ namespace AISEP.BLL.Validators.Project
                // .When(x => x.DevelopmentStage.HasValue);
 
             RuleFor(x => x.ShortDescription)
-                .MaximumLength(500).WithMessage("Short description must not exceed 500 characters.");
+                .MaximumLength(500).WithMessage("Short description must not exceed 500 characters.")
+                .Matches(TextPattern).WithMessage("Short description contains invalid characters.")
+                .When(x => !string.IsNullOrWhiteSpace(x.ShortDescription));
                // .When(x => x.ShortDescription is not null);
 
             RuleFor(x => x.ProblemStatement)
-                .MaximumLength(2000).WithMessage("Problem statement must not exceed 2000 characters.");
+                .MaximumLength(2000).WithMessage("Problem statement must not exceed 2000 characters.")
+                .Matches(TextPattern).WithMessage("Problem statement contains invalid characters.")
+                .When(x => !string.IsNullOrWhiteSpace(x.ProblemStatement));
                // .When(x => x.ProblemStatement is not null);
 
             RuleFor(x => x.SolutionDescription)
-                .MaximumLength(2000).WithMessage("Solution description must not exceed 2000 characters.");
+                .MaximumLength(2000).WithMessage("Solution description must not exceed 2000 characters.")
+                .Matches(TextPattern).WithMessage("Solution description contains invalid characters.")
+                .When(x => !string.IsNullOrWhiteSpace(x.SolutionDescription));
                // .When(x => x.SolutionDescription is not null);
 
             RuleFor(x => x.TargetCustomers)
-                .MaximumLength(1000).WithMessage("Target customers must not exceed 1000 characters.");
+                .MaximumLength(1000).WithMessage("Target customers must not exceed 1000 characters.")
+                .Matches(TextPattern).WithMessage("Target customers contains invalid characters.")
+                .When(x => !string.IsNullOrWhiteSpace(x.TargetCustomers));
                // .When(x => x.TargetCustomers is not null);
 
             RuleFor(x => x.UniqueValueProposition)
-                .MaximumLength(1000).WithMessage("Unique value proposition must not exceed 1000 characters.");
+                .MaximumLength(1000).WithMessage("Unique value proposition must not exceed 1000 characters.")
+                .Matches(TextPattern).WithMessage("Unique value proposition contains invalid characters.")
+                .When(x => !string.IsNullOrWhiteSpace(x.UniqueValueProposition));
                // .When(x => x.UniqueValueProposition is not null);
 
             RuleFor(x => x.MarketSize)
@@ -40,7 +55,9 @@ namespace AISEP.BLL.Validators.Project
                //.When(x => x.MarketSize.HasValue);
 
             RuleFor(x => x.BusinessModel)
-                .MaximumLength(1000).WithMessage("Business model must not exceed 1000 characters.");
+                .MaximumLength(1000).WithMessage("Business model must not exceed 1000 characters.")
+                .Matches(TextPattern).WithMessage("Business model contains invalid characters.")
+                .When(x => !string.IsNullOrWhiteSpace(x.BusinessModel));
                // .When(x => x.BusinessModel is not null);
 
             RuleFor(x => x.Revenue)
@@ -48,19 +65,27 @@ namespace AISEP.BLL.Validators.Project
                // .When(x => x.Revenue.HasValue);
 
             RuleFor(x => x.Competitors)
-                .MaximumLength(1000).WithMessage("Competitors must not exceed 1000 characters.");
+                .MaximumLength(1000).WithMessage("Competitors must not exceed 1000 characters.")
+                .Matches(TextPattern).WithMessage("Competitors contain invalid characters.")
+                .When(x => !string.IsNullOrWhiteSpace(x.Competitors));
                // .When(x => x.Competitors is not null);
 
             RuleFor(x => x.TeamMembers)
-                .MaximumLength(1000).WithMessage("Team members must not exceed 1000 characters.");
+                .MaximumLength(1000).WithMessage("Team members must not exceed 1000 characters.")
+                .Matches(TeamMembersPattern).WithMessage("Team members contain invalid characters.")
+                .When(x => !string.IsNullOrWhiteSpace(x.TeamMembers));
                 //.When(x => x.TeamMembers is not null);
 
             RuleFor(x => x.KeySkills)
-                .MaximumLength(1000).WithMessage("Key skills must not exceed 1000 characters.");
+                .MaximumLength(1000).WithMessage("Key skills must not exceed 1000 characters.")
+                .Matches(TextPattern).WithMessage("Key skills contain invalid characters.")
+                .When(x => !string.IsNullOrWhiteSpace(x.KeySkills));
                // .When(x => x.KeySkills is not null);
 
             RuleFor(x => x.TeamExperience)
-                .MaximumLength(1000).WithMessage("Team experience must not exceed 1000 characters."); 
+                .MaximumLength(1000).WithMessage("Team experience must not exceed 1000 characters.")
+                .Matches(TextPattern).WithMessage("Team experience contains invalid characters.")
+                .When(x => !string.IsNullOrWhiteSpace(x.TeamExperience)); 
                // .When(x => x.TeamExperience is not null);
         }
     }
