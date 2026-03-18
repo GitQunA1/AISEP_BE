@@ -184,7 +184,7 @@ namespace AISEP.API.Controllers
             }
         }
         [HttpPatch("{id:int}/submit")]
-        [Authorize(Roles = "Staff")]
+        [Authorize(Roles = "Startup")]
         public async Task<IActionResult> Submit(int id)
         {
 
