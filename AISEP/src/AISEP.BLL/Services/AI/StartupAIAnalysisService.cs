@@ -24,6 +24,7 @@ namespace AISEP.BLL.Services.AI
             var documents = (await _unitOfWork.Documents.GetByProjectIdAsync(projectId)).ToList();
 
             var result      = await _geminiAiService.AnalyzeProjectAsync(project, documents);
+            NormalizeAnalysisResult(result);
             result.PotentialScore = CalculatePotentialScore(result);
             var analysisJson = JsonSerializer.Serialize(result);
 
@@ -65,33 +66,146 @@ namespace AISEP.BLL.Services.AI
             return analysis is null ? null : MapToResponse(analysis);
         }
 
-        private static StartupAIAnalysisResponse MapToResponse(StartupAIAnalysis a) => new()
+        private static StartupAIAnalysisResponse MapToResponse(StartupAIAnalysis a)
         {
-            EvaluationId      = a.EvaluationId,
-            ProjectId         = a.ProjectId,
-            PotentialScore    = a.PotentialScore,
-            ChaosScore        = a.ChaosScore,
-            AnalysisJson      = a.AnalysisJson,
-            IsEligibleStartup = a.IsEligibleStartup,
-            EligibilityReason = a.EligibilityReason,
-            CreatedAt         = a.CreatedAt
-        };
+            var parsedAnalysis = DeserializeAnalysisJson(a.AnalysisJson);
+            return new StartupAIAnalysisResponse
+            {
+                EvaluationId = a.EvaluationId,
+                ProjectId = a.ProjectId,
+                PotentialScore = a.PotentialScore,
+                ChaosScore = a.ChaosScore,
+                AnalysisJson = a.AnalysisJson,
+                Analysis = parsedAnalysis,
+                ScoreBreakdown = BuildBreakdown(parsedAnalysis),
+                IsEligibleStartup = a.IsEligibleStartup,
+                EligibilityReason = a.EligibilityReason,
+                CreatedAt = a.CreatedAt
+            };
+        }
 
         private static int CalculatePotentialScore(GeminiAnalysisResult result)
         {
             static double Normalize(double score) => Math.Clamp(score, 0.0, 2.0);
 
             var weighted =
-                0.30 * Normalize(result.TeamScore) +
-                0.25 * Normalize(result.OpportunityScore) +
-                0.15 * Normalize(result.ProductScore) +
-                0.10 * Normalize(result.CompetitionScore) +
-                0.10 * Normalize(result.MarketingScore) +
-                0.05 * Normalize(result.InvestmentScore) +
-                0.05 * Normalize(result.OtherScore);
+                0.30 * Normalize(GetComponentScore(result.Team, result.TeamScore)) +
+                0.25 * Normalize(GetComponentScore(result.Opportunity, result.OpportunityScore)) +
+                0.15 * Normalize(GetComponentScore(result.Product, result.ProductScore)) +
+                0.10 * Normalize(GetComponentScore(result.Competition, result.CompetitionScore)) +
+                0.10 * Normalize(GetComponentScore(result.Marketing, result.MarketingScore)) +
+                0.05 * Normalize(GetComponentScore(result.Investment, result.InvestmentScore)) +
+                0.05 * Normalize(GetComponentScore(result.Other, result.OtherScore));
 
             // 100 = market average (all component scores = 1.0)
             return (int)Math.Round(weighted * 100, MidpointRounding.AwayFromZero);
+        }
+
+        private static void NormalizeAnalysisResult(GeminiAnalysisResult result)
+        {
+            static double ClampScore(double value) => Math.Clamp(value, 0.0, 2.0);
+            static double ClampConfidence(double value) => Math.Clamp(value, 0.0, 1.0);
+
+            void NormalizeComponent(ComponentEvaluation? component, Action<double> setLegacyScore)
+            {
+                if (component is null)
+                {
+                    return;
+                }
+
+                component.Score = ClampScore(component.Score);
+                component.Confidence = ClampConfidence(component.Confidence);
+                component.Evidence ??= [];
+                component.MissingData ??= [];
+                component.Reason ??= string.Empty;
+
+                // Guardrail: score cao nhưng thiếu bằng chứng => giảm về mức thận trọng
+                if (component.Score > 1.0 && component.Evidence.Count == 0)
+                {
+                    component.Score = 0.9;
+                    component.Reason = string.IsNullOrWhiteSpace(component.Reason)
+                        ? "Điểm đã được điều chỉnh do thiếu bằng chứng cụ thể."
+                        : component.Reason + " | Adjusted: thiếu bằng chứng cụ thể.";
+                }
+
+                setLegacyScore(component.Score);
+            }
+
+            NormalizeComponent(result.Team, s => result.TeamScore = s);
+            NormalizeComponent(result.Opportunity, s => result.OpportunityScore = s);
+            NormalizeComponent(result.Product, s => result.ProductScore = s);
+            NormalizeComponent(result.Competition, s => result.CompetitionScore = s);
+            NormalizeComponent(result.Marketing, s => result.MarketingScore = s);
+            NormalizeComponent(result.Investment, s => result.InvestmentScore = s);
+            NormalizeComponent(result.Other, s => result.OtherScore = s);
+
+            result.TeamScore = ClampScore(result.TeamScore);
+            result.OpportunityScore = ClampScore(result.OpportunityScore);
+            result.ProductScore = ClampScore(result.ProductScore);
+            result.CompetitionScore = ClampScore(result.CompetitionScore);
+            result.MarketingScore = ClampScore(result.MarketingScore);
+            result.InvestmentScore = ClampScore(result.InvestmentScore);
+            result.OtherScore = ClampScore(result.OtherScore);
+            result.ChaosScore = Math.Clamp(result.ChaosScore, 0, 100);
+
+            result.Strengths ??= [];
+            result.Weaknesses ??= [];
+            result.Recommendations ??= [];
+            result.Summary ??= string.Empty;
+        }
+
+        private static double GetComponentScore(ComponentEvaluation? component, double fallbackScore)
+        {
+            return component?.Score > 0 ? component.Score : fallbackScore;
+        }
+
+        private static GeminiAnalysisResult? DeserializeAnalysisJson(string? analysisJson)
+        {
+            if (string.IsNullOrWhiteSpace(analysisJson))
+            {
+                return null;
+            }
+
+            try
+            {
+                return JsonSerializer.Deserialize<GeminiAnalysisResult>(
+                    analysisJson,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static List<ScoreBreakdownItem> BuildBreakdown(GeminiAnalysisResult? analysis)
+        {
+            if (analysis is null)
+            {
+                return [];
+            }
+
+            double Normalize(double score) => Math.Clamp(score, 0.0, 2.0);
+            double Score(ComponentEvaluation? component, double fallback) => Normalize(GetComponentScore(component, fallback));
+
+            var team = Score(analysis.Team, analysis.TeamScore);
+            var opportunity = Score(analysis.Opportunity, analysis.OpportunityScore);
+            var product = Score(analysis.Product, analysis.ProductScore);
+            var competition = Score(analysis.Competition, analysis.CompetitionScore);
+            var marketing = Score(analysis.Marketing, analysis.MarketingScore);
+            var investment = Score(analysis.Investment, analysis.InvestmentScore);
+            var other = Score(analysis.Other, analysis.OtherScore);
+
+            return
+            [
+                new ScoreBreakdownItem { Component = "Team", Weight = 0.30, Score = team, WeightedContribution = Math.Round(0.30 * team * 100, 2) },
+                new ScoreBreakdownItem { Component = "Opportunity", Weight = 0.25, Score = opportunity, WeightedContribution = Math.Round(0.25 * opportunity * 100, 2) },
+                new ScoreBreakdownItem { Component = "Product", Weight = 0.15, Score = product, WeightedContribution = Math.Round(0.15 * product * 100, 2) },
+                new ScoreBreakdownItem { Component = "Competition", Weight = 0.10, Score = competition, WeightedContribution = Math.Round(0.10 * competition * 100, 2) },
+                new ScoreBreakdownItem { Component = "Marketing", Weight = 0.10, Score = marketing, WeightedContribution = Math.Round(0.10 * marketing * 100, 2) },
+                new ScoreBreakdownItem { Component = "Investment", Weight = 0.05, Score = investment, WeightedContribution = Math.Round(0.05 * investment * 100, 2) },
+                new ScoreBreakdownItem { Component = "Other", Weight = 0.05, Score = other, WeightedContribution = Math.Round(0.05 * other * 100, 2) }
+            ];
         }
     }
 }

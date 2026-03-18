@@ -95,23 +95,100 @@ namespace AISEP.BLL.Services.AI
                   6. Investment Need    (5%): clarity of funding requirements
                   7. Other              (5%): document count, overall pitch quality
 
+                --- SCORING RUBRIC (strict) ---
+                For each component, choose score range based on evidence quality:
+                - 0.0 - 0.3: Missing or irrelevant information (e.g. placeholder text like "string", no usable document proof).
+                - 0.4 - 0.7: Basic information exists but weak evidence / unclear execution.
+                - 0.8 - 1.2: Market-average quality with reasonable evidence.
+                - 1.3 - 1.6: Strong quality with clear, specific, verifiable evidence.
+                - 1.7 - 2.0: Exceptional quality with outstanding evidence and traction.
+                If confidence is low, prefer conservative score.
+
+                --- FEW-SHOT EXAMPLES (style reference) ---
+                Example A (Weak project):
+                Input signals: team undefined, market size missing, pitch deck irrelevant image.
+                Expected style:
+                - Team.score around 0.1~0.3, evidence empty, missingData includes founder experience.
+                - Opportunity.score around 0.1~0.3, missing TAM/SAM/SOM.
+                - ChaosScore high (80-100).
+
+                Example B (Good MVP):
+                Input signals: clear team roles, demo + pitch deck, defined ICP, early revenue.
+                Expected style:
+                - Team.score around 1.1~1.4 with evidence from team slide.
+                - Product.score around 1.1~1.5 with evidence from demo.
+                - Marketing.score around 1.0~1.3 with traction evidence.
+                - ChaosScore medium (30-55).
+
                 Do NOT compute weighted total score. Backend will compute PotentialScore using:
                 0.30*Team + 0.25*Opportunity + 0.15*Product + 0.10*Competition + 0.10*Marketing + 0.05*Investment + 0.05*Other,
                 then multiply by 100.
                 ChaosScore (0-100): risk/uncertainty level (0 = stable, 100 = very risky)
                 Summary: brief analysis written in Vietnamese, mention which documents/slides influenced the scoring.
+                Strengths: 3-5 key strengths (Vietnamese).
+                Weaknesses: 3-5 key weaknesses/gaps (Vietnamese).
+                Recommendations: 5-8 actionable recommendations in priority order (Vietnamese), focused on improving score.
+                Final self-check before output:
+                1) Every component must include at least one meaningful evidence or missingData item.
+                2) High score (>1.2) requires specific evidence.
+                3) Return valid JSON only.
 
                 --- REQUIRED OUTPUT FORMAT (return ONLY this JSON) ---
                 {
-                  "TeamScore":         <decimal 0.0-2.0>,
-                  "OpportunityScore":  <decimal 0.0-2.0>,
-                  "ProductScore":      <decimal 0.0-2.0>,
-                  "CompetitionScore":  <decimal 0.0-2.0>,
-                  "MarketingScore":    <decimal 0.0-2.0>,
-                  "InvestmentScore":   <decimal 0.0-2.0>,
-                  "OtherScore":        <decimal 0.0-2.0>,
+                  "Team": {
+                    "score": <decimal 0.0-2.0>,
+                    "evidence": ["<short evidence 1>", "<short evidence 2>"],
+                    "missingData": ["<missing data 1>"],
+                    "confidence": <decimal 0.0-1.0>,
+                    "reason": "<why this score>"
+                  },
+                  "Opportunity": {
+                    "score": <decimal 0.0-2.0>,
+                    "evidence": [],
+                    "missingData": [],
+                    "confidence": <decimal 0.0-1.0>,
+                    "reason": "<why this score>"
+                  },
+                  "Product": {
+                    "score": <decimal 0.0-2.0>,
+                    "evidence": [],
+                    "missingData": [],
+                    "confidence": <decimal 0.0-1.0>,
+                    "reason": "<why this score>"
+                  },
+                  "Competition": {
+                    "score": <decimal 0.0-2.0>,
+                    "evidence": [],
+                    "missingData": [],
+                    "confidence": <decimal 0.0-1.0>,
+                    "reason": "<why this score>"
+                  },
+                  "Marketing": {
+                    "score": <decimal 0.0-2.0>,
+                    "evidence": [],
+                    "missingData": [],
+                    "confidence": <decimal 0.0-1.0>,
+                    "reason": "<why this score>"
+                  },
+                  "Investment": {
+                    "score": <decimal 0.0-2.0>,
+                    "evidence": [],
+                    "missingData": [],
+                    "confidence": <decimal 0.0-1.0>,
+                    "reason": "<why this score>"
+                  },
+                  "Other": {
+                    "score": <decimal 0.0-2.0>,
+                    "evidence": [],
+                    "missingData": [],
+                    "confidence": <decimal 0.0-1.0>,
+                    "reason": "<why this score>"
+                  },
                   "ChaosScore":        <integer 0-100>,
-                  "Summary":           "<string in Vietnamese>"
+                  "Summary":           "<string in Vietnamese>",
+                  "Strengths":         ["<strength 1>", "<strength 2>"],
+                  "Weaknesses":        ["<weakness 1>", "<weakness 2>"],
+                  "Recommendations":   ["<action 1>", "<action 2>"]
                 }
                 """;
         }
@@ -130,7 +207,7 @@ namespace AISEP.BLL.Services.AI
                 },
                 generationConfig = new
                 {
-                    temperature     = 0.2,
+                    temperature     = 0.05,
                     topK            = 40,
                     topP            = 0.95,
                     maxOutputTokens = 8192
