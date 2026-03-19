@@ -43,6 +43,28 @@ namespace AISEP.BLL.Services.AI
             }
         }
 
+        public async Task<GeminiAnalysisResult> AnalyzeProjectForInvestorAsync(Project project, IEnumerable<Document> documents)
+        {
+            var docList = documents.ToList();
+            var prompt = BuildInvestorPrompt(project, docList);
+            var inlineParts = await BuildInlinePartsAsync(docList);
+
+            _logger.LogInformation("Calling Gemini (Investor mode): model={Model}, inlineParts={Count}",
+                _settings.Model, inlineParts.Count);
+
+            try
+            {
+                var responseJson = await CallGeminiAsync(prompt, inlineParts);
+                return ParseResponse(responseJson);
+            }
+            catch (HttpRequestException ex) when (inlineParts.Count > 0)
+            {
+                _logger.LogWarning("Inline_data investor call failed ({Msg}). Retrying text-only...", ex.Message);
+                var responseJson = await CallGeminiAsync(prompt, []);
+                return ParseResponse(responseJson);
+            }
+        }
+
       
 
         private string BuildPrompt(Project project, List<Document> documents)
@@ -105,20 +127,132 @@ namespace AISEP.BLL.Services.AI
                 If confidence is low, prefer conservative score.
 
                 --- FEW-SHOT EXAMPLES (style reference) ---
-                Example A (Weak project):
-                Input signals: team undefined, market size missing, pitch deck irrelevant image.
-                Expected style:
-                - Team.score around 0.1~0.3, evidence empty, missingData includes founder experience.
-                - Opportunity.score around 0.1~0.3, missing TAM/SAM/SOM.
-                - ChaosScore high (80-100).
+                Golden Sample A (Weak / Low-quality submission):
+                Input signals:
+                - TeamMembers = "string", KeySkills = "string", TeamExperience = "string"
+                - MarketSize = 0, BusinessModel = "string", Competitors = "string"
+                - Attached "PitchDeck" is unrelated image (signature/photo, not startup content)
+                Target output style:
+                {
+                  "Team": {
+                    "score": 0.1,
+                    "evidence": [],
+                    "missingData": ["Founder background", "Role split", "Domain experience"],
+                    "confidence": 0.9,
+                    "reason": "Team information is placeholder-only and not verifiable."
+                  },
+                  "Opportunity": {
+                    "score": 0.1,
+                    "evidence": [],
+                    "missingData": ["TAM/SAM/SOM", "ICP detail", "Growth assumptions"],
+                    "confidence": 0.9,
+                    "reason": "No usable market evidence provided."
+                  },
+                  "Product": {
+                    "score": 0.2,
+                    "evidence": ["Development Stage = Idea"],
+                    "missingData": ["Product architecture", "MVP proof", "Technical differentiation"],
+                    "confidence": 0.8,
+                    "reason": "Only early idea signal exists, no supporting product evidence."
+                  },
+                  "Competition": {
+                    "score": 0.1,
+                    "evidence": [],
+                    "missingData": ["Direct competitors", "Positioning map", "UVP proof"],
+                    "confidence": 0.9,
+                    "reason": "Competitive analysis is missing."
+                  },
+                  "Marketing": {
+                    "score": 0.1,
+                    "evidence": [],
+                    "missingData": ["Go-to-market plan", "Traction", "Conversion metrics"],
+                    "confidence": 0.9,
+                    "reason": "No real business model or traction data."
+                  },
+                  "Investment": {
+                    "score": 0.1,
+                    "evidence": [],
+                    "missingData": ["Fundraising ask", "Use-of-funds", "Milestones"],
+                    "confidence": 0.9,
+                    "reason": "Investment ask section is missing."
+                  },
+                  "Other": {
+                    "score": 0.0,
+                    "evidence": ["Attached document is irrelevant to project evaluation."],
+                    "missingData": ["Valid pitch deck", "Supporting legal/financial documents"],
+                    "confidence": 0.95,
+                    "reason": "Attached file does not support evaluation."
+                  },
+                  "ChaosScore": 95,
+                  "Summary": "Thiếu dữ liệu nghiêm trọng và tài liệu không liên quan.",
+                  "Strengths": ["Có tên ý tưởng rõ ràng."],
+                  "Weaknesses": ["Thiếu dữ liệu đội ngũ", "Thiếu dữ liệu thị trường", "Tài liệu đính kèm không hợp lệ"],
+                  "Recommendations": ["Bổ sung team profile", "Nộp pitch deck thực tế", "Mô tả GTM và traction"]
+                }
 
-                Example B (Good MVP):
-                Input signals: clear team roles, demo + pitch deck, defined ICP, early revenue.
-                Expected style:
-                - Team.score around 1.1~1.4 with evidence from team slide.
-                - Product.score around 1.1~1.5 with evidence from demo.
-                - Marketing.score around 1.0~1.3 with traction evidence.
-                - ChaosScore medium (30-55).
+                Golden Sample B (Good MVP / Investment-ready soon):
+                Input signals:
+                - Team has clear founder roles and 5+ years relevant experience
+                - Market slide includes TAM/SAM/SOM and growth trend
+                - Product demo exists + MVP users + measurable traction
+                - Business model + early paid users + clear competitor differentiation
+                Target output style:
+                {
+                  "Team": {
+                    "score": 1.3,
+                    "evidence": ["Founder CEO: agritech operations 7 years", "CTO built similar IoT stack"],
+                    "missingData": [],
+                    "confidence": 0.85,
+                    "reason": "Team is complete, experienced, and aligned with domain."
+                  },
+                  "Opportunity": {
+                    "score": 1.2,
+                    "evidence": ["TAM/SAM/SOM provided", "Market growth rate stated"],
+                    "missingData": ["Independent benchmark source link"],
+                    "confidence": 0.8,
+                    "reason": "Opportunity is large with reasonable quantification."
+                  },
+                  "Product": {
+                    "score": 1.3,
+                    "evidence": ["MVP demo video", "Pilot customer feedback"],
+                    "missingData": [],
+                    "confidence": 0.82,
+                    "reason": "Product has concrete validation signals."
+                  },
+                  "Competition": {
+                    "score": 1.1,
+                    "evidence": ["Competitor table", "UVP statement with pricing edge"],
+                    "missingData": ["Win/loss data"],
+                    "confidence": 0.76,
+                    "reason": "Positioning is fairly clear but more proof is needed."
+                  },
+                  "Marketing": {
+                    "score": 1.2,
+                    "evidence": ["Go-to-market plan", "Early paid customers"],
+                    "missingData": ["Channel CAC breakdown"],
+                    "confidence": 0.78,
+                    "reason": "Commercial logic is sound with initial traction."
+                  },
+                  "Investment": {
+                    "score": 1.0,
+                    "evidence": ["Ask and use-of-funds table"],
+                    "missingData": ["Quarterly milestone sensitivity analysis"],
+                    "confidence": 0.72,
+                    "reason": "Funding ask is clear at baseline quality."
+                  },
+                  "Other": {
+                    "score": 1.0,
+                    "evidence": ["Pitch deck quality is coherent", "Customer testimonial screenshot"],
+                    "missingData": [],
+                    "confidence": 0.75,
+                    "reason": "Supporting materials are coherent and useful."
+                  },
+                  "ChaosScore": 42,
+                  "Summary": "Dự án MVP khá tốt, còn thiếu một số bằng chứng tài chính sâu.",
+                  "Strengths": ["Đội ngũ phù hợp", "MVP có validation", "GTM rõ"],
+                  "Weaknesses": ["Thiếu benchmark độc lập", "Thiếu CAC chi tiết"],
+                  "Recommendations": ["Bổ sung unit economics", "Tăng bằng chứng cạnh tranh", "Chuẩn hóa roadmap vốn"]
+                }
 
                 Do NOT compute weighted total score. Backend will compute PotentialScore using:
                 0.30*Team + 0.25*Opportunity + 0.15*Product + 0.10*Competition + 0.10*Marketing + 0.05*Investment + 0.05*Other,
@@ -189,6 +323,121 @@ namespace AISEP.BLL.Services.AI
                   "Strengths":         ["<strength 1>", "<strength 2>"],
                   "Weaknesses":        ["<weakness 1>", "<weakness 2>"],
                   "Recommendations":   ["<action 1>", "<action 2>"]
+                }
+                """;
+        }
+
+        private string BuildInvestorPrompt(Project project, List<Document> documents)
+        {
+            var readable = documents.Where(d => GetMimeType(d.FileName) is not null).ToList();
+            var skipped = documents.Where(d => GetMimeType(d.FileName) is null).ToList();
+            var docCount = readable.Count;
+
+            var docSummary = docCount > 0
+                ? string.Join(", ", readable.Select(d => $"{d.DocumentType} ({d.FileName})"))
+                : "None";
+            var skippedSummary = skipped.Count > 0
+                ? $" | Skipped (unsupported format): {string.Join(", ", skipped.Select(d => d.FileName))}"
+                : string.Empty;
+
+            return $$"""
+                You are an investor-side startup evaluator using the Bill Payne Scorecard Valuation Method.
+                Analyze the project and attached project documents from an INVESTOR DECISION perspective.
+                Return ONLY a valid JSON object — no markdown, no extra text.
+
+                --- PROJECT DATA ---
+                Name: {{project.ProjectName}}
+                Short Description: {{project.ShortDescription ?? "N/A"}}
+                Development Stage: {{project.DevelopmentStage?.ToString() ?? "N/A"}}
+                Problem Statement: {{project.ProblemStatement ?? "N/A"}}
+                Solution: {{project.SolutionDescription ?? "N/A"}}
+                Target Customers: {{project.TargetCustomers ?? "N/A"}}
+                Unique Value Proposition: {{project.UniqueValueProposition ?? "N/A"}}
+                Market Size: {{(project.MarketSize.HasValue ? project.MarketSize.Value.ToString("N0") + " USD" : "N/A")}}
+                Business Model: {{project.BusinessModel ?? "N/A"}}
+                Revenue: {{(project.Revenue.HasValue ? project.Revenue.Value.ToString("N0") + " USD" : "N/A")}}
+                Competitors: {{project.Competitors ?? "N/A"}}
+                Team Members: {{project.TeamMembers ?? "N/A"}}
+                Key Skills: {{project.KeySkills ?? "N/A"}}
+                Team Experience: {{project.TeamExperience ?? "N/A"}}
+                Uploaded Documents ({{docCount}} attached for reading){{skippedSummary}}:
+                {{docSummary}}
+
+                --- SCORING INSTRUCTIONS ---
+                Use Bill Payne component multipliers (relative to market average):
+                1. Team (30%), 2. Opportunity (25%), 3. Product/Tech (15%),
+                4. Competition (10%), 5. Marketing/Sales (10%),
+                6. Investment Need (5%), 7. Other (5%).
+
+                Multiplier guide:
+                - 1.0 = market average
+                - 1.5 = 50% above average
+                - 0.7 = 30% below average
+                - Range must be 0.0 to 2.0
+
+                --- SCORING RUBRIC (strict) ---
+                For each component, choose score range based on evidence quality:
+                - 0.0 - 0.3: Missing or irrelevant information (placeholder text, no usable document proof).
+                - 0.4 - 0.7: Basic info exists but weak evidence / unclear execution.
+                - 0.8 - 1.2: Market-average quality with reasonable evidence.
+                - 1.3 - 1.6: Strong quality with clear, specific, verifiable evidence.
+                - 1.7 - 2.0: Exceptional quality with outstanding evidence and traction.
+                If confidence is low, prefer conservative scoring.
+
+                --- GOLDEN SAMPLES (style reference) ---
+                Golden Sample A (Pass / high risk):
+                Input signals:
+                - Team data is placeholder, market size = 0, business model unclear.
+                - Uploaded pitch deck is irrelevant image/document.
+                Expected style:
+                - Team/Opportunity/Competition/Marketing/Investment near 0.1~0.3.
+                - Other near 0.0 if docs are irrelevant.
+                - ChaosScore very high (85-100).
+                - InvestmentVerdict = "Pass".
+                - RiskFlags and DealBreakers must be explicit.
+
+                Golden Sample B (Watchlist / promising MVP):
+                Input signals:
+                - Founder team clear, MVP demo exists, early paid users, TAM/SAM/SOM provided.
+                - Competitive positioning present but still lacks deep financial proof.
+                Expected style:
+                - Team/Product/Marketing around 1.0~1.4.
+                - Opportunity around 1.0~1.3 with evidence.
+                - ChaosScore medium (35-60).
+                - InvestmentVerdict = "Watchlist".
+                - DueDiligenceQuestions focus on unit economics and validation depth.
+
+                Investor focus:
+                - Emphasize investability, downside risk, execution risk, and data credibility.
+                - High score (>1.2) MUST include concrete evidence from project/docs.
+                - If evidence is weak, score conservatively and add risk flags.
+
+                Do NOT compute weighted total score. Backend computes PotentialScore.
+                Final self-check before output:
+                1) Every component must include at least one meaningful evidence or missingData item.
+                2) High score (>1.2) requires specific evidence.
+                3) InvestmentVerdict must align with RiskFlags and DealBreakers.
+                4) Return valid JSON only.
+
+                --- REQUIRED OUTPUT FORMAT (JSON only) ---
+                {
+                  "Team": {"score": 0.0, "evidence": [], "missingData": [], "confidence": 0.0, "reason": ""},
+                  "Opportunity": {"score": 0.0, "evidence": [], "missingData": [], "confidence": 0.0, "reason": ""},
+                  "Product": {"score": 0.0, "evidence": [], "missingData": [], "confidence": 0.0, "reason": ""},
+                  "Competition": {"score": 0.0, "evidence": [], "missingData": [], "confidence": 0.0, "reason": ""},
+                  "Marketing": {"score": 0.0, "evidence": [], "missingData": [], "confidence": 0.0, "reason": ""},
+                  "Investment": {"score": 0.0, "evidence": [], "missingData": [], "confidence": 0.0, "reason": ""},
+                  "Other": {"score": 0.0, "evidence": [], "missingData": [], "confidence": 0.0, "reason": ""},
+                  "ChaosScore": 0,
+                  "Summary": "",
+                  "Strengths": [],
+                  "Weaknesses": [],
+                  "Recommendations": [],
+                  "InvestmentVerdict": "Strong|Watchlist|Pass",
+                  "RiskFlags": [],
+                  "DealBreakers": [],
+                  "DueDiligenceQuestions": [],
+                  "InvestorNextStep": ""
                 }
                 """;
         }
