@@ -71,6 +71,7 @@ builder.Services.Configure<SePaySettings>(builder.Configuration.GetSection("SePa
 
 builder.Services.AddHttpClient<IGeminiAiService, GeminiAiService>();
 builder.Services.AddScoped<IStartupAIAnalysisService, StartupAIAnalysisService>();
+builder.Services.AddScoped<IInvestorAIAnalysisService, InvestorAIAnalysisService>();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
  options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
