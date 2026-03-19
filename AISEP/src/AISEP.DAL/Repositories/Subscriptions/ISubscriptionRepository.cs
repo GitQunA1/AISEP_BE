@@ -8,5 +8,6 @@ namespace AISEP.DAL.Repositories.Subscriptions
         void Update(Subscription subscription);
         Task<IEnumerable<Subscription>> GetExpiredActiveAsync();
         Task<bool> HasActiveAsync(int userId);
+        Task<Subscription?> GetLatestActiveAsync(int userId);
     }
 }

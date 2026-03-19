@@ -2,7 +2,6 @@ namespace AISEP.DAL.Enums
 {
     public enum EnumTypeName
     {
-        //AIStatus,
         ApprovalStatus,
         BookingStatus,
         ConnectionRequestStatus,
@@ -14,6 +13,7 @@ namespace AISEP.DAL.Enums
         PreferredStage,
         WalletTransactionStatus,
         ProjectStatus,
+        ReferenceType,
         RiskTolerance,
         SubscriptionStatus,
         TransactionStatus,
