@@ -4,8 +4,6 @@ using AISEP.BLL.DTOs.Responses;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using AutoMapper;
-using AISEP.DAL.Enums;
-using AutoMapper;
 using System.Text.RegularExpressions;
 
 namespace AISEP.BLL.Services.AI
@@ -15,14 +13,12 @@ namespace AISEP.BLL.Services.AI
         private readonly IUnitOfWork      _unitOfWork;
         private readonly IGeminiAiService _geminiAiService;
         private readonly IMapper           _mapper;
-        private readonly IMapper _mapper;
 
         public StartupAIAnalysisService(IUnitOfWork unitOfWork, IGeminiAiService geminiAiService, IMapper mapper)
         {
             _unitOfWork      = unitOfWork;
             _geminiAiService = geminiAiService;
             _mapper          = mapper;
-            _mapper = mapper;
         }
 
         public async Task<StartupAIAnalysisResponse> AnalyzeProjectAsync(int projectId)
@@ -127,7 +123,6 @@ namespace AISEP.BLL.Services.AI
             return _mapper.Map<StartupEligibilityResponse>(existing);
         }
 
-        private static StartupAIAnalysisResponse MapToResponse(StartupAIAnalysis a)
         private static StartupAIAnalysisResponse MapToResponse(StartupAIAnalysis a, IMapper mapper)
         {
             var parsedAnalysis = DeserializeAnalysisJson(a.AnalysisJson);

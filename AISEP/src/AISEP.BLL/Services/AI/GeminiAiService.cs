@@ -51,6 +51,19 @@ namespace AISEP.BLL.Services.AI
 
             _logger.LogInformation("Calling Gemini eligibility evaluation: model={Model}, inlineParts={Count}",
                 _settings.Model, inlineParts.Count);
+            try
+            {
+                var responseJson = await CallGeminiAsync(prompt, inlineParts);
+                return ParseEligibilityResponse(responseJson);
+            }
+            catch (HttpRequestException ex) when (inlineParts.Count > 0)
+            {
+                _logger.LogWarning("Eligibility inline_data call failed ({Msg}). Retrying text-only...", ex.Message);
+                var responseJson = await CallGeminiAsync(prompt, []);
+                return ParseEligibilityResponse(responseJson);
+            }
+        }
+
         public async Task<GeminiAnalysisResult> AnalyzeProjectForInvestorAsync(Project project, IEnumerable<Document> documents)
         {
             var docList = documents.ToList();
@@ -70,21 +83,6 @@ namespace AISEP.BLL.Services.AI
                 _logger.LogWarning("Inline_data investor call failed ({Msg}). Retrying text-only...", ex.Message);
                 var responseJson = await CallGeminiAsync(prompt, []);
                 return ParseResponse(responseJson);
-            }
-        }
-
-      
-
-            try
-            {
-                var responseJson = await CallGeminiAsync(prompt, inlineParts);
-                return ParseEligibilityResponse(responseJson);
-            }
-            catch (HttpRequestException ex) when (inlineParts.Count > 0)
-            {
-                _logger.LogWarning("Eligibility inline_data call failed ({Msg}). Retrying text-only...", ex.Message);
-                var responseJson = await CallGeminiAsync(prompt, []);
-                return ParseEligibilityResponse(responseJson);
             }
         }
 
