@@ -56,6 +56,14 @@ namespace AISEP.BLL.Services.Documents
             if (isDuplicate)
                 throw new InvalidOperationException("Tài liệu này đã được upload trước đó. Vui lòng kiểm tra lại.");
 
+            // Kiểm tra hash đã tồn tại on-chain chưa để tránh bypass khi dữ liệu DB bị xóa.
+            var (_, timestampOnChain) = await _blockchainService.VerifyDocumentAsync(fileHash);
+            if (timestampOnChain > 0)
+            {
+                throw new InvalidOperationException(
+                    "Tài liệu này đã từng được đăng ký trên blockchain trước đó. Không thể upload lại cùng nội dung.");
+            }
+
             var fileUrl = await _storageService.UploadFileAsync(request.File);
 
             var document = new Document
