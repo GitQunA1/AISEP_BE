@@ -1,4 +1,5 @@
 ﻿using AISEP.DAL.Entities;
+using System.Text.Json.Serialization;
 
 namespace AISEP.BLL.Services.AI
 {
@@ -38,8 +39,18 @@ namespace AISEP.BLL.Services.AI
         public List<string> Recommendations { get; set; } = [];
     }
 
+    public class GeminiEligibilityResult
+    {
+        [JsonPropertyName("is_eligible_startup")]
+        public bool IsEligibleStartup { get; set; }
+
+        [JsonPropertyName("eligibility_reason")]
+        public string EligibilityReason { get; set; } = string.Empty;
+    }
+
     public interface IGeminiAiService
     {
         Task<GeminiAnalysisResult> AnalyzeProjectAsync(Project project, IEnumerable<Document> documents);
+        Task<GeminiEligibilityResult> EvaluateStartupEligibilityAsync(Project project, IEnumerable<Document> documents);
     }
 }

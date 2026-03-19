@@ -146,6 +146,13 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.RejectedById, opt => opt.MapFrom(src => src.RejectedById))
                 .ForMember(dest => dest.RejectedAt, opt => opt.MapFrom(src => src.RejectedAt))
                 .ForMember(dest => dest.RejectionReason, opt => opt.MapFrom(src => src.RejectionReason));
+
+            // StartupAIAnalysis Entity -> StartupEligibilityResponse
+            CreateMap<StartupAIAnalysis, StartupEligibilityResponse>()
+                .ForMember(dest => dest.IsEligibleStartup,
+                    opt => opt.MapFrom(src => src.IsEligibleStartup ?? false))
+                .ForMember(dest => dest.EligibilityReason,
+                    opt => opt.MapFrom(src => src.EligibilityReason ?? string.Empty));
         }
     }
 }
