@@ -7,6 +7,7 @@ namespace AISEP.DAL.Repositories.Transactions
         Task<Transaction?> GetByIdAsync(int transactionId, int userId);
         Task<Transaction?> GetPendingByUserAndReferenceAsync(int userId, string referenceType, int referenceId);
         Task<Transaction?> GetPendingByPaymentCodeAsync(string paymentCode);
+        Task<Transaction?> GetByPaymentCodeAsync(string paymentCode);
         Task AddAsync(Transaction transaction);
         void Update(Transaction transaction);
     }

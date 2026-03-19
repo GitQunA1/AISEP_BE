@@ -30,5 +30,13 @@ namespace AISEP.DAL.Repositories.Subscriptions
                 .AnyAsync(s => s.UserId == userId
                             && s.Status == SubscriptionStatus.Active
                             && s.EndDate >= DateTime.UtcNow);
+
+        public async Task<Subscription?> GetLatestActiveAsync(int userId)
+            => await _context.Subscriptions
+                .Where(s => s.UserId == userId
+                         && s.Status == SubscriptionStatus.Active
+                         && s.EndDate >= DateTime.UtcNow)
+                .OrderByDescending(s => s.EndDate)
+                .FirstOrDefaultAsync();
     }
 }

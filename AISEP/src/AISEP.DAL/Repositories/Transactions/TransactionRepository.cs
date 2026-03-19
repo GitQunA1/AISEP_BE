@@ -30,6 +30,10 @@ namespace AISEP.DAL.Repositories.Transactions
                 .FirstOrDefaultAsync(t => t.PaymentCode == paymentCode
                                        && t.Status == TransactionStatus.Pending);
 
+        public async Task<Transaction?> GetByPaymentCodeAsync(string paymentCode)
+            => await _context.Transactions
+                .FirstOrDefaultAsync(t => t.PaymentCode == paymentCode);
+
         public async Task AddAsync(Transaction transaction)
             => await _context.Transactions.AddAsync(transaction);
 

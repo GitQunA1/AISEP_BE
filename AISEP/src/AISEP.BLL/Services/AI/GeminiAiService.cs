@@ -43,6 +43,14 @@ namespace AISEP.BLL.Services.AI
             }
         }
 
+        public async Task<GeminiEligibilityResult> EvaluateStartupEligibilityAsync(Project project, IEnumerable<Document> documents)
+        {
+            var docList = documents.ToList();
+            var prompt = BuildEligibilityPrompt(project, docList);
+            var inlineParts = await BuildInlinePartsAsync(docList);
+
+            _logger.LogInformation("Calling Gemini eligibility evaluation: model={Model}, inlineParts={Count}",
+                _settings.Model, inlineParts.Count);
         public async Task<GeminiAnalysisResult> AnalyzeProjectForInvestorAsync(Project project, IEnumerable<Document> documents)
         {
             var docList = documents.ToList();
@@ -66,6 +74,19 @@ namespace AISEP.BLL.Services.AI
         }
 
       
+
+            try
+            {
+                var responseJson = await CallGeminiAsync(prompt, inlineParts);
+                return ParseEligibilityResponse(responseJson);
+            }
+            catch (HttpRequestException ex) when (inlineParts.Count > 0)
+            {
+                _logger.LogWarning("Eligibility inline_data call failed ({Msg}). Retrying text-only...", ex.Message);
+                var responseJson = await CallGeminiAsync(prompt, []);
+                return ParseEligibilityResponse(responseJson);
+            }
+        }
 
         private string BuildPrompt(Project project, List<Document> documents)
         {
@@ -442,8 +463,81 @@ namespace AISEP.BLL.Services.AI
                 """;
         }
 
+        private string BuildEligibilityPrompt(Project project, List<Document> documents)
+        {
+            var readable = documents.Where(d => GetMimeType(d.FileName) is not null).ToList();
+            var skipped = documents.Where(d => GetMimeType(d.FileName) is null).ToList();
+            var docCount = readable.Count;
+
+            var docSummary = docCount > 0
+                ? string.Join(", ", readable.Select(d => $"{d.DocumentType} ({d.FileName})"))
+                : "Không có tài liệu hỗ trợ.";
+            var skippedSummary = skipped.Count > 0
+                ? $" | Bỏ qua (định dạng không hỗ trợ): {string.Join(", ", skipped.Select(d => d.FileName))}"
+                : string.Empty;
+
+            return $$"""
+                Bạn là một chuyên gia thẩm định dự án Khởi nghiệp Đổi mới Sáng tạo tại Vườn ươm (Incubator).
+                Nhiệm vụ: xác định dự án có đủ tư cách là "Startup / Ý tưởng sáng tạo" hay không.
+                Bối cảnh: CHẤP NHẬN ý tưởng giai đoạn sớm (Idea Stage), dự án xã hội, mô hình có yếu tố sáng tạo.
+
+                Đánh giá theo Khung 3 Lăng kính Đổi mới của IDEO kết hợp Lean Startup:
+                1) Desirability: Có nỗi đau rõ ràng của nhóm người dùng cụ thể không? Giải pháp có logic không?
+                2) Innovation / Differentiation: Có yếu tố mới mẻ/khác biệt (công nghệ, mô hình kinh doanh, quy trình, ứng dụng mới)?
+                3) Scalability Potential: Nếu thành công có khả năng mở rộng vùng/quốc gia, đóng gói/nhượng quyền/qua Internet?
+                4) Feasibility (lọc cơ bản): Có vi phạm pháp luật, phi logic vật lý, lừa đảo, đa cấp, hoặc quá viển vông không?
+
+                Luật loại bỏ (is_eligible_startup = false):
+                - Mô hình buôn bán/dịch vụ nhỏ lẻ truyền thống, không sáng tạo, khó nhân rộng.
+                - Viển vông, phi logic, thiếu thông tin trầm trọng hoặc có dấu hiệu lừa đảo.
+
+                Còn lại, nếu giải quyết vấn đề cụ thể, có đổi mới dù nhỏ, có tiềm năng mở rộng hoặc ứng dụng mô hình/công nghệ mới:
+                - is_eligible_startup = true.
+
+                Quy tắc đánh giá tài liệu đính kèm:
+                - Bắt buộc kiểm tra mức độ liên quan của từng tài liệu với Problem Statement, Solution, Business Model và tên dự án.
+                - Nếu phần lớn tài liệu không liên quan hoặc mâu thuẫn nội dung dự án, coi là thiếu thông tin trầm trọng.
+                - Trong trường hợp đó, bắt buộc kết luận is_eligible_startup = false.
+                - eligibility_reason bắt buộc nêu rõ cụm: "Tài liệu đính kèm không liên quan đến nội dung dự án".
+
+                Yêu cầu cho eligibility_reason:
+                - Viết tiếng Việt.
+                - Tối đa 3 câu ngắn gọn để staff đọc nhanh.
+                - Nêu rõ vì sao duyệt hoặc từ chối theo đúng 4 tiêu chí trên.
+
+                --- PROJECT DATA ---
+                Name: {{project.ProjectName}}
+                Short Description: {{project.ShortDescription ?? "N/A"}}
+                Development Stage: {{project.DevelopmentStage?.ToString() ?? "N/A"}}
+                Problem Statement: {{project.ProblemStatement ?? "N/A"}}
+                Solution: {{project.SolutionDescription ?? "N/A"}}
+                Target Customers: {{project.TargetCustomers ?? "N/A"}}
+                Unique Value Proposition: {{project.UniqueValueProposition ?? "N/A"}}
+                Market Size: {{(project.MarketSize.HasValue ? project.MarketSize.Value.ToString("N0") + " USD" : "N/A")}}
+                Business Model: {{project.BusinessModel ?? "N/A"}}
+                Revenue: {{(project.Revenue.HasValue ? project.Revenue.Value.ToString("N0") + " USD" : "N/A")}}
+                Competitors: {{project.Competitors ?? "N/A"}}
+                Team Members: {{project.TeamMembers ?? "N/A"}}
+                Key Skills: {{project.KeySkills ?? "N/A"}}
+                Team Experience: {{project.TeamExperience ?? "N/A"}}
+                Uploaded Documents ({{docCount}} tài liệu đọc được){{skippedSummary}}:
+                {{docSummary}}
+
+                Trả về ONLY JSON, không markdown, không text thêm:
+                {
+                  "is_eligible_startup": <boolean>,
+                  "eligibility_reason": "<string tiếng Việt tối đa 3 câu>"
+                }
+                """;
+        }
+
         private async Task<string> CallGeminiAsync(string prompt, List<object> inlineParts)
         {
+            if (string.IsNullOrWhiteSpace(_settings.ApiKey))
+            {
+                throw new HttpRequestException("Thiếu Gemini API key. Hãy cấu hình GeminiSettings:ApiKey trong appsettings hoặc biến môi trường.");
+            }
+
             // Build parts: text prompt first, then each document as inline_data
             var parts = new List<object> { new { text = prompt } };
             parts.AddRange(inlineParts);
@@ -480,6 +574,7 @@ namespace AISEP.BLL.Services.AI
                 var message = statusCode switch
                 {
                     401 => "Gemini API key không hợp lệ hoặc chưa được cấp quyền.",
+                    403 => "Gemini API bị từ chối quyền (PERMISSION_DENIED). Kiểm tra GeminiSettings:ApiKey, bật Generative Language API, và bỏ giới hạn API key không phù hợp.",
                     404 => $"Model '{_settings.Model}' không tồn tại hoặc không được hỗ trợ. Kiểm tra lại GeminiSettings.Model trong appsettings.json.",
                     429 => "Gemini API vượt quá quota. Free tier giới hạn số request/phút và token/ngày. Vui lòng chờ hoặc nâng cấp plan.",
                     500 => "Gemini API lỗi phía server. Thử lại sau.",
@@ -496,16 +591,25 @@ namespace AISEP.BLL.Services.AI
         private async Task<List<object>> BuildInlinePartsAsync(List<Document> documents)
         {
             var parts = new List<object>();
+            var index = 0;
 
             foreach (var doc in documents)
             {
                 var mimeType = GetMimeType(doc.FileName);
                 if (mimeType is null) continue;
 
+                index++;
+
                 try
                 {
                     var bytes  = await _httpClient.GetByteArrayAsync(doc.FileUrl);
                     var base64 = Convert.ToBase64String(bytes);
+
+                    parts.Add(new
+                    {
+                        text = $"Document #{index}: Type={doc.DocumentType}, FileName={doc.FileName}. Hãy kiểm tra mức độ liên quan của tài liệu này với dự án trước khi dùng làm bằng chứng."
+                    });
+
                     parts.Add(new
                     {
                         inline_data = new
@@ -517,7 +621,7 @@ namespace AISEP.BLL.Services.AI
                 }
                 catch
                 {
-                    // Skip documents that fail to download
+                    
                 }
             }
 
@@ -574,6 +678,56 @@ namespace AISEP.BLL.Services.AI
             {
                 _logger.LogError("Failed to parse Gemini response. Raw text: {Text}\nError: {Error}", text, ex.Message);
                 return new GeminiAnalysisResult();
+            }
+        }
+
+        private GeminiEligibilityResult ParseEligibilityResponse(string responseJson)
+        {
+            var doc = JsonDocument.Parse(responseJson);
+            var text = doc.RootElement
+                .GetProperty("candidates")[0]
+                .GetProperty("content")
+                .GetProperty("parts")[0]
+                .GetProperty("text")
+                .GetString() ?? "{}";
+
+            text = Regex.Replace(text, @"```json\s*", "").Replace("```", "").Trim();
+
+            if (!text.TrimEnd().EndsWith('}'))
+            {
+                text = text.TrimEnd().TrimEnd(',') + "}";
+            }
+
+            try
+            {
+                var result = JsonSerializer.Deserialize<GeminiEligibilityResult>(
+                    text,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (result is null)
+                {
+                    return new GeminiEligibilityResult
+                    {
+                        IsEligibleStartup = false,
+                        EligibilityReason = "Dự án chưa có đủ dữ liệu rõ ràng để kết luận theo bộ tiêu chí IDEO và Lean Startup."
+                    };
+                }
+
+                if (string.IsNullOrWhiteSpace(result.EligibilityReason))
+                {
+                    result.EligibilityReason = "Dự án chưa có đủ dữ liệu rõ ràng để kết luận theo bộ tiêu chí IDEO và Lean Startup.";
+                }
+
+                return result;
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError("Failed to parse Gemini eligibility response. Raw text: {Text}\nError: {Error}", text, ex.Message);
+                return new GeminiEligibilityResult
+                {
+                    IsEligibleStartup = false,
+                    EligibilityReason = "Không thể phân tích kết quả AI hợp lệ. Vui lòng thử lại với thông tin dự án đầy đủ hơn."
+                };
             }
         }
     }

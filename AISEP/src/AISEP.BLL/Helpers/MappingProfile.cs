@@ -158,6 +158,13 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.PotentialScore, opt => opt.Ignore())
                 .ForMember(dest => dest.ChaosScore, opt => opt.Ignore())
                 .ForMember(dest => dest.ScoreBreakdown, opt => opt.Ignore());
+
+            // StartupAIAnalysis Entity -> StartupEligibilityResponse
+            CreateMap<StartupAIAnalysis, StartupEligibilityResponse>()
+                .ForMember(dest => dest.IsEligibleStartup,
+                    opt => opt.MapFrom(src => src.IsEligibleStartup ?? false))
+                .ForMember(dest => dest.EligibilityReason,
+                    opt => opt.MapFrom(src => src.EligibilityReason ?? string.Empty));
         }
     }
 }

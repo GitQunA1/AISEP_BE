@@ -4,6 +4,9 @@ using AISEP.BLL.DTOs.Responses;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using AutoMapper;
+using AISEP.DAL.Enums;
+using AutoMapper;
+using System.Text.RegularExpressions;
 
 namespace AISEP.BLL.Services.AI
 {
@@ -11,12 +14,14 @@ namespace AISEP.BLL.Services.AI
     {
         private readonly IUnitOfWork      _unitOfWork;
         private readonly IGeminiAiService _geminiAiService;
+        private readonly IMapper           _mapper;
         private readonly IMapper _mapper;
 
         public StartupAIAnalysisService(IUnitOfWork unitOfWork, IGeminiAiService geminiAiService, IMapper mapper)
         {
             _unitOfWork      = unitOfWork;
             _geminiAiService = geminiAiService;
+            _mapper          = mapper;
             _mapper = mapper;
         }
 
@@ -74,6 +79,55 @@ namespace AISEP.BLL.Services.AI
             return analysis is null ? null : MapToResponse(analysis, _mapper);
         }
 
+        public async Task<StartupEligibilityResponse> EvaluateEligibilityAsync(int projectId)
+        {
+            var project = await _unitOfWork.Projects.GetByIdAsync(projectId)
+                ?? throw new KeyNotFoundException($"Project {projectId} not found.");
+
+            if (project.Status != ProjectStatus.Pending)
+            {
+                throw new InvalidOperationException("Chỉ được đánh giá eligibility khi dự án đang ở trạng thái Pending.");
+            }
+
+            var documents = (await _unitOfWork.Documents.GetByProjectIdAsync(projectId)).ToList();
+            var result = await _geminiAiService.EvaluateStartupEligibilityAsync(project, documents);
+
+            var normalizedReason = NormalizeEligibilityReason(result.EligibilityReason);
+            var eligibilityJson = JsonSerializer.Serialize(new StartupEligibilityResponse
+            {
+                IsEligibleStartup = result.IsEligibleStartup,
+                EligibilityReason = normalizedReason
+            });
+
+            var existing = await _unitOfWork.StartupAIAnalyses.GetByProjectIdAsync(projectId);
+
+            if (existing is not null)
+            {
+                existing.IsEligibleStartup = result.IsEligibleStartup;
+                existing.EligibilityReason = normalizedReason;
+                existing.AnalysisJson = eligibilityJson;
+                existing.CreatedAt = DateTime.UtcNow;
+                _unitOfWork.StartupAIAnalyses.Update(existing);
+            }
+            else
+            {
+                existing = new StartupAIAnalysis
+                {
+                    ProjectId = projectId,
+                    IsEligibleStartup = result.IsEligibleStartup,
+                    EligibilityReason = normalizedReason,
+                    AnalysisJson = eligibilityJson,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _unitOfWork.StartupAIAnalyses.AddAsync(existing);
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+            return _mapper.Map<StartupEligibilityResponse>(existing);
+        }
+
+        private static StartupAIAnalysisResponse MapToResponse(StartupAIAnalysis a)
         private static StartupAIAnalysisResponse MapToResponse(StartupAIAnalysis a, IMapper mapper)
         {
             var parsedAnalysis = DeserializeAnalysisJson(a.AnalysisJson);
@@ -205,6 +259,28 @@ namespace AISEP.BLL.Services.AI
                 new ScoreBreakdownItem { Component = "Investment", Weight = 0.05, Score = investment, WeightedContribution = Math.Round(0.05 * investment * 100, 2) },
                 new ScoreBreakdownItem { Component = "Other", Weight = 0.05, Score = other, WeightedContribution = Math.Round(0.05 * other * 100, 2) }
             ];
+        }
+
+        private static string NormalizeEligibilityReason(string? reason)
+        {
+            if (string.IsNullOrWhiteSpace(reason))
+            {
+                return "Dự án chưa có đủ dữ liệu rõ ràng để kết luận theo bộ tiêu chí IDEO và Lean Startup.";
+            }
+
+            var normalized = Regex.Replace(reason.Trim(), @"\s+", " ");
+            var sentences = Regex.Matches(normalized, @"[^.!?]+[.!?]?")
+                .Select(m => m.Value.Trim())
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Take(3)
+                .ToList();
+
+            if (sentences.Count == 0)
+            {
+                return "Dự án chưa có đủ dữ liệu rõ ràng để kết luận theo bộ tiêu chí IDEO và Lean Startup.";
+            }
+
+            return string.Join(" ", sentences);
         }
     }
 }

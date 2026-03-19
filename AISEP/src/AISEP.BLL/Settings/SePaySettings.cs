@@ -4,6 +4,7 @@ namespace AISEP.BLL.Settings
     {
         public string WebhookSecret { get; set; } = string.Empty;
         public string PaymentPrefix { get; set; } = "AISEP";
+        public int PendingTimeoutMinutes { get; set; } = 30;
 
         // VietQR bank info
         public string BankCode { get; set; } = string.Empty;       // e.g. "MB", "VCB", "ACB"

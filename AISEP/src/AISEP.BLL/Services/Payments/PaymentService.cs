@@ -48,7 +48,7 @@ namespace AISEP.BLL.Services.Payments
 
                 amount = package.Price;
             }
-            else // Booking
+            else
             {
                 var booking = await _unitOfWork.Bookings.GetPendingByIdAndCustomerAsync(request.ReferenceId, userId);
 
@@ -58,45 +58,53 @@ namespace AISEP.BLL.Services.Payments
                 amount = booking.Price;
             }
 
-            // Return existing pending transaction if one already exists
+            // Return existing pending transaction if one already exists.
+            // If the pending transaction is too old, mark it as Failed and create a new one.
             var existingTransaction = await _unitOfWork.Transactions
                 .GetPendingByUserAndReferenceAsync(userId, referenceType, request.ReferenceId);
 
             if (existingTransaction is not null)
             {
-                return new CheckoutResponse
+                if (IsPendingExpired(existingTransaction))
                 {
-                    TransactionId = existingTransaction.TransactionId,
-                    Amount        = existingTransaction.Amount,
-                    PaymentCode   = existingTransaction.PaymentCode!,
-                    QrCodeUrl     = BuildQrCodeUrl(existingTransaction.Amount, existingTransaction.PaymentCode!)
-                };
+                    existingTransaction.Status = TransactionStatus.Failed;
+                    _unitOfWork.Transactions.Update(existingTransaction);
+                    await _unitOfWork.SaveChangesAsync();
+                }
+                else
+                {
+                    return new CheckoutResponse
+                    {
+                        TransactionId = existingTransaction.TransactionId,
+                        Amount = existingTransaction.Amount,
+                        PaymentCode = existingTransaction.PaymentCode!,
+                        QrCodeUrl = BuildQrCodeUrl(existingTransaction.Amount, existingTransaction.PaymentCode!)
+                    };
+                }
             }
 
-            // Create new transaction
             var transaction = new Transaction
             {
-                UserId        = userId,
-                Amount        = amount,
-                Type          = TransactionType.Payment,
-                Status        = TransactionStatus.Pending,
+                UserId = userId,
+                Amount = amount,
+                Type = TransactionType.Payment,
+                Status = TransactionStatus.Pending,
                 ReferenceType = referenceType,
-                ReferenceId   = request.ReferenceId
+                ReferenceId = request.ReferenceId
             };
 
             await _unitOfWork.Transactions.AddAsync(transaction);
             await _unitOfWork.SaveChangesAsync();
 
-            // Generate PaymentCode = Prefix + TransactionId (requires the ID from DB)
             transaction.PaymentCode = $"{_sePaySettings.PaymentPrefix}{transaction.TransactionId}";
             await _unitOfWork.SaveChangesAsync();
 
             return new CheckoutResponse
             {
                 TransactionId = transaction.TransactionId,
-                Amount        = transaction.Amount,
-                PaymentCode   = transaction.PaymentCode,
-                QrCodeUrl     = BuildQrCodeUrl(transaction.Amount, transaction.PaymentCode)
+                Amount = transaction.Amount,
+                PaymentCode = transaction.PaymentCode,
+                QrCodeUrl = BuildQrCodeUrl(transaction.Amount, transaction.PaymentCode)
             };
         }
 
@@ -107,43 +115,58 @@ namespace AISEP.BLL.Services.Payments
             if (transaction is null)
                 throw new KeyNotFoundException("Transaction not found.");
 
+            // Auto-expire old pending transactions when clients poll status.
+            if (transaction.Status == TransactionStatus.Pending && IsPendingExpired(transaction))
+            {
+                transaction.Status = TransactionStatus.Failed;
+                _unitOfWork.Transactions.Update(transaction);
+                await _unitOfWork.SaveChangesAsync();
+            }
+
             return new TransactionStatusResponse
             {
                 TransactionId = transaction.TransactionId,
-                Status        = transaction.Status.ToString(),
-                PaymentCode   = transaction.PaymentCode ?? string.Empty,
-                Amount        = transaction.Amount
+                Status = transaction.Status.ToString(),
+                PaymentCode = transaction.PaymentCode ?? string.Empty,
+                Amount = transaction.Amount
             };
         }
 
         public async Task ProcessSePayWebhookAsync(SePayWebhookRequest request)
         {
-            var paymentCode = ExtractPaymentCode(request.Content);
+            var paymentCode = ExtractPaymentCode(request);
 
             if (string.IsNullOrEmpty(paymentCode))
-                throw new KeyNotFoundException("Transaction not found or already processed.");
+                throw new KeyNotFoundException("Không tìm thấy PaymentCode trong payload webhook.");
 
             var transaction = await _unitOfWork.Transactions.GetPendingByPaymentCodeAsync(paymentCode);
 
             if (transaction is null)
-                throw new KeyNotFoundException("Transaction not found or already processed.");
+            {
+                var anyTransaction = await _unitOfWork.Transactions.GetByPaymentCodeAsync(paymentCode);
+
+                // Idempotency: webhook can be sent more than once.
+                if (anyTransaction is not null && anyTransaction.Status == TransactionStatus.Completed)
+                {
+                    return;
+                }
+
+                throw new KeyNotFoundException("Transaction không tồn tại hoặc không còn ở trạng thái Pending.");
+            }
 
             if (request.TransferAmount < transaction.Amount)
                 throw new InvalidOperationException("Transfer amount is less than required.");
 
-            // Mark transaction as Completed
-            transaction.Status             = TransactionStatus.Completed;
+            transaction.Status = TransactionStatus.Completed;
             transaction.SepayTransactionId = request.ReferenceCode;
-            transaction.PaymentContent     = request.Content;
-            transaction.CompletedAt        = DateTime.UtcNow;
+            transaction.PaymentContent = request.Content
+                                      ?? request.Description
+                                      ?? request.Code;
+            transaction.CompletedAt = DateTime.UtcNow;
 
-            // Activate the purchased service
             await ActivateServiceAsync(transaction);
-
             await _unitOfWork.SaveChangesAsync();
         }
-
-        // ── Post-Payment Activation ──────────────────────────────────────
 
         private async Task ActivateServiceAsync(Transaction transaction)
         {
@@ -172,16 +195,23 @@ namespace AISEP.BLL.Services.Payments
             if (package is null)
                 throw new InvalidOperationException($"Package {transaction.ReferenceId} not found.");
 
+            // Prevent overlap: extension starts at max(current active end, now).
+            var now = DateTime.UtcNow;
+            var latestActive = await _unitOfWork.Subscriptions.GetLatestActiveAsync(transaction.UserId);
+            var startDate = latestActive is not null && latestActive.EndDate > now
+                ? latestActive.EndDate
+                : now;
+            var endDate = startDate.AddMonths(package.DurationMonths);
+
             await _unitOfWork.Subscriptions.AddAsync(new Subscription
             {
                 PackageId = package.PackageId,
-                UserId    = transaction.UserId,
-                StartDate = DateTime.UtcNow,
-                EndDate   = DateTime.UtcNow.AddMonths(package.DurationMonths),
-                Status    = SubscriptionStatus.Active
+                UserId = transaction.UserId,
+                StartDate = startDate,
+                EndDate = endDate,
+                Status = SubscriptionStatus.Active
             });
 
-            // Set User as Premium
             var user = await _unitOfWork.Users.GetByIdAsync(transaction.UserId);
             if (user is not null)
             {
@@ -197,30 +227,25 @@ namespace AISEP.BLL.Services.Payments
             if (booking is null)
                 throw new InvalidOperationException($"Booking {transaction.ReferenceId} not found.");
 
-            // Only confirm if booking is still Pending
             if (booking.Status != BookingStatus.Pending)
                 return;
 
-            // Update booking status to Confirmed
             booking.Status = BookingStatus.Confirmed;
 
-            // Credit Advisor's wallet
             if (booking.Advisor?.Wallet is not null)
             {
                 booking.Advisor.Wallet.Balance += transaction.Amount;
 
                 await _unitOfWork.WalletTransactions.AddAsync(new WalletTransaction
                 {
-                    WalletId  = booking.Advisor.Wallet.WalletId,
-                    Amount    = transaction.Amount,
-                    Type      = WalletTransactionType.Deposit,
-                    Status    = WalletTransactionStatus.Completed,
+                    WalletId = booking.Advisor.Wallet.WalletId,
+                    Amount = transaction.Amount,
+                    Type = WalletTransactionType.Deposit,
+                    Status = WalletTransactionStatus.Completed,
                     CreatedAt = DateTime.UtcNow
                 });
             }
         }
-
-        // ── Helpers ──────────────────────────────────────────────────────
 
         private string BuildQrCodeUrl(decimal amount, string paymentCode)
         {
@@ -228,13 +253,44 @@ namespace AISEP.BLL.Services.Payments
             return $"https://img.vietqr.io/image/{_sePaySettings.BankCode}-{_sePaySettings.AccountNumber}-compact2.jpg?amount={amount:0}&addInfo={paymentCode}&accountName={accountName}";
         }
 
-        private string? ExtractPaymentCode(string? content)
+        private bool IsPendingExpired(Transaction transaction)
         {
-            if (string.IsNullOrWhiteSpace(content))
+            var timeoutMinutes = _sePaySettings.PendingTimeoutMinutes > 0
+                ? _sePaySettings.PendingTimeoutMinutes
+                : 30;
+
+            return transaction.CreatedAt <= DateTime.UtcNow.AddMinutes(-timeoutMinutes);
+        }
+
+        private string? ExtractPaymentCode(SePayWebhookRequest request)
+        {
+            var candidates = new[]
+            {
+                request.Content,
+                request.Description,
+                request.Code,
+                request.ReferenceCode
+            };
+
+            foreach (var candidate in candidates)
+            {
+                var extracted = ExtractPaymentCodeFromText(candidate);
+                if (!string.IsNullOrWhiteSpace(extracted))
+                {
+                    return extracted;
+                }
+            }
+
+            return null;
+        }
+
+        private string? ExtractPaymentCodeFromText(string? text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
                 return null;
 
             var pattern = $@"(?i){Regex.Escape(_sePaySettings.PaymentPrefix)}\s*(\d+)";
-            var match   = Regex.Match(content, pattern);
+            var match = Regex.Match(text, pattern);
 
             if (!match.Success)
                 return null;

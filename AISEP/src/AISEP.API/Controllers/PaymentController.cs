@@ -20,7 +20,6 @@ namespace AISEP.API.Controllers
             _currentUserService = currentUserService;
         }
 
-        // List all available packages for Subscription checkout
         [HttpGet("packages")]
         [Authorize]
         public async Task<IActionResult> GetPackages()
