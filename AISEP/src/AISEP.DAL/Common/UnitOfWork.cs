@@ -3,6 +3,7 @@ using AISEP.DAL.Repositories.Advisors;
 using AISEP.DAL.Repositories.Bookings;
 using AISEP.DAL.Repositories.Chats;
 using AISEP.DAL.Repositories.Documents;
+using AISEP.DAL.Repositories.InvestorAIAnalyses;
 using AISEP.DAL.Repositories.Packages;
 using AISEP.DAL.Repositories.Projects;
 using AISEP.DAL.Repositories.RefreshTokens;
@@ -33,6 +34,7 @@ namespace AISEP.DAL.Common
         private IProjectRepository?           _projects;
         private IStartupRepository?           _startups;
         private IInvestorRepository?          _investors;
+        private IInvestorAIAnalysisRepository? _investorAIAnalyses;
         private IUserRepository?              _users;
         private IStartupAIAnalysisRepository? _startupAIAnalyses;
         private ITransactionRepository?       _transactions;
@@ -53,6 +55,7 @@ namespace AISEP.DAL.Common
         public IProjectRepository           Projects           => _projects           ??= new ProjectRepository(_context);
         public IStartupRepository           Startups           => _startups           ??= new StartupRepository(_context);
         public IInvestorRepository          Investors          => _investors          ??= new InvestorRepository(_context);
+        public IInvestorAIAnalysisRepository InvestorAIAnalyses => _investorAIAnalyses ??= new InvestorAIAnalysisRepository(_context);
         public IUserRepository              Users              => _users              ??= new UserRepository(_context);
         public IStartupAIAnalysisRepository StartupAIAnalyses  => _startupAIAnalyses ??= new StartupAIAnalysisRepository(_context);
         public IAdvisorsRepository          Advisors           => _advisors           ??= new AdvisorRepository(_context);

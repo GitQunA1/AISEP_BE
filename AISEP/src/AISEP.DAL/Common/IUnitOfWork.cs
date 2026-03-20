@@ -2,6 +2,7 @@ using AISEP.DAL.Repositories.Advisors;
 using AISEP.DAL.Repositories.Bookings;
 using AISEP.DAL.Repositories.Chats;
 using AISEP.DAL.Repositories.Documents;
+using AISEP.DAL.Repositories.InvestorAIAnalyses;
 using AISEP.DAL.Repositories.Packages;
 using AISEP.DAL.Repositories.Projects;
 using AISEP.DAL.Repositories.RefreshTokens;
@@ -27,6 +28,7 @@ namespace AISEP.DAL.Common
         IProjectRepository           Projects           { get; }
         IStartupRepository           Startups           { get; }
         IInvestorRepository          Investors          { get; }
+        IInvestorAIAnalysisRepository InvestorAIAnalyses { get; }
         IUserRepository              Users              { get; }
         IStartupAIAnalysisRepository StartupAIAnalyses  { get; }
         IAdvisorsRepository          Advisors           { get; }

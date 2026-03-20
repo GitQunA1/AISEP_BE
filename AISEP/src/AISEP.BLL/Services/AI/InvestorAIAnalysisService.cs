@@ -1,135 +1,121 @@
-﻿using System.Text.Json;
-using AISEP.DAL.Common;
+using System.Text.Json;
 using AISEP.BLL.DTOs.Responses;
+using AISEP.BLL.Services.Users;
+using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using AutoMapper;
-using System.Text.RegularExpressions;
 
 namespace AISEP.BLL.Services.AI
 {
-    public class StartupAIAnalysisService : IStartupAIAnalysisService
+    public class InvestorAIAnalysisService : IInvestorAIAnalysisService
     {
-        private readonly IUnitOfWork      _unitOfWork;
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IUserService _userService;
         private readonly IGeminiAiService _geminiAiService;
-        private readonly IMapper           _mapper;
+        private readonly IMapper _mapper;
 
-        public StartupAIAnalysisService(IUnitOfWork unitOfWork, IGeminiAiService geminiAiService, IMapper mapper)
+        public InvestorAIAnalysisService(
+            IUnitOfWork unitOfWork,
+            IUserService userService,
+            IGeminiAiService geminiAiService,
+            IMapper mapper)
         {
-            _unitOfWork      = unitOfWork;
+            _unitOfWork = unitOfWork;
+            _userService = userService;
             _geminiAiService = geminiAiService;
-            _mapper          = mapper;
+            _mapper = mapper;
         }
 
-        public async Task<StartupAIAnalysisResponse> AnalyzeProjectAsync(int projectId)
+        public async Task<InvestorAIAnalysisResponse> AnalyzeProjectForInvestorAsync(int projectId)
         {
+            var userId = _userService.GetUserId();
+            var investor = await _unitOfWork.Investors.GetByUserIdAsync(userId)
+                ?? throw new KeyNotFoundException("Investor profile not found.");
+
             var project = await _unitOfWork.Projects.GetByIdAsync(projectId)
                 ?? throw new KeyNotFoundException($"Project {projectId} not found.");
-            if (project.Status != ProjectStatus.Draft)
+            if (project.Status != ProjectStatus.Approved)
             {
-                throw new InvalidOperationException("AI analysis is only available when project status is Draft.");
+                throw new InvalidOperationException("Investor AI analysis is only available when project status is Approved.");
             }
 
             var documents = (await _unitOfWork.Documents.GetByProjectIdAsync(projectId)).ToList();
-
-            var result      = await _geminiAiService.AnalyzeProjectAsync(project, documents);
+            var result = await _geminiAiService.AnalyzeProjectForInvestorAsync(project, documents);
             NormalizeAnalysisResult(result);
             result.PotentialScore = CalculatePotentialScore(result);
-            var analysisJson = JsonSerializer.Serialize(result);
 
-            var existing = await _unitOfWork.StartupAIAnalyses.GetByProjectIdAsync(projectId);
+            var analysisJson = JsonSerializer.Serialize(result);
+            var existing = await _unitOfWork.InvestorAIAnalyses
+                .GetByInvestorAndProjectAsync(investor.InvestorId, projectId);
 
             if (existing is not null)
             {
-                existing.PotentialScore    = result.PotentialScore;
-                existing.ChaosScore        = result.ChaosScore;
-                existing.AnalysisJson      = analysisJson;
-                existing.IsEligibleStartup = null;
-                existing.EligibilityReason = null;
-                existing.CreatedAt         = DateTime.UtcNow;
-                _unitOfWork.StartupAIAnalyses.Update(existing);
+                existing.AnalysisJson = analysisJson;
+                existing.CreatedAt = DateTime.UtcNow;
+                _unitOfWork.InvestorAIAnalyses.Update(existing);
             }
             else
             {
-                existing = new StartupAIAnalysis
+                existing = new InvestorAIAnalysis
                 {
-                    ProjectId         = projectId,
-                    PotentialScore    = result.PotentialScore,
-                    ChaosScore        = result.ChaosScore,
-                    AnalysisJson      = analysisJson,
-                    IsEligibleStartup = null,
-                    EligibilityReason = null,
-                    CreatedAt         = DateTime.UtcNow
+                    InvestorId = investor.InvestorId,
+                    ProjectId = projectId,
+                    AnalysisJson = analysisJson,
+                    CreatedAt = DateTime.UtcNow
                 };
-                await _unitOfWork.StartupAIAnalyses.AddAsync(existing);
+                await _unitOfWork.InvestorAIAnalyses.AddAsync(existing);
             }
 
             await _unitOfWork.SaveChangesAsync();
-
             return MapToResponse(existing, _mapper);
         }
 
-        public async Task<StartupAIAnalysisResponse?> GetAnalysisAsync(int projectId)
+        public async Task<InvestorAIAnalysisResponse?> GetAnalysisAsync(int projectId)
         {
-            var analysis = await _unitOfWork.StartupAIAnalyses.GetByProjectIdAsync(projectId);
+            var userId = _userService.GetUserId();
+            var investor = await _unitOfWork.Investors.GetByUserIdAsync(userId)
+                ?? throw new KeyNotFoundException("Investor profile not found.");
+
+            var analysis = await _unitOfWork.InvestorAIAnalyses
+                .GetByInvestorAndProjectAsync(investor.InvestorId, projectId);
+
             return analysis is null ? null : MapToResponse(analysis, _mapper);
         }
 
-        public async Task<StartupEligibilityResponse> EvaluateEligibilityAsync(int projectId)
+        private static InvestorAIAnalysisResponse MapToResponse(InvestorAIAnalysis analysis, IMapper mapper)
         {
-            var project = await _unitOfWork.Projects.GetByIdAsync(projectId)
-                ?? throw new KeyNotFoundException($"Project {projectId} not found.");
-
-            if (project.Status != ProjectStatus.Pending)
-            {
-                throw new InvalidOperationException("Chỉ được đánh giá eligibility khi dự án đang ở trạng thái Pending.");
-            }
-
-            var documents = (await _unitOfWork.Documents.GetByProjectIdAsync(projectId)).ToList();
-            var result = await _geminiAiService.EvaluateStartupEligibilityAsync(project, documents);
-
-            var normalizedReason = NormalizeEligibilityReason(result.EligibilityReason);
-            var eligibilityJson = JsonSerializer.Serialize(new StartupEligibilityResponse
-            {
-                IsEligibleStartup = result.IsEligibleStartup,
-                EligibilityReason = normalizedReason
-            });
-
-            var existing = await _unitOfWork.StartupAIAnalyses.GetByProjectIdAsync(projectId);
-
-            if (existing is not null)
-            {
-                existing.IsEligibleStartup = result.IsEligibleStartup;
-                existing.EligibilityReason = normalizedReason;
-                existing.AnalysisJson = eligibilityJson;
-                existing.CreatedAt = DateTime.UtcNow;
-                _unitOfWork.StartupAIAnalyses.Update(existing);
-            }
-            else
-            {
-                existing = new StartupAIAnalysis
-                {
-                    ProjectId = projectId,
-                    IsEligibleStartup = result.IsEligibleStartup,
-                    EligibilityReason = normalizedReason,
-                    AnalysisJson = eligibilityJson,
-                    CreatedAt = DateTime.UtcNow
-                };
-
-                await _unitOfWork.StartupAIAnalyses.AddAsync(existing);
-            }
-
-            await _unitOfWork.SaveChangesAsync();
-            return _mapper.Map<StartupEligibilityResponse>(existing);
+            var parsed = DeserializeAnalysisJson(analysis.AnalysisJson);
+            var response = mapper.Map<InvestorAIAnalysisResponse>(analysis);
+            response.Analysis = parsed;
+            response.PotentialScore = parsed?.PotentialScore;
+            response.ChaosScore = parsed?.ChaosScore;
+            response.ScoreBreakdown = BuildBreakdown(parsed);
+            response.InvestmentVerdict = parsed?.InvestmentVerdict ?? string.Empty;
+            response.RiskFlags = parsed?.RiskFlags ?? [];
+            response.DealBreakers = parsed?.DealBreakers ?? [];
+            response.DueDiligenceQuestions = parsed?.DueDiligenceQuestions ?? [];
+            response.InvestorNextStep = parsed?.InvestorNextStep ?? string.Empty;
+            return response;
         }
 
-        private static StartupAIAnalysisResponse MapToResponse(StartupAIAnalysis a, IMapper mapper)
+        private static GeminiAnalysisResult? DeserializeAnalysisJson(string? analysisJson)
         {
-            var parsedAnalysis = DeserializeAnalysisJson(a.AnalysisJson);
-            var response = mapper.Map<StartupAIAnalysisResponse>(a);
-            response.Analysis = parsedAnalysis;
-            response.ScoreBreakdown = BuildBreakdown(parsedAnalysis);
-            return response;
+            if (string.IsNullOrWhiteSpace(analysisJson))
+            {
+                return null;
+            }
+
+            try
+            {
+                return JsonSerializer.Deserialize<GeminiAnalysisResult>(
+                    analysisJson,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private static int CalculatePotentialScore(GeminiAnalysisResult result)
@@ -145,8 +131,12 @@ namespace AISEP.BLL.Services.AI
                 0.05 * Normalize(GetComponentScore(result.Investment, result.InvestmentScore)) +
                 0.05 * Normalize(GetComponentScore(result.Other, result.OtherScore));
 
-            // 100 = market average (all component scores = 1.0)
             return (int)Math.Round(weighted * 100, MidpointRounding.AwayFromZero);
+        }
+
+        private static double GetComponentScore(ComponentEvaluation? component, double fallbackScore)
+        {
+            return component?.Score > 0 ? component.Score : fallbackScore;
         }
 
         private static void NormalizeAnalysisResult(GeminiAnalysisResult result)
@@ -156,10 +146,7 @@ namespace AISEP.BLL.Services.AI
 
             void NormalizeComponent(ComponentEvaluation? component, Action<double> setLegacyScore)
             {
-                if (component is null)
-                {
-                    return;
-                }
+                if (component is null) return;
 
                 component.Score = ClampScore(component.Score);
                 component.Confidence = ClampConfidence(component.Confidence);
@@ -167,7 +154,6 @@ namespace AISEP.BLL.Services.AI
                 component.MissingData ??= [];
                 component.Reason ??= string.Empty;
 
-                // Guardrail: score cao nhưng thiếu bằng chứng => giảm về mức thận trọng
                 if (component.Score > 1.0 && component.Evidence.Count == 0)
                 {
                     component.Score = 0.9;
@@ -199,31 +185,12 @@ namespace AISEP.BLL.Services.AI
             result.Strengths ??= [];
             result.Weaknesses ??= [];
             result.Recommendations ??= [];
+            result.RiskFlags ??= [];
+            result.DealBreakers ??= [];
+            result.DueDiligenceQuestions ??= [];
+            result.InvestmentVerdict ??= string.Empty;
+            result.InvestorNextStep ??= string.Empty;
             result.Summary ??= string.Empty;
-        }
-
-        private static double GetComponentScore(ComponentEvaluation? component, double fallbackScore)
-        {
-            return component?.Score > 0 ? component.Score : fallbackScore;
-        }
-
-        private static GeminiAnalysisResult? DeserializeAnalysisJson(string? analysisJson)
-        {
-            if (string.IsNullOrWhiteSpace(analysisJson))
-            {
-                return null;
-            }
-
-            try
-            {
-                return JsonSerializer.Deserialize<GeminiAnalysisResult>(
-                    analysisJson,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            }
-            catch
-            {
-                return null;
-            }
         }
 
         private static List<ScoreBreakdownItem> BuildBreakdown(GeminiAnalysisResult? analysis)
@@ -254,28 +221,6 @@ namespace AISEP.BLL.Services.AI
                 new ScoreBreakdownItem { Component = "Investment", Weight = 0.05, Score = investment, WeightedContribution = Math.Round(0.05 * investment * 100, 2) },
                 new ScoreBreakdownItem { Component = "Other", Weight = 0.05, Score = other, WeightedContribution = Math.Round(0.05 * other * 100, 2) }
             ];
-        }
-
-        private static string NormalizeEligibilityReason(string? reason)
-        {
-            if (string.IsNullOrWhiteSpace(reason))
-            {
-                return "Dự án chưa có đủ dữ liệu rõ ràng để kết luận theo bộ tiêu chí IDEO và Lean Startup.";
-            }
-
-            var normalized = Regex.Replace(reason.Trim(), @"\s+", " ");
-            var sentences = Regex.Matches(normalized, @"[^.!?]+[.!?]?")
-                .Select(m => m.Value.Trim())
-                .Where(s => !string.IsNullOrWhiteSpace(s))
-                .Take(3)
-                .ToList();
-
-            if (sentences.Count == 0)
-            {
-                return "Dự án chưa có đủ dữ liệu rõ ràng để kết luận theo bộ tiêu chí IDEO và Lean Startup.";
-            }
-
-            return string.Join(" ", sentences);
         }
     }
 }
