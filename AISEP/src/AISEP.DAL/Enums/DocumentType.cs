@@ -4,7 +4,10 @@
     {
         PitchDeck,
         BusinessPlan,
+        Financial,
+        Legal,
+        Technical,
+        Marketing,
         Other
-     
     }
 }
