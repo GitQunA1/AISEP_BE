@@ -46,10 +46,6 @@ namespace AISEP.API.Controllers
             {
                 return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not Found", 404));
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
-            }
         }
 
        
@@ -65,10 +61,6 @@ namespace AISEP.API.Controllers
             catch (KeyNotFoundException ex)
             {
                 return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not Found", 404));
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
             }
         }
 
@@ -86,10 +78,6 @@ namespace AISEP.API.Controllers
             catch (InvalidOperationException ex)
             {
                 return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Conflict", 409));
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
             }
         }
 
@@ -111,10 +99,6 @@ namespace AISEP.API.Controllers
             {
                 return StatusCode(403, ApiResponse<object>.ErrorResponse(ex.Message, "Forbidden", 403));
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
-            }
         }
 
 
@@ -135,10 +119,6 @@ namespace AISEP.API.Controllers
             {
                 return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Conflict", 409));
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
-            }
         }
 
         [HttpPatch("{advisorId:int}/reject")]
@@ -157,10 +137,6 @@ namespace AISEP.API.Controllers
             catch (InvalidOperationException ex)
             {
                 return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Conflict", 409));
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
             }
         }
 

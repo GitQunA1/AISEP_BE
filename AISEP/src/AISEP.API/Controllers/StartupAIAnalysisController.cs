@@ -73,10 +73,6 @@ namespace AISEP.API.Controllers
             {
                 return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Conflict", 409));
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal Server Error", 500));
-            }
         }
     }
 }
