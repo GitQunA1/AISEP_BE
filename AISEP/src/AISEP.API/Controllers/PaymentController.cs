@@ -24,15 +24,8 @@ namespace AISEP.API.Controllers
         [Authorize]
         public async Task<IActionResult> GetPackages()
         {
-            try
-            {
-                var result = await _paymentService.GetPackagesAsync();
-                return Ok(ApiResponse<object>.SuccessResponse(result, "Packages retrieved successfully"));
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal server error", 500));
-            }
+            var result = await _paymentService.GetPackagesAsync();
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Packages retrieved successfully"));
         }
 
         // Create transaction + return VietQR code URL
@@ -54,10 +47,6 @@ namespace AISEP.API.Controllers
             {
                 return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message, "Bad request", 400));
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal server error", 500));
-            }
         }
 
         // FE polls this every 3-5s to check payment status
@@ -74,10 +63,6 @@ namespace AISEP.API.Controllers
             catch (KeyNotFoundException ex)
             {
                 return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not found", 404));
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal server error", 500));
             }
         }
 
@@ -97,10 +82,6 @@ namespace AISEP.API.Controllers
             catch (InvalidOperationException ex)
             {
                 return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message, "Bad request", 400));
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ApiResponse<object>.ErrorResponse(ex.Message, "Internal server error", 500));
             }
         }
     }

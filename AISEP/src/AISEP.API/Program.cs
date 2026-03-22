@@ -22,6 +22,7 @@ using AISEP.BLL.Services.Payments;
 using AISEP.BLL.Services.BackgroundServices;
 using AISEP.BLL.Settings;
 using AISEP.BLL.Validators.Auth;
+using AISEP.API.Middleware;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -33,6 +34,7 @@ using Microsoft.OpenApi.Models;
 using Sieve.Models;
 using Sieve.Services;
 using System.Text;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -123,6 +125,46 @@ builder.Services.AddAuthentication(options =>
  IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings?.SecretKey ?? "")),
   ClockSkew = TimeSpan.Zero
    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnChallenge = async context =>
+        {
+            context.HandleResponse();
+
+            if (context.Response.HasStarted)
+            {
+                return;
+            }
+
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            context.Response.ContentType = "application/json";
+
+            var response = ApiResponse<object>.ErrorResponse(
+                "Unauthorized access. Please provide a valid token.",
+                "Unauthorized",
+                401);
+
+            await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+        },
+        OnForbidden = async context =>
+        {
+            if (context.Response.HasStarted)
+            {
+                return;
+            }
+
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            context.Response.ContentType = "application/json";
+
+            var response = ApiResponse<object>.ErrorResponse(
+                "You do not have permission to access this resource.",
+                "Forbidden",
+                403);
+
+            await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+        }
+    };
 });
 
 // Add Unit of Work
@@ -205,6 +247,8 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseHttpsRedirection();
 

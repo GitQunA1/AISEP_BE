@@ -1,5 +1,6 @@
 ﻿using AISEP.BLL.Settings;
 using Microsoft.Extensions.Options;
+using Nethereum.ABI.FunctionEncoding;
 using Nethereum.Hex.HexTypes;
 using Nethereum.Web3;
 using Nethereum.Web3.Accounts;
@@ -70,7 +71,7 @@ namespace AISEP.BLL.Services.Blockchain
             );
 
             if (receipt.Status.Value == 0)
-                throw new Exception("Blockchain transaction failed (reverted).");
+                throw new InvalidOperationException("Blockchain transaction failed (reverted).");
 
             return receipt.TransactionHash;
         }
@@ -81,9 +82,21 @@ namespace AISEP.BLL.Services.Blockchain
             var contract = web3.Eth.GetContract(_contractAbi, _settings.ContractAddress);
 
             var verifyFunction = contract.GetFunction("verifyDocument");
-            var result = await verifyFunction.CallDeserializingToObjectAsync<VerifyDocumentOutput>(fileHash);
+            try
+            {
+                var result = await verifyFunction.CallDeserializingToObjectAsync<VerifyDocumentOutput>(fileHash);
+                return ((int)result.EntityId, (long)result.Timestamp);
+            }
+            catch (SmartContractRevertException ex)
+            {
+                if (ex.Message.Contains("Document hash not found", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Hash chưa tồn tại trên chain -> trả về "not found" an toàn.
+                    return (0, 0);
+                }
 
-            return ((int)result.EntityId, (long)result.Timestamp);
+                throw new InvalidOperationException($"Blockchain verify failed: {ex.Message}");
+            }
         }
     }
 }

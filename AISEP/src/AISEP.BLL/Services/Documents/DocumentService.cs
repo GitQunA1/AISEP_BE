@@ -7,6 +7,7 @@ using AISEP.DAL.Enums;
 using AISEP.BLL.Services.Blockchain;
 using AISEP.BLL.Services.Storage;
 using AutoMapper;
+using Nethereum.ABI.FunctionEncoding;
 using Sieve.Models;
 using Sieve.Services;
 
@@ -57,11 +58,35 @@ namespace AISEP.BLL.Services.Documents
                 throw new InvalidOperationException("Tài liệu này đã được upload trước đó. Vui lòng kiểm tra lại.");
 
             // Kiểm tra hash đã tồn tại on-chain chưa để tránh bypass khi dữ liệu DB bị xóa.
-            var (_, timestampOnChain) = await _blockchainService.VerifyDocumentAsync(fileHash);
+            long timestampOnChain;
+            try
+            {
+                (_, timestampOnChain) = await _blockchainService.VerifyDocumentAsync(fileHash);
+            }
+            catch (SmartContractRevertException ex)
+            {
+                if (ex.Message.Contains("Document hash not found", StringComparison.OrdinalIgnoreCase))
+                {
+                    timestampOnChain = 0;
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Không thể kiểm tra hash trên blockchain: {ex.Message}");
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Không thể kiểm tra hash trên blockchain: {ex.Message}");
+            }
+
             if (timestampOnChain > 0)
             {
                 throw new InvalidOperationException(
-                    "Tài liệu này đã từng được đăng ký trên blockchain trước đó. Không thể upload lại cùng nội dung.");
+                    "File đã tồn tại trên hệ thống (đã được đăng ký trên blockchain). Không thể upload lại cùng nội dung.");
             }
 
             var fileUrl = await _storageService.UploadFileAsync(request.File);
