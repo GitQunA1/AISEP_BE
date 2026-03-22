@@ -1,4 +1,5 @@
 ﻿using AISEP.BLL.Helpers;
+using AISEP.BLL.Exceptions;
 using AISEP.BLL.Services.AI;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,6 +20,7 @@ namespace AISEP.API.Controllers
 
        
         [HttpPost("{projectId:int}/analyze")]
+        [Authorize(Roles = "Startup")]
         public async Task<IActionResult> Analyze(int projectId)
         {
             try
@@ -34,6 +36,10 @@ namespace AISEP.API.Controllers
             {
                 return StatusCode(502, ApiResponse<object>.ErrorResponse(ex.Message, "AI Service Error", 502));
             }
+            catch (ForbiddenAccessException ex)
+            {
+                return StatusCode(403, ApiResponse<object>.ErrorResponse(ex.Message, "Forbidden", 403));
+            }
             catch (InvalidOperationException ex)
             {
                 return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Conflict", 409));
@@ -42,13 +48,25 @@ namespace AISEP.API.Controllers
 
       
         [HttpGet("{projectId:int}")]
+        [Authorize(Roles = "Startup")]
         public async Task<IActionResult> GetAnalysis(int projectId)
         {
-            var result = await _analysisService.GetAnalysisAsync(projectId);
-            if (result is null)
-                return NotFound(ApiResponse<object>.ErrorResponse("Analysis not found.", "Not found", 404));
+            try
+            {
+                var result = await _analysisService.GetAnalysisAsync(projectId);
+                if (result is null)
+                    return NotFound(ApiResponse<object>.ErrorResponse("Analysis not found.", "Not found", 404));
 
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not found", 404));
+            }
+            catch (ForbiddenAccessException ex)
+            {
+                return StatusCode(403, ApiResponse<object>.ErrorResponse(ex.Message, "Forbidden", 403));
+            }
         }
 
         /// Đánh giá startup theo IDEO 3 Lenses + Lean Startup

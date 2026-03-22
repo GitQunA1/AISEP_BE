@@ -1,4 +1,6 @@
 ﻿using System.Text.Json;
+using AISEP.BLL.Exceptions;
+using AISEP.BLL.Services.Users;
 using AISEP.DAL.Common;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.DAL.Entities;
@@ -11,20 +13,25 @@ namespace AISEP.BLL.Services.AI
     public class StartupAIAnalysisService : IStartupAIAnalysisService
     {
         private readonly IUnitOfWork      _unitOfWork;
+        private readonly IUserService     _userService;
         private readonly IGeminiAiService _geminiAiService;
         private readonly IMapper           _mapper;
 
-        public StartupAIAnalysisService(IUnitOfWork unitOfWork, IGeminiAiService geminiAiService, IMapper mapper)
+        public StartupAIAnalysisService(
+            IUnitOfWork unitOfWork,
+            IUserService userService,
+            IGeminiAiService geminiAiService,
+            IMapper mapper)
         {
             _unitOfWork      = unitOfWork;
+            _userService     = userService;
             _geminiAiService = geminiAiService;
             _mapper          = mapper;
         }
 
         public async Task<StartupAIAnalysisResponse> AnalyzeProjectAsync(int projectId)
         {
-            var project = await _unitOfWork.Projects.GetByIdAsync(projectId)
-                ?? throw new KeyNotFoundException($"Project {projectId} not found.");
+            var project = await EnsureProjectBelongsToCurrentStartupAsync(projectId);
             if (project.Status != ProjectStatus.Draft)
             {
                 throw new InvalidOperationException("AI analysis is only available when project status is Draft.");
@@ -71,6 +78,8 @@ namespace AISEP.BLL.Services.AI
 
         public async Task<StartupAIAnalysisResponse?> GetAnalysisAsync(int projectId)
         {
+            await EnsureProjectBelongsToCurrentStartupAsync(projectId);
+
             var analysis = await _unitOfWork.StartupAIAnalyses.GetByProjectIdAsync(projectId);
             return analysis is null ? null : MapToResponse(analysis, _mapper);
         }
@@ -123,6 +132,23 @@ namespace AISEP.BLL.Services.AI
             return _mapper.Map<StartupEligibilityResponse>(existing);
         }
 
+        private async Task<Project> EnsureProjectBelongsToCurrentStartupAsync(int projectId)
+        {
+            var userId = _userService.GetUserId();
+            var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId)
+                ?? throw new KeyNotFoundException("Startup profile not found for this account.");
+
+            var project = await _unitOfWork.Projects.GetByIdAsync(projectId)
+                ?? throw new KeyNotFoundException($"Project {projectId} not found.");
+
+            if (project.StartupId != startup.StartupId)
+            {
+                throw new ForbiddenAccessException("You do not have permission to analyze this project.");
+            }
+
+            return project;
+        }
+
         private static StartupAIAnalysisResponse MapToResponse(StartupAIAnalysis a, IMapper mapper)
         {
             var parsedAnalysis = DeserializeAnalysisJson(a.AnalysisJson);
@@ -145,8 +171,8 @@ namespace AISEP.BLL.Services.AI
                 0.05 * Normalize(GetComponentScore(result.Investment, result.InvestmentScore)) +
                 0.05 * Normalize(GetComponentScore(result.Other, result.OtherScore));
 
-            // 100 = market average (all component scores = 1.0)
-            return (int)Math.Round(weighted * 100, MidpointRounding.AwayFromZero);
+            // Map weighted average from [0..2] to [0..100]
+            return (int)Math.Round((weighted / 2.0) * 100.0, MidpointRounding.AwayFromZero);
         }
 
         private static void NormalizeAnalysisResult(GeminiAnalysisResult result)
@@ -246,13 +272,13 @@ namespace AISEP.BLL.Services.AI
 
             return
             [
-                new ScoreBreakdownItem { Component = "Team", Weight = 0.30, Score = team, WeightedContribution = Math.Round(0.30 * team * 100, 2) },
-                new ScoreBreakdownItem { Component = "Opportunity", Weight = 0.25, Score = opportunity, WeightedContribution = Math.Round(0.25 * opportunity * 100, 2) },
-                new ScoreBreakdownItem { Component = "Product", Weight = 0.15, Score = product, WeightedContribution = Math.Round(0.15 * product * 100, 2) },
-                new ScoreBreakdownItem { Component = "Competition", Weight = 0.10, Score = competition, WeightedContribution = Math.Round(0.10 * competition * 100, 2) },
-                new ScoreBreakdownItem { Component = "Marketing", Weight = 0.10, Score = marketing, WeightedContribution = Math.Round(0.10 * marketing * 100, 2) },
-                new ScoreBreakdownItem { Component = "Investment", Weight = 0.05, Score = investment, WeightedContribution = Math.Round(0.05 * investment * 100, 2) },
-                new ScoreBreakdownItem { Component = "Other", Weight = 0.05, Score = other, WeightedContribution = Math.Round(0.05 * other * 100, 2) }
+                new ScoreBreakdownItem { Component = "Team", Weight = 0.30, Score = team, WeightedContribution = Math.Round(0.30 * (team / 2.0) * 100.0, 2) },
+                new ScoreBreakdownItem { Component = "Opportunity", Weight = 0.25, Score = opportunity, WeightedContribution = Math.Round(0.25 * (opportunity / 2.0) * 100.0, 2) },
+                new ScoreBreakdownItem { Component = "Product", Weight = 0.15, Score = product, WeightedContribution = Math.Round(0.15 * (product / 2.0) * 100.0, 2) },
+                new ScoreBreakdownItem { Component = "Competition", Weight = 0.10, Score = competition, WeightedContribution = Math.Round(0.10 * (competition / 2.0) * 100.0, 2) },
+                new ScoreBreakdownItem { Component = "Marketing", Weight = 0.10, Score = marketing, WeightedContribution = Math.Round(0.10 * (marketing / 2.0) * 100.0, 2) },
+                new ScoreBreakdownItem { Component = "Investment", Weight = 0.05, Score = investment, WeightedContribution = Math.Round(0.05 * (investment / 2.0) * 100.0, 2) },
+                new ScoreBreakdownItem { Component = "Other", Weight = 0.05, Score = other, WeightedContribution = Math.Round(0.05 * (other / 2.0) * 100.0, 2) }
             ];
         }
 
