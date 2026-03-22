@@ -125,6 +125,8 @@ namespace AISEP.BLL.Services.Projects
             project.KeySkills              = dto.KeySkills              ?? project.KeySkills;
             project.TeamExperience         = dto.TeamExperience         ?? project.TeamExperience;
 
+            ValidateByStageLikeCreate(project);
+
             _unitOfWork.Projects.Update(project);
             await _unitOfWork.SaveChangesAsync();
 
@@ -177,6 +179,50 @@ namespace AISEP.BLL.Services.Projects
             project.RejectedById = _userService.GetUserId();
             _unitOfWork.Projects.Update(project);
             await _unitOfWork.SaveChangesAsync();
+        }
+
+        private static void ValidateByStageLikeCreate(Project project)
+        {
+            
+            if (!HasValue(project.ProjectName))
+                throw new InvalidOperationException("Project name is required.");
+            if (!HasValue(project.ShortDescription))
+                throw new InvalidOperationException("Short description is required.");
+            if (!HasValue(project.ProblemStatement))
+                throw new InvalidOperationException("Problem statement is required.");
+            if (!HasValue(project.SolutionDescription))
+                throw new InvalidOperationException("Solution description is required.");
+            if (!HasValue(project.TargetCustomers))
+                throw new InvalidOperationException("Target customers is required.");
+            if (!HasValue(project.TeamMembers))
+                throw new InvalidOperationException("Team members is required.");
+
+            if (project.DevelopmentStage is DevelopmentStage.MVP or DevelopmentStage.Growth)
+            {
+                if (!HasValue(project.UniqueValueProposition))
+                    throw new InvalidOperationException("Unique value proposition is required for MVP and Growth stages.");
+                if (!HasValue(project.BusinessModel))
+                    throw new InvalidOperationException("Business model is required for MVP and Growth stages.");
+                if (!HasValue(project.KeySkills))
+                    throw new InvalidOperationException("Key skills are required for MVP and Growth stages.");
+                if (!HasValue(project.Competitors))
+                    throw new InvalidOperationException("Competitors are required for MVP and Growth stages.");
+            }
+
+            if (project.DevelopmentStage == DevelopmentStage.Growth)
+            {
+                if (project.Revenue is null || project.Revenue <= 0)
+                    throw new InvalidOperationException("Revenue must be greater than 0 for Growth stage.");
+                if (project.MarketSize is null || project.MarketSize <= 0)
+                    throw new InvalidOperationException("Market size must be greater than 0 for Growth stage.");
+                if (!HasValue(project.TeamExperience))
+                    throw new InvalidOperationException("Team experience is required for Growth stage.");
+            }
+        }
+
+        private static bool HasValue(string? value)
+        {
+            return !string.IsNullOrWhiteSpace(value);
         }
     }
 }
