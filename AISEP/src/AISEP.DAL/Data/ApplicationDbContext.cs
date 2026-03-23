@@ -140,6 +140,7 @@ namespace AISEP.DAL.Data
                 entity.ToTable("advisors");
                 entity.HasKey(e => e.AdvisorId);
                 entity.Property(e => e.Expertise).HasMaxLength(255);
+                entity.Property(e => e.Industry).HasConversion<string>();
                 entity.Property(e => e.Rating).HasColumnType("decimal(3,2)");
                 entity.Property(e => e.LanguagesSpoken).HasMaxLength(255);
                 entity.Property(e => e.Location).HasMaxLength(255);
@@ -176,6 +177,7 @@ namespace AISEP.DAL.Data
                 entity.HasKey(e => e.ProjectId);
                 entity.Property(e => e.ProjectName).HasMaxLength(255).IsRequired();
                 entity.Property(e => e.DevelopmentStage).HasConversion<string>().HasMaxLength(50);
+                entity.Property(e => e.Industry).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.MarketSize).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.Revenue).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();

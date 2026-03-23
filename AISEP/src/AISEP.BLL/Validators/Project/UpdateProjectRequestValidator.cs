@@ -20,6 +20,10 @@ namespace AISEP.BLL.Validators.Project
                 .IsInEnum().WithMessage("Development stage is not valid. Allowed: Idea, MVP, Growth.");
                // .When(x => x.DevelopmentStage.HasValue);
 
+            RuleFor(x => x.Industry)
+                .NotNull().WithMessage("Industry is required.")
+                .IsInEnum().WithMessage("Industry is invalid.");
+
             RuleFor(x => x.ShortDescription)
                 .MaximumLength(500).WithMessage("Short description must not exceed 500 characters.")
                 .Matches(TextPattern).WithMessage("Short description contains invalid characters.")

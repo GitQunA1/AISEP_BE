@@ -67,6 +67,7 @@ namespace AISEP.BLL.Services.Advisors
             advisor.UserId     = userId;
             advisor.ProfileImage   = await UploadIfPresent(dto.ProfileImageFile,  "advisor-profiles");
             advisor.Certifications = await UploadIfPresent(dto.CertificationFile, "advisor-certifications");
+            advisor.Industry       = dto.Industry;
             advisor.ApprovalStatus = ApprovalStatus.Pending;
             //advisor.CreatedAt      = DateTime.UtcNow;
             advisor.CreatedBy      = userId;
@@ -92,6 +93,7 @@ namespace AISEP.BLL.Services.Advisors
             advisor.LanguagesSpoken    = string.IsNullOrWhiteSpace(dto.LanguagesSpoken)    ? advisor.LanguagesSpoken    : dto.LanguagesSpoken;
             advisor.Location           = string.IsNullOrWhiteSpace(dto.Location)           ? advisor.Location           : dto.Location;
             advisor.HourlyRate         = (dto.HourlyRate > 0) ? dto.HourlyRate : advisor.HourlyRate;
+            advisor.Industry           = dto.Industry ?? advisor.Industry;
 
             if (dto.ProfileImageFile is not null)
                 advisor.ProfileImage = await _storage.UploadFileAsync(dto.ProfileImageFile, "advisor-profiles");

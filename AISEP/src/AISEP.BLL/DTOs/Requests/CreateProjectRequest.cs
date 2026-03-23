@@ -18,5 +18,6 @@ namespace AISEP.BLL.DTOs.Requests
         public string          TeamMembers            { get; set; } = string.Empty;
         public string?         KeySkills              { get; set; }
         public string?         TeamExperience         { get; set; }
+        public Industry?       Industry               { get; set; }
     }
 }

@@ -16,6 +16,8 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.User != null ? src.User.UserName : null))
                 .ForMember(dest => dest.Email,
                     opt => opt.MapFrom(src => src.User != null ? src.User.Email : null))
+                .ForMember(dest => dest.Industry,
+                    opt => opt.MapFrom(src => src.Industry != null ? src.Industry.ToString() : null))
                 .ForMember(dest => dest.ApprovalStatus,
                     opt => opt.MapFrom(src => src.ApprovalStatus.ToString()));
 
@@ -139,6 +141,8 @@ namespace AISEP.BLL.Helpers
             CreateMap<Project, ProjectResponse>()
                 .ForMember(dest => dest.DevelopmentStage,
                     opt => opt.MapFrom(src => src.DevelopmentStage != null ? src.DevelopmentStage.ToString() : null))
+                .ForMember(dest => dest.Industry,
+                    opt => opt.MapFrom(src => src.Industry.ToString()))
                 .ForMember(dest => dest.Status,
                     opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.ApprovedById, opt => opt.MapFrom(src => src.ApprovedById))

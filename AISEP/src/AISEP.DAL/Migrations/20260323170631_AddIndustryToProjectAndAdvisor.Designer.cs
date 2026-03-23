@@ -3,6 +3,7 @@ using System;
 using AISEP.DAL.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AISEP.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260323170631_AddIndustryToProjectAndAdvisor")]
+    partial class AddIndustryToProjectAndAdvisor
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -647,6 +650,15 @@ namespace AISEP.Migrations
                     b.Property<int>("DurationMonths")
                         .HasColumnType("integer");
 
+                    b.Property<int>("FreeBookingCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MaxAiRequests")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MaxProjectViews")
+                        .HasColumnType("integer");
+
                     b.Property<string>("PackageName")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -1046,6 +1058,9 @@ namespace AISEP.Migrations
                     b.Property<int>("PackageId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("RemainingFreeBookings")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -1053,6 +1068,12 @@ namespace AISEP.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<int>("UsedAiRequests")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UsedProjectViews")
+                        .HasColumnType("integer");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -1125,6 +1146,35 @@ namespace AISEP.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("transactions", (string)null);
+                });
+
+            modelBuilder.Entity("AISEP.DAL.Entities.UnlockedProject", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UnlockedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("UserId", "ProjectId")
+                        .IsUnique();
+
+                    b.ToTable("unlocked_projects", (string)null);
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.User", b =>
@@ -1848,6 +1898,25 @@ namespace AISEP.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("AISEP.DAL.Entities.UnlockedProject", b =>
+                {
+                    b.HasOne("AISEP.DAL.Entities.Project", "Project")
+                        .WithMany("UnlockedProjects")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AISEP.DAL.Entities.User", "User")
+                        .WithMany("UnlockedProjects")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("AISEP.DAL.Entities.UserReport", b =>
                 {
                     b.HasOne("AISEP.DAL.Entities.User", "ReportedUser")
@@ -2009,6 +2078,8 @@ namespace AISEP.Migrations
                     b.Navigation("InvestorAIAnalyses");
 
                     b.Navigation("StartupAIAnalysis");
+
+                    b.Navigation("UnlockedProjects");
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.Startup", b =>
@@ -2047,6 +2118,8 @@ namespace AISEP.Migrations
                     b.Navigation("Subscriptions");
 
                     b.Navigation("Transactions");
+
+                    b.Navigation("UnlockedProjects");
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.Wallet", b =>
