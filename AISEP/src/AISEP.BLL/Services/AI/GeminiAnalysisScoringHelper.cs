@@ -18,8 +18,8 @@ namespace AISEP.BLL.Services.AI
                 0.05 * Normalize(GetComponentScore(result.Investment, result.InvestmentScore)) +
                 0.05 * Normalize(GetComponentScore(result.Other, result.OtherScore));
 
-            // 100 = market average (all component scores = 1.0)
-            return (int)Math.Round(weighted * 100, MidpointRounding.AwayFromZero);
+            // Map weighted average from [0..2] to [0..100].
+            return (int)Math.Round((weighted / 2.0) * 100.0, MidpointRounding.AwayFromZero);
         }
 
         public static void NormalizeAnalysisResult(GeminiAnalysisResult result, bool includeInvestorFields)
@@ -123,13 +123,13 @@ namespace AISEP.BLL.Services.AI
 
             return
             [
-                new ScoreBreakdownItem { Component = "Team", Weight = 0.30, Score = team, WeightedContribution = Math.Round(0.30 * team * 100, 2) },
-                new ScoreBreakdownItem { Component = "Opportunity", Weight = 0.25, Score = opportunity, WeightedContribution = Math.Round(0.25 * opportunity * 100, 2) },
-                new ScoreBreakdownItem { Component = "Product", Weight = 0.15, Score = product, WeightedContribution = Math.Round(0.15 * product * 100, 2) },
-                new ScoreBreakdownItem { Component = "Competition", Weight = 0.10, Score = competition, WeightedContribution = Math.Round(0.10 * competition * 100, 2) },
-                new ScoreBreakdownItem { Component = "Marketing", Weight = 0.10, Score = marketing, WeightedContribution = Math.Round(0.10 * marketing * 100, 2) },
-                new ScoreBreakdownItem { Component = "Investment", Weight = 0.05, Score = investment, WeightedContribution = Math.Round(0.05 * investment * 100, 2) },
-                new ScoreBreakdownItem { Component = "Other", Weight = 0.05, Score = other, WeightedContribution = Math.Round(0.05 * other * 100, 2) }
+                new ScoreBreakdownItem { Component = "Team", Weight = 0.30, Score = team, WeightedContribution = Math.Round(0.30 * (team / 2.0) * 100.0, 2) },
+                new ScoreBreakdownItem { Component = "Opportunity", Weight = 0.25, Score = opportunity, WeightedContribution = Math.Round(0.25 * (opportunity / 2.0) * 100.0, 2) },
+                new ScoreBreakdownItem { Component = "Product", Weight = 0.15, Score = product, WeightedContribution = Math.Round(0.15 * (product / 2.0) * 100.0, 2) },
+                new ScoreBreakdownItem { Component = "Competition", Weight = 0.10, Score = competition, WeightedContribution = Math.Round(0.10 * (competition / 2.0) * 100.0, 2) },
+                new ScoreBreakdownItem { Component = "Marketing", Weight = 0.10, Score = marketing, WeightedContribution = Math.Round(0.10 * (marketing / 2.0) * 100.0, 2) },
+                new ScoreBreakdownItem { Component = "Investment", Weight = 0.05, Score = investment, WeightedContribution = Math.Round(0.05 * (investment / 2.0) * 100.0, 2) },
+                new ScoreBreakdownItem { Component = "Other", Weight = 0.05, Score = other, WeightedContribution = Math.Round(0.05 * (other / 2.0) * 100.0, 2) }
             ];
         }
 

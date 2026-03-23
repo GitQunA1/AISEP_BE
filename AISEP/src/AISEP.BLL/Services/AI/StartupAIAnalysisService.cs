@@ -1,7 +1,9 @@
 ﻿using System.Text.Json;
 using System.Text.RegularExpressions;
+using AISEP.BLL.Exceptions;
 using AISEP.DAL.Common;
 using AISEP.BLL.DTOs.Responses;
+using AISEP.BLL.Services.Users;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using AutoMapper;
@@ -11,20 +13,25 @@ namespace AISEP.BLL.Services.AI
     public class StartupAIAnalysisService : IStartupAIAnalysisService
     {
         private readonly IUnitOfWork      _unitOfWork;
+        private readonly IUserService     _userService;
         private readonly IGeminiAiService _geminiAiService;
         private readonly IMapper           _mapper;
 
-        public StartupAIAnalysisService(IUnitOfWork unitOfWork, IGeminiAiService geminiAiService, IMapper mapper)
+        public StartupAIAnalysisService(
+            IUnitOfWork unitOfWork,
+            IUserService userService,
+            IGeminiAiService geminiAiService,
+            IMapper mapper)
         {
             _unitOfWork      = unitOfWork;
+            _userService     = userService;
             _geminiAiService = geminiAiService;
             _mapper          = mapper;
         }
 
         public async Task<StartupAIAnalysisResponse> AnalyzeProjectAsync(int projectId)
         {
-            var project = await _unitOfWork.Projects.GetByIdAsync(projectId)
-                ?? throw new KeyNotFoundException($"Project {projectId} not found.");
+            var project = await EnsureProjectBelongsToCurrentStartupAsync(projectId);
             if (project.Status != ProjectStatus.Draft)
             {
                 throw new InvalidOperationException("AI analysis is only available when project status is Draft.");
@@ -73,6 +80,8 @@ namespace AISEP.BLL.Services.AI
 
         public async Task<StartupAIAnalysisResponse?> GetAnalysisAsync(int projectId)
         {
+            await EnsureProjectBelongsToCurrentStartupAsync(projectId);
+
             var analysis = await _unitOfWork.StartupAIAnalyses.GetByProjectIdAsync(projectId);
             return analysis is null ? null : MapToResponse(analysis, _mapper);
         }
@@ -123,6 +132,23 @@ namespace AISEP.BLL.Services.AI
 
             await _unitOfWork.SaveChangesAsync();
             return _mapper.Map<StartupEligibilityResponse>(existing);
+        }
+
+        private async Task<Project> EnsureProjectBelongsToCurrentStartupAsync(int projectId)
+        {
+            var userId = _userService.GetUserId();
+            var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId)
+                ?? throw new KeyNotFoundException("Startup profile not found for this account.");
+
+            var project = await _unitOfWork.Projects.GetByIdAsync(projectId)
+                ?? throw new KeyNotFoundException($"Project {projectId} not found.");
+
+            if (project.StartupId != startup.StartupId)
+            {
+                throw new ForbiddenAccessException("You do not have permission to analyze this project.");
+            }
+
+            return project;
         }
 
         private async Task ConsumeAiQuotaAsync(int startupId)
