@@ -35,6 +35,7 @@ namespace AISEP.DAL.Data
         public DbSet<ConsultingReport> ConsultingReports { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Package> Packages { get; set; }
+        public DbSet<UnlockedProject> UnlockedProjects { get; set; }
         public DbSet<WalletTransaction> WalletTransactions { get; set; }
         public DbSet<WithdrawRequest> WithdrawRequests { get; set; }
         public DbSet<Notification> Notifications { get; set; }
@@ -412,6 +413,25 @@ namespace AISEP.DAL.Data
                 entity.HasOne(s => s.User)
                     .WithMany(u => u.Subscriptions)
                     .HasForeignKey(s => s.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<UnlockedProject>(entity =>
+            {
+                entity.ToTable("unlocked_projects");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.UnlockedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                entity.HasIndex(e => new { e.UserId, e.ProjectId }).IsUnique();
+
+                entity.HasOne(e => e.User)
+                    .WithMany(u => u.UnlockedProjects)
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Project)
+                    .WithMany(p => p.UnlockedProjects)
+                    .HasForeignKey(e => e.ProjectId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 

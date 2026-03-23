@@ -7,7 +7,6 @@ using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
 using Sieve.Services;
 
@@ -38,6 +37,26 @@ namespace AISEP.BLL.Services.Projects
             var project = await _unitOfWork.Projects.GetByIdAsync(id);
             if (project is null)
                 throw new KeyNotFoundException("Project not found.");
+
+            var userId = _userService.GetUserId();
+            var role = _userService.GetUserRole();
+
+            if (CanBypassViewQuota(project, userId, role))
+            {
+                return _mapper.Map<ProjectResponse>(project);
+            }
+
+            if (!RequiresViewQuota(role))
+            {
+                return _mapper.Map<ProjectResponse>(project);
+            }
+
+            var isUnlocked = await _unitOfWork.UnlockedProjects.ExistsAsync(userId, id);
+            if (!isUnlocked)
+            {
+                await ConsumeProjectViewQuotaAndUnlockAsync(userId, id);
+            }
+
             return _mapper.Map<ProjectResponse>(project);
         }
 
@@ -63,28 +82,11 @@ namespace AISEP.BLL.Services.Projects
             if (startup is null)
                 throw new KeyNotFoundException("Startup profile not found. Please create a startup profile first.");
 
-            var project = new Project
-            {
-                StartupId              = startup.StartupId,
-                ProjectName            = dto.ProjectName,
-                ShortDescription       = dto.ShortDescription,
-                DevelopmentStage       = dto.DevelopmentStage,
-                ProblemStatement       = dto.ProblemStatement,
-                SolutionDescription    = dto.SolutionDescription,
-                TargetCustomers        = dto.TargetCustomers,
-                UniqueValueProposition = dto.UniqueValueProposition,
-                MarketSize             = dto.MarketSize,
-                BusinessModel          = dto.BusinessModel,
-                Revenue                = dto.Revenue,
-                Competitors            = dto.Competitors,
-                TeamMembers            = dto.TeamMembers,
-                KeySkills              = dto.KeySkills,
-                TeamExperience         = dto.TeamExperience,
-                Status                 = ProjectStatus.Draft,
-                CreatedAt              = DateTime.UtcNow,
-                //CreatedBy              = userId
-
-            };
+            var project = _mapper.Map<Project>(dto);
+            project.StartupId = startup.StartupId;
+            project.Industry = dto.Industry!.Value;
+            project.Status = ProjectStatus.Draft;
+            project.CreatedAt = DateTime.UtcNow;
 
             await _unitOfWork.Projects.AddAsync(project);
             await _unitOfWork.SaveChangesAsync();
@@ -108,22 +110,8 @@ namespace AISEP.BLL.Services.Projects
             if (project.Status == ProjectStatus.Rejected)
                  project.Status = ProjectStatus.Draft;
 
-
-
-            project.ProjectName            = dto.ProjectName            ?? project.ProjectName;
-            project.ShortDescription       = dto.ShortDescription       ?? project.ShortDescription;
-            project.DevelopmentStage       = dto.DevelopmentStage       ?? project.DevelopmentStage;
-            project.ProblemStatement       = dto.ProblemStatement       ?? project.ProblemStatement;
-            project.SolutionDescription    = dto.SolutionDescription    ?? project.SolutionDescription;
-            project.TargetCustomers        = dto.TargetCustomers        ?? project.TargetCustomers;
-            project.UniqueValueProposition = dto.UniqueValueProposition ?? project.UniqueValueProposition;
-            project.MarketSize             = dto.MarketSize             ?? project.MarketSize;
-            project.BusinessModel          = dto.BusinessModel          ?? project.BusinessModel;
-            project.Revenue                = dto.Revenue                ?? project.Revenue;
-            project.Competitors            = dto.Competitors            ?? project.Competitors;
-            project.TeamMembers            = dto.TeamMembers            ?? project.TeamMembers;
-            project.KeySkills              = dto.KeySkills              ?? project.KeySkills;
-            project.TeamExperience         = dto.TeamExperience         ?? project.TeamExperience;
+            _mapper.Map(dto, project);
+            project.Industry = dto.Industry!.Value;
 
             _unitOfWork.Projects.Update(project);
             await _unitOfWork.SaveChangesAsync();
@@ -176,6 +164,49 @@ namespace AISEP.BLL.Services.Projects
             project.RejectionReason = dto.Reason?.Trim();
             project.RejectedById = _userService.GetUserId();
             _unitOfWork.Projects.Update(project);
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        private static bool CanBypassViewQuota(Project project, int userId, string? role)
+        {
+            if (string.Equals(role, "Staff", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            return project.Startup.UserId == userId;
+        }
+
+        private static bool RequiresViewQuota(string? role)
+        {
+            return string.Equals(role, "Investor", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(role, "User", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private async Task ConsumeProjectViewQuotaAndUnlockAsync(int userId, int projectId)
+        {
+            var subscription = await _unitOfWork.Subscriptions.GetLatestActiveAsync(userId)
+                ?? throw new InvalidOperationException("No active subscription.");
+
+            var package = await _unitOfWork.Packages.GetByIdAsync(subscription.PackageId)
+                ?? throw new KeyNotFoundException("Package not found.");
+
+            if (subscription.UsedProjectViews >= package.MaxProjectViews)
+            {
+                throw new InvalidOperationException("Bạn đã hết lượt xem dự án. Vui lòng nâng cấp gói.");
+            }
+
+            subscription.UsedProjectViews += 1;
+            _unitOfWork.Subscriptions.Update(subscription);
+
+            await _unitOfWork.UnlockedProjects.AddAsync(new UnlockedProject
+            {
+                UserId = userId,
+                ProjectId = projectId,
+                UnlockedAt = DateTime.UtcNow
+            });
+
             await _unitOfWork.SaveChangesAsync();
         }
     }

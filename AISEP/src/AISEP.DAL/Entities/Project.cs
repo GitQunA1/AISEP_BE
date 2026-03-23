@@ -25,7 +25,6 @@ namespace AISEP.DAL.Entities
         public ProjectStatus Status { get; set; } = ProjectStatus.Draft;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // Approval / Rejection info
         public int? ApprovedById { get; set; }
         public DateTime? ApprovedAt { get; set; }
 
@@ -38,8 +37,8 @@ namespace AISEP.DAL.Entities
         public ICollection<Document> Documents { get; set; } = new List<Document>();
         public StartupAIAnalysis? StartupAIAnalysis { get; set; }
         public ICollection<InvestorAIAnalysis> InvestorAIAnalyses { get; set; } = new List<InvestorAIAnalysis>();
+        public ICollection<UnlockedProject> UnlockedProjects { get; set; } = new List<UnlockedProject>();
         public ICollection<ConnectionRequest> ConnectionRequests { get; set; } = new List<ConnectionRequest>();
         public ICollection<Deal> Deals { get; set; } = new List<Deal>();
-        //public int? CreatedBy { get; set; }
     }
 }

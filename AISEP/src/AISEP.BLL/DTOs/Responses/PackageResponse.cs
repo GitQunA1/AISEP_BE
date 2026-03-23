@@ -7,5 +7,8 @@ namespace AISEP.BLL.DTOs.Responses
         public string? Description { get; set; }
         public decimal Price { get; set; }
         public int DurationMonths { get; set; }
+        public int MaxAiRequests { get; set; }
+        public int MaxProjectViews { get; set; }
+        public int FreeBookingCount { get; set; }
     }
 }

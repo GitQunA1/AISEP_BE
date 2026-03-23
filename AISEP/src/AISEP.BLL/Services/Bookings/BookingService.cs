@@ -6,7 +6,6 @@ using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using AISEP.BLL.Services.Users;
 using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
 using Sieve.Services;
 
@@ -34,18 +33,35 @@ namespace AISEP.BLL.Services.Bookings
         public async Task<BookingResponse?> CreateBookingAsync(CreateBookingRequest dto)
         {
             var currentUser = _currentUserService.GetUserId();
+            var advisor = await _unitOfWork.Advisors.GetByIdAsync(dto.AdvisorId)
+                ?? throw new KeyNotFoundException("Advisor not found.");
+
+            if (dto.EndTime <= dto.StartTime)
+            {
+                throw new InvalidOperationException("Booking time range is invalid.");
+            }
 
             var booking = _mapper.Map<Booking>(dto);
             booking.CustomerId = currentUser;
-            booking.Price = 200000;
             booking.Status = BookingStatus.Pending;
+
+            var subscription = await _unitOfWork.Subscriptions.GetLatestActiveAsync(currentUser);
+            if (subscription is not null && subscription.RemainingFreeBookings > 0)
+            {
+                booking.Price = 0;
+                subscription.RemainingFreeBookings -= 1;
+                _unitOfWork.Subscriptions.Update(subscription);
+            }
+            else
+            {
+                var hourlyRate = advisor.HourlyRate ?? 0;
+                var totalHours = Math.Max((decimal)(dto.EndTime - dto.StartTime).TotalHours, 1m);
+                booking.Price = Math.Round(hourlyRate * totalHours, 2, MidpointRounding.AwayFromZero);
+            }
 
             await _unitOfWork.Bookings.AddAsync(booking);
             await _unitOfWork.SaveChangesAsync();
 
-            
-            var created = await _unitOfWork.Bookings.GetByIdAsync(booking.BookingId);
-           
             return _mapper.Map<BookingResponse>(booking);
         }
 
@@ -88,5 +104,5 @@ namespace AISEP.BLL.Services.Bookings
             return true;
         }
 
-            }
-        }
+    }
+}
