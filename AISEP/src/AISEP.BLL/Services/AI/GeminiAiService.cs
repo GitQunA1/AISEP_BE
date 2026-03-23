@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using AISEP.DAL.Entities;
+using AISEP.DAL.Enums;
 using AISEP.BLL.Settings;
 using Microsoft.Extensions.Options;
 
@@ -91,6 +92,7 @@ namespace AISEP.BLL.Services.AI
             var readable = documents.Where(d => GetMimeType(d.FileName) is not null).ToList();
             var skipped  = documents.Where(d => GetMimeType(d.FileName) is null).ToList();
             var docCount = readable.Count;
+            var stageFocus = GetStageFocusGuidance(project.DevelopmentStage);
 
             var docSummary = docCount > 0
                 ? string.Join(", ", readable.Select(d => $"{d.DocumentType} ({d.FileName})"))
@@ -135,6 +137,9 @@ namespace AISEP.BLL.Services.AI
                   5. Marketing/Sales   (10%): BusinessModel, Revenue
                   6. Investment Need    (5%): clarity of funding requirements
                   7. Other              (5%): document count, overall pitch quality
+
+                --- STAGE FOCUS (very important) ---
+                {{stageFocus}}
 
                 --- SCORING RUBRIC (strict) ---
                 For each component, choose score range based on evidence quality:
@@ -273,9 +278,8 @@ namespace AISEP.BLL.Services.AI
                   "Recommendations": ["Bổ sung unit economics", "Tăng bằng chứng cạnh tranh", "Chuẩn hóa roadmap vốn"]
                 }
 
-                Do NOT compute weighted total score. Backend will compute PotentialScore using:
-                0.30*Team + 0.25*Opportunity + 0.15*Product + 0.10*Competition + 0.10*Marketing + 0.05*Investment + 0.05*Other,
-                then multiply by 100.
+                Do NOT compute weighted total score. Backend computes PotentialScore on a 0-100 scale
+                using fixed Bill Payne weights.
                 ChaosScore (0-100): risk/uncertainty level (0 = stable, 100 = very risky)
                 Summary: brief analysis written in Vietnamese, mention which documents/slides influenced the scoring.
                 Strengths: 3-5 key strengths (Vietnamese).
@@ -351,6 +355,7 @@ namespace AISEP.BLL.Services.AI
             var readable = documents.Where(d => GetMimeType(d.FileName) is not null).ToList();
             var skipped = documents.Where(d => GetMimeType(d.FileName) is null).ToList();
             var docCount = readable.Count;
+            var stageFocus = GetStageFocusGuidance(project.DevelopmentStage);
 
             var docSummary = docCount > 0
                 ? string.Join(", ", readable.Select(d => $"{d.DocumentType} ({d.FileName})"))
@@ -387,6 +392,9 @@ namespace AISEP.BLL.Services.AI
                 1. Team (30%), 2. Opportunity (25%), 3. Product/Tech (15%),
                 4. Competition (10%), 5. Marketing/Sales (10%),
                 6. Investment Need (5%), 7. Other (5%).
+
+                --- STAGE FOCUS (very important) ---
+                {{stageFocus}}
 
                 Multiplier guide:
                 - 1.0 = market average
@@ -431,7 +439,8 @@ namespace AISEP.BLL.Services.AI
                 - High score (>1.2) MUST include concrete evidence from project/docs.
                 - If evidence is weak, score conservatively and add risk flags.
 
-                Do NOT compute weighted total score. Backend computes PotentialScore.
+                Do NOT compute weighted total score. Backend computes PotentialScore on a 0-100 scale
+                using fixed Bill Payne weights.
                 Final self-check before output:
                 1) Every component must include at least one meaningful evidence or missingData item.
                 2) High score (>1.2) requires specific evidence.
@@ -527,6 +536,24 @@ namespace AISEP.BLL.Services.AI
                   "eligibility_reason": "<string tiếng Việt tối đa 3 câu>"
                 }
                 """;
+        }
+
+        private static string GetStageFocusGuidance(DevelopmentStage? stage)
+        {
+            return stage switch
+            {
+                DevelopmentStage.Idea =>
+                    "IDEA stage: prioritize ProblemStatement, SolutionDescription, TargetCustomers, and TeamMembers. " +
+                    "Do not heavily penalize missing Revenue or detailed TeamExperience at this stage, but still be strict on evidence quality for the available data.",
+                DevelopmentStage.MVP =>
+                    "MVP stage: include all IDEA expectations, and emphasize execution readiness via " +
+                    "UniqueValueProposition, BusinessModel, KeySkills, Competitors, and relevance of attached demo/pitch evidence. Be stricter than IDEA.",
+                DevelopmentStage.Growth =>
+                    "GROWTH stage: include IDEA + MVP expectations, and strongly emphasize Revenue performance, " +
+                    "MarketSize rationale, TeamExperience for scaling, and professional evidence documents. This stage must be evaluated most strictly.",
+                _ =>
+                    "Unknown stage: balance scoring conservatively, prioritize evidence quality, and list missing critical data explicitly."
+            };
         }
 
         private async Task<string> CallGeminiAsync(string prompt, List<object> inlineParts)
