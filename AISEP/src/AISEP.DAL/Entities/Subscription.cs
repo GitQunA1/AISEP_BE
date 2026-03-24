@@ -17,6 +17,12 @@ namespace AISEP.DAL.Entities
 
         public SubscriptionStatus Status { get; set; }
 
+        public int UsedAiRequests { get; set; } = 0;
+
+        public int UsedProjectViews { get; set; } = 0;
+
+        public int RemainingFreeBookings { get; set; }
+
         // Navigation properties
         public Package Package { get; set; } = null!;
 

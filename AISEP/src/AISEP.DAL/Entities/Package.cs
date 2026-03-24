@@ -15,6 +15,12 @@ namespace AISEP.DAL.Entities
 
         public int DurationMonths { get; set; }
 
+        public int MaxAiRequests { get; set; }
+
+        public int MaxProjectViews { get; set; }
+
+        public int FreeBookingCount { get; set; }
+
         // Navigation properties
         public ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
     }

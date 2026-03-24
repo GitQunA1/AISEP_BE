@@ -14,6 +14,10 @@ namespace AISEP.BLL.Validators.Project
             RuleFor(x => x.DevelopmentStage)
                 .IsInEnum().WithMessage("Development stage is invalid.");
 
+            RuleFor(x => x.Industry)
+                .NotNull().WithMessage("Industry is required.")
+                .IsInEnum().WithMessage("Industry is invalid.");
+
             // IDEA: required for all stages (Idea, MVP, Growth)
             RuleFor(x => x.ProjectName)
                 .NotEmpty().WithMessage("Project name is required.")

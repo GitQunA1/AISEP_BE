@@ -14,6 +14,7 @@ namespace AISEP.DAL.Entities
         public string? LanguagesSpoken { get; set; }
         public string? Location { get; set; }
         public string? ProfileImage { get; set; }
+        public Industry? Industry { get; set; }
         public decimal? HourlyRate { get; set; }
         public ApprovalStatus ApprovalStatus { get; set; } = ApprovalStatus.Unverified;
         public int? CreatedBy { get; set; }

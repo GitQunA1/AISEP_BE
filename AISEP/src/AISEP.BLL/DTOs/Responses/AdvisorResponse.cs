@@ -16,6 +16,7 @@ namespace AISEP.BLL.DTOs.Responses
         public string? LanguagesSpoken   { get; set; }
         public string? Location          { get; set; }
         public string? ProfileImage      { get; set; }
+        public string? Industry          { get; set; }
         public decimal? HourlyRate       { get; set; }
         public string? ApprovalStatus    { get; set; }
     }

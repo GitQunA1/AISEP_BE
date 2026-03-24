@@ -33,6 +33,8 @@ namespace AISEP.BLL.Services.AI
             var investor = await _unitOfWork.Investors.GetByUserIdAsync(userId)
                 ?? throw new KeyNotFoundException("Investor profile not found.");
 
+            await ConsumeAiQuotaAsync(userId);
+
             var project = await _unitOfWork.Projects.GetByIdAsync(projectId)
                 ?? throw new KeyNotFoundException($"Project {projectId} not found.");
             if (project.Status != ProjectStatus.Approved)
@@ -42,8 +44,10 @@ namespace AISEP.BLL.Services.AI
 
             var documents = (await _unitOfWork.Documents.GetByProjectIdAsync(projectId)).ToList();
             var result = await _geminiAiService.AnalyzeProjectForInvestorAsync(project, documents);
-            NormalizeAnalysisResult(result);
-            result.PotentialScore = CalculatePotentialScore(result, project.DevelopmentStage);
+            //NormalizeAnalysisResult(result);
+            //result.PotentialScore = CalculatePotentialScore(result, project.DevelopmentStage);
+            GeminiAnalysisScoringHelper.NormalizeAnalysisResult(result, includeInvestorFields: true);
+            result.PotentialScore = GeminiAnalysisScoringHelper.CalculatePotentialScore(result);
 
             var analysisJson = JsonSerializer.Serialize(result);
             var existing = await _unitOfWork.InvestorAIAnalyses
@@ -68,7 +72,22 @@ namespace AISEP.BLL.Services.AI
             }
 
             await _unitOfWork.SaveChangesAsync();
-            return MapToResponse(existing, _mapper, project.DevelopmentStage);
+            return MapToResponse(existing, _mapper);
+        }
+
+        private async Task ConsumeAiQuotaAsync(int userId)
+        {
+            var subscription = await _unitOfWork.Subscriptions.GetLatestActiveAsync(userId)
+                ?? throw new InvalidOperationException("No active subscription.");
+
+            var package = await _unitOfWork.Packages.GetByIdAsync(subscription.PackageId)
+                ?? throw new KeyNotFoundException("Package not found.");
+
+            AiQuotaPolicy.EnsureAiQuotaNotExceeded(subscription, package);
+
+            subscription.UsedAiRequests += 1;
+            _unitOfWork.Subscriptions.Update(subscription);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task<InvestorAIAnalysisResponse?> GetAnalysisAsync(int projectId)
@@ -90,12 +109,13 @@ namespace AISEP.BLL.Services.AI
             IMapper mapper,
             DevelopmentStage? stage)
         {
-            var parsed = DeserializeAnalysisJson(analysis.AnalysisJson);
+            var parsed = GeminiAnalysisScoringHelper.DeserializeAnalysisJson(analysis.AnalysisJson);
             var response = mapper.Map<InvestorAIAnalysisResponse>(analysis);
             response.Analysis = parsed;
             response.PotentialScore = parsed?.PotentialScore;
             response.ChaosScore = parsed?.ChaosScore;
-            response.ScoreBreakdown = BuildBreakdown(parsed, stage);
+            response.ScoreBreakdown = GeminiAnalysisScoringHelper.BuildBreakdown(parsed);
+            //response.ScoreBreakdown = BuildBreakdown(parsed, stage);
             response.InvestmentVerdict = parsed?.InvestmentVerdict ?? string.Empty;
             response.RiskFlags = parsed?.RiskFlags ?? [];
             response.DealBreakers = parsed?.DealBreakers ?? [];

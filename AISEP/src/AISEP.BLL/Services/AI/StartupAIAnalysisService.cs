@@ -1,8 +1,9 @@
 ﻿using System.Text.Json;
+using System.Text.RegularExpressions;
 using AISEP.BLL.Exceptions;
-using AISEP.BLL.Services.Users;
 using AISEP.DAL.Common;
 using AISEP.BLL.DTOs.Responses;
+using AISEP.BLL.Services.Users;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using AutoMapper;
@@ -37,11 +38,15 @@ namespace AISEP.BLL.Services.AI
                 throw new InvalidOperationException("AI analysis is only available when project status is Draft.");
             }
 
+            await ConsumeAiQuotaAsync(project.StartupId);
+
             var documents = (await _unitOfWork.Documents.GetByProjectIdAsync(projectId)).ToList();
 
             var result      = await _geminiAiService.AnalyzeProjectAsync(project, documents);
-            NormalizeAnalysisResult(result);
-            result.PotentialScore = CalculatePotentialScore(result, project.DevelopmentStage);
+            //NormalizeAnalysisResult(result);
+            //result.PotentialScore = CalculatePotentialScore(result, project.DevelopmentStage);
+            GeminiAnalysisScoringHelper.NormalizeAnalysisResult(result, includeInvestorFields: false);
+            result.PotentialScore = GeminiAnalysisScoringHelper.CalculatePotentialScore(result);
             var analysisJson = JsonSerializer.Serialize(result);
 
             var existing = await _unitOfWork.StartupAIAnalyses.GetByProjectIdAsync(projectId);
@@ -153,11 +158,31 @@ namespace AISEP.BLL.Services.AI
             StartupAIAnalysis a,
             IMapper mapper,
             DevelopmentStage? stage)
+        private async Task ConsumeAiQuotaAsync(int startupId)
         {
-            var parsedAnalysis = DeserializeAnalysisJson(a.AnalysisJson);
+            var startup = await _unitOfWork.Startups.GetByIdAsync(startupId)
+                ?? throw new KeyNotFoundException("Startup profile not found.");
+
+            var subscription = await _unitOfWork.Subscriptions.GetLatestActiveAsync(startup.UserId)
+                ?? throw new InvalidOperationException("No active subscription.");
+
+            var package = await _unitOfWork.Packages.GetByIdAsync(subscription.PackageId)
+                ?? throw new KeyNotFoundException("Package not found.");
+
+            AiQuotaPolicy.EnsureAiQuotaNotExceeded(subscription, package);
+
+            subscription.UsedAiRequests += 1;
+            _unitOfWork.Subscriptions.Update(subscription);
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        private static StartupAIAnalysisResponse MapToResponse(StartupAIAnalysis a, IMapper mapper)
+        {
+            var parsedAnalysis = GeminiAnalysisScoringHelper.DeserializeAnalysisJson(a.AnalysisJson);
             var response = mapper.Map<StartupAIAnalysisResponse>(a);
             response.Analysis = parsedAnalysis;
             response.ScoreBreakdown = BuildBreakdown(parsedAnalysis, stage);
+            response.ScoreBreakdown = GeminiAnalysisScoringHelper.BuildBreakdown(parsedAnalysis);
             return response;
         }
 

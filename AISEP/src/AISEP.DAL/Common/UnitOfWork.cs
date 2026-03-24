@@ -16,6 +16,7 @@ using AISEP.DAL.Repositories.Subscriptions;
 using AISEP.DAL.Repositories.Transactions;
 using AISEP.DAL.Repositories.Users;
 using AISEP.DAL.Repositories.WalletTransactions;
+using AISEP.DAL.Repositories.UnlockedProjects;
 
 namespace AISEP.DAL.Common
 {
@@ -40,6 +41,7 @@ namespace AISEP.DAL.Common
         private ITransactionRepository?       _transactions;
         private IPackageRepository?           _packages;
         private ISubscriptionRepository?      _subscriptions;
+        private IUnlockedProjectRepository?   _unlockedProjects;
         private IWalletTransactionRepository? _walletTransactions;
 
         public UnitOfWork(ApplicationDbContext context)
@@ -64,6 +66,7 @@ namespace AISEP.DAL.Common
         public ITransactionRepository       Transactions       => _transactions       ??= new TransactionRepository(_context);
         public IPackageRepository           Packages           => _packages           ??= new PackageRepository(_context);
         public ISubscriptionRepository      Subscriptions      => _subscriptions      ??= new SubscriptionRepository(_context);
+        public IUnlockedProjectRepository   UnlockedProjects   => _unlockedProjects   ??= new UnlockedProjectRepository(_context);
         public IWalletTransactionRepository WalletTransactions => _walletTransactions ??= new WalletTransactionRepository(_context);
 
         public async Task<int> SaveChangesAsync()
