@@ -129,7 +129,7 @@ namespace AISEP.BLL.Services.AI
                 Score each component as a multiplier relative to the market average:
                   1.0 = average | 1.5 = 50% above average | 0.7 = 30% below average
 
-                Components (Bill Payne weights):
+                Components (Bill Payne framework):
                   1. Team              (30%): TeamMembers, KeySkills, TeamExperience
                   2. Opportunity       (25%): TargetCustomers, MarketSize
                   3. Product/Tech      (15%): SolutionDescription, DevelopmentStage
@@ -279,7 +279,7 @@ namespace AISEP.BLL.Services.AI
                 }
 
                 Do NOT compute weighted total score. Backend computes PotentialScore on a 0-100 scale
-                using fixed Bill Payne weights.
+                using stage-specific maximum points for each component.
                 ChaosScore (0-100): risk/uncertainty level (0 = stable, 100 = very risky)
                 Summary: brief analysis written in Vietnamese, mention which documents/slides influenced the scoring.
                 Strengths: 3-5 key strengths (Vietnamese).
@@ -440,7 +440,7 @@ namespace AISEP.BLL.Services.AI
                 - If evidence is weak, score conservatively and add risk flags.
 
                 Do NOT compute weighted total score. Backend computes PotentialScore on a 0-100 scale
-                using fixed Bill Payne weights.
+                using stage-specific maximum points for each component.
                 Final self-check before output:
                 1) Every component must include at least one meaningful evidence or missingData item.
                 2) High score (>1.2) requires specific evidence.
@@ -544,13 +544,16 @@ namespace AISEP.BLL.Services.AI
             {
                 DevelopmentStage.Idea =>
                     "IDEA stage: prioritize ProblemStatement, SolutionDescription, TargetCustomers, and TeamMembers. " +
-                    "Do not heavily penalize missing Revenue or detailed TeamExperience at this stage, but still be strict on evidence quality for the available data.",
+                    "Do not heavily penalize missing Revenue or detailed TeamExperience at this stage, but still be strict on evidence quality for the available data. " +
+                    "Max points by component: Team=20, Opportunity=25, Product=30, Competition=5, Marketing=10, Investment=5, Other=5.",
                 DevelopmentStage.MVP =>
                     "MVP stage: include all IDEA expectations, and emphasize execution readiness via " +
-                    "UniqueValueProposition, BusinessModel, KeySkills, Competitors, and relevance of attached demo/pitch evidence. Be stricter than IDEA.",
+                    "UniqueValueProposition, BusinessModel, KeySkills, Competitors, and relevance of attached demo/pitch evidence. Be stricter than IDEA. " +
+                    "Max points by component: Team=25, Opportunity=20, Product=25, Competition=10, Marketing=10, Investment=5, Other=5.",
                 DevelopmentStage.Growth =>
                     "GROWTH stage: include IDEA + MVP expectations, and strongly emphasize Revenue performance, " +
-                    "MarketSize rationale, TeamExperience for scaling, and professional evidence documents. This stage must be evaluated most strictly.",
+                    "MarketSize rationale, TeamExperience for scaling, and professional evidence documents. This stage must be evaluated most strictly. " +
+                    "Max points by component: Team=20, Opportunity=15, Product=15, Competition=10, Marketing=20, Investment=15, Other=5.",
                 _ =>
                     "Unknown stage: balance scoring conservatively, prioritize evidence quality, and list missing critical data explicitly."
             };

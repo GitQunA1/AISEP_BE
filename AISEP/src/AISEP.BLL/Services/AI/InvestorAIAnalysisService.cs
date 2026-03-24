@@ -43,7 +43,7 @@ namespace AISEP.BLL.Services.AI
             var documents = (await _unitOfWork.Documents.GetByProjectIdAsync(projectId)).ToList();
             var result = await _geminiAiService.AnalyzeProjectForInvestorAsync(project, documents);
             NormalizeAnalysisResult(result);
-            result.PotentialScore = CalculatePotentialScore(result);
+            result.PotentialScore = CalculatePotentialScore(result, project.DevelopmentStage);
 
             var analysisJson = JsonSerializer.Serialize(result);
             var existing = await _unitOfWork.InvestorAIAnalyses
@@ -68,7 +68,7 @@ namespace AISEP.BLL.Services.AI
             }
 
             await _unitOfWork.SaveChangesAsync();
-            return MapToResponse(existing, _mapper);
+            return MapToResponse(existing, _mapper, project.DevelopmentStage);
         }
 
         public async Task<InvestorAIAnalysisResponse?> GetAnalysisAsync(int projectId)
@@ -76,21 +76,26 @@ namespace AISEP.BLL.Services.AI
             var userId = _userService.GetUserId();
             var investor = await _unitOfWork.Investors.GetByUserIdAsync(userId)
                 ?? throw new KeyNotFoundException("Investor profile not found.");
+            var project = await _unitOfWork.Projects.GetByIdAsync(projectId)
+                ?? throw new KeyNotFoundException($"Project {projectId} not found.");
 
             var analysis = await _unitOfWork.InvestorAIAnalyses
                 .GetByInvestorAndProjectAsync(investor.InvestorId, projectId);
 
-            return analysis is null ? null : MapToResponse(analysis, _mapper);
+            return analysis is null ? null : MapToResponse(analysis, _mapper, project.DevelopmentStage);
         }
 
-        private static InvestorAIAnalysisResponse MapToResponse(InvestorAIAnalysis analysis, IMapper mapper)
+        private static InvestorAIAnalysisResponse MapToResponse(
+            InvestorAIAnalysis analysis,
+            IMapper mapper,
+            DevelopmentStage? stage)
         {
             var parsed = DeserializeAnalysisJson(analysis.AnalysisJson);
             var response = mapper.Map<InvestorAIAnalysisResponse>(analysis);
             response.Analysis = parsed;
             response.PotentialScore = parsed?.PotentialScore;
             response.ChaosScore = parsed?.ChaosScore;
-            response.ScoreBreakdown = BuildBreakdown(parsed);
+            response.ScoreBreakdown = BuildBreakdown(parsed, stage);
             response.InvestmentVerdict = parsed?.InvestmentVerdict ?? string.Empty;
             response.RiskFlags = parsed?.RiskFlags ?? [];
             response.DealBreakers = parsed?.DealBreakers ?? [];
@@ -118,20 +123,21 @@ namespace AISEP.BLL.Services.AI
             }
         }
 
-        private static int CalculatePotentialScore(GeminiAnalysisResult result)
+        private static int CalculatePotentialScore(GeminiAnalysisResult result, DevelopmentStage? stage)
         {
             static double Normalize(double score) => Math.Clamp(score, 0.0, 2.0);
+            var maxPoints = GetStageMaxPointProfile(stage);
 
-            var weighted =
-                0.30 * Normalize(GetComponentScore(result.Team, result.TeamScore)) +
-                0.25 * Normalize(GetComponentScore(result.Opportunity, result.OpportunityScore)) +
-                0.15 * Normalize(GetComponentScore(result.Product, result.ProductScore)) +
-                0.10 * Normalize(GetComponentScore(result.Competition, result.CompetitionScore)) +
-                0.10 * Normalize(GetComponentScore(result.Marketing, result.MarketingScore)) +
-                0.05 * Normalize(GetComponentScore(result.Investment, result.InvestmentScore)) +
-                0.05 * Normalize(GetComponentScore(result.Other, result.OtherScore));
+            var totalPoints =
+                (Normalize(GetComponentScore(result.Team, result.TeamScore)) / 2.0) * maxPoints.Team +
+                (Normalize(GetComponentScore(result.Opportunity, result.OpportunityScore)) / 2.0) * maxPoints.Opportunity +
+                (Normalize(GetComponentScore(result.Product, result.ProductScore)) / 2.0) * maxPoints.Product +
+                (Normalize(GetComponentScore(result.Competition, result.CompetitionScore)) / 2.0) * maxPoints.Competition +
+                (Normalize(GetComponentScore(result.Marketing, result.MarketingScore)) / 2.0) * maxPoints.Marketing +
+                (Normalize(GetComponentScore(result.Investment, result.InvestmentScore)) / 2.0) * maxPoints.Investment +
+                (Normalize(GetComponentScore(result.Other, result.OtherScore)) / 2.0) * maxPoints.Other;
 
-            return (int)Math.Round((weighted / 2.0) * 100.0, MidpointRounding.AwayFromZero);
+            return (int)Math.Round(totalPoints, MidpointRounding.AwayFromZero);
         }
 
         private static double GetComponentScore(ComponentEvaluation? component, double fallbackScore)
@@ -193,7 +199,7 @@ namespace AISEP.BLL.Services.AI
             result.Summary ??= string.Empty;
         }
 
-        private static List<ScoreBreakdownItem> BuildBreakdown(GeminiAnalysisResult? analysis)
+        private static List<ScoreBreakdownItem> BuildBreakdown(GeminiAnalysisResult? analysis, DevelopmentStage? stage)
         {
             if (analysis is null)
             {
@@ -202,6 +208,7 @@ namespace AISEP.BLL.Services.AI
 
             double Normalize(double score) => Math.Clamp(score, 0.0, 2.0);
             double Score(ComponentEvaluation? component, double fallback) => Normalize(GetComponentScore(component, fallback));
+            var maxPoints = GetStageMaxPointProfile(stage);
 
             var team = Score(analysis.Team, analysis.TeamScore);
             var opportunity = Score(analysis.Opportunity, analysis.OpportunityScore);
@@ -213,14 +220,26 @@ namespace AISEP.BLL.Services.AI
 
             return
             [
-                new ScoreBreakdownItem { Component = "Team", Weight = 0.30, Score = team, WeightedContribution = Math.Round(0.30 * (team / 2.0) * 100.0, 2) },
-                new ScoreBreakdownItem { Component = "Opportunity", Weight = 0.25, Score = opportunity, WeightedContribution = Math.Round(0.25 * (opportunity / 2.0) * 100.0, 2) },
-                new ScoreBreakdownItem { Component = "Product", Weight = 0.15, Score = product, WeightedContribution = Math.Round(0.15 * (product / 2.0) * 100.0, 2) },
-                new ScoreBreakdownItem { Component = "Competition", Weight = 0.10, Score = competition, WeightedContribution = Math.Round(0.10 * (competition / 2.0) * 100.0, 2) },
-                new ScoreBreakdownItem { Component = "Marketing", Weight = 0.10, Score = marketing, WeightedContribution = Math.Round(0.10 * (marketing / 2.0) * 100.0, 2) },
-                new ScoreBreakdownItem { Component = "Investment", Weight = 0.05, Score = investment, WeightedContribution = Math.Round(0.05 * (investment / 2.0) * 100.0, 2) },
-                new ScoreBreakdownItem { Component = "Other", Weight = 0.05, Score = other, WeightedContribution = Math.Round(0.05 * (other / 2.0) * 100.0, 2) }
+                new ScoreBreakdownItem { Component = "Team", Weight = maxPoints.Team / 100.0, Score = team, WeightedContribution = Math.Round((team / 2.0) * maxPoints.Team, 2) },
+                new ScoreBreakdownItem { Component = "Opportunity", Weight = maxPoints.Opportunity / 100.0, Score = opportunity, WeightedContribution = Math.Round((opportunity / 2.0) * maxPoints.Opportunity, 2) },
+                new ScoreBreakdownItem { Component = "Product", Weight = maxPoints.Product / 100.0, Score = product, WeightedContribution = Math.Round((product / 2.0) * maxPoints.Product, 2) },
+                new ScoreBreakdownItem { Component = "Competition", Weight = maxPoints.Competition / 100.0, Score = competition, WeightedContribution = Math.Round((competition / 2.0) * maxPoints.Competition, 2) },
+                new ScoreBreakdownItem { Component = "Marketing", Weight = maxPoints.Marketing / 100.0, Score = marketing, WeightedContribution = Math.Round((marketing / 2.0) * maxPoints.Marketing, 2) },
+                new ScoreBreakdownItem { Component = "Investment", Weight = maxPoints.Investment / 100.0, Score = investment, WeightedContribution = Math.Round((investment / 2.0) * maxPoints.Investment, 2) },
+                new ScoreBreakdownItem { Component = "Other", Weight = maxPoints.Other / 100.0, Score = other, WeightedContribution = Math.Round((other / 2.0) * maxPoints.Other, 2) }
             ];
+        }
+
+        private static (double Team, double Opportunity, double Product, double Competition, double Marketing, double Investment, double Other)
+            GetStageMaxPointProfile(DevelopmentStage? stage)
+        {
+            return stage switch
+            {
+                DevelopmentStage.Idea => (20, 25, 30, 5, 10, 5, 5),
+                DevelopmentStage.MVP => (25, 20, 25, 10, 10, 5, 5),
+                DevelopmentStage.Growth => (20, 15, 15, 10, 20, 15, 5),
+                _ => (20, 25, 30, 5, 10, 5, 5)
+            };
         }
     }
 }
