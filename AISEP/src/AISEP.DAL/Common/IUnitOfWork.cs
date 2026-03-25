@@ -16,6 +16,7 @@ using AISEP.DAL.Repositories.Transactions;
 using AISEP.DAL.Repositories.Users;
 using AISEP.DAL.Repositories.WalletTransactions;
 using AISEP.DAL.Repositories.UnlockedProjects;
+using AISEP.DAL.Repositories.Notifications;
 
 namespace AISEP.DAL.Common
 {
@@ -39,6 +40,7 @@ namespace AISEP.DAL.Common
         IPackageRepository           Packages           { get; }
         ISubscriptionRepository      Subscriptions      { get; }
         IUnlockedProjectRepository   UnlockedProjects   { get; }
+        INotificationRepository      Notifications      { get; }
         IWalletTransactionRepository WalletTransactions { get; }
 
         Task<int> SaveChangesAsync();

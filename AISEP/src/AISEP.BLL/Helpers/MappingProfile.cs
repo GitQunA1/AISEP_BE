@@ -220,6 +220,9 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.IsEligibleStartup ?? false))
                 .ForMember(dest => dest.EligibilityReason,
                     opt => opt.MapFrom(src => src.EligibilityReason ?? string.Empty));
+
+            // Notification Entity -> NotificationDto
+            CreateMap<Notification, NotificationDto>();
         }
     }
 }
