@@ -157,6 +157,8 @@ namespace AISEP.BLL.Helpers
             CreateMap<Project, NonPremiumProjectResponse>()
                 .ForMember(dest => dest.DevelopmentStage,
                     opt => opt.MapFrom(src => src.DevelopmentStage != null ? src.DevelopmentStage.ToString() : null))
+                .ForMember(dest => dest.Industry,
+                    opt => opt.MapFrom(src => src.Industry.ToString()))
                 .ForMember(dest => dest.StartupPotentialScore,
                     opt => opt.MapFrom(src => src.StartupAIAnalysis != null ? src.StartupAIAnalysis.PotentialScore : null));
 

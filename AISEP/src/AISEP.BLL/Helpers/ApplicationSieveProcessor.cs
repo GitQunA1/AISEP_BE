@@ -99,6 +99,9 @@ namespace AISEP.BLL.Helpers
             mapper.Property<Project>(p => p.CreatedAt)
                 .CanFilter()
                 .CanSort();
+            mapper.Property<Project>(p => p.Industry)
+                .CanFilter()
+                .CanSort();
 
             // Document
             mapper.Property<Document>(d => d.DocumentType)
