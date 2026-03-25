@@ -515,7 +515,9 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.Title).HasMaxLength(255);
                 entity.Property(e => e.Message).IsRequired();
                 entity.Property(e => e.Type).HasMaxLength(50);
+                entity.Property(e => e.IsRead).IsRequired();
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.HasIndex(e => new { e.UserId, e.CreatedAt });
 
                 entity.HasOne(n => n.User)
                     .WithMany(u => u.Notifications)
