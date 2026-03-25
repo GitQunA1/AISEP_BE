@@ -35,6 +35,7 @@ namespace AISEP.DAL.Data
         public DbSet<ConsultingReport> ConsultingReports { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Package> Packages { get; set; }
+        public DbSet<UnlockedProject> UnlockedProjects { get; set; }
         public DbSet<WalletTransaction> WalletTransactions { get; set; }
         public DbSet<WithdrawRequest> WithdrawRequests { get; set; }
         public DbSet<Notification> Notifications { get; set; }
@@ -140,6 +141,7 @@ namespace AISEP.DAL.Data
                 entity.ToTable("advisors");
                 entity.HasKey(e => e.AdvisorId);
                 entity.Property(e => e.Expertise).HasMaxLength(255);
+                entity.Property(e => e.Industry).HasConversion<string>();
                 entity.Property(e => e.Rating).HasColumnType("decimal(3,2)");
                 entity.Property(e => e.LanguagesSpoken).HasMaxLength(255);
                 entity.Property(e => e.Location).HasMaxLength(255);
@@ -175,7 +177,9 @@ namespace AISEP.DAL.Data
                 entity.ToTable("projects");
                 entity.HasKey(e => e.ProjectId);
                 entity.Property(e => e.ProjectName).HasMaxLength(255).IsRequired();
+                entity.Property(e => e.ProjectImageUrl).HasMaxLength(500);
                 entity.Property(e => e.DevelopmentStage).HasConversion<string>().HasMaxLength(50);
+                entity.Property(e => e.Industry).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.MarketSize).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.Revenue).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
@@ -410,6 +414,25 @@ namespace AISEP.DAL.Data
                 entity.HasOne(s => s.User)
                     .WithMany(u => u.Subscriptions)
                     .HasForeignKey(s => s.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<UnlockedProject>(entity =>
+            {
+                entity.ToTable("unlocked_projects");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.UnlockedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                entity.HasIndex(e => new { e.UserId, e.ProjectId }).IsUnique();
+
+                entity.HasOne(e => e.User)
+                    .WithMany(u => u.UnlockedProjects)
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Project)
+                    .WithMany(p => p.UnlockedProjects)
+                    .HasForeignKey(e => e.ProjectId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 

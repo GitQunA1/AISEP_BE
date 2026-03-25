@@ -29,7 +29,10 @@ namespace AISEP.BLL.Services.Payments
                 PackageName    = p.PackageName,
                 Description    = p.Description,
                 Price          = p.Price,
-                DurationMonths = p.DurationMonths
+                DurationMonths = p.DurationMonths,
+                MaxAiRequests = p.MaxAiRequests,
+                MaxProjectViews = p.MaxProjectViews,
+                FreeBookingCount = p.FreeBookingCount
             });
         }
 
@@ -209,7 +212,10 @@ namespace AISEP.BLL.Services.Payments
                 UserId = transaction.UserId,
                 StartDate = startDate,
                 EndDate = endDate,
-                Status = SubscriptionStatus.Active
+                Status = SubscriptionStatus.Active,
+                RemainingFreeBookings = package.FreeBookingCount,
+                UsedAiRequests = 0,
+                UsedProjectViews = 0
             });
 
             var user = await _unitOfWork.Users.GetByIdAsync(transaction.UserId);

@@ -9,7 +9,9 @@ namespace AISEP.BLL.Services.Projects
     public interface IProjectService
     {
         Task<PagedResult<ProjectResponse>> GetAllProjectsAsync(SieveModel model);
+        Task<PagedResult<NonPremiumProjectResponse>> GetAllProjectsForNonPremiumAsync(SieveModel model);
         Task<ProjectResponse?> GetProjectByIdAsync(int id);
+       
         Task<PagedResult<ProjectResponse>> GetMyProjectsAsync(SieveModel model);
         Task<PagedResult<ProjectResponse>> GetDraftProjectsAsync(SieveModel model);
 

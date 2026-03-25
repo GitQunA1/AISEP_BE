@@ -25,6 +25,7 @@ namespace AISEP.DAL.Entities
         public ICollection<Booking> CustomerBookings { get; set; } = new List<Booking>();
         public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
         public ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
+        public ICollection<UnlockedProject> UnlockedProjects { get; set; } = new List<UnlockedProject>();
         public ICollection<ActionLog> ActionLogs { get; set; } = new List<ActionLog>();
         public ICollection<ChatMessage> ChatMessages { get; set; } = new List<ChatMessage>();
         public ICollection<Review> Reviews { get; set; } = new List<Review>();

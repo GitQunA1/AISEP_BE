@@ -10,30 +10,15 @@ namespace AISEP.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<int>(
-                name: "ReferenceId",
-                table: "transactions",
-                type: "integer",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "ReferenceType",
-                table: "transactions",
-                type: "character varying(50)",
-                maxLength: 50,
-                nullable: true);
+            migrationBuilder.Sql("ALTER TABLE \"transactions\" ADD COLUMN IF NOT EXISTS \"ReferenceId\" integer;");
+            migrationBuilder.Sql("ALTER TABLE \"transactions\" ADD COLUMN IF NOT EXISTS \"ReferenceType\" character varying(50);");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "ReferenceId",
-                table: "transactions");
-
-            migrationBuilder.DropColumn(
-                name: "ReferenceType",
-                table: "transactions");
+            migrationBuilder.Sql("ALTER TABLE \"transactions\" DROP COLUMN IF EXISTS \"ReferenceId\";");
+            migrationBuilder.Sql("ALTER TABLE \"transactions\" DROP COLUMN IF EXISTS \"ReferenceType\";");
         }
     }
 }

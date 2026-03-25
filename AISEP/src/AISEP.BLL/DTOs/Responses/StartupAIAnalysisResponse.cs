@@ -5,9 +5,8 @@ namespace AISEP.BLL.DTOs.Responses
     public class ScoreBreakdownItem
     {
         public string Component { get; set; } = string.Empty;
-        public double Weight { get; set; }
+        public double MaxPoints { get; set; }
         public double Score { get; set; }
-        public double WeightedContribution { get; set; }
     }
 
     public class StartupAIAnalysisResponse

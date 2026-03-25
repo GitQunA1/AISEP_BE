@@ -16,6 +16,8 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.User != null ? src.User.UserName : null))
                 .ForMember(dest => dest.Email,
                     opt => opt.MapFrom(src => src.User != null ? src.User.Email : null))
+                .ForMember(dest => dest.Industry,
+                    opt => opt.MapFrom(src => src.Industry != null ? src.Industry.ToString() : null))
                 .ForMember(dest => dest.ApprovalStatus,
                     opt => opt.MapFrom(src => src.ApprovalStatus.ToString()));
 
@@ -139,6 +141,8 @@ namespace AISEP.BLL.Helpers
             CreateMap<Project, ProjectResponse>()
                 .ForMember(dest => dest.DevelopmentStage,
                     opt => opt.MapFrom(src => src.DevelopmentStage != null ? src.DevelopmentStage.ToString() : null))
+                .ForMember(dest => dest.Industry,
+                    opt => opt.MapFrom(src => src.Industry.ToString()))
                 .ForMember(dest => dest.Status,
                     opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.ApprovedById, opt => opt.MapFrom(src => src.ApprovedById))
@@ -146,6 +150,53 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.RejectedById, opt => opt.MapFrom(src => src.RejectedById))
                 .ForMember(dest => dest.RejectedAt, opt => opt.MapFrom(src => src.RejectedAt))
                 .ForMember(dest => dest.RejectionReason, opt => opt.MapFrom(src => src.RejectionReason));
+
+            // Project Entity → NonPremiumProjectResponse
+            CreateMap<Project, NonPremiumProjectResponse>()
+                .ForMember(dest => dest.DevelopmentStage,
+                    opt => opt.MapFrom(src => src.DevelopmentStage != null ? src.DevelopmentStage.ToString() : null));
+
+            // CreateProjectRequest -> Project Entity
+            CreateMap<CreateProjectRequest, Project>()
+                .ForMember(dest => dest.ProjectId, opt => opt.Ignore())
+                .ForMember(dest => dest.StartupId, opt => opt.Ignore())
+                .ForMember(dest => dest.ViewCount, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.ApprovedById, opt => opt.Ignore())
+                .ForMember(dest => dest.ApprovedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.RejectedById, opt => opt.Ignore())
+                .ForMember(dest => dest.RejectedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.RejectionReason, opt => opt.Ignore())
+                .ForMember(dest => dest.Startup, opt => opt.Ignore())
+                .ForMember(dest => dest.Documents, opt => opt.Ignore())
+                .ForMember(dest => dest.StartupAIAnalysis, opt => opt.Ignore())
+                .ForMember(dest => dest.InvestorAIAnalyses, opt => opt.Ignore())
+                .ForMember(dest => dest.UnlockedProjects, opt => opt.Ignore())
+                .ForMember(dest => dest.ConnectionRequests, opt => opt.Ignore())
+                .ForMember(dest => dest.Deals, opt => opt.Ignore());
+
+            // UpdateProjectRequest -> Project Entity
+            var updateProjectMap = CreateMap<UpdateProjectRequest, Project>()
+                .ForMember(dest => dest.ProjectId, opt => opt.Ignore())
+                .ForMember(dest => dest.StartupId, opt => opt.Ignore())
+                .ForMember(dest => dest.ViewCount, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.ApprovedById, opt => opt.Ignore())
+                .ForMember(dest => dest.ApprovedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.RejectedById, opt => opt.Ignore())
+                .ForMember(dest => dest.RejectedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.RejectionReason, opt => opt.Ignore())
+                .ForMember(dest => dest.Startup, opt => opt.Ignore())
+                .ForMember(dest => dest.Documents, opt => opt.Ignore())
+                .ForMember(dest => dest.StartupAIAnalysis, opt => opt.Ignore())
+                .ForMember(dest => dest.InvestorAIAnalyses, opt => opt.Ignore())
+                .ForMember(dest => dest.UnlockedProjects, opt => opt.Ignore())
+                .ForMember(dest => dest.ConnectionRequests, opt => opt.Ignore())
+                .ForMember(dest => dest.Deals, opt => opt.Ignore());
+
+            updateProjectMap.ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
             // StartupAIAnalysis Entity → StartupAIAnalysisResponse
             CreateMap<StartupAIAnalysis, StartupAIAnalysisResponse>()

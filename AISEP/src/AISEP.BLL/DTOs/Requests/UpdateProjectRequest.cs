@@ -5,6 +5,7 @@ namespace AISEP.BLL.DTOs.Requests
     public class UpdateProjectRequest
     {
         public string?          ProjectName            { get; set; }
+        public string?          ProjectImageUrl        { get; set; }
         public string?          ShortDescription       { get; set; }
         public DevelopmentStage? DevelopmentStage      { get; set; }
         public string?          ProblemStatement       { get; set; }
@@ -18,5 +19,6 @@ namespace AISEP.BLL.DTOs.Requests
         public string?          TeamMembers            { get; set; }
         public string?          KeySkills              { get; set; }
         public string?          TeamExperience         { get; set; }
+        public Industry?        Industry               { get; set; }
     }
 }

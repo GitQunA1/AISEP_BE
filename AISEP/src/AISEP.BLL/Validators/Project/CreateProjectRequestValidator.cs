@@ -14,11 +14,20 @@ namespace AISEP.BLL.Validators.Project
             RuleFor(x => x.DevelopmentStage)
                 .IsInEnum().WithMessage("Development stage is invalid.");
 
+            RuleFor(x => x.Industry)
+                .NotNull().WithMessage("Industry is required.")
+                .IsInEnum().WithMessage("Industry is invalid.");
+
             // IDEA: required for all stages (Idea, MVP, Growth)
             RuleFor(x => x.ProjectName)
                 .NotEmpty().WithMessage("Project name is required.")
                 .MaximumLength(255).WithMessage("Project name must not exceed 255 characters.")
                 .Matches(TextPattern).WithMessage("Project name contains invalid characters.");
+
+            RuleFor(x => x.ProjectImageUrl)
+                .MaximumLength(500).WithMessage("Project image URL must not exceed 500 characters.")
+                .Must(BeValidUrl).WithMessage("Project image URL is invalid.")
+                .When(x => !string.IsNullOrWhiteSpace(x.ProjectImageUrl));
 
             RuleFor(x => x.ShortDescription)
                 .NotEmpty().WithMessage("Short description is required.")
@@ -115,6 +124,12 @@ namespace AISEP.BLL.Validators.Project
         private static bool IsMvpOrGrowth(CreateProjectRequest request)
         {
             return request.DevelopmentStage is DevelopmentStage.MVP or DevelopmentStage.Growth;
+        }
+
+        private static bool BeValidUrl(string? url)
+        {
+            return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+                && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
         }
     }
 }

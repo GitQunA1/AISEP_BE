@@ -49,6 +49,10 @@ namespace AISEP.BLL.Validators.Advisor
             RuleFor(x => x.Location)
                 .Matches("^[a-zA-Z0-9 .,!?'-àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]*$").WithMessage("Location must not contain numbers or special characters.")
                 .When(x => !string.IsNullOrWhiteSpace(x.Location));
+
+            RuleFor(x => x.Industry)
+                .IsInEnum().WithMessage("Industry is invalid.")
+                .When(x => x.Industry.HasValue);
         }
     }
 }

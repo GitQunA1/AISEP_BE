@@ -7,7 +7,6 @@ using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
 using Sieve.Services;
 
@@ -33,13 +32,46 @@ namespace AISEP.BLL.Services.Projects
             return await PaginationHelper.PaginateAsync(_unitOfWork.Projects.GetAllQuery(), model, _sieveProcessor, p => _mapper.Map<ProjectResponse>(p));
         }
 
+        public async Task<PagedResult<NonPremiumProjectResponse>> GetAllProjectsForNonPremiumAsync(SieveModel model)
+        {
+            return await PaginationHelper.PaginateAsync(
+                _unitOfWork.Projects.GetAllQuery(),
+                model,
+                _sieveProcessor,
+                p => _mapper.Map<NonPremiumProjectResponse>(p));
+        }
+
+      
+
         public async Task<ProjectResponse?> GetProjectByIdAsync(int id)
         {
             var project = await _unitOfWork.Projects.GetByIdAsync(id);
             if (project is null)
                 throw new KeyNotFoundException("Project not found.");
+
+            var userId = _userService.GetUserId();
+            var role = _userService.GetUserRole();
+
+            if (CanBypassViewQuota(project, userId, role))
+            {
+                return _mapper.Map<ProjectResponse>(project);
+            }
+
+            if (!RequiresViewQuota(role))
+            {
+                return _mapper.Map<ProjectResponse>(project);
+            }
+
+            var isUnlocked = await _unitOfWork.UnlockedProjects.ExistsAsync(userId, id);
+            if (!isUnlocked)
+            {
+                await ConsumeProjectViewQuotaAndUnlockAsync(userId, id);
+            }
+
             return _mapper.Map<ProjectResponse>(project);
         }
+
+      
 
         public async Task<PagedResult<ProjectResponse>> GetMyProjectsAsync(SieveModel model)
         {
@@ -63,28 +95,11 @@ namespace AISEP.BLL.Services.Projects
             if (startup is null)
                 throw new KeyNotFoundException("Startup profile not found. Please create a startup profile first.");
 
-            var project = new Project
-            {
-                StartupId              = startup.StartupId,
-                ProjectName            = dto.ProjectName,
-                ShortDescription       = dto.ShortDescription,
-                DevelopmentStage       = dto.DevelopmentStage,
-                ProblemStatement       = dto.ProblemStatement,
-                SolutionDescription    = dto.SolutionDescription,
-                TargetCustomers        = dto.TargetCustomers,
-                UniqueValueProposition = dto.UniqueValueProposition,
-                MarketSize             = dto.MarketSize,
-                BusinessModel          = dto.BusinessModel,
-                Revenue                = dto.Revenue,
-                Competitors            = dto.Competitors,
-                TeamMembers            = dto.TeamMembers,
-                KeySkills              = dto.KeySkills,
-                TeamExperience         = dto.TeamExperience,
-                Status                 = ProjectStatus.Draft,
-                CreatedAt              = DateTime.UtcNow,
-                //CreatedBy              = userId
-
-            };
+            var project = _mapper.Map<Project>(dto);
+            project.StartupId = startup.StartupId;
+            project.Industry = dto.Industry!.Value;
+            project.Status = ProjectStatus.Draft;
+            project.CreatedAt = DateTime.UtcNow;
 
             await _unitOfWork.Projects.AddAsync(project);
             await _unitOfWork.SaveChangesAsync();
@@ -108,22 +123,9 @@ namespace AISEP.BLL.Services.Projects
             if (project.Status == ProjectStatus.Rejected)
                  project.Status = ProjectStatus.Draft;
 
-
-
-            project.ProjectName            = dto.ProjectName            ?? project.ProjectName;
-            project.ShortDescription       = dto.ShortDescription       ?? project.ShortDescription;
-            project.DevelopmentStage       = dto.DevelopmentStage       ?? project.DevelopmentStage;
-            project.ProblemStatement       = dto.ProblemStatement       ?? project.ProblemStatement;
-            project.SolutionDescription    = dto.SolutionDescription    ?? project.SolutionDescription;
-            project.TargetCustomers        = dto.TargetCustomers        ?? project.TargetCustomers;
-            project.UniqueValueProposition = dto.UniqueValueProposition ?? project.UniqueValueProposition;
-            project.MarketSize             = dto.MarketSize             ?? project.MarketSize;
-            project.BusinessModel          = dto.BusinessModel          ?? project.BusinessModel;
-            project.Revenue                = dto.Revenue                ?? project.Revenue;
-            project.Competitors            = dto.Competitors            ?? project.Competitors;
-            project.TeamMembers            = dto.TeamMembers            ?? project.TeamMembers;
-            project.KeySkills              = dto.KeySkills              ?? project.KeySkills;
-            project.TeamExperience         = dto.TeamExperience         ?? project.TeamExperience;
+            _mapper.Map(dto, project);
+            if (dto.Industry.HasValue)
+                project.Industry = dto.Industry.Value;
 
             ValidateByStageLikeCreate(project);
 
@@ -181,9 +183,51 @@ namespace AISEP.BLL.Services.Projects
             await _unitOfWork.SaveChangesAsync();
         }
 
+        private static bool CanBypassViewQuota(Project project, int userId, string? role)
+        {
+            if (string.Equals(role, "Staff", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            return project.Startup.UserId == userId;
+        }
+
+        private static bool RequiresViewQuota(string? role)
+        {
+            return string.Equals(role, "Investor", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(role, "User", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private async Task ConsumeProjectViewQuotaAndUnlockAsync(int userId, int projectId)
+        {
+            var subscription = await _unitOfWork.Subscriptions.GetLatestActiveAsync(userId)
+                ?? throw new InvalidOperationException("No active subscription.");
+
+            var package = await _unitOfWork.Packages.GetByIdAsync(subscription.PackageId)
+                ?? throw new KeyNotFoundException("Package not found.");
+
+            if (subscription.UsedProjectViews >= package.MaxProjectViews)
+            {
+                throw new InvalidOperationException("Bạn đã hết lượt xem dự án. Vui lòng nâng cấp gói.");
+            }
+
+            subscription.UsedProjectViews += 1;
+            _unitOfWork.Subscriptions.Update(subscription);
+
+            await _unitOfWork.UnlockedProjects.AddAsync(new UnlockedProject
+            {
+                UserId = userId,
+                ProjectId = projectId,
+                UnlockedAt = DateTime.UtcNow
+            });
+
+            await _unitOfWork.SaveChangesAsync();
+        }
+
         private static void ValidateByStageLikeCreate(Project project)
         {
-            
             if (!HasValue(project.ProjectName))
                 throw new InvalidOperationException("Project name is required.");
             if (!HasValue(project.ShortDescription))
@@ -224,5 +268,31 @@ namespace AISEP.BLL.Services.Projects
         {
             return !string.IsNullOrWhiteSpace(value);
         }
+
+        private static string? BuildTeaserText(string? value, int maxLength)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return null;
+            }
+
+            var normalized = System.Text.RegularExpressions.Regex.Replace(value.Trim(), @"\s+", " ");
+            if (normalized.Length <= maxLength)
+            {
+                return normalized;
+            }
+
+            return normalized[..maxLength].TrimEnd() + "...";
+        }
+
+        //private NonPremiumProjectResponse MapNonPremiumProject(Project project)
+        //{
+        //    var response = _mapper.Map<NonPremiumProjectResponse>(project);
+        //    response.ProblemStatement = BuildTeaserText(response.ProblemStatement, 220);
+        //    response.SolutionDescription = BuildTeaserText(response.SolutionDescription, 220);
+        //    response.TargetCustomers = BuildTeaserText(response.TargetCustomers, 120);
+        //    response.UniqueValueProposition = BuildTeaserText(response.UniqueValueProposition, 140);
+        //    return response;
+        //}
     }
 }

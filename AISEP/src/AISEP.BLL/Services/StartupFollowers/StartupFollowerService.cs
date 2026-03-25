@@ -4,7 +4,6 @@ using AISEP.BLL.DTOs.Responses;
 using AISEP.DAL.Entities;
 using AISEP.BLL.Services.Users;
 using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
 using Sieve.Services;
 
@@ -92,18 +91,6 @@ namespace AISEP.BLL.Services.StartupFollowers
 
         //    return await ApplySieveAndPaginateFollowersAsync(query, model);
         //}
-
-        private FollowedStartupResponse MapToFollowedStartupResponse(StartupFollower sf)
-        {
-            return new FollowedStartupResponse
-            {
-                StartupId = sf.FollowedId,
-                CompanyName = sf.Startup?.CompanyName ?? "Unknown",
-                LogoUrl = sf.Startup?.LogoUrl,
-                Industry = sf.Startup?.Industry.ToString(),
-                FollowedAt = sf.CreatedAt
-            };
-        }
 
         //private StartupFollowerResponseDto MapToFollowerDto(StartupFollower sf)
         //{
