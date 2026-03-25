@@ -32,6 +32,17 @@ namespace AISEP.BLL.Services.Projects
             return await PaginationHelper.PaginateAsync(_unitOfWork.Projects.GetAllQuery(), model, _sieveProcessor, p => _mapper.Map<ProjectResponse>(p));
         }
 
+        public async Task<PagedResult<NonPremiumProjectResponse>> GetAllProjectsForNonPremiumAsync(SieveModel model)
+        {
+            return await PaginationHelper.PaginateAsync(
+                _unitOfWork.Projects.GetAllQuery(),
+                model,
+                _sieveProcessor,
+                p => _mapper.Map<NonPremiumProjectResponse>(p));
+        }
+
+      
+
         public async Task<ProjectResponse?> GetProjectByIdAsync(int id)
         {
             var project = await _unitOfWork.Projects.GetByIdAsync(id);
@@ -59,6 +70,8 @@ namespace AISEP.BLL.Services.Projects
 
             return _mapper.Map<ProjectResponse>(project);
         }
+
+      
 
         public async Task<PagedResult<ProjectResponse>> GetMyProjectsAsync(SieveModel model)
         {
@@ -111,7 +124,8 @@ namespace AISEP.BLL.Services.Projects
                  project.Status = ProjectStatus.Draft;
 
             _mapper.Map(dto, project);
-            project.Industry = dto.Industry!.Value;
+            if (dto.Industry.HasValue)
+                project.Industry = dto.Industry.Value;
 
             ValidateByStageLikeCreate(project);
 
@@ -254,5 +268,31 @@ namespace AISEP.BLL.Services.Projects
         {
             return !string.IsNullOrWhiteSpace(value);
         }
+
+        private static string? BuildTeaserText(string? value, int maxLength)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return null;
+            }
+
+            var normalized = System.Text.RegularExpressions.Regex.Replace(value.Trim(), @"\s+", " ");
+            if (normalized.Length <= maxLength)
+            {
+                return normalized;
+            }
+
+            return normalized[..maxLength].TrimEnd() + "...";
+        }
+
+        //private NonPremiumProjectResponse MapNonPremiumProject(Project project)
+        //{
+        //    var response = _mapper.Map<NonPremiumProjectResponse>(project);
+        //    response.ProblemStatement = BuildTeaserText(response.ProblemStatement, 220);
+        //    response.SolutionDescription = BuildTeaserText(response.SolutionDescription, 220);
+        //    response.TargetCustomers = BuildTeaserText(response.TargetCustomers, 120);
+        //    response.UniqueValueProposition = BuildTeaserText(response.UniqueValueProposition, 140);
+        //    return response;
+        //}
     }
 }

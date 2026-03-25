@@ -5,6 +5,7 @@
         public int ProjectId { get; set; }
         public int StartupId { get; set; }
         public string ProjectName { get; set; } = string.Empty;
+        public string? ProjectImageUrl { get; set; }
         public string? ShortDescription { get; set; }
         public string? DevelopmentStage { get; set; }
         public string? ProblemStatement { get; set; }

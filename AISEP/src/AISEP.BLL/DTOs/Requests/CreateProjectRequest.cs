@@ -5,6 +5,7 @@ namespace AISEP.BLL.DTOs.Requests
     public class CreateProjectRequest
     {
         public string          ProjectName            { get; set; } = string.Empty;
+        public string?         ProjectImageUrl        { get; set; }
         public string          ShortDescription       { get; set; } = string.Empty;
         public DevelopmentStage DevelopmentStage      { get; set; }
         public string          ProblemStatement       { get; set; } = string.Empty;

@@ -151,6 +151,11 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.RejectedAt, opt => opt.MapFrom(src => src.RejectedAt))
                 .ForMember(dest => dest.RejectionReason, opt => opt.MapFrom(src => src.RejectionReason));
 
+            // Project Entity → NonPremiumProjectResponse
+            CreateMap<Project, NonPremiumProjectResponse>()
+                .ForMember(dest => dest.DevelopmentStage,
+                    opt => opt.MapFrom(src => src.DevelopmentStage != null ? src.DevelopmentStage.ToString() : null));
+
             // CreateProjectRequest -> Project Entity
             CreateMap<CreateProjectRequest, Project>()
                 .ForMember(dest => dest.ProjectId, opt => opt.Ignore())

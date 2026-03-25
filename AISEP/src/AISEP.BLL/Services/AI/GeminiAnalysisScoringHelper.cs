@@ -1,30 +1,65 @@
 using System.Text.Json;
+using System.Linq;
 using AISEP.BLL.DTOs.Responses;
+using AISEP.DAL.Entities;
+using AISEP.DAL.Enums;
 
 namespace AISEP.BLL.Services.AI
 {
     public static class GeminiAnalysisScoringHelper
     {
-        public static int CalculatePotentialScore(GeminiAnalysisResult result)
+        public static int CalculatePotentialScore(GeminiAnalysisResult result, DevelopmentStage? stage)
         {
-            static double Normalize(double score) => Math.Clamp(score, 0.0, 2.0);
+            static double Normalize(double score) => NormalizeScore(score);
+            var maxPoints = GetStageMaxPointProfile(stage);
 
-            var weighted =
-                0.30 * Normalize(GetComponentScore(result.Team, result.TeamScore)) +
-                0.25 * Normalize(GetComponentScore(result.Opportunity, result.OpportunityScore)) +
-                0.15 * Normalize(GetComponentScore(result.Product, result.ProductScore)) +
-                0.10 * Normalize(GetComponentScore(result.Competition, result.CompetitionScore)) +
-                0.10 * Normalize(GetComponentScore(result.Marketing, result.MarketingScore)) +
-                0.05 * Normalize(GetComponentScore(result.Investment, result.InvestmentScore)) +
-                0.05 * Normalize(GetComponentScore(result.Other, result.OtherScore));
+            var totalPoints =
+                (Normalize(GetComponentScore(result.Team, result.TeamScore)) / 10.0) * maxPoints.Team +
+                (Normalize(GetComponentScore(result.Opportunity, result.OpportunityScore)) / 10.0) * maxPoints.Opportunity +
+                (Normalize(GetComponentScore(result.Product, result.ProductScore)) / 10.0) * maxPoints.Product +
+                (Normalize(GetComponentScore(result.Competition, result.CompetitionScore)) / 10.0) * maxPoints.Competition +
+                (Normalize(GetComponentScore(result.Marketing, result.MarketingScore)) / 10.0) * maxPoints.Marketing +
+                (Normalize(GetComponentScore(result.Investment, result.InvestmentScore)) / 10.0) * maxPoints.Investment +
+                (Normalize(GetComponentScore(result.Other, result.OtherScore)) / 10.0) * maxPoints.Other;
 
-            // Map weighted average from [0..2] to [0..100].
-            return (int)Math.Round((weighted / 2.0) * 100.0, MidpointRounding.AwayFromZero);
+            return (int)Math.Round(totalPoints, MidpointRounding.AwayFromZero);
+        }
+
+        public static int ApplyDataQualitySanityCap(int potentialScore, GeminiAnalysisResult result, Project project)
+        {
+            var capped = potentialScore;
+            var weakCoreFields = CountWeakCoreFields(project);
+
+            // Hard cap for extremely risky outputs.
+            if (result.ChaosScore >= 95)
+            {
+                capped = Math.Min(capped, 30);
+            }
+            else if (result.ChaosScore >= 90)
+            {
+                capped = Math.Min(capped, 40);
+            }
+            else if (result.ChaosScore >= 80)
+            {
+                capped = Math.Min(capped, 55);
+            }
+
+            // Additional cap when core project fields are placeholder-like.
+            if (weakCoreFields >= 4)
+            {
+                capped = Math.Min(capped, 30);
+            }
+            else if (weakCoreFields >= 2)
+            {
+                capped = Math.Min(capped, 45);
+            }
+
+            return capped;
         }
 
         public static void NormalizeAnalysisResult(GeminiAnalysisResult result, bool includeInvestorFields)
         {
-            static double ClampScore(double value) => Math.Clamp(value, 0.0, 2.0);
+            static double ClampScore(double value) => NormalizeScore(value);
             static double ClampConfidence(double value) => Math.Clamp(value, 0.0, 1.0);
 
             void NormalizeComponent(ComponentEvaluation? component, Action<double> setLegacyScore)
@@ -40,13 +75,13 @@ namespace AISEP.BLL.Services.AI
                 component.MissingData ??= [];
                 component.Reason ??= string.Empty;
 
-                // Guardrail: score cao nhưng thiếu bằng chứng => giảm về mức thận trọng.
-                if (component.Score > 1.0 && component.Evidence.Count == 0)
+                // Guardrail: score high but evidence missing -> reduce to a cautious level.
+                if (component.Score > 6.0 && component.Evidence.Count == 0)
                 {
-                    component.Score = 0.9;
+                    component.Score = 4.5;
                     component.Reason = string.IsNullOrWhiteSpace(component.Reason)
-                    ? "Điểm đã được điều chỉnh do thiếu bằng chứng cụ thể."
-                    : component.Reason + " | Adjusted: thiếu bằng chứng cụ thể.";
+                        ? "Score adjusted due to missing concrete evidence."
+                        : component.Reason + " | Adjusted: missing concrete evidence.";
                 }
 
                 setLegacyScore(component.Score);
@@ -103,15 +138,16 @@ namespace AISEP.BLL.Services.AI
             }
         }
 
-        public static List<ScoreBreakdownItem> BuildBreakdown(GeminiAnalysisResult? analysis)
+        public static List<ScoreBreakdownItem> BuildBreakdown(GeminiAnalysisResult? analysis, DevelopmentStage? stage)
         {
             if (analysis is null)
             {
                 return [];
             }
 
-            double Normalize(double score) => Math.Clamp(score, 0.0, 2.0);
+            static double Normalize(double score) => NormalizeScore(score);
             double Score(ComponentEvaluation? component, double fallback) => Normalize(GetComponentScore(component, fallback));
+            var maxPoints = GetStageMaxPointProfile(stage);
 
             var team = Score(analysis.Team, analysis.TeamScore);
             var opportunity = Score(analysis.Opportunity, analysis.OpportunityScore);
@@ -123,19 +159,106 @@ namespace AISEP.BLL.Services.AI
 
             return
             [
-                new ScoreBreakdownItem { Component = "Team", Weight = 0.30, Score = team, WeightedContribution = Math.Round(0.30 * (team / 2.0) * 100.0, 2) },
-                new ScoreBreakdownItem { Component = "Opportunity", Weight = 0.25, Score = opportunity, WeightedContribution = Math.Round(0.25 * (opportunity / 2.0) * 100.0, 2) },
-                new ScoreBreakdownItem { Component = "Product", Weight = 0.15, Score = product, WeightedContribution = Math.Round(0.15 * (product / 2.0) * 100.0, 2) },
-                new ScoreBreakdownItem { Component = "Competition", Weight = 0.10, Score = competition, WeightedContribution = Math.Round(0.10 * (competition / 2.0) * 100.0, 2) },
-                new ScoreBreakdownItem { Component = "Marketing", Weight = 0.10, Score = marketing, WeightedContribution = Math.Round(0.10 * (marketing / 2.0) * 100.0, 2) },
-                new ScoreBreakdownItem { Component = "Investment", Weight = 0.05, Score = investment, WeightedContribution = Math.Round(0.05 * (investment / 2.0) * 100.0, 2) },
-                new ScoreBreakdownItem { Component = "Other", Weight = 0.05, Score = other, WeightedContribution = Math.Round(0.05 * (other / 2.0) * 100.0, 2) }
+                new ScoreBreakdownItem
+                {
+                    Component = "Team",
+                    MaxPoints = maxPoints.Team,
+                    Score = Math.Round((team / 10.0) * maxPoints.Team, 2)
+                },
+                new ScoreBreakdownItem
+                {
+                    Component = "Opportunity",
+                    MaxPoints = maxPoints.Opportunity,
+                    Score = Math.Round((opportunity / 10.0) * maxPoints.Opportunity, 2)
+                },
+                new ScoreBreakdownItem
+                {
+                    Component = "Product",
+                    MaxPoints = maxPoints.Product,
+                    Score = Math.Round((product / 10.0) * maxPoints.Product, 2)
+                },
+                new ScoreBreakdownItem
+                {
+                    Component = "Competition",
+                    MaxPoints = maxPoints.Competition,
+                    Score = Math.Round((competition / 10.0) * maxPoints.Competition, 2)
+                },
+                new ScoreBreakdownItem
+                {
+                    Component = "Marketing",
+                    MaxPoints = maxPoints.Marketing,
+                    Score = Math.Round((marketing / 10.0) * maxPoints.Marketing, 2)
+                },
+                new ScoreBreakdownItem
+                {
+                    Component = "Investment",
+                    MaxPoints = maxPoints.Investment,
+                    Score = Math.Round((investment / 10.0) * maxPoints.Investment, 2)
+                },
+                new ScoreBreakdownItem
+                {
+                    Component = "Other",
+                    MaxPoints = maxPoints.Other,
+                    Score = Math.Round((other / 10.0) * maxPoints.Other, 2)
+                }
             ];
+        }
+
+        private static (double Team, double Opportunity, double Product, double Competition, double Marketing, double Investment, double Other)
+            GetStageMaxPointProfile(DevelopmentStage? stage)
+        {
+            return stage switch
+            {
+                // Total must always equal 100 points.
+                // IDEA: emphasize problem/solution fit, customer pain, and early product logic.
+                DevelopmentStage.Idea => (20, 30, 35, 5, 5, 3, 2),
+                // MVP: emphasize execution readiness while still valuing market and team.
+                DevelopmentStage.MVP => (25, 20, 25, 10, 10, 5, 5),
+                // GROWTH: emphasize numbers and scaling readiness (revenue, market, scale team, funding discipline).
+                DevelopmentStage.Growth => (25, 20, 5, 10, 20, 15, 5),
+                _ => (20, 30, 35, 5, 5, 3, 2)
+            };
         }
 
         private static double GetComponentScore(ComponentEvaluation? component, double fallbackScore)
         {
             return component?.Score > 0 ? component.Score : fallbackScore;
+        }
+
+        private static int CountWeakCoreFields(Project project)
+        {
+            var core = new[]
+            {
+                project.ProjectName,
+                project.ShortDescription,
+                project.ProblemStatement,
+                project.SolutionDescription,
+                project.TargetCustomers,
+                project.TeamMembers
+            };
+
+            return core.Count(IsWeakFieldValue);
+        }
+
+        private static bool IsWeakFieldValue(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return true;
+            }
+
+            var normalized = value.Trim().ToLowerInvariant();
+            if (normalized.Length < 8)
+            {
+                return true;
+            }
+
+            return normalized is "string" or "null" or "n/a" or "na" or "none" or "undefined" or "test";
+        }
+
+        private static double NormalizeScore(double value)
+        {
+            return Math.Clamp(value, 0.0, 10.0);
         }
     }
 }

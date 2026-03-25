@@ -177,6 +177,7 @@ namespace AISEP.DAL.Data
                 entity.ToTable("projects");
                 entity.HasKey(e => e.ProjectId);
                 entity.Property(e => e.ProjectName).HasMaxLength(255).IsRequired();
+                entity.Property(e => e.ProjectImageUrl).HasMaxLength(500);
                 entity.Property(e => e.DevelopmentStage).HasConversion<string>().HasMaxLength(50);
                 entity.Property(e => e.Industry).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.MarketSize).HasColumnType("decimal(18,2)");

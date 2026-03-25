@@ -126,28 +126,28 @@ namespace AISEP.BLL.Services.AI
                 {{docSummary}}
 
                 --- SCORING INSTRUCTIONS ---
-                Score each component as a multiplier relative to the market average:
-                  1.0 = average | 1.5 = 50% above average | 0.7 = 30% below average
+                Score each component on an absolute 0-10 scale:
+                  5 = market average | 7.5 = strong | 9+ = excellent | below 4 = weak
 
                 Components (Bill Payne framework):
-                  1. Team              (30%): TeamMembers, KeySkills, TeamExperience
-                  2. Opportunity       (25%): TargetCustomers, MarketSize
-                  3. Product/Tech      (15%): SolutionDescription, DevelopmentStage
-                  4. Competition       (10%): Competitors, UniqueValueProposition
-                  5. Marketing/Sales   (10%): BusinessModel, Revenue
-                  6. Investment Need    (5%): clarity of funding requirements
-                  7. Other              (5%): document count, overall pitch quality
+                  1. Team: TeamMembers, KeySkills, TeamExperience
+                  2. Opportunity: TargetCustomers, MarketSize
+                  3. Product/Tech: SolutionDescription, DevelopmentStage
+                  4. Competition: Competitors, UniqueValueProposition
+                  5. Marketing/Sales: BusinessModel, Revenue
+                  6. Investment Need: clarity of funding requirements
+                  7. Other: document quality and overall coherence
 
                 --- STAGE FOCUS (very important) ---
                 {{stageFocus}}
 
                 --- SCORING RUBRIC (strict) ---
                 For each component, choose score range based on evidence quality:
-                - 0.0 - 0.3: Missing or irrelevant information (e.g. placeholder text like "string", no usable document proof).
-                - 0.4 - 0.7: Basic information exists but weak evidence / unclear execution.
-                - 0.8 - 1.2: Market-average quality with reasonable evidence.
-                - 1.3 - 1.6: Strong quality with clear, specific, verifiable evidence.
-                - 1.7 - 2.0: Exceptional quality with outstanding evidence and traction.
+                - 0.0 - 2.0: Missing or irrelevant information (e.g. placeholder text like "string", no usable document proof).
+                - 2.1 - 4.0: Basic information exists but weak evidence / unclear execution.
+                - 4.1 - 6.5: Market-average quality with reasonable evidence.
+                - 6.6 - 8.5: Strong quality with clear, specific, verifiable evidence.
+                - 8.6 - 10.0: Exceptional quality with outstanding evidence and traction.
                 If confidence is low, prefer conservative score.
 
                 --- FEW-SHOT EXAMPLES (style reference) ---
@@ -159,49 +159,49 @@ namespace AISEP.BLL.Services.AI
                 Target output style:
                 {
                   "Team": {
-                    "score": 0.1,
+                    "score": 1.0,
                     "evidence": [],
                     "missingData": ["Founder background", "Role split", "Domain experience"],
                     "confidence": 0.9,
                     "reason": "Team information is placeholder-only and not verifiable."
                   },
                   "Opportunity": {
-                    "score": 0.1,
+                    "score": 1.0,
                     "evidence": [],
                     "missingData": ["TAM/SAM/SOM", "ICP detail", "Growth assumptions"],
                     "confidence": 0.9,
                     "reason": "No usable market evidence provided."
                   },
                   "Product": {
-                    "score": 0.2,
+                    "score": 1.5,
                     "evidence": ["Development Stage = Idea"],
                     "missingData": ["Product architecture", "MVP proof", "Technical differentiation"],
                     "confidence": 0.8,
                     "reason": "Only early idea signal exists, no supporting product evidence."
                   },
                   "Competition": {
-                    "score": 0.1,
+                    "score": 1.0,
                     "evidence": [],
                     "missingData": ["Direct competitors", "Positioning map", "UVP proof"],
                     "confidence": 0.9,
                     "reason": "Competitive analysis is missing."
                   },
                   "Marketing": {
-                    "score": 0.1,
+                    "score": 1.0,
                     "evidence": [],
                     "missingData": ["Go-to-market plan", "Traction", "Conversion metrics"],
                     "confidence": 0.9,
                     "reason": "No real business model or traction data."
                   },
                   "Investment": {
-                    "score": 0.1,
+                    "score": 1.0,
                     "evidence": [],
                     "missingData": ["Fundraising ask", "Use-of-funds", "Milestones"],
                     "confidence": 0.9,
                     "reason": "Investment ask section is missing."
                   },
                   "Other": {
-                    "score": 0.0,
+                    "score": 0.5,
                     "evidence": ["Attached document is irrelevant to project evaluation."],
                     "missingData": ["Valid pitch deck", "Supporting legal/financial documents"],
                     "confidence": 0.95,
@@ -223,49 +223,49 @@ namespace AISEP.BLL.Services.AI
                 Target output style:
                 {
                   "Team": {
-                    "score": 1.3,
+                    "score": 7.2,
                     "evidence": ["Founder CEO: agritech operations 7 years", "CTO built similar IoT stack"],
                     "missingData": [],
                     "confidence": 0.85,
                     "reason": "Team is complete, experienced, and aligned with domain."
                   },
                   "Opportunity": {
-                    "score": 1.2,
+                    "score": 6.8,
                     "evidence": ["TAM/SAM/SOM provided", "Market growth rate stated"],
                     "missingData": ["Independent benchmark source link"],
                     "confidence": 0.8,
                     "reason": "Opportunity is large with reasonable quantification."
                   },
                   "Product": {
-                    "score": 1.3,
+                    "score": 7.0,
                     "evidence": ["MVP demo video", "Pilot customer feedback"],
                     "missingData": [],
                     "confidence": 0.82,
                     "reason": "Product has concrete validation signals."
                   },
                   "Competition": {
-                    "score": 1.1,
+                    "score": 6.2,
                     "evidence": ["Competitor table", "UVP statement with pricing edge"],
                     "missingData": ["Win/loss data"],
                     "confidence": 0.76,
                     "reason": "Positioning is fairly clear but more proof is needed."
                   },
                   "Marketing": {
-                    "score": 1.2,
+                    "score": 6.9,
                     "evidence": ["Go-to-market plan", "Early paid customers"],
                     "missingData": ["Channel CAC breakdown"],
                     "confidence": 0.78,
                     "reason": "Commercial logic is sound with initial traction."
                   },
                   "Investment": {
-                    "score": 1.0,
+                    "score": 5.8,
                     "evidence": ["Ask and use-of-funds table"],
                     "missingData": ["Quarterly milestone sensitivity analysis"],
                     "confidence": 0.72,
                     "reason": "Funding ask is clear at baseline quality."
                   },
                   "Other": {
-                    "score": 1.0,
+                    "score": 5.9,
                     "evidence": ["Pitch deck quality is coherent", "Customer testimonial screenshot"],
                     "missingData": [],
                     "confidence": 0.75,
@@ -287,55 +287,55 @@ namespace AISEP.BLL.Services.AI
                 Recommendations: 5-8 actionable recommendations in priority order (Vietnamese), focused on improving score.
                 Final self-check before output:
                 1) Every component must include at least one meaningful evidence or missingData item.
-                2) High score (>1.2) requires specific evidence.
+                2) High score (>6.5) requires specific evidence.
                 3) Return valid JSON only.
 
                 --- REQUIRED OUTPUT FORMAT (return ONLY this JSON) ---
                 {
                   "Team": {
-                    "score": <decimal 0.0-2.0>,
+                    "score": <decimal 0.0-10.0>,
                     "evidence": ["<short evidence 1>", "<short evidence 2>"],
                     "missingData": ["<missing data 1>"],
                     "confidence": <decimal 0.0-1.0>,
                     "reason": "<why this score>"
                   },
                   "Opportunity": {
-                    "score": <decimal 0.0-2.0>,
+                    "score": <decimal 0.0-10.0>,
                     "evidence": [],
                     "missingData": [],
                     "confidence": <decimal 0.0-1.0>,
                     "reason": "<why this score>"
                   },
                   "Product": {
-                    "score": <decimal 0.0-2.0>,
+                    "score": <decimal 0.0-10.0>,
                     "evidence": [],
                     "missingData": [],
                     "confidence": <decimal 0.0-1.0>,
                     "reason": "<why this score>"
                   },
                   "Competition": {
-                    "score": <decimal 0.0-2.0>,
+                    "score": <decimal 0.0-10.0>,
                     "evidence": [],
                     "missingData": [],
                     "confidence": <decimal 0.0-1.0>,
                     "reason": "<why this score>"
                   },
                   "Marketing": {
-                    "score": <decimal 0.0-2.0>,
+                    "score": <decimal 0.0-10.0>,
                     "evidence": [],
                     "missingData": [],
                     "confidence": <decimal 0.0-1.0>,
                     "reason": "<why this score>"
                   },
                   "Investment": {
-                    "score": <decimal 0.0-2.0>,
+                    "score": <decimal 0.0-10.0>,
                     "evidence": [],
                     "missingData": [],
                     "confidence": <decimal 0.0-1.0>,
                     "reason": "<why this score>"
                   },
                   "Other": {
-                    "score": <decimal 0.0-2.0>,
+                    "score": <decimal 0.0-10.0>,
                     "evidence": [],
                     "missingData": [],
                     "confidence": <decimal 0.0-1.0>,
@@ -388,27 +388,26 @@ namespace AISEP.BLL.Services.AI
                 {{docSummary}}
 
                 --- SCORING INSTRUCTIONS ---
-                Use Bill Payne component multipliers (relative to market average):
-                1. Team (30%), 2. Opportunity (25%), 3. Product/Tech (15%),
-                4. Competition (10%), 5. Marketing/Sales (10%),
-                6. Investment Need (5%), 7. Other (5%).
+                Use absolute 0-10 scoring for all 7 components.
+                Do not assume one fixed weight profile across all projects;
+                stage-specific weighting is provided in STAGE FOCUS and finalized by backend.
 
                 --- STAGE FOCUS (very important) ---
                 {{stageFocus}}
 
-                Multiplier guide:
-                - 1.0 = market average
-                - 1.5 = 50% above average
-                - 0.7 = 30% below average
-                - Range must be 0.0 to 2.0
+                Score guide:
+                - 5.0 = market average
+                - 7.5 = strong
+                - 9.0+ = exceptional
+                - Range must be 0.0 to 10.0
 
                 --- SCORING RUBRIC (strict) ---
                 For each component, choose score range based on evidence quality:
-                - 0.0 - 0.3: Missing or irrelevant information (placeholder text, no usable document proof).
-                - 0.4 - 0.7: Basic info exists but weak evidence / unclear execution.
-                - 0.8 - 1.2: Market-average quality with reasonable evidence.
-                - 1.3 - 1.6: Strong quality with clear, specific, verifiable evidence.
-                - 1.7 - 2.0: Exceptional quality with outstanding evidence and traction.
+                - 0.0 - 2.0: Missing or irrelevant information (placeholder text, no usable document proof).
+                - 2.1 - 4.0: Basic info exists but weak evidence / unclear execution.
+                - 4.1 - 6.5: Market-average quality with reasonable evidence.
+                - 6.6 - 8.5: Strong quality with clear, specific, verifiable evidence.
+                - 8.6 - 10.0: Exceptional quality with outstanding evidence and traction.
                 If confidence is low, prefer conservative scoring.
 
                 --- GOLDEN SAMPLES (style reference) ---
@@ -417,7 +416,7 @@ namespace AISEP.BLL.Services.AI
                 - Team data is placeholder, market size = 0, business model unclear.
                 - Uploaded pitch deck is irrelevant image/document.
                 Expected style:
-                - Team/Opportunity/Competition/Marketing/Investment near 0.1~0.3.
+                - Team/Opportunity/Competition/Marketing/Investment near 1.0~2.5.
                 - Other near 0.0 if docs are irrelevant.
                 - ChaosScore very high (85-100).
                 - InvestmentVerdict = "Pass".
@@ -428,22 +427,22 @@ namespace AISEP.BLL.Services.AI
                 - Founder team clear, MVP demo exists, early paid users, TAM/SAM/SOM provided.
                 - Competitive positioning present but still lacks deep financial proof.
                 Expected style:
-                - Team/Product/Marketing around 1.0~1.4.
-                - Opportunity around 1.0~1.3 with evidence.
+                - Team/Product/Marketing around 5.5~7.5.
+                - Opportunity around 5.0~7.0 with evidence.
                 - ChaosScore medium (35-60).
                 - InvestmentVerdict = "Watchlist".
                 - DueDiligenceQuestions focus on unit economics and validation depth.
 
                 Investor focus:
                 - Emphasize investability, downside risk, execution risk, and data credibility.
-                - High score (>1.2) MUST include concrete evidence from project/docs.
+                - High score (>6.5) MUST include concrete evidence from project/docs.
                 - If evidence is weak, score conservatively and add risk flags.
 
                 Do NOT compute weighted total score. Backend computes PotentialScore on a 0-100 scale
                 using stage-specific maximum points for each component.
                 Final self-check before output:
                 1) Every component must include at least one meaningful evidence or missingData item.
-                2) High score (>1.2) requires specific evidence.
+                2) High score (>6.5) requires specific evidence.
                 3) InvestmentVerdict must align with RiskFlags and DealBreakers.
                 4) Return valid JSON only.
 
@@ -545,7 +544,7 @@ namespace AISEP.BLL.Services.AI
                 DevelopmentStage.Idea =>
                     "IDEA stage: prioritize ProblemStatement, SolutionDescription, TargetCustomers, and TeamMembers. " +
                     "Do not heavily penalize missing Revenue or detailed TeamExperience at this stage, but still be strict on evidence quality for the available data. " +
-                    "Max points by component: Team=20, Opportunity=25, Product=30, Competition=5, Marketing=10, Investment=5, Other=5.",
+                    "Max points by component: Team=20, Opportunity=30, Product=35, Competition=5, Marketing=5, Investment=3, Other=2.",
                 DevelopmentStage.MVP =>
                     "MVP stage: include all IDEA expectations, and emphasize execution readiness via " +
                     "UniqueValueProposition, BusinessModel, KeySkills, Competitors, and relevance of attached demo/pitch evidence. Be stricter than IDEA. " +
@@ -553,7 +552,7 @@ namespace AISEP.BLL.Services.AI
                 DevelopmentStage.Growth =>
                     "GROWTH stage: include IDEA + MVP expectations, and strongly emphasize Revenue performance, " +
                     "MarketSize rationale, TeamExperience for scaling, and professional evidence documents. This stage must be evaluated most strictly. " +
-                    "Max points by component: Team=20, Opportunity=15, Product=15, Competition=10, Marketing=20, Investment=15, Other=5.",
+                    "Max points by component: Team=25, Opportunity=20, Product=5, Competition=10, Marketing=20, Investment=15, Other=5.",
                 _ =>
                     "Unknown stage: balance scoring conservatively, prioritize evidence quality, and list missing critical data explicitly."
             };

@@ -7,7 +7,6 @@ using AISEP.BLL.Services.Users;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using AutoMapper;
-using System.Text.RegularExpressions;
 
 namespace AISEP.BLL.Services.AI
 {
@@ -43,10 +42,9 @@ namespace AISEP.BLL.Services.AI
             var documents = (await _unitOfWork.Documents.GetByProjectIdAsync(projectId)).ToList();
 
             var result      = await _geminiAiService.AnalyzeProjectAsync(project, documents);
-            //NormalizeAnalysisResult(result);
-            //result.PotentialScore = CalculatePotentialScore(result, project.DevelopmentStage);
             GeminiAnalysisScoringHelper.NormalizeAnalysisResult(result, includeInvestorFields: false);
-            result.PotentialScore = GeminiAnalysisScoringHelper.CalculatePotentialScore(result);
+            result.PotentialScore = GeminiAnalysisScoringHelper.CalculatePotentialScore(result, project.DevelopmentStage);
+            result.PotentialScore = GeminiAnalysisScoringHelper.ApplyDataQualitySanityCap(result.PotentialScore, result, project);
             var analysisJson = JsonSerializer.Serialize(result);
 
             var existing = await _unitOfWork.StartupAIAnalyses.GetByProjectIdAsync(projectId);
@@ -154,10 +152,6 @@ namespace AISEP.BLL.Services.AI
             return project;
         }
 
-        private static StartupAIAnalysisResponse MapToResponse(
-            StartupAIAnalysis a,
-            IMapper mapper,
-            DevelopmentStage? stage)
         private async Task ConsumeAiQuotaAsync(int startupId)
         {
             var startup = await _unitOfWork.Startups.GetByIdAsync(startupId)
@@ -176,151 +170,13 @@ namespace AISEP.BLL.Services.AI
             await _unitOfWork.SaveChangesAsync();
         }
 
-        private static StartupAIAnalysisResponse MapToResponse(StartupAIAnalysis a, IMapper mapper)
+        private static StartupAIAnalysisResponse MapToResponse(StartupAIAnalysis a, IMapper mapper, DevelopmentStage? stage)
         {
             var parsedAnalysis = GeminiAnalysisScoringHelper.DeserializeAnalysisJson(a.AnalysisJson);
             var response = mapper.Map<StartupAIAnalysisResponse>(a);
             response.Analysis = parsedAnalysis;
-            response.ScoreBreakdown = BuildBreakdown(parsedAnalysis, stage);
-            response.ScoreBreakdown = GeminiAnalysisScoringHelper.BuildBreakdown(parsedAnalysis);
+            response.ScoreBreakdown = GeminiAnalysisScoringHelper.BuildBreakdown(parsedAnalysis, stage);
             return response;
-        }
-
-        private static int CalculatePotentialScore(GeminiAnalysisResult result, DevelopmentStage? stage)
-        {
-            static double Normalize(double score) => Math.Clamp(score, 0.0, 2.0);
-            var maxPoints = GetStageMaxPointProfile(stage);
-
-            var totalPoints =
-                (Normalize(GetComponentScore(result.Team, result.TeamScore)) / 2.0) * maxPoints.Team +
-                (Normalize(GetComponentScore(result.Opportunity, result.OpportunityScore)) / 2.0) * maxPoints.Opportunity +
-                (Normalize(GetComponentScore(result.Product, result.ProductScore)) / 2.0) * maxPoints.Product +
-                (Normalize(GetComponentScore(result.Competition, result.CompetitionScore)) / 2.0) * maxPoints.Competition +
-                (Normalize(GetComponentScore(result.Marketing, result.MarketingScore)) / 2.0) * maxPoints.Marketing +
-                (Normalize(GetComponentScore(result.Investment, result.InvestmentScore)) / 2.0) * maxPoints.Investment +
-                (Normalize(GetComponentScore(result.Other, result.OtherScore)) / 2.0) * maxPoints.Other;
-
-            return (int)Math.Round(totalPoints, MidpointRounding.AwayFromZero);
-        }
-
-        private static void NormalizeAnalysisResult(GeminiAnalysisResult result)
-        {
-            static double ClampScore(double value) => Math.Clamp(value, 0.0, 2.0);
-            static double ClampConfidence(double value) => Math.Clamp(value, 0.0, 1.0);
-
-            void NormalizeComponent(ComponentEvaluation? component, Action<double> setLegacyScore)
-            {
-                if (component is null)
-                {
-                    return;
-                }
-
-                component.Score = ClampScore(component.Score);
-                component.Confidence = ClampConfidence(component.Confidence);
-                component.Evidence ??= [];
-                component.MissingData ??= [];
-                component.Reason ??= string.Empty;
-
-                // Guardrail: score cao nhưng thiếu bằng chứng => giảm về mức thận trọng
-                if (component.Score > 1.0 && component.Evidence.Count == 0)
-                {
-                    component.Score = 0.9;
-                    component.Reason = string.IsNullOrWhiteSpace(component.Reason)
-                        ? "Điểm đã được điều chỉnh do thiếu bằng chứng cụ thể."
-                        : component.Reason + " | Adjusted: thiếu bằng chứng cụ thể.";
-                }
-
-                setLegacyScore(component.Score);
-            }
-
-            NormalizeComponent(result.Team, s => result.TeamScore = s);
-            NormalizeComponent(result.Opportunity, s => result.OpportunityScore = s);
-            NormalizeComponent(result.Product, s => result.ProductScore = s);
-            NormalizeComponent(result.Competition, s => result.CompetitionScore = s);
-            NormalizeComponent(result.Marketing, s => result.MarketingScore = s);
-            NormalizeComponent(result.Investment, s => result.InvestmentScore = s);
-            NormalizeComponent(result.Other, s => result.OtherScore = s);
-
-            result.TeamScore = ClampScore(result.TeamScore);
-            result.OpportunityScore = ClampScore(result.OpportunityScore);
-            result.ProductScore = ClampScore(result.ProductScore);
-            result.CompetitionScore = ClampScore(result.CompetitionScore);
-            result.MarketingScore = ClampScore(result.MarketingScore);
-            result.InvestmentScore = ClampScore(result.InvestmentScore);
-            result.OtherScore = ClampScore(result.OtherScore);
-            result.ChaosScore = Math.Clamp(result.ChaosScore, 0, 100);
-
-            result.Strengths ??= [];
-            result.Weaknesses ??= [];
-            result.Recommendations ??= [];
-            result.Summary ??= string.Empty;
-        }
-
-        private static double GetComponentScore(ComponentEvaluation? component, double fallbackScore)
-        {
-            return component?.Score > 0 ? component.Score : fallbackScore;
-        }
-
-        private static GeminiAnalysisResult? DeserializeAnalysisJson(string? analysisJson)
-        {
-            if (string.IsNullOrWhiteSpace(analysisJson))
-            {
-                return null;
-            }
-
-            try
-            {
-                return JsonSerializer.Deserialize<GeminiAnalysisResult>(
-                    analysisJson,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        private static List<ScoreBreakdownItem> BuildBreakdown(GeminiAnalysisResult? analysis, DevelopmentStage? stage)
-        {
-            if (analysis is null)
-            {
-                return [];
-            }
-
-            double Normalize(double score) => Math.Clamp(score, 0.0, 2.0);
-            double Score(ComponentEvaluation? component, double fallback) => Normalize(GetComponentScore(component, fallback));
-            var maxPoints = GetStageMaxPointProfile(stage);
-
-            var team = Score(analysis.Team, analysis.TeamScore);
-            var opportunity = Score(analysis.Opportunity, analysis.OpportunityScore);
-            var product = Score(analysis.Product, analysis.ProductScore);
-            var competition = Score(analysis.Competition, analysis.CompetitionScore);
-            var marketing = Score(analysis.Marketing, analysis.MarketingScore);
-            var investment = Score(analysis.Investment, analysis.InvestmentScore);
-            var other = Score(analysis.Other, analysis.OtherScore);
-
-            return
-            [
-                new ScoreBreakdownItem { Component = "Team", Weight = maxPoints.Team / 100.0, Score = team, WeightedContribution = Math.Round((team / 2.0) * maxPoints.Team, 2) },
-                new ScoreBreakdownItem { Component = "Opportunity", Weight = maxPoints.Opportunity / 100.0, Score = opportunity, WeightedContribution = Math.Round((opportunity / 2.0) * maxPoints.Opportunity, 2) },
-                new ScoreBreakdownItem { Component = "Product", Weight = maxPoints.Product / 100.0, Score = product, WeightedContribution = Math.Round((product / 2.0) * maxPoints.Product, 2) },
-                new ScoreBreakdownItem { Component = "Competition", Weight = maxPoints.Competition / 100.0, Score = competition, WeightedContribution = Math.Round((competition / 2.0) * maxPoints.Competition, 2) },
-                new ScoreBreakdownItem { Component = "Marketing", Weight = maxPoints.Marketing / 100.0, Score = marketing, WeightedContribution = Math.Round((marketing / 2.0) * maxPoints.Marketing, 2) },
-                new ScoreBreakdownItem { Component = "Investment", Weight = maxPoints.Investment / 100.0, Score = investment, WeightedContribution = Math.Round((investment / 2.0) * maxPoints.Investment, 2) },
-                new ScoreBreakdownItem { Component = "Other", Weight = maxPoints.Other / 100.0, Score = other, WeightedContribution = Math.Round((other / 2.0) * maxPoints.Other, 2) }
-            ];
-        }
-
-        private static (double Team, double Opportunity, double Product, double Competition, double Marketing, double Investment, double Other)
-            GetStageMaxPointProfile(DevelopmentStage? stage)
-        {
-            return stage switch
-            {
-                DevelopmentStage.Idea => (20, 25, 30, 5, 10, 5, 5),
-                DevelopmentStage.MVP => (25, 20, 25, 10, 10, 5, 5),
-                DevelopmentStage.Growth => (20, 15, 15, 10, 20, 15, 5),
-                _ => (20, 25, 30, 5, 10, 5, 5)
-            };
         }
 
         private static string NormalizeEligibilityReason(string? reason)
