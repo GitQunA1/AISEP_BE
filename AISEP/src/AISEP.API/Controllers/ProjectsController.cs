@@ -29,6 +29,14 @@ namespace AISEP.API.Controllers
             return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
         }
 
+        [HttpGet("non-premium")]
+       
+        public async Task<IActionResult> GetAllForNonPremium([FromQuery] SieveModel model)
+        {
+            var result = await _projectService.GetAllProjectsForNonPremiumAsync(model);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
+        }
+
         [HttpGet("{id:int}")]
         [Authorize]
         public async Task<IActionResult> GetById(int id)
@@ -43,6 +51,8 @@ namespace AISEP.API.Controllers
                 return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not found", 404));
             }
         }
+
+      
 
         [HttpGet("my")]
         [Authorize(Roles = "Startup")]

@@ -24,6 +24,11 @@ namespace AISEP.BLL.Validators.Project
                 .MaximumLength(255).WithMessage("Project name must not exceed 255 characters.")
                 .Matches(TextPattern).WithMessage("Project name contains invalid characters.");
 
+            RuleFor(x => x.ProjectImageUrl)
+                .MaximumLength(500).WithMessage("Project image URL must not exceed 500 characters.")
+                .Must(BeValidUrl).WithMessage("Project image URL is invalid.")
+                .When(x => !string.IsNullOrWhiteSpace(x.ProjectImageUrl));
+
             RuleFor(x => x.ShortDescription)
                 .NotEmpty().WithMessage("Short description is required.")
                 .MaximumLength(500).WithMessage("Short description must not exceed 500 characters.")
@@ -119,6 +124,12 @@ namespace AISEP.BLL.Validators.Project
         private static bool IsMvpOrGrowth(CreateProjectRequest request)
         {
             return request.DevelopmentStage is DevelopmentStage.MVP or DevelopmentStage.Growth;
+        }
+
+        private static bool BeValidUrl(string? url)
+        {
+            return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+                && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
         }
     }
 }

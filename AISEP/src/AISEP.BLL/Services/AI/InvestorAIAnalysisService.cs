@@ -45,7 +45,8 @@ namespace AISEP.BLL.Services.AI
             var documents = (await _unitOfWork.Documents.GetByProjectIdAsync(projectId)).ToList();
             var result = await _geminiAiService.AnalyzeProjectForInvestorAsync(project, documents);
             GeminiAnalysisScoringHelper.NormalizeAnalysisResult(result, includeInvestorFields: true);
-            result.PotentialScore = GeminiAnalysisScoringHelper.CalculatePotentialScore(result);
+            result.PotentialScore = GeminiAnalysisScoringHelper.CalculatePotentialScore(result, project.DevelopmentStage);
+            result.PotentialScore = GeminiAnalysisScoringHelper.ApplyDataQualitySanityCap(result.PotentialScore, result, project);
 
             var analysisJson = JsonSerializer.Serialize(result);
             var existing = await _unitOfWork.InvestorAIAnalyses
@@ -70,7 +71,21 @@ namespace AISEP.BLL.Services.AI
             }
 
             await _unitOfWork.SaveChangesAsync();
-            return MapToResponse(existing, _mapper);
+            return MapToResponse(existing, _mapper, project.DevelopmentStage);
+        }
+
+        public async Task<InvestorAIAnalysisResponse?> GetAnalysisAsync(int projectId)
+        {
+            var userId = _userService.GetUserId();
+            var investor = await _unitOfWork.Investors.GetByUserIdAsync(userId)
+                ?? throw new KeyNotFoundException("Investor profile not found.");
+            var project = await _unitOfWork.Projects.GetByIdAsync(projectId)
+                ?? throw new KeyNotFoundException($"Project {projectId} not found.");
+
+            var analysis = await _unitOfWork.InvestorAIAnalyses
+                .GetByInvestorAndProjectAsync(investor.InvestorId, projectId);
+
+            return analysis is null ? null : MapToResponse(analysis, _mapper, project.DevelopmentStage);
         }
 
         private async Task ConsumeAiQuotaAsync(int userId)
@@ -88,26 +103,17 @@ namespace AISEP.BLL.Services.AI
             await _unitOfWork.SaveChangesAsync();
         }
 
-        public async Task<InvestorAIAnalysisResponse?> GetAnalysisAsync(int projectId)
-        {
-            var userId = _userService.GetUserId();
-            var investor = await _unitOfWork.Investors.GetByUserIdAsync(userId)
-                ?? throw new KeyNotFoundException("Investor profile not found.");
-
-            var analysis = await _unitOfWork.InvestorAIAnalyses
-                .GetByInvestorAndProjectAsync(investor.InvestorId, projectId);
-
-            return analysis is null ? null : MapToResponse(analysis, _mapper);
-        }
-
-        private static InvestorAIAnalysisResponse MapToResponse(InvestorAIAnalysis analysis, IMapper mapper)
+        private static InvestorAIAnalysisResponse MapToResponse(
+            InvestorAIAnalysis analysis,
+            IMapper mapper,
+            DevelopmentStage? stage)
         {
             var parsed = GeminiAnalysisScoringHelper.DeserializeAnalysisJson(analysis.AnalysisJson);
             var response = mapper.Map<InvestorAIAnalysisResponse>(analysis);
             response.Analysis = parsed;
             response.PotentialScore = parsed?.PotentialScore;
             response.ChaosScore = parsed?.ChaosScore;
-            response.ScoreBreakdown = GeminiAnalysisScoringHelper.BuildBreakdown(parsed);
+            response.ScoreBreakdown = GeminiAnalysisScoringHelper.BuildBreakdown(parsed, stage);
             response.InvestmentVerdict = parsed?.InvestmentVerdict ?? string.Empty;
             response.RiskFlags = parsed?.RiskFlags ?? [];
             response.DealBreakers = parsed?.DealBreakers ?? [];

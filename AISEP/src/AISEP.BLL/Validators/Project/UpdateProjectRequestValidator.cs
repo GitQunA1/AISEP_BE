@@ -16,13 +16,18 @@ namespace AISEP.BLL.Validators.Project
                 .When(x => !string.IsNullOrWhiteSpace(x.ProjectName));
             //.When(x => x.ProjectName is not null);
 
+            RuleFor(x => x.ProjectImageUrl)
+                .MaximumLength(500).WithMessage("Project image URL must not exceed 500 characters.")
+                .Must(BeValidUrl).WithMessage("Project image URL is invalid.")
+                .When(x => !string.IsNullOrWhiteSpace(x.ProjectImageUrl));
+
             RuleFor(x => x.DevelopmentStage)
                 .IsInEnum().WithMessage("Development stage is not valid. Allowed: Idea, MVP, Growth.");
                // .When(x => x.DevelopmentStage.HasValue);
 
             RuleFor(x => x.Industry)
-                .NotNull().WithMessage("Industry is required.")
-                .IsInEnum().WithMessage("Industry is invalid.");
+                .IsInEnum().WithMessage("Industry is invalid.")
+                .When(x => x.Industry.HasValue);
 
             RuleFor(x => x.ShortDescription)
                 .MaximumLength(500).WithMessage("Short description must not exceed 500 characters.")
@@ -91,6 +96,12 @@ namespace AISEP.BLL.Validators.Project
                 .Matches(TextPattern).WithMessage("Team experience contains invalid characters.")
                 .When(x => !string.IsNullOrWhiteSpace(x.TeamExperience)); 
                // .When(x => x.TeamExperience is not null);
+        }
+
+        private static bool BeValidUrl(string? url)
+        {
+            return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+                && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
         }
     }
 }

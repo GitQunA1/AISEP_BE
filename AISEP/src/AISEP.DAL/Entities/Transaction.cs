@@ -11,9 +11,9 @@ namespace AISEP.DAL.Entities
         public TransactionStatus Status { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // Reference to what this payment is for
-        public string? ReferenceType { get; set; }  // "Subscription" or "Booking"
-        public int? ReferenceId { get; set; }        // PackageId or BookingId
+       
+        public string? ReferenceType { get; set; }  
+        public int? ReferenceId { get; set; }        
 
         // SePay fields
         public string? PaymentCode { get; set; }

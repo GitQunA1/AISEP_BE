@@ -43,7 +43,8 @@ namespace AISEP.BLL.Services.AI
 
             var result      = await _geminiAiService.AnalyzeProjectAsync(project, documents);
             GeminiAnalysisScoringHelper.NormalizeAnalysisResult(result, includeInvestorFields: false);
-            result.PotentialScore = GeminiAnalysisScoringHelper.CalculatePotentialScore(result);
+            result.PotentialScore = GeminiAnalysisScoringHelper.CalculatePotentialScore(result, project.DevelopmentStage);
+            result.PotentialScore = GeminiAnalysisScoringHelper.ApplyDataQualitySanityCap(result.PotentialScore, result, project);
             var analysisJson = JsonSerializer.Serialize(result);
 
             var existing = await _unitOfWork.StartupAIAnalyses.GetByProjectIdAsync(projectId);
@@ -75,15 +76,15 @@ namespace AISEP.BLL.Services.AI
 
             await _unitOfWork.SaveChangesAsync();
 
-            return MapToResponse(existing, _mapper);
+            return MapToResponse(existing, _mapper, project.DevelopmentStage);
         }
 
         public async Task<StartupAIAnalysisResponse?> GetAnalysisAsync(int projectId)
         {
-            await EnsureProjectBelongsToCurrentStartupAsync(projectId);
+            var project = await EnsureProjectBelongsToCurrentStartupAsync(projectId);
 
             var analysis = await _unitOfWork.StartupAIAnalyses.GetByProjectIdAsync(projectId);
-            return analysis is null ? null : MapToResponse(analysis, _mapper);
+            return analysis is null ? null : MapToResponse(analysis, _mapper, project.DevelopmentStage);
         }
 
         public async Task<StartupEligibilityResponse> EvaluateEligibilityAsync(int projectId)
@@ -169,12 +170,12 @@ namespace AISEP.BLL.Services.AI
             await _unitOfWork.SaveChangesAsync();
         }
 
-        private static StartupAIAnalysisResponse MapToResponse(StartupAIAnalysis a, IMapper mapper)
+        private static StartupAIAnalysisResponse MapToResponse(StartupAIAnalysis a, IMapper mapper, DevelopmentStage? stage)
         {
             var parsedAnalysis = GeminiAnalysisScoringHelper.DeserializeAnalysisJson(a.AnalysisJson);
             var response = mapper.Map<StartupAIAnalysisResponse>(a);
             response.Analysis = parsedAnalysis;
-            response.ScoreBreakdown = GeminiAnalysisScoringHelper.BuildBreakdown(parsedAnalysis);
+            response.ScoreBreakdown = GeminiAnalysisScoringHelper.BuildBreakdown(parsedAnalysis, stage);
             return response;
         }
 
