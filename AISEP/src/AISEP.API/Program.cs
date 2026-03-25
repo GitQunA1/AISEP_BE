@@ -141,7 +141,7 @@ builder.Services.AddAuthentication(options =>
             context.Response.ContentType = "application/json";
 
             var response = ApiResponse<object>.ErrorResponse(
-                "Unauthorized access. Please provide a valid token.",
+                "Unauthorized access. Please provide a valid token JWT.",
                 "Unauthorized",
                 401);
 
