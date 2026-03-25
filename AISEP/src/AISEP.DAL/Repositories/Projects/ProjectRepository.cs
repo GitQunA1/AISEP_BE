@@ -18,6 +18,7 @@ namespace AISEP.DAL.Repositories.Projects
         {
             return _context.Projects
                 .Include(p => p.Startup)
+                .Include(p => p.StartupAIAnalysis)
                 .OrderBy(p => p.ProjectId)
                 .AsQueryable();
         }
@@ -26,6 +27,7 @@ namespace AISEP.DAL.Repositories.Projects
         {
             return _context.Projects
                 .Include(p => p.Startup)
+                .Include(p => p.StartupAIAnalysis)
                 .Where(p => p.StartupId == startupId)
                 .OrderBy(p => p.ProjectId)
                 .AsQueryable();
@@ -35,6 +37,7 @@ namespace AISEP.DAL.Repositories.Projects
         {
             return _context.Projects
                 .Include(p => p.Startup)
+                .Include(p => p.StartupAIAnalysis)
                 .Where(p => p.Status == status)
                 .OrderBy(p => p.ProjectId)
                 .AsQueryable();
@@ -44,6 +47,7 @@ namespace AISEP.DAL.Repositories.Projects
         {
             return await _context.Projects
                 .Include(p => p.Startup)
+                .Include(p => p.StartupAIAnalysis)
                 .FirstOrDefaultAsync(p => p.ProjectId == id);
         }
 
