@@ -1,5 +1,4 @@
 ﻿using AISEP.BLL.DTOs.Requests;
-using AISEP.BLL.Exceptions;
 using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.Investors;
 using AISEP.BLL.Services.Users;
@@ -101,10 +100,6 @@ namespace AISEP.API.Controllers
             catch (KeyNotFoundException ex)
             {
                 return NotFound(ApiResponse<object>.ErrorResponse("Investor profile not found.", "Not found", 404));
-            }
-            catch (ForbiddenAccessException ex)
-            {
-                return StatusCode(403,ApiResponse<object>.ErrorResponse(ex.Message, "Forbidden", 403));
             }
         }
 

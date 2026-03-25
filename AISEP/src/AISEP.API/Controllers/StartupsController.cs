@@ -1,5 +1,4 @@
 ﻿using AISEP.BLL.DTOs.Requests;
-using AISEP.BLL.Exceptions;
 using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.Startups;
 using AISEP.BLL.Services.Users;
@@ -113,10 +112,6 @@ namespace AISEP.API.Controllers
             catch (KeyNotFoundException ex)
             {
                 return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not Found", 404));
-            }
-            catch(ForbiddenAccessException ex)
-            {
-                return StatusCode(403,ApiResponse<object>.ErrorResponse(ex.Message, "Forbidden", 403));
             }
             catch (InvalidOperationException ex)
             {

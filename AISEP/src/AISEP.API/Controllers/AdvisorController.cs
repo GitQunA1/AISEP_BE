@@ -5,7 +5,6 @@ using AISEP.BLL.Services.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sieve.Models;
-using AISEP.BLL.Exceptions;
 
 namespace AISEP.API.Controllers
 {
@@ -94,10 +93,6 @@ namespace AISEP.API.Controllers
             catch (KeyNotFoundException ex)
             {
                 return NotFound(ApiResponse<object>.ErrorResponse("Advisor profile not found.", "Not found", 404));
-            }
-            catch(ForbiddenAccessException ex)
-            {
-                return StatusCode(403, ApiResponse<object>.ErrorResponse(ex.Message, "Forbidden", 403));
             }
         }
 
