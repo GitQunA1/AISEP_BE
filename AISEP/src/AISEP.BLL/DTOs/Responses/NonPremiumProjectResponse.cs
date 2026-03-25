@@ -11,5 +11,6 @@ namespace AISEP.BLL.DTOs.Responses
         public string? TargetCustomers { get; set; }
         public string? UniqueValueProposition { get; set; }
         public string? ProjectImageUrl { get; set; }
+        public int? StartupPotentialScore { get; set; }
     }
 }

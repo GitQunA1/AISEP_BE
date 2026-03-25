@@ -143,6 +143,8 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.DevelopmentStage != null ? src.DevelopmentStage.ToString() : null))
                 .ForMember(dest => dest.Industry,
                     opt => opt.MapFrom(src => src.Industry.ToString()))
+                .ForMember(dest => dest.StartupPotentialScore,
+                    opt => opt.MapFrom(src => src.StartupAIAnalysis != null ? src.StartupAIAnalysis.PotentialScore : null))
                 .ForMember(dest => dest.Status,
                     opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.ApprovedById, opt => opt.MapFrom(src => src.ApprovedById))
@@ -154,7 +156,9 @@ namespace AISEP.BLL.Helpers
             // Project Entity → NonPremiumProjectResponse
             CreateMap<Project, NonPremiumProjectResponse>()
                 .ForMember(dest => dest.DevelopmentStage,
-                    opt => opt.MapFrom(src => src.DevelopmentStage != null ? src.DevelopmentStage.ToString() : null));
+                    opt => opt.MapFrom(src => src.DevelopmentStage != null ? src.DevelopmentStage.ToString() : null))
+                .ForMember(dest => dest.StartupPotentialScore,
+                    opt => opt.MapFrom(src => src.StartupAIAnalysis != null ? src.StartupAIAnalysis.PotentialScore : null));
 
             // CreateProjectRequest -> Project Entity
             CreateMap<CreateProjectRequest, Project>()

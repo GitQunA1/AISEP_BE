@@ -32,5 +32,6 @@
         public int? RejectedById { get; set; }
         public DateTime? RejectedAt { get; set; }
         public string? RejectionReason { get; set; }
+        public int? StartupPotentialScore { get; set; }
     }
 }
