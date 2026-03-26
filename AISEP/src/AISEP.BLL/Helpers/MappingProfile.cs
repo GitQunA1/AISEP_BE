@@ -225,6 +225,14 @@ namespace AISEP.BLL.Helpers
 
             // Notification Entity -> NotificationDto
             CreateMap<Notification, NotificationDto>();
+
+            // ConnectionRequest Entity -> ConnectionRequestDto
+            CreateMap<ConnectionRequest, ConnectionRequestDto>()
+                .ForMember(dest => dest.Status,
+                    opt => opt.MapFrom(src => src.Status.ToString()));
+
+            // Startup Entity -> ContactInfoDto
+            CreateMap<Startup, ContactInfoDto>();
         }
     }
 }

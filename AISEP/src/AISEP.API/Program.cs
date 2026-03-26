@@ -20,6 +20,7 @@ using AISEP.BLL.Services.AI;
 using AISEP.BLL.Services.Chats;
 using AISEP.BLL.Services.Payments;
 using AISEP.BLL.Services.Notifications;
+using AISEP.BLL.Services.Connections;
 using AISEP.BLL.Services.BackgroundServices;
 using AISEP.BLL.Settings;
 using AISEP.BLL.Validators.Auth;
@@ -231,6 +232,7 @@ builder.Services.AddScoped<IChatSessionService, ChatSessionService>();
 builder.Services.AddScoped<IChatMessageService, ChatMessageService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IConnectionService, ConnectionService>();
 builder.Services.AddScoped<INotificationRealtimePublisher, SignalRNotificationRealtimePublisher>();
 builder.Services.AddHostedService<SubscriptionExpiryBackgroundService>();
 
