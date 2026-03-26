@@ -178,7 +178,19 @@ namespace AISEP.BLL.Services.Documents
                 throw new InvalidOperationException("This document was not registered on the blockchain.");
 
             var (entityId, timestamp) = await _blockchainService.VerifyDocumentAsync(document.FileHash);
-            var isAuthentic = timestamp > 0 && entityId == document.ProjectId;
+
+            if (timestamp <= 0)
+            {
+                return new BlockchainVerificationResponse
+                {
+                    IsAuthentic = false,
+                    TxHash = document.BlockchainTxHash,
+                    TimestampOnBlockchain = string.Empty,
+                    Message = "Document hash was not found on the blockchain."
+                };
+            }
+
+            var isAuthentic = entityId == document.ProjectId;
 
             return new BlockchainVerificationResponse
             {

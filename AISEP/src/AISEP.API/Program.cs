@@ -225,7 +225,7 @@ builder.Services.AddScoped<IStartupService, StartupService>();
 builder.Services.AddScoped<IInvestorService, InvestorService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IStorageService, CloudinaryStorageService>();
-builder.Services.AddScoped<IBlockchainService, SepoliaBlockchainService>();
+builder.Services.AddScoped<IBlockchainService, BlockchainService>();
 builder.Services.AddScoped<IAdvisorService, AdvisorService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IChatSessionService, ChatSessionService>();
