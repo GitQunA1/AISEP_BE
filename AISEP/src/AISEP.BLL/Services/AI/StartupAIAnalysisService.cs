@@ -135,6 +135,24 @@ namespace AISEP.BLL.Services.AI
             return _mapper.Map<StartupEligibilityResponse>(existing);
         }
 
+        public async Task<StartupEligibilityResponse?> GetEligibilityEvaluationAsync(int projectId)
+        {
+            var project = await _unitOfWork.Projects.GetByIdAsync(projectId)
+                ?? throw new KeyNotFoundException($"Project {projectId} not found.");
+
+            var analysis = await _unitOfWork.StartupAIAnalyses.GetByProjectIdAsync(projectId);
+            if (analysis is null || !analysis.IsEligibleStartup.HasValue || string.IsNullOrWhiteSpace(analysis.EligibilityReason))
+            {
+                return null;
+            }
+
+            return new StartupEligibilityResponse
+            {
+                IsEligibleStartup = analysis.IsEligibleStartup.Value,
+                EligibilityReason = analysis.EligibilityReason
+            };
+        }
+
         private async Task<Project> EnsureProjectBelongsToCurrentStartupAsync(int projectId)
         {
             var userId = _userService.GetUserId();

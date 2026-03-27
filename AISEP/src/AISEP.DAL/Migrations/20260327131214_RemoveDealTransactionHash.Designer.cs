@@ -3,6 +3,7 @@ using System;
 using AISEP.DAL.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AISEP.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260327131214_RemoveDealTransactionHash")]
+    partial class RemoveDealTransactionHash
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -139,49 +142,6 @@ namespace AISEP.Migrations
                     b.ToTable("advisors", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.DAL.Entities.AdvisorAvailability", b =>
-                {
-                    b.Property<int>("AdvisorAvailabilityId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("AdvisorAvailabilityId"));
-
-                    b.Property<int>("AdvisorId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<TimeOnly>("EndTime")
-                        .HasColumnType("time");
-
-                    b.Property<DateTime>("SlotDate")
-                        .HasColumnType("date");
-
-                    b.Property<TimeOnly>("StartTime")
-                        .HasColumnType("time");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.HasKey("AdvisorAvailabilityId");
-
-                    b.HasIndex("AdvisorId", "SlotDate", "StartTime", "EndTime")
-                        .IsUnique();
-
-                    b.ToTable("advisor_availabilities", (string)null);
-                });
-
             modelBuilder.Entity("AISEP.DAL.Entities.Booking", b =>
                 {
                     b.Property<int>("BookingId")
@@ -193,20 +153,11 @@ namespace AISEP.Migrations
                     b.Property<int>("AdvisorId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
                     b.Property<int>("CustomerId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Note")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
@@ -226,31 +177,6 @@ namespace AISEP.Migrations
                     b.HasIndex("CustomerId");
 
                     b.ToTable("bookings", (string)null);
-                });
-
-            modelBuilder.Entity("AISEP.DAL.Entities.BookingSlot", b =>
-                {
-                    b.Property<int>("BookingSlotId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("BookingSlotId"));
-
-                    b.Property<int>("AdvisorAvailabilityId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("BookingId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("BookingSlotId");
-
-                    b.HasIndex("AdvisorAvailabilityId")
-                        .IsUnique();
-
-                    b.HasIndex("BookingId", "AdvisorAvailabilityId")
-                        .IsUnique();
-
-                    b.ToTable("booking_slots", (string)null);
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.ChatMessage", b =>
@@ -1655,17 +1581,6 @@ namespace AISEP.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("AISEP.DAL.Entities.AdvisorAvailability", b =>
-                {
-                    b.HasOne("AISEP.DAL.Entities.Advisor", "Advisor")
-                        .WithMany("Availabilities")
-                        .HasForeignKey("AdvisorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Advisor");
-                });
-
             modelBuilder.Entity("AISEP.DAL.Entities.Booking", b =>
                 {
                     b.HasOne("AISEP.DAL.Entities.Advisor", "Advisor")
@@ -1683,25 +1598,6 @@ namespace AISEP.Migrations
                     b.Navigation("Advisor");
 
                     b.Navigation("Customer");
-                });
-
-            modelBuilder.Entity("AISEP.DAL.Entities.BookingSlot", b =>
-                {
-                    b.HasOne("AISEP.DAL.Entities.AdvisorAvailability", "AdvisorAvailability")
-                        .WithMany("BookingSlots")
-                        .HasForeignKey("AdvisorAvailabilityId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("AISEP.DAL.Entities.Booking", "Booking")
-                        .WithMany("BookingSlots")
-                        .HasForeignKey("BookingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("AdvisorAvailability");
-
-                    b.Navigation("Booking");
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.ChatMessage", b =>
@@ -2126,8 +2022,6 @@ namespace AISEP.Migrations
 
             modelBuilder.Entity("AISEP.DAL.Entities.Advisor", b =>
                 {
-                    b.Navigation("Availabilities");
-
                     b.Navigation("Bookings");
 
                     b.Navigation("Reviews");
@@ -2135,15 +2029,8 @@ namespace AISEP.Migrations
                     b.Navigation("Wallet");
                 });
 
-            modelBuilder.Entity("AISEP.DAL.Entities.AdvisorAvailability", b =>
-                {
-                    b.Navigation("BookingSlots");
-                });
-
             modelBuilder.Entity("AISEP.DAL.Entities.Booking", b =>
                 {
-                    b.Navigation("BookingSlots");
-
                     b.Navigation("ChatSession");
 
                     b.Navigation("ConsultingReport");

@@ -7,5 +7,6 @@ namespace AISEP.BLL.Services.AI
         Task<StartupAIAnalysisResponse> AnalyzeProjectAsync(int projectId);
         Task<StartupAIAnalysisResponse?> GetAnalysisAsync(int projectId);
         Task<StartupEligibilityResponse> EvaluateEligibilityAsync(int projectId);
+        Task<StartupEligibilityResponse?> GetEligibilityEvaluationAsync(int projectId);
     }
 }

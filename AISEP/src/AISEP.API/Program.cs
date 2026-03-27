@@ -24,6 +24,8 @@ using AISEP.BLL.Services.Chats;
 using AISEP.BLL.Services.Payments;
 using AISEP.BLL.Services.Notifications;
 using AISEP.BLL.Services.Connections;
+using AISEP.BLL.Services.Deals;
+using AISEP.BLL.Services.Pinata;
 using AISEP.BLL.Services.BackgroundServices;
 using AISEP.BLL.Settings;
 using AISEP.BLL.Validators.Auth;
@@ -94,6 +96,7 @@ builder.Services.Configure<GeminiSettings>(builder.Configuration.GetSection("Gem
 // Configure SePaySettings
 builder.Services.Configure<SePaySettings>(builder.Configuration.GetSection("SePaySettings"));
 
+builder.Services.AddHttpClient();
 builder.Services.AddHttpClient<IGeminiAiService, GeminiAiService>();
 builder.Services.AddScoped<IStartupAIAnalysisService, StartupAIAnalysisService>();
 builder.Services.AddScoped<IInvestorAIAnalysisService, InvestorAIAnalysisService>();
@@ -241,6 +244,8 @@ builder.Services.AddScoped<IChatMessageService, ChatMessageService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IConnectionService, ConnectionService>();
+builder.Services.AddScoped<IDealService, DealService>();
+builder.Services.AddScoped<IPinataService, PinataService>();
 builder.Services.AddScoped<INotificationRealtimePublisher, SignalRNotificationRealtimePublisher>();
 builder.Services.AddHostedService<SubscriptionExpiryBackgroundService>();
 builder.Services.AddHostedService<BookingResponseExpiryBackgroundService>();

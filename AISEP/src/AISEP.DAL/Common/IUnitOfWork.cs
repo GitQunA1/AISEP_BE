@@ -22,6 +22,8 @@ using AISEP.DAL.Repositories.WalletTransactions;
 using AISEP.DAL.Repositories.UnlockedProjects;
 using AISEP.DAL.Repositories.Notifications;
 using AISEP.DAL.Repositories.ConnectionRequests;
+using AISEP.DAL.Repositories.Deals;
+using AISEP.DAL.Repositories.NFTRecords;
 
 namespace AISEP.DAL.Common
 {
@@ -52,6 +54,8 @@ namespace AISEP.DAL.Common
         INotificationRepository      Notifications      { get; }
         IWalletTransactionRepository WalletTransactions { get; }
         IConnectionRequestRepository ConnectionRequests { get; }
+        IDealRepository              Deals              { get; }
+        INFTRecordRepository         NFTRecords         { get; }
 
         Task<int> SaveChangesAsync();
     }

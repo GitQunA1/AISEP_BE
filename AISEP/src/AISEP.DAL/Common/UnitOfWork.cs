@@ -23,6 +23,8 @@ using AISEP.DAL.Repositories.WalletTransactions;
 using AISEP.DAL.Repositories.UnlockedProjects;
 using AISEP.DAL.Repositories.Notifications;
 using AISEP.DAL.Repositories.ConnectionRequests;
+using AISEP.DAL.Repositories.Deals;
+using AISEP.DAL.Repositories.NFTRecords;
 
 namespace AISEP.DAL.Common
 {
@@ -55,6 +57,8 @@ namespace AISEP.DAL.Common
         private INotificationRepository?      _notifications;
         private IWalletTransactionRepository? _walletTransactions;
         private IConnectionRequestRepository? _connectionRequests;
+        private IDealRepository?              _deals;
+        private INFTRecordRepository?         _nftRecords;
 
         public UnitOfWork(ApplicationDbContext context)
         {
@@ -86,6 +90,8 @@ namespace AISEP.DAL.Common
         public INotificationRepository      Notifications      => _notifications      ??= new NotificationRepository(_context);
         public IWalletTransactionRepository WalletTransactions => _walletTransactions ??= new WalletTransactionRepository(_context);
         public IConnectionRequestRepository ConnectionRequests => _connectionRequests ??= new ConnectionRequestRepository(_context);
+        public IDealRepository              Deals              => _deals              ??= new DealRepository(_context);
+        public INFTRecordRepository         NFTRecords         => _nftRecords         ??= new NFTRecordRepository(_context);
 
         public async Task<int> SaveChangesAsync()
         {
