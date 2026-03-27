@@ -263,7 +263,6 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.PaymentMethod).HasMaxLength(50);
                 entity.Property(e => e.EquityPercentage).HasColumnType("decimal(5,2)");
-                entity.Property(e => e.TransactionHash).HasMaxLength(255);
                 entity.Property(e => e.DealDate).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                 entity.HasOne(d => d.Investor)

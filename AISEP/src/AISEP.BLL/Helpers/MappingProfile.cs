@@ -226,6 +226,31 @@ namespace AISEP.BLL.Helpers
             // Notification Entity -> NotificationDto
             CreateMap<Notification, NotificationDto>();
 
+            // NFTRecord Entity -> NFTRecordDto
+            CreateMap<NFTRecord, NFTRecordDto>()
+                .ForMember(dest => dest.ValidityStatus,
+                    opt => opt.MapFrom(src => src.ValidityStatus.ToString()));
+
+            // Deal Entity -> DealDto
+            CreateMap<Deal, DealDto>()
+                .ForMember(dest => dest.Status,
+                    opt => opt.MapFrom(src => src.Status.ToString()));
+
+            // CreateDealDto -> Deal Entity
+            CreateMap<CreateDealDto, Deal>()
+                .ForMember(dest => dest.DealId, opt => opt.Ignore())
+                .ForMember(dest => dest.InvestorId, opt => opt.Ignore())
+                .ForMember(dest => dest.ProjectId, opt => opt.Ignore())
+                .ForMember(dest => dest.StartupConfirmed, opt => opt.Ignore())
+                .ForMember(dest => dest.InvestorConfirmed, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.DealDate, opt => opt.Ignore())
+                .ForMember(dest => dest.IsCompleted, opt => opt.Ignore())
+                .ForMember(dest => dest.CompletionDate, opt => opt.Ignore())
+                .ForMember(dest => dest.Investor, opt => opt.Ignore())
+                .ForMember(dest => dest.Project, opt => opt.Ignore())
+                .ForMember(dest => dest.NFTRecord, opt => opt.Ignore());
+
             // ConnectionRequest Entity -> ConnectionRequestDto
             CreateMap<ConnectionRequest, ConnectionRequestDto>()
                 .ForMember(dest => dest.Status,

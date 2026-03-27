@@ -2,8 +2,9 @@
 {
     public enum DealStatus
     {
-        Negotiating,
+        Pending,
         Confirmed,
+        Minted_NFT,
         Failed
     }
 }
