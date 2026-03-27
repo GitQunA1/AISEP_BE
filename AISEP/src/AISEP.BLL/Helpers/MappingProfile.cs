@@ -74,6 +74,25 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.ChatSession, opt => opt.Ignore())
                 .ForMember(dest => dest.ConsultingReport, opt => opt.Ignore());
 
+            // CreateConsultingReportRequest -> ConsultingReport Entity
+            CreateMap<CreateConsultingReportRequest, ConsultingReport>()
+                .ForMember(dest => dest.ConsultingReportId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.Booking, opt => opt.Ignore());
+
+            // ConsultingReport Entity -> ConsultingReportResponse
+            CreateMap<ConsultingReport, ConsultingReportResponse>()
+                .ForMember(dest => dest.AdvisorId, opt => opt.MapFrom(src => src.Booking.AdvisorId))
+                .ForMember(dest => dest.CustomerId, opt => opt.MapFrom(src => src.Booking.CustomerId))
+                .ForMember(dest => dest.AdvisorName,
+                    opt => opt.MapFrom(src => src.Booking.Advisor != null && src.Booking.Advisor.User != null
+                        ? src.Booking.Advisor.User.UserName
+                        : "Unknown"))
+                .ForMember(dest => dest.CustomerName,
+                    opt => opt.MapFrom(src => src.Booking.Customer != null
+                        ? src.Booking.Customer.UserName
+                        : "Unknown"));
+
             // User Entity → UserResponse
             CreateMap<User, UserResponse>()
                 .ForMember(dest => dest.UserId,

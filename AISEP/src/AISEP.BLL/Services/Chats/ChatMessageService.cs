@@ -40,7 +40,8 @@ namespace AISEP.BLL.Services.Chats
             await _unitOfWork.ChatMessages.AddAsync(message);
             await _unitOfWork.SaveChangesAsync();
 
-            return MapMessage(message);
+            var created = await _unitOfWork.ChatMessages.GetByIdAsync(message.ChatMessageId);
+            return created is null ? null : MapMessage(created);
         }
 
         // ── Helpers ──────────────────────────────────────────────────────

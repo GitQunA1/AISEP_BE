@@ -2,6 +2,7 @@
 using AISEP.BLL.DTOs.Responses;
 using AISEP.BLL.Exceptions;
 using AISEP.BLL.Helpers;
+using AISEP.BLL.Services.Storage;
 using AISEP.BLL.Services.Users;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
@@ -18,13 +19,20 @@ namespace AISEP.BLL.Services.Projects
         private readonly ISieveProcessor _sieveProcessor;
         private readonly IMapper _mapper;
         private readonly IUserService _userService;
+        private readonly IStorageService _storage;
 
-        public ProjectService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IUserService userService)
+        public ProjectService(
+            IUnitOfWork unitOfWork,
+            ISieveProcessor sieveProcessor,
+            IMapper mapper,
+            IUserService userService,
+            IStorageService storage)
         {
             _unitOfWork = unitOfWork;
             _sieveProcessor = sieveProcessor;
             _mapper = mapper;
             _userService = userService;
+            _storage = storage;
         }
 
         public async Task<PagedResult<ProjectResponse>> GetAllProjectsAsync(SieveModel model)
@@ -100,6 +108,7 @@ namespace AISEP.BLL.Services.Projects
             project.Industry = dto.Industry!.Value;
             project.Status = ProjectStatus.Draft;
             project.CreatedAt = DateTime.UtcNow;
+            project.ProjectImageUrl = await UploadIfPresent(dto.ProjectImageFile, "project-images");
 
             await _unitOfWork.Projects.AddAsync(project);
             await _unitOfWork.SaveChangesAsync();
@@ -126,6 +135,8 @@ namespace AISEP.BLL.Services.Projects
             _mapper.Map(dto, project);
             if (dto.Industry.HasValue)
                 project.Industry = dto.Industry.Value;
+            if (dto.ProjectImageFile is not null)
+                project.ProjectImageUrl = await _storage.UploadFileAsync(dto.ProjectImageFile, "project-images");
 
             ValidateByStageLikeCreate(project);
 
@@ -294,5 +305,8 @@ namespace AISEP.BLL.Services.Projects
         //    response.UniqueValueProposition = BuildTeaserText(response.UniqueValueProposition, 140);
         //    return response;
         //}
+
+        private async Task<string?> UploadIfPresent(IFormFile? file, string folder)
+            => file is not null ? await _storage.UploadFileAsync(file, folder) : null;
     }
 }

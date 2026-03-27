@@ -5,7 +5,7 @@ namespace AISEP.BLL.DTOs.Requests
     public class UpdateProjectRequest
     {
         public string?          ProjectName            { get; set; }
-        public string?          ProjectImageUrl        { get; set; }
+        public IFormFile?       ProjectImageFile       { get; set; }
         public string?          ShortDescription       { get; set; }
         public DevelopmentStage? DevelopmentStage      { get; set; }
         public string?          ProblemStatement       { get; set; }

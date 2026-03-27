@@ -6,7 +6,9 @@ using AISEP.BLL.Services.Auth;
 using AISEP.BLL.Services.Blockchain;
 using AISEP.BLL.Services.Bookings;
 using AISEP.BLL.Services.Users;
+using AISEP.BLL.Services.UserReports;
 using AISEP.BLL.Services.Documents;
+using AISEP.BLL.Services.ConsultingReports;
 using AISEP.BLL.Services.Email;
 using AISEP.BLL.Services.Investors;
 using AISEP.BLL.Services.Jwt;
@@ -156,7 +158,9 @@ builder.Services.AddAuthentication(options =>
             var accessToken = context.Request.Query["access_token"];
             var requestPath = context.HttpContext.Request.Path;
 
-            if (!string.IsNullOrWhiteSpace(accessToken) && requestPath.StartsWithSegments("/hubs/notifications"))
+            if (!string.IsNullOrWhiteSpace(accessToken)
+                && (requestPath.StartsWithSegments("/hubs/notifications")
+                    || requestPath.StartsWithSegments("/hubs/chat")))
             {
                 context.Token = accessToken;
             }
@@ -218,6 +222,7 @@ builder.Services.Configure<Sieve.Models.SieveOptions>(builder.Configuration.GetS
 
 // Add Services
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUserReportService, UserReportService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -231,6 +236,7 @@ builder.Services.AddScoped<IStorageService, CloudinaryStorageService>();
 builder.Services.AddScoped<IBlockchainService, BlockchainService>();
 builder.Services.AddScoped<IAdvisorService, AdvisorService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<IConsultingReportService, ConsultingReportService>();
 builder.Services.AddScoped<IChatSessionService, ChatSessionService>();
 builder.Services.AddScoped<IChatMessageService, ChatMessageService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
@@ -298,5 +304,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
+app.MapHub<ChatHub>("/hubs/chat");
 
 app.Run();
