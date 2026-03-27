@@ -61,7 +61,7 @@ namespace AISEP.API.Controllers
         }
 
         /// Đánh giá startup theo IDEO 3 Lenses + Lean Startup
-        [HttpPost("{projectId:int}/eligibility-evaluate")]
+        [HttpPost("{projectId:int}/eligibility-evaluate-staff")]
         [Authorize(Roles = "Staff, Admin")]
         public async Task<IActionResult> EvaluateEligibility(int projectId)
         {
@@ -81,6 +81,24 @@ namespace AISEP.API.Controllers
             catch (InvalidOperationException ex)
             {
                 return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Conflict", 409));
+            }
+        }
+
+        [HttpGet("{projectId:int}/eligibility-evaluate-staff")]
+        [Authorize(Roles = "Staff, Admin")]
+        public async Task<IActionResult> GetEligibilityEvaluation(int projectId)
+        {
+            try
+            {
+                var result = await _analysisService.GetEligibilityEvaluationAsync(projectId);
+                if (result is null)
+                    return NotFound(ApiResponse<object>.ErrorResponse("Eligibility evaluation not found.", "Not found", 404));
+
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not found", 404));
             }
         }
     }
