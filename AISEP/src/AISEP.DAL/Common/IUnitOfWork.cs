@@ -1,6 +1,7 @@
 using AISEP.DAL.Repositories.Advisors;
 using AISEP.DAL.Repositories.Bookings;
 using AISEP.DAL.Repositories.Chats;
+using AISEP.DAL.Repositories.ConsultingReports;
 using AISEP.DAL.Repositories.Documents;
 using AISEP.DAL.Repositories.InvestorAIAnalyses;
 using AISEP.DAL.Repositories.Packages;
@@ -14,6 +15,7 @@ using AISEP.DAL.Repositories.Investors;
 using AISEP.DAL.Repositories.Subscriptions;
 using AISEP.DAL.Repositories.Transactions;
 using AISEP.DAL.Repositories.Users;
+using AISEP.DAL.Repositories.UserReports;
 using AISEP.DAL.Repositories.WalletTransactions;
 using AISEP.DAL.Repositories.UnlockedProjects;
 using AISEP.DAL.Repositories.Notifications;
@@ -32,10 +34,12 @@ namespace AISEP.DAL.Common
         IInvestorRepository          Investors          { get; }
         IInvestorAIAnalysisRepository InvestorAIAnalyses { get; }
         IUserRepository              Users              { get; }
+        IUserReportRepository        UserReports        { get; }
         IStartupAIAnalysisRepository StartupAIAnalyses  { get; }
         IAdvisorsRepository          Advisors           { get; }
         IChatSessionRepository       ChatSessions       { get; }
         IChatMessageRepository       ChatMessages       { get; }
+        IConsultingReportRepository  ConsultingReports  { get; }
         ITransactionRepository       Transactions       { get; }
         IPackageRepository           Packages           { get; }
         ISubscriptionRepository      Subscriptions      { get; }

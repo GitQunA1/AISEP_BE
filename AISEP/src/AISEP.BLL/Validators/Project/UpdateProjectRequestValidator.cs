@@ -7,6 +7,8 @@ namespace AISEP.BLL.Validators.Project
     {
         private const string TextPattern = @"^[\p{L}\p{N}\s]*$";
         private const string TeamMembersPattern = @"^[\p{L}\p{N}\s()]*$";
+        private static readonly string[] AllowedImageTypes = ["image/jpeg", "image/png", "image/webp"];
+        private const long MaxImageSize = 5 * 1024 * 1024; // 5 MB
 
         public UpdateProjectRequestValidator()
         {
@@ -16,10 +18,12 @@ namespace AISEP.BLL.Validators.Project
                 .When(x => !string.IsNullOrWhiteSpace(x.ProjectName));
             //.When(x => x.ProjectName is not null);
 
-            RuleFor(x => x.ProjectImageUrl)
-                .MaximumLength(500).WithMessage("Project image URL must not exceed 500 characters.")
-                .Must(BeValidUrl).WithMessage("Project image URL is invalid.")
-                .When(x => !string.IsNullOrWhiteSpace(x.ProjectImageUrl));
+            RuleFor(x => x.ProjectImageFile)
+                .Must(f => f!.Length <= MaxImageSize)
+                    .WithMessage("Project image must not exceed 5MB.")
+                .Must(f => AllowedImageTypes.Contains(f!.ContentType))
+                    .WithMessage("Project image only supports JPG, PNG, WEBP.")
+                .When(x => x.ProjectImageFile is not null);
 
             RuleFor(x => x.DevelopmentStage)
                 .IsInEnum().WithMessage("Development stage is not valid. Allowed: Idea, MVP, Growth.");
@@ -98,10 +102,5 @@ namespace AISEP.BLL.Validators.Project
                // .When(x => x.TeamExperience is not null);
         }
 
-        private static bool BeValidUrl(string? url)
-        {
-            return Uri.TryCreate(url, UriKind.Absolute, out var uri)
-                && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
-        }
     }
 }
