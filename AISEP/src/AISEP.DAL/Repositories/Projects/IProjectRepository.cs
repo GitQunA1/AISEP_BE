@@ -9,6 +9,7 @@ namespace AISEP.DAL.Repositories.Projects
         IQueryable<Project> GetByStartupIdQuery(int startupId);
         IQueryable<Project> GetByStatusQuery(ProjectStatus status);
         Task<Project?> GetByIdAsync(int id);
+        Task<Project?> GetByIdWithDocumentsAsync(int id);
         Task AddAsync(Project project);
         void Update(Project project);
     }

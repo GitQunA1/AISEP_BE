@@ -51,6 +51,14 @@ namespace AISEP.DAL.Repositories.Projects
                 .FirstOrDefaultAsync(p => p.ProjectId == id);
         }
 
+        public async Task<Project?> GetByIdWithDocumentsAsync(int id)
+        {
+            return await _context.Projects
+                .Include(p => p.Startup)
+                .Include(p => p.Documents)
+                .FirstOrDefaultAsync(p => p.ProjectId == id);
+        }
+
         public async Task AddAsync(Project project)
         {
             await _context.Projects.AddAsync(project);

@@ -22,6 +22,7 @@ using AISEP.BLL.Services.AI;
 using AISEP.BLL.Services.Chats;
 using AISEP.BLL.Services.Payments;
 using AISEP.BLL.Services.Notifications;
+using AISEP.BLL.Services.Connections;
 using AISEP.BLL.Services.BackgroundServices;
 using AISEP.BLL.Settings;
 using AISEP.BLL.Validators.Auth;
@@ -51,6 +52,20 @@ builder.Services.AddControllers()
     });
 
 builder.Services.AddSignalR();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins(
+                "http://localhost:3000",
+                "https://aisep.tech",
+                "https://www.aisep.tech")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
 
 // Add FluentValidation
 builder.Services.AddFluentValidationAutoValidation();
@@ -215,7 +230,7 @@ builder.Services.AddScoped<IStartupService, StartupService>();
 builder.Services.AddScoped<IInvestorService, InvestorService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IStorageService, CloudinaryStorageService>();
-builder.Services.AddScoped<IBlockchainService, SepoliaBlockchainService>();
+builder.Services.AddScoped<IBlockchainService, BlockchainService>();
 builder.Services.AddScoped<IAdvisorService, AdvisorService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IConsultingReportService, ConsultingReportService>();
@@ -223,6 +238,7 @@ builder.Services.AddScoped<IChatSessionService, ChatSessionService>();
 builder.Services.AddScoped<IChatMessageService, ChatMessageService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IConnectionService, ConnectionService>();
 builder.Services.AddScoped<INotificationRealtimePublisher, SignalRNotificationRealtimePublisher>();
 builder.Services.AddHostedService<SubscriptionExpiryBackgroundService>();
 
@@ -276,6 +292,7 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseHttpsRedirection();
+app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();

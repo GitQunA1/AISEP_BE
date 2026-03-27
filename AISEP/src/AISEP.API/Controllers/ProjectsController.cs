@@ -1,5 +1,7 @@
 ﻿using AISEP.BLL.Helpers;
 using AISEP.BLL.DTOs.Requests;
+using AISEP.BLL.DTOs.Responses;
+using AISEP.BLL.Services.Blockchain;
 using AISEP.BLL.Services.Projects;
 using AISEP.BLL.Services.Users;
 using Microsoft.AspNetCore.Authorization;
@@ -14,11 +16,16 @@ namespace AISEP.API.Controllers
     public class ProjectsController : ControllerBase
     {
         private readonly IProjectService _projectService;
+        private readonly IBlockchainService _blockchainService;
         private readonly IUserService _currentUserService;
 
-        public ProjectsController(IProjectService projectService, IUserService currentUserService)
+        public ProjectsController(
+            IProjectService projectService,
+            IBlockchainService blockchainService,
+            IUserService currentUserService)
         {
             _projectService = projectService;
+            _blockchainService = blockchainService;
             _currentUserService = currentUserService;
         }
 
@@ -52,7 +59,34 @@ namespace AISEP.API.Controllers
             }
         }
 
-      
+        [HttpGet("{id:int}/verify-blockchain")]
+        [Authorize(Roles = "Investor, Admin")]
+        public async Task<IActionResult> VerifyBlockchain(int id)
+        {
+            try
+            {
+                var result = await _blockchainService.VerifyProjectDocumentsAsync(id);
+                if (!result.IsFullyVerified)
+                {
+                    const string notFullyVerifiedMessage = "Chưa verify hết tất cả tài liệu trong dự án trên Blockchain.";
+                    const string notFullyVerifiedErrorCode = "PROJECT_DOCUMENTS_NOT_FULLY_VERIFIED";
+                    return BadRequest(ApiResponse<ProjectBlockchainVerificationResponse>.ErrorResponse(
+                        notFullyVerifiedErrorCode,
+                        notFullyVerifiedMessage,
+                        400));
+                }
+
+                return Ok(ApiResponse<ProjectBlockchainVerificationResponse>.SuccessResponse(result, "Verification completed"));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<ProjectBlockchainVerificationResponse>.ErrorResponse(ex.Message, "Not found", 404));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ApiResponse<ProjectBlockchainVerificationResponse>.ErrorResponse(ex.Message, "Invalid operation", 400));
+            }
+        }
 
         [HttpGet("my")]
         [Authorize(Roles = "Startup")]

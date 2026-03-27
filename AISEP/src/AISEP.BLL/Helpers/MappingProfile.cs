@@ -245,18 +245,13 @@ namespace AISEP.BLL.Helpers
             // Notification Entity -> NotificationDto
             CreateMap<Notification, NotificationDto>();
 
-            // CreateUserReportRequest -> UserReport Entity
-            CreateMap<CreateUserReportRequest, UserReport>()
-                .ForMember(dest => dest.UserReportId, opt => opt.Ignore())
-                .ForMember(dest => dest.ReporterId, opt => opt.Ignore())
-                .ForMember(dest => dest.Status, opt => opt.Ignore())
-                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.Reporter, opt => opt.Ignore())
-                .ForMember(dest => dest.ReportedUser, opt => opt.Ignore());
+            // ConnectionRequest Entity -> ConnectionRequestDto
+            CreateMap<ConnectionRequest, ConnectionRequestDto>()
+                .ForMember(dest => dest.Status,
+                    opt => opt.MapFrom(src => src.Status.ToString()));
 
-            // UserReport Entity -> UserReportResponse
-            CreateMap<UserReport, UserReportResponse>()
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+            // Startup Entity -> ContactInfoDto
+            CreateMap<Startup, ContactInfoDto>();
         }
     }
 }

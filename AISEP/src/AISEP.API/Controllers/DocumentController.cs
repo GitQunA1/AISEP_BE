@@ -132,6 +132,10 @@ namespace AISEP.API.Controllers
             {
                 return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message, "Invalid operation", 400));
             }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode(502, ApiResponse<object>.ErrorResponse(ex.Message, "Blockchain RPC error", 502));
+            }
         }
 
         [HttpPut("api/projects/{projectId}/approve")]

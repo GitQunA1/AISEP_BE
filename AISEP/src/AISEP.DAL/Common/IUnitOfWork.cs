@@ -19,6 +19,7 @@ using AISEP.DAL.Repositories.UserReports;
 using AISEP.DAL.Repositories.WalletTransactions;
 using AISEP.DAL.Repositories.UnlockedProjects;
 using AISEP.DAL.Repositories.Notifications;
+using AISEP.DAL.Repositories.ConnectionRequests;
 
 namespace AISEP.DAL.Common
 {
@@ -46,6 +47,7 @@ namespace AISEP.DAL.Common
         IUnlockedProjectRepository   UnlockedProjects   { get; }
         INotificationRepository      Notifications      { get; }
         IWalletTransactionRepository WalletTransactions { get; }
+        IConnectionRequestRepository ConnectionRequests { get; }
 
         Task<int> SaveChangesAsync();
     }
