@@ -14,6 +14,9 @@ namespace AISEP.BLL.Services.Bookings
         Task<BookingResponse?> GetMyBookingAsync();
         Task<PagedResult<BookingResponse>> GetBookingsByAdvisorIdAsync(int advisorId, SieveModel model);
         Task<PagedResult<BookingResponse>> GetBookingsByCustomerIdAsync(int customerId, SieveModel model);
+        Task<BookingResponse?> ApproveBookingAsync(int id);
+        Task<BookingResponse?> RejectBookingAsync(int id, string? reason);
         Task<bool> DeleteBookingAsync(int id);
+        Task<int> ExpirePendingAdvisorResponsesAsync();
     }
 }

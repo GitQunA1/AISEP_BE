@@ -70,5 +70,27 @@ namespace AISEP.API.Controllers
 
             return Ok(ApiResponse<object>.SuccessResponse(null!, "Deleted successfully"));
         }
+
+        [HttpPatch("{id:int}/approve")]
+        [Authorize(Roles = "Advisor")]
+        public async Task<IActionResult> ApproveBooking(int id)
+        {
+            var booking = await _bookingService.ApproveBookingAsync(id);
+            if (booking is null)
+                return NotFound(ApiResponse<object>.ErrorResponse("Booking not found.", "Not found", 404));
+
+            return Ok(ApiResponse<object>.SuccessResponse(booking, "Booking approved successfully."));
+        }
+
+        [HttpPatch("{id:int}/reject")]
+        [Authorize(Roles = "Advisor")]
+        public async Task<IActionResult> RejectBooking(int id, [FromBody] RejectBookingRequest request)
+        {
+            var booking = await _bookingService.RejectBookingAsync(id, request.Reason);
+            if (booking is null)
+                return NotFound(ApiResponse<object>.ErrorResponse("Booking not found.", "Not found", 404));
+
+            return Ok(ApiResponse<object>.SuccessResponse(booking, "Booking rejected successfully."));
+        }
     }
 }

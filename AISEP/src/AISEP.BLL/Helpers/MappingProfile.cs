@@ -56,6 +56,8 @@ namespace AISEP.BLL.Helpers
 
             // Booking Entity → BookingResponse
             CreateMap<Booking, BookingResponse>()
+                .ForMember(dest => dest.Id,
+                    opt => opt.MapFrom(src => src.BookingId))
                 .ForMember(dest => dest.AdvisorName,
                     opt => opt.MapFrom(src => src.Advisor != null && src.Advisor.User != null
                         ? src.Advisor.User.UserName
@@ -63,16 +65,23 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.CustomerName,
                     opt => opt.MapFrom(src => src.Customer != null
                         ? src.Customer.UserName
-                        : "Unknown"));
+                        : "Unknown"))
+                .ForMember(dest => dest.AdvisorAvailabilitySlotIds,
+                    opt => opt.MapFrom(src => src.BookingSlots.Select(bs => bs.AdvisorAvailabilityId)))
+                .ForMember(dest => dest.SlotCount,
+                    opt => opt.MapFrom(src => src.BookingSlots.Count));
 
-            // CreateBookingRequest → Booking Entity
-            CreateMap<CreateBookingRequest, Booking>()
-                .ForMember(dest => dest.BookingId, opt => opt.Ignore())
+            // AdvisorAvailability mappings
+            CreateMap<CreateAdvisorAvailabilityRequest, AdvisorAvailability>()
+                .ForMember(dest => dest.AdvisorAvailabilityId, opt => opt.Ignore())
+                .ForMember(dest => dest.AdvisorId, opt => opt.Ignore())
                 .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.Advisor, opt => opt.Ignore())
-                .ForMember(dest => dest.Customer, opt => opt.Ignore())
-                .ForMember(dest => dest.ChatSession, opt => opt.Ignore())
-                .ForMember(dest => dest.ConsultingReport, opt => opt.Ignore());
+                .ForMember(dest => dest.BookingSlots, opt => opt.Ignore());
+
+            CreateMap<AdvisorAvailability, AdvisorAvailabilityResponse>();
 
             // CreateConsultingReportRequest -> ConsultingReport Entity
             CreateMap<CreateConsultingReportRequest, ConsultingReport>()
@@ -174,6 +183,8 @@ namespace AISEP.BLL.Helpers
 
             // Project Entity → NonPremiumProjectResponse
             CreateMap<Project, NonPremiumProjectResponse>()
+                .ForMember(dest => dest.StartupId,
+                    opt => opt.MapFrom(src => src.StartupId))
                 .ForMember(dest => dest.DevelopmentStage,
                     opt => opt.MapFrom(src => src.DevelopmentStage != null ? src.DevelopmentStage.ToString() : null))
                 .ForMember(dest => dest.Industry,

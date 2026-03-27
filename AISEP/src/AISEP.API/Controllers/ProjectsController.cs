@@ -44,6 +44,20 @@ namespace AISEP.API.Controllers
             return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
         }
 
+        [HttpGet("non-premium/{projectId:int}")]
+        public async Task<IActionResult> GetByIdForNonPremium(int projectId)
+        {
+            try
+            {
+                var result = await _projectService.GetProjectForNonPremiumByIdAsync(projectId);
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not found", 404));
+            }
+        }
+
         [HttpGet("{id:int}")]
         [Authorize]
         public async Task<IActionResult> GetById(int id)
