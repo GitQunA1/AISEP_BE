@@ -13,6 +13,11 @@ namespace AISEP.DAL.Repositories.Chats
             _context = context;
         }
 
+        public async Task<ChatMessage?> GetByIdAsync(int messageId)
+            => await _context.ChatMessages
+                .Include(m => m.Sender)
+                .FirstOrDefaultAsync(m => m.ChatMessageId == messageId);
+
         public async Task<IEnumerable<ChatMessage>> GetBySessionIdAsync(int sessionId)
             => await _context.ChatMessages
                 .Include(m => m.Sender)

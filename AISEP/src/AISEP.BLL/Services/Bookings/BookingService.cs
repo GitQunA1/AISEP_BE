@@ -77,6 +77,17 @@ namespace AISEP.BLL.Services.Bookings
             return await PaginationHelper.PaginateAsync(query, sieveModel, _sieveProcessor, b => _mapper.Map<BookingResponse>(b));
         }
 
+        public async Task<BookingResponse?> GetMyBookingAsync()
+        {
+            var currentUserId = _currentUserService.GetUserId();
+            var booking = _unitOfWork.Bookings.GetBookingQuery()
+                .Where(b => b.CustomerId == currentUserId)
+                .OrderByDescending(b => b.BookingId)
+                .FirstOrDefault();
+
+            return await Task.FromResult(booking != null ? _mapper.Map<BookingResponse>(booking) : null);
+        }
+
         public async Task<PagedResult<BookingResponse>> GetBookingsByAdvisorIdAsync(int advisorId, SieveModel sieveModel)
         {
             var query = _unitOfWork.Bookings.GetBookingQuery()
