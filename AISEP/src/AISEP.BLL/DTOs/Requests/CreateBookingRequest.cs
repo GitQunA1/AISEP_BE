@@ -3,7 +3,7 @@
     public class CreateBookingRequest
     {
         public int AdvisorId { get; set; }
-        public DateTime StartTime { get; set; }
-        public DateTime EndTime { get; set; }
+        public List<int> AdvisorAvailabilitySlotIds { get; set; } = [];
+        public string? Note { get; set; }
     }
 }

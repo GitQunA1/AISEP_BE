@@ -53,10 +53,10 @@ namespace AISEP.BLL.Services.Payments
             }
             else
             {
-                var booking = await _unitOfWork.Bookings.GetPendingByIdAndCustomerAsync(request.ReferenceId, userId);
+                var booking = await _unitOfWork.Bookings.GetPayableByIdAndCustomerAsync(request.ReferenceId, userId);
 
                 if (booking is null)
-                    throw new KeyNotFoundException("Booking not found or not in Pending status.");
+                    throw new KeyNotFoundException("Booking not found or not in ApprovedAwaitingPayment status.");
 
                 amount = booking.Price;
             }
@@ -233,7 +233,7 @@ namespace AISEP.BLL.Services.Payments
             if (booking is null)
                 throw new InvalidOperationException($"Booking {transaction.ReferenceId} not found.");
 
-            if (booking.Status != BookingStatus.Pending)
+            if (booking.Status != BookingStatus.ApprovedAwaitingPayment)
                 return;
 
             booking.Status = BookingStatus.Confirmed;

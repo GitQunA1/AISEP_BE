@@ -1,5 +1,7 @@
 using AISEP.DAL.Repositories.Advisors;
+using AISEP.DAL.Repositories.AdvisorAvailabilities;
 using AISEP.DAL.Repositories.Bookings;
+using AISEP.DAL.Repositories.BookingSlots;
 using AISEP.DAL.Repositories.Chats;
 using AISEP.DAL.Repositories.ConsultingReports;
 using AISEP.DAL.Repositories.Documents;
@@ -28,6 +30,7 @@ namespace AISEP.DAL.Common
     public interface IUnitOfWork : IDisposable
     {
         IBookingRepository           Bookings           { get; }
+        IBookingSlotRepository       BookingSlots       { get; }
         IRefreshTokenRepository      RefreshTokens      { get; }
         IDocumentRepository          Documents          { get; }
         IReviewRepository            Reviews            { get; }
@@ -40,6 +43,7 @@ namespace AISEP.DAL.Common
         IUserReportRepository        UserReports        { get; }
         IStartupAIAnalysisRepository StartupAIAnalyses  { get; }
         IAdvisorsRepository          Advisors           { get; }
+        IAdvisorAvailabilityRepository AdvisorAvailabilities { get; }
         IChatSessionRepository       ChatSessions       { get; }
         IChatMessageRepository       ChatMessages       { get; }
         IConsultingReportRepository  ConsultingReports  { get; }

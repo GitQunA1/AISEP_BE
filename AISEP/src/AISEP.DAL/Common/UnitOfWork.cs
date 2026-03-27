@@ -1,6 +1,8 @@
 using AISEP.DAL.Data;
 using AISEP.DAL.Repositories.Advisors;
+using AISEP.DAL.Repositories.AdvisorAvailabilities;
 using AISEP.DAL.Repositories.Bookings;
+using AISEP.DAL.Repositories.BookingSlots;
 using AISEP.DAL.Repositories.Chats;
 using AISEP.DAL.Repositories.ConsultingReports;
 using AISEP.DAL.Repositories.Documents;
@@ -31,8 +33,10 @@ namespace AISEP.DAL.Common
         private readonly ApplicationDbContext _context;
 
         private IBookingRepository?           _bookings;
+        private IBookingSlotRepository?       _bookingSlots;
         private IRefreshTokenRepository?      _refreshTokens;
         private IAdvisorsRepository?          _advisors;
+        private IAdvisorAvailabilityRepository? _advisorAvailabilities;
         private IChatSessionRepository?       _chatSessions;
         private IChatMessageRepository?       _chatMessages;
         private IConsultingReportRepository?  _consultingReports;
@@ -62,6 +66,7 @@ namespace AISEP.DAL.Common
         }
 
         public IBookingRepository           Bookings           => _bookings           ??= new BookingRepository(_context);
+        public IBookingSlotRepository       BookingSlots       => _bookingSlots       ??= new BookingSlotRepository(_context);
         public IRefreshTokenRepository      RefreshTokens      => _refreshTokens      ??= new RefreshTokenRepository(_context);
         public IDocumentRepository          Documents          => _documents          ??= new DocumentRepository(_context);
         public IReviewRepository            Reviews            => _reviews            ??= new ReviewRepository(_context);
@@ -74,6 +79,7 @@ namespace AISEP.DAL.Common
         public IUserReportRepository        UserReports        => _userReports        ??= new UserReportRepository(_context);
         public IStartupAIAnalysisRepository StartupAIAnalyses  => _startupAIAnalyses ??= new StartupAIAnalysisRepository(_context);
         public IAdvisorsRepository          Advisors           => _advisors           ??= new AdvisorRepository(_context);
+        public IAdvisorAvailabilityRepository AdvisorAvailabilities => _advisorAvailabilities ??= new AdvisorAvailabilityRepository(_context);
         public IChatSessionRepository       ChatSessions       => _chatSessions       ??= new ChatSessionRepository(_context);
         public IChatMessageRepository       ChatMessages       => _chatMessages       ??= new ChatMessageRepository(_context);
         public IConsultingReportRepository  ConsultingReports  => _consultingReports  ??= new ConsultingReportRepository(_context);

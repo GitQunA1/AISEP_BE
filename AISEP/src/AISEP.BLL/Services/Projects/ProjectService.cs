@@ -49,7 +49,14 @@ namespace AISEP.BLL.Services.Projects
                 p => _mapper.Map<NonPremiumProjectResponse>(p));
         }
 
-      
+        public async Task<NonPremiumProjectResponse?> GetProjectForNonPremiumByIdAsync(int id)
+        {
+            var project = await _unitOfWork.Projects.GetByIdAsync(id);
+            if (project is null)
+                throw new KeyNotFoundException("Project not found.");
+
+            return _mapper.Map<NonPremiumProjectResponse>(project);
+        }
 
         public async Task<ProjectResponse?> GetProjectByIdAsync(int id)
         {

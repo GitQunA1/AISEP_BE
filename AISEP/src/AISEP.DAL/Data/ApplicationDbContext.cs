@@ -42,6 +42,8 @@ namespace AISEP.DAL.Data
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<StartupFollower> StartupFollowers { get; set; }
         public DbSet<UserReport> UserReports { get; set; }
+        public DbSet<AdvisorAvailability> AdvisorAvailabilities { get; set; }
+        public DbSet<BookingSlot> BookingSlots { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -312,6 +314,8 @@ namespace AISEP.DAL.Data
                 entity.HasKey(e => e.BookingId);
                 entity.Property(e => e.Price).HasColumnType("decimal(18,2)").IsRequired();
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
+                entity.Property(e => e.Note).HasMaxLength(1000);
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                 entity.HasOne(b => b.Advisor)
                     .WithMany(a => a.Bookings)
@@ -321,6 +325,42 @@ namespace AISEP.DAL.Data
                 entity.HasOne(b => b.Customer)
                     .WithMany(u => u.CustomerBookings)
                     .HasForeignKey(b => b.CustomerId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<AdvisorAvailability>(entity =>
+            {
+                entity.ToTable("advisor_availabilities");
+                entity.HasKey(e => e.AdvisorAvailabilityId);
+                entity.Property(e => e.SlotDate).HasColumnType("date");
+                entity.Property(e => e.StartTime).HasColumnType("time");
+                entity.Property(e => e.EndTime).HasColumnType("time");
+                entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.HasIndex(e => new { e.AdvisorId, e.SlotDate, e.StartTime, e.EndTime }).IsUnique();
+
+                entity.HasOne(a => a.Advisor)
+                    .WithMany(a => a.Availabilities)
+                    .HasForeignKey(a => a.AdvisorId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<BookingSlot>(entity =>
+            {
+                entity.ToTable("booking_slots");
+                entity.HasKey(e => e.BookingSlotId);
+                entity.HasIndex(e => new { e.BookingId, e.AdvisorAvailabilityId }).IsUnique();
+                entity.HasIndex(e => e.AdvisorAvailabilityId).IsUnique();
+
+                entity.HasOne(bs => bs.Booking)
+                    .WithMany(b => b.BookingSlots)
+                    .HasForeignKey(bs => bs.BookingId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(bs => bs.AdvisorAvailability)
+                    .WithMany(a => a.BookingSlots)
+                    .HasForeignKey(bs => bs.AdvisorAvailabilityId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 

@@ -28,6 +28,26 @@ namespace AISEP.BLL.Helpers
                 .CanFilter()
                 .CanSort();
 
+            // Advisor availability
+            mapper.Property<AdvisorAvailability>(a => a.AdvisorId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<AdvisorAvailability>(a => a.SlotDate)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<AdvisorAvailability>(a => a.StartTime)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<AdvisorAvailability>(a => a.EndTime)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<AdvisorAvailability>(a => a.Status)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<AdvisorAvailability>(a => a.CreatedAt)
+                .CanFilter()
+                .CanSort();
+
 
             // Advisor
             mapper.Property<Advisor>(a => a.Rating)

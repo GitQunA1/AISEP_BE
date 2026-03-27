@@ -11,6 +11,8 @@ namespace AISEP.DAL.Entities
         public DateTime EndTime { get; set; }
         public decimal Price { get; set; }
         public BookingStatus Status { get; set; }
+        public string? Note { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation properties
         public Advisor Advisor { get; set; } = null!;
@@ -18,5 +20,6 @@ namespace AISEP.DAL.Entities
         public ChatSession? ChatSession { get; set; }
         public ConsultingReport? ConsultingReport { get; set; }
         public Review? Review { get; set; }
+        public ICollection<BookingSlot> BookingSlots { get; set; } = new List<BookingSlot>();
     }
 }

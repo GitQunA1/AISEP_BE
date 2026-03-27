@@ -11,15 +11,15 @@ namespace AISEP.BLL.Validators.Booking
                 .NotEmpty().WithMessage("AdvisorId is required.")
                 .GreaterThan(0).WithMessage("AdvisorId must be a positive number.");
 
-            RuleFor(x => x.StartTime)
-                .NotEmpty().WithMessage("StartTime is required.")
-                .GreaterThan(DateTime.UtcNow).WithMessage("StartTime must be in the future.");
+            RuleFor(x => x.AdvisorAvailabilitySlotIds)
+                .NotEmpty().WithMessage("At least one slot must be selected.");
 
-            RuleFor(x => x.EndTime)
-                .NotEmpty().WithMessage("EndTime is required.")
-                .GreaterThan(x => x.StartTime).WithMessage("EndTime must be after StartTime.");
-                // .Must((req, end) => (end - req.StartTime).TotalMinutes >= 30)
-                // .WithMessage("Booking duration must be at least 30 minutes.");
+            RuleFor(x => x.AdvisorAvailabilitySlotIds)
+                .Must(ids => ids.Distinct().Count() == ids.Count)
+                .WithMessage("Selected slots must be unique.");
+
+            RuleFor(x => x.Note)
+                .MaximumLength(1000).WithMessage("Note must not exceed 1000 characters.");
         }
     }
 }

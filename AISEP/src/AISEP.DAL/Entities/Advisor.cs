@@ -27,6 +27,7 @@ namespace AISEP.DAL.Entities
         // Navigation properties
         public User User { get; set; } = null!;
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+        public ICollection<AdvisorAvailability> Availabilities { get; set; } = new List<AdvisorAvailability>();
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
         public Wallet? Wallet { get; set; }
     }

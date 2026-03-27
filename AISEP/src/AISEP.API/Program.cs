@@ -18,6 +18,7 @@ using AISEP.BLL.Services.Startups;
 using AISEP.BLL.Services.StartupFollowers;
 using AISEP.BLL.Services.Storage;
 using AISEP.BLL.Services.Advisors;
+using AISEP.BLL.Services.AdvisorAvailabilities;
 using AISEP.BLL.Services.AI;
 using AISEP.BLL.Services.Chats;
 using AISEP.BLL.Services.Payments;
@@ -235,6 +236,7 @@ builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IStorageService, CloudinaryStorageService>();
 builder.Services.AddScoped<IBlockchainService, BlockchainService>();
 builder.Services.AddScoped<IAdvisorService, AdvisorService>();
+builder.Services.AddScoped<IAdvisorAvailabilityService, AdvisorAvailabilityService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IConsultingReportService, ConsultingReportService>();
 builder.Services.AddScoped<IChatSessionService, ChatSessionService>();
@@ -246,6 +248,7 @@ builder.Services.AddScoped<IDealService, DealService>();
 builder.Services.AddScoped<IPinataService, PinataService>();
 builder.Services.AddScoped<INotificationRealtimePublisher, SignalRNotificationRealtimePublisher>();
 builder.Services.AddHostedService<SubscriptionExpiryBackgroundService>();
+builder.Services.AddHostedService<BookingResponseExpiryBackgroundService>();
 
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>

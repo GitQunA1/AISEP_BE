@@ -20,10 +20,19 @@ namespace AISEP.DAL.Repositories.Bookings
                 .Include(b => b.Advisor)
                     .ThenInclude(a => a.User)
                 .Include(b => b.Customer)
+                .Include(b => b.BookingSlots)
+                    .ThenInclude(bs => bs.AdvisorAvailability)
                 .Include(b => b.ChatSession)
                 .Include(b => b.ConsultingReport)
                 .FirstOrDefaultAsync(b => b.BookingId == id);
         }
+
+        public async Task<Booking?> GetByIdForAdvisorActionAsync(int id)
+            => await _context.Bookings
+                .Include(b => b.Advisor)
+                .Include(b => b.BookingSlots)
+                    .ThenInclude(bs => bs.AdvisorAvailability)
+                .FirstOrDefaultAsync(b => b.BookingId == id);
 
         public async Task<Booking?> GetByIdWithAdvisorWalletAsync(int id)
             => await _context.Bookings
@@ -31,11 +40,19 @@ namespace AISEP.DAL.Repositories.Bookings
                     .ThenInclude(a => a.Wallet)
                 .FirstOrDefaultAsync(b => b.BookingId == id);
 
-        public async Task<Booking?> GetPendingByIdAndCustomerAsync(int bookingId, int customerId)
+        public async Task<Booking?> GetPayableByIdAndCustomerAsync(int bookingId, int customerId)
             => await _context.Bookings
                 .FirstOrDefaultAsync(b => b.BookingId == bookingId
                                        && b.CustomerId == customerId
-                                       && b.Status == BookingStatus.Pending);
+                                       && b.Status == BookingStatus.ApprovedAwaitingPayment);
+
+        public async Task<List<Booking>> GetExpiredAwaitingAdvisorResponseAsync(DateTime thresholdUtc)
+            => await _context.Bookings
+                .Include(b => b.BookingSlots)
+                    .ThenInclude(bs => bs.AdvisorAvailability)
+                .Where(b => b.Status == BookingStatus.Pending
+                         && b.CreatedAt <= thresholdUtc)
+                .ToListAsync();
 
         public async Task AddAsync(Booking booking)
         {
@@ -60,6 +77,8 @@ namespace AISEP.DAL.Repositories.Bookings
                 .Include(b => b.Advisor)
                     .ThenInclude(a => a.User)
                 .Include(b => b.Customer)
+                .Include(b => b.BookingSlots)
+                    .ThenInclude(bs => bs.AdvisorAvailability)
                 .AsNoTracking();
         }
     }

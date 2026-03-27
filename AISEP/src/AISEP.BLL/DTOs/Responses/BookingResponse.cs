@@ -13,5 +13,8 @@ namespace AISEP.BLL.DTOs.Responses
         public DateTime EndTime { get; set; }
         public decimal Price { get; set; }
         public BookingStatus Status { get; set; }
+        public string? Note { get; set; }
+        public List<int> AdvisorAvailabilitySlotIds { get; set; } = [];
+        public int SlotCount { get; set; }
     }
 }
