@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AISEP Investment Contract</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.5; color: #222; margin: 24px; }
+        h1 { margin-bottom: 12px; }
+        .meta { margin-bottom: 16px; }
+        .label { font-weight: 700; }
+        .box { border: 1px solid #ccc; padding: 12px; border-radius: 6px; min-height: 60px; }
+        .sign-row { margin-top: 32px; display: flex; justify-content: space-between; }
+        .sign-col { width: 45%; }
+        .line { border-top: 1px solid #666; margin-top: 8px; padding-top: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Investment Contract</h1>
+
+    <div class="meta">
+        <div><span class="label">Contract No:</span> DEAL-{{DealId}}</div>
+        <div><span class="label">Date:</span> {{ContractDate}}</div>
+    </div>
+
+    <p>
+        This contract confirms the investment agreement between
+        <strong>{{InvestorName}}</strong> and project <strong>{{ProjectName}}</strong> (Project ID: {{ProjectId}}).
+    </p>
+
+    <div><span class="label">Final Amount (USD):</span> {{FinalAmount}}</div>
+    <div><span class="label">Final Equity (%):</span> {{FinalEquityPercentage}}</div>
+
+    <h3>Additional Terms</h3>
+    <div class="box">{{AdditionalTerms}}</div>
+
+    <div class="sign-row">
+        <div class="sign-col">
+            <div class="label">Investor Signature</div>
+            <div class="box">{{SignatureImage}}</div>
+            <div class="line">{{InvestorName}}</div>
+        </div>
+        <div class="sign-col">
+            <div class="label">Startup Representative</div>
+            <div class="box"></div>
+            <div class="line">{{ProjectName}}</div>
+        </div>
+    </div>
+</body>
+</html>

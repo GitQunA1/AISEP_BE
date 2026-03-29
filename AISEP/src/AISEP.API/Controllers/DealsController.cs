@@ -66,9 +66,9 @@ namespace AISEP.API.Controllers
             return Ok(ApiResponse<object>.SuccessResponse(result, "Deal confirmed successfully."));
         }
 
-        [HttpPost("{id:int}/mint-nft")]
+        [HttpGet("{id:int}/contract-preview")]
         [Authorize(Roles = "Investor")]
-        public async Task<IActionResult> MintNft(int id, [FromBody] MintNftRequestDto request)
+        public async Task<IActionResult> GetContractPreview(int id)
         {
             var userId = _userService.GetUserId();
             var investor = await _investorService.GetMyProfileAsync()
@@ -79,13 +79,13 @@ namespace AISEP.API.Controllers
                 throw new UnauthorizedAccessException("Invalid investor context.");
             }
 
-            var result = await _dealService.MintNftForDealAsync(id, request);
-            return Ok(ApiResponse<object>.SuccessResponse(result, "NFT minted successfully."));
+            var html = await _dealService.GetContractPreviewAsync(id, investor.InvestorId);
+            return Ok(ApiResponse<object>.SuccessResponse(html, "Contract preview loaded successfully."));
         }
 
-        [HttpGet("my-nfts")]
+        [HttpPost("{id:int}/sign")]
         [Authorize(Roles = "Investor")]
-        public async Task<IActionResult> GetMyNfts([FromQuery] SieveModel sieveModel)
+        public async Task<IActionResult> SignContract(int id, [FromBody] SignContractRequestDto request)
         {
             var userId = _userService.GetUserId();
             var investor = await _investorService.GetMyProfileAsync()
@@ -96,8 +96,79 @@ namespace AISEP.API.Controllers
                 throw new UnauthorizedAccessException("Invalid investor context.");
             }
 
-            var result = await _dealService.GetMyNftsAsync(investor.InvestorId, sieveModel);
-            return Ok(ApiResponse<object>.SuccessResponse(result, "NFT deals retrieved successfully."));
+            var result = await _dealService.SignAndFinalizeContractAsync(id, investor.InvestorId, userId, request);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Contract signed successfully."));
         }
+
+        [HttpGet("{id:int}/contract-status")]
+        [Authorize(Roles = "Investor,Startup")]
+        public async Task<IActionResult> GetContractStatus(int id)
+        {
+            var userId = _userService.GetUserId();
+
+            if (User.IsInRole("Investor"))
+            {
+                var investor = await _investorService.GetMyProfileAsync()
+                    ?? throw new KeyNotFoundException("Investor profile not found.");
+
+                if (investor.UserId != userId)
+                {
+                    throw new UnauthorizedAccessException("Invalid investor context.");
+                }
+
+                var investorResult = await _dealService.GetContractStatusForInvestorAsync(id, investor.InvestorId);
+                return Ok(ApiResponse<object>.SuccessResponse(investorResult, "Contract status loaded successfully."));
+            }
+
+            if (User.IsInRole("Startup"))
+            {
+                var startup = await _startupService.GetMyProfileAsync()
+                    ?? throw new KeyNotFoundException("Startup profile not found.");
+
+                if (startup.UserId != userId)
+                {
+                    throw new UnauthorizedAccessException("Invalid startup context.");
+                }
+
+                var startupResult = await _dealService.GetContractStatusForStartupAsync(id, startup.Id);
+                return Ok(ApiResponse<object>.SuccessResponse(startupResult, "Contract status loaded successfully."));
+            }
+
+            throw new UnauthorizedAccessException("Role is not allowed to access contract status.");
+        }
+
+        // [HttpPost("{id:int}/mint-nft")]
+        // [Authorize(Roles = "Investor")]
+        // public async Task<IActionResult> MintNft(int id, [FromBody] MintNftRequestDto request)
+        // {
+        //     var userId = _userService.GetUserId();
+        //     var investor = await _investorService.GetMyProfileAsync()
+        //         ?? throw new KeyNotFoundException("Investor profile not found.");
+
+        //     if (investor.UserId != userId)
+        //     {
+        //         throw new UnauthorizedAccessException("Invalid investor context.");
+        //     }
+
+        //     var result = await _dealService.MintNftForDealAsync(id, request);
+        //     return Ok(ApiResponse<object>.SuccessResponse(result, "NFT minted successfully."));
+        // }
+
+        // [HttpGet("my-nfts")]
+        // [Authorize(Roles = "Investor")]
+        // public async Task<IActionResult> GetMyNfts([FromQuery] SieveModel sieveModel)
+        // {
+        //     var userId = _userService.GetUserId();
+        //     var investor = await _investorService.GetMyProfileAsync()
+        //         ?? throw new KeyNotFoundException("Investor profile not found.");
+
+        //     if (investor.UserId != userId)
+        //     {
+        //         throw new UnauthorizedAccessException("Invalid investor context.");
+        //     }
+
+        //     var result = await _dealService.GetMyNftsAsync(investor.InvestorId, sieveModel);
+        //     return Ok(ApiResponse<object>.SuccessResponse(result, "NFT deals retrieved successfully."));
+        // }
     }
 }

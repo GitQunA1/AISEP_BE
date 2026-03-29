@@ -285,6 +285,7 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.PaymentMethod).HasMaxLength(50);
                 entity.Property(e => e.EquityPercentage).HasColumnType("decimal(5,2)");
                 entity.Property(e => e.DealDate).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.ContractPdfUrl).HasMaxLength(500);
 
                 entity.HasOne(d => d.Investor)
                     .WithMany(i => i.Deals)
@@ -638,23 +639,23 @@ namespace AISEP.DAL.Data
                 entity.HasIndex(e => e.Token);
             });
 
-            modelBuilder.Entity<StartupFollower>(entity =>
+            modelBuilder.Entity<ProjectFollower>(entity =>
             {
-                entity.ToTable("startup_followers");
-                entity.HasKey(sf => sf.StartupFollowerId);
+                entity.ToTable("project_followers");
+                entity.HasKey(pf => pf.ProjectFollowerId);
 
-                entity.HasOne(sf => sf.User)
-                    .WithMany(u => u.FollowedStartups)
-                    .HasForeignKey(sf => sf.FollowerId)
+                entity.HasOne(pf => pf.User)
+                    .WithMany(u => u.FollowedProjects)
+                    .HasForeignKey(pf => pf.FollowerId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasOne(sf => sf.Startup)
-                    .WithMany(s => s.Followers)
-                    .HasForeignKey(sf => sf.FollowedId)
+                entity.HasOne(pf => pf.Project)
+                    .WithMany(p => p.Followers)
+                    .HasForeignKey(pf => pf.ProjectId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasIndex(sf => new { sf.FollowerId, sf.FollowedId }).IsUnique();
-                entity.Property(sf => sf.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(pf => pf.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+               
             });
         }
     }
