@@ -4,6 +4,7 @@
     {
         Pending,
         Confirmed,
+        Contract_Signed,
         Minted_NFT,
         Failed
     }

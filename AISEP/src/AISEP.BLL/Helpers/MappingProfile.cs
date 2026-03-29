@@ -274,6 +274,13 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.Status,
                     opt => opt.MapFrom(src => src.Status.ToString()));
 
+            // Deal Entity -> DealContractStatusResponse
+            CreateMap<Deal, DealContractStatusResponse>()
+                .ForMember(dest => dest.Status,
+                    opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.IsContractSigned,
+                    opt => opt.MapFrom(src => src.Status == AISEP.DAL.Enums.DealStatus.Contract_Signed || src.Status == AISEP.DAL.Enums.DealStatus.Minted_NFT));
+
             // CreateDealDto -> Deal Entity
             CreateMap<CreateDealDto, Deal>()
                 .ForMember(dest => dest.DealId, opt => opt.Ignore())

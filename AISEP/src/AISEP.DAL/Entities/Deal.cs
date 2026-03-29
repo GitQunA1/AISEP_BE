@@ -20,6 +20,9 @@ namespace AISEP.DAL.Entities
         public decimal? EquityPercentage { get; set; }
         public bool IsCompleted { get; set; }
         public DateTime? CompletionDate { get; set; }
+        public string? ContractPdfUrl { get; set; }
+        public DateTime? ContractSignedAt { get; set; }
+        public int? ContractSignedByUserId { get; set; }
 
         // Navigation properties
         public Investor Investor { get; set; } = null!;

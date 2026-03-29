@@ -14,6 +14,9 @@ namespace AISEP.BLL.DTOs.Responses
         public decimal? EquityPercentage { get; set; }
         public bool IsCompleted { get; set; }
         public DateTime? CompletionDate { get; set; }
+        public string? ContractPdfUrl { get; set; }
+        public DateTime? ContractSignedAt { get; set; }
+        public int? ContractSignedByUserId { get; set; }
         public NFTRecordDto? NFTRecord { get; set; }
     }
 }
