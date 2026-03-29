@@ -40,7 +40,7 @@ namespace AISEP.DAL.Data
         public DbSet<WithdrawRequest> WithdrawRequests { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
-        public DbSet<StartupFollower> StartupFollowers { get; set; }
+        public DbSet<ProjectFollower> ProjectFollowers { get; set; }
         public DbSet<UserReport> UserReports { get; set; }
         public DbSet<AdvisorAvailability> AdvisorAvailabilities { get; set; }
         public DbSet<BookingSlot> BookingSlots { get; set; }
@@ -614,22 +614,22 @@ namespace AISEP.DAL.Data
                 entity.HasIndex(e => e.Token);
             });
 
-            modelBuilder.Entity<StartupFollower>(entity =>
+            modelBuilder.Entity<ProjectFollower>(entity =>
             {
-                entity.ToTable("startup_followers");
-                entity.HasKey(sf => sf.StartupFollowerId);
+                entity.ToTable("project_followers");
+                entity.HasKey(pf => pf.ProjectFollowerId);
 
-                entity.HasOne(sf => sf.User)
-                    .WithMany(u => u.FollowedStartups)
-                    .HasForeignKey(sf => sf.FollowerId)
+                entity.HasOne(pf => pf.User)
+                    .WithMany(u => u.FollowedProjects)
+                    .HasForeignKey(pf => pf.FollowerId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasOne(sf => sf.Startup)
-                    .WithMany(s => s.Followers)
-                    .HasForeignKey(sf => sf.FollowedId)
+                entity.HasOne(pf => pf.Project)
+                    .WithMany(p => p.Followers)
+                    .HasForeignKey(pf => pf.ProjectId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                entity.Property(sf => sf.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(pf => pf.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
             });
         }
     }

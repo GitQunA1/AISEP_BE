@@ -13,7 +13,7 @@ using AISEP.DAL.Repositories.RefreshTokens;
 using AISEP.DAL.Repositories.Reviews;
 using AISEP.DAL.Repositories.Startups;
 using AISEP.DAL.Repositories.StartupAIAnalyses;
-using AISEP.DAL.Repositories.StartupFollowers;
+using AISEP.DAL.Repositories.ProjectFollowers;
 using AISEP.DAL.Repositories.Investors;
 using AISEP.DAL.Repositories.Subscriptions;
 using AISEP.DAL.Repositories.Transactions;
@@ -41,7 +41,7 @@ namespace AISEP.DAL.Common
         private IChatMessageRepository?       _chatMessages;
         private IConsultingReportRepository?  _consultingReports;
         private IReviewRepository?            _reviews;
-        private IStartupFollowerRepository?   _startupFollowers;
+        private IProjectFollowerRepository?   _projectFollowers;
         private IDocumentRepository?          _documents;
         private IProjectRepository?           _projects;
         private IStartupRepository?           _startups;
@@ -70,7 +70,7 @@ namespace AISEP.DAL.Common
         public IRefreshTokenRepository      RefreshTokens      => _refreshTokens      ??= new RefreshTokenRepository(_context);
         public IDocumentRepository          Documents          => _documents          ??= new DocumentRepository(_context);
         public IReviewRepository            Reviews            => _reviews            ??= new ReviewRepository(_context);
-        public IStartupFollowerRepository   StartupFollowers   => _startupFollowers   ??= new StartupFollowerRepository(_context);
+        public IProjectFollowerRepository   ProjectFollowers   => _projectFollowers   ??= new ProjectFollowerRepository(_context);
         public IProjectRepository           Projects           => _projects           ??= new ProjectRepository(_context);
         public IStartupRepository           Startups           => _startups           ??= new StartupRepository(_context);
         public IInvestorRepository          Investors          => _investors          ??= new InvestorRepository(_context);
