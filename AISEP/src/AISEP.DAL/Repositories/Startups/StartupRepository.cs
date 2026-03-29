@@ -17,7 +17,6 @@ namespace AISEP.DAL.Repositories.Startups
         public IQueryable<Startup> SearchStartupsQuery(string? industry = null, DevelopmentStage? stage = null, string? searchTerm = null)
         {
             return _context.Startups
-                .Include(s => s.Followers)
                 .Include(s => s.User)
                 .Where(s =>
                     s.ApprovalStatus == ApprovalStatus.Approved &&
@@ -31,7 +30,6 @@ namespace AISEP.DAL.Repositories.Startups
         public async Task<Startup?> GetByIdAsync(int id)
         {
             return await _context.Startups
-                .Include(s => s.Followers)
                 .Include(s => s.User)
                 .FirstOrDefaultAsync(s => s.StartupId == id);
         }
@@ -39,7 +37,6 @@ namespace AISEP.DAL.Repositories.Startups
         public async Task<Startup?> GetByUserIdAsync(int userId)
         {
             return await _context.Startups
-                .Include(s => s.Followers)
                 .Include(s => s.User)
                 .FirstOrDefaultAsync(s => s.UserId == userId);
         }
@@ -47,7 +44,6 @@ namespace AISEP.DAL.Repositories.Startups
         public IQueryable<Startup> GetStartupQuery()
         {
             return _context.Startups
-                .Include(s => s.Followers)
                 .Include(s => s.User)
                 .OrderBy(s => s.StartupId)
                 .AsQueryable();
@@ -65,7 +61,6 @@ namespace AISEP.DAL.Repositories.Startups
         public IQueryable<Startup> GetByStatusQuery(ApprovalStatus? status = null)
         {
             var query = _context.Startups
-                .Include(s => s.Followers)
                 .Include(s => s.User)
                 .OrderBy(s => s.StartupId)
                 .AsQueryable();

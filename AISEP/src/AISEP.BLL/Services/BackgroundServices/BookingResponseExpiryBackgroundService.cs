@@ -9,7 +9,7 @@ namespace AISEP.BLL.Services.BackgroundServices
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<BookingResponseExpiryBackgroundService> _logger;
-        private static readonly TimeSpan Interval = TimeSpan.FromMinutes(30);
+        private static readonly TimeSpan Interval = TimeSpan.FromSeconds(1);
 
         public BookingResponseExpiryBackgroundService(
             IServiceScopeFactory scopeFactory,
@@ -41,7 +41,7 @@ namespace AISEP.BLL.Services.BackgroundServices
                 if (expiredCount > 0)
                 {
                     _logger.LogInformation(
-                        "Auto-cancelled {Count} booking(s) because advisor response exceeded 12h.",
+                        "Marked {Count} booking(s) as no-response because advisor response exceeded 1 minute.",
                         expiredCount);
                 }
             }

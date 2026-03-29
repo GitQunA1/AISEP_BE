@@ -6,6 +6,7 @@ namespace AISEP.DAL.Entities
     {
         public int BookingId { get; set; }
         public int AdvisorId { get; set; }
+        public int? ProjectId { get; set; }
         public int CustomerId { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
@@ -16,6 +17,7 @@ namespace AISEP.DAL.Entities
 
         // Navigation properties
         public Advisor Advisor { get; set; } = null!;
+        public Project? Project { get; set; }
         public User Customer { get; set; } = null!;
         public ChatSession? ChatSession { get; set; }
         public ConsultingReport? ConsultingReport { get; set; }

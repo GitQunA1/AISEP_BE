@@ -9,7 +9,7 @@ namespace AISEP.BLL.Services.AdvisorAvailabilities
     {
         Task<PagedResult<AdvisorAvailabilityResponse>> GetByAdvisorIdAsync(int advisorId, SieveModel model);
         Task<PagedResult<AdvisorAvailabilityResponse>> GetMyAvailabilitiesAsync(SieveModel model);
-        Task<AdvisorAvailabilityResponse> CreateMyAvailabilityAsync(CreateAdvisorAvailabilityRequest request);
+        Task<List<AdvisorAvailabilityResponse>> CreateMyAvailabilityAsync(CreateAdvisorAvailabilityRequest request);
         Task<AdvisorAvailabilityResponse> UpdateMyAvailabilityAsync(int availabilityId, UpdateAdvisorAvailabilityRequest request);
         Task<bool> DeleteMyAvailabilityAsync(int availabilityId);
     }

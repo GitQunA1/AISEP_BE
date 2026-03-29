@@ -19,6 +19,7 @@ namespace AISEP.DAL.Repositories.Bookings
             return await _context.Bookings
                 .Include(b => b.Advisor)
                     .ThenInclude(a => a.User)
+                .Include(b => b.Project)
                 .Include(b => b.Customer)
                 .Include(b => b.BookingSlots)
                     .ThenInclude(bs => bs.AdvisorAvailability)
@@ -30,6 +31,7 @@ namespace AISEP.DAL.Repositories.Bookings
         public async Task<Booking?> GetByIdForAdvisorActionAsync(int id)
             => await _context.Bookings
                 .Include(b => b.Advisor)
+                .Include(b => b.Project)
                 .Include(b => b.BookingSlots)
                     .ThenInclude(bs => bs.AdvisorAvailability)
                 .FirstOrDefaultAsync(b => b.BookingId == id);
@@ -48,6 +50,7 @@ namespace AISEP.DAL.Repositories.Bookings
 
         public async Task<List<Booking>> GetExpiredAwaitingAdvisorResponseAsync(DateTime thresholdUtc)
             => await _context.Bookings
+                .Include(b => b.Project)
                 .Include(b => b.BookingSlots)
                     .ThenInclude(bs => bs.AdvisorAvailability)
                 .Where(b => b.Status == BookingStatus.Pending
@@ -76,6 +79,7 @@ namespace AISEP.DAL.Repositories.Bookings
             return _context.Bookings
                 .Include(b => b.Advisor)
                     .ThenInclude(a => a.User)
+                .Include(b => b.Project)
                 .Include(b => b.Customer)
                 .Include(b => b.BookingSlots)
                     .ThenInclude(bs => bs.AdvisorAvailability)

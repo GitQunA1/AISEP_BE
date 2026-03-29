@@ -7,6 +7,7 @@ using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
 using Sieve.Services;
 
@@ -57,24 +58,50 @@ namespace AISEP.BLL.Services.AdvisorAvailabilities
                 x => _mapper.Map<AdvisorAvailabilityResponse>(x));
         }
 
-        public async Task<AdvisorAvailabilityResponse> CreateMyAvailabilityAsync(CreateAdvisorAvailabilityRequest request)
+        public async Task<List<AdvisorAvailabilityResponse>> CreateMyAvailabilityAsync(CreateAdvisorAvailabilityRequest request)
         {
             var advisor = await GetCurrentAdvisorAsync();
-            var exists = await _unitOfWork.AdvisorAvailabilities
-                .ExistsAsync(advisor.AdvisorId, request.SlotDate, request.StartTime, request.EndTime);
-            if (exists)
-                throw new InvalidOperationException("Availability slot already exists.");
+            var slotDate = request.SlotDate.Date;
+            var slotsToCreate = new List<(TimeOnly Start, TimeOnly End)>();
+            for (var start = request.StartTime; start < request.EndTime; start = start.AddHours(1))
+            {
+                var end = start.AddHours(1);
+                slotsToCreate.Add((start, end));
+            }
 
-            var availability = _mapper.Map<AdvisorAvailability>(request);
-            availability.AdvisorId = advisor.AdvisorId;
-            availability.SlotDate = request.SlotDate.Date;
-            availability.Status = AdvisorAvailabilityStatus.Available;
-            availability.UpdatedAt = DateTime.UtcNow;
+            var existingSlots = await _unitOfWork.AdvisorAvailabilities.GetQuery()
+                .Where(x => x.AdvisorId == advisor.AdvisorId && x.SlotDate.Date == slotDate)
+                .Select(x => new { x.StartTime, x.EndTime })
+                .ToListAsync();
 
-            await _unitOfWork.AdvisorAvailabilities.AddAsync(availability);
+            var duplicatedSlot = slotsToCreate.FirstOrDefault(slot =>
+                existingSlots.Any(existing => existing.StartTime == slot.Start && existing.EndTime == slot.End));
+
+            if (duplicatedSlot != default)
+            {
+                throw new InvalidOperationException(
+                    $"Availability slot already exists: {duplicatedSlot.Start:HH\\:mm}-{duplicatedSlot.End:HH\\:mm}.");
+            }
+
+            var newAvailabilities = slotsToCreate.Select(slot => new AdvisorAvailability
+            {
+                AdvisorId = advisor.AdvisorId,
+                SlotDate = slotDate,
+                StartTime = slot.Start,
+                EndTime = slot.End,
+                Status = AdvisorAvailabilityStatus.Available,
+                UpdatedAt = DateTime.UtcNow
+            }).ToList();
+
+            foreach (var availability in newAvailabilities)
+            {
+                await _unitOfWork.AdvisorAvailabilities.AddAsync(availability);
+            }
+
             await _unitOfWork.SaveChangesAsync();
-
-            return _mapper.Map<AdvisorAvailabilityResponse>(availability);
+            return newAvailabilities
+                .Select(a => _mapper.Map<AdvisorAvailabilityResponse>(a))
+                .ToList();
         }
 
         public async Task<AdvisorAvailabilityResponse> UpdateMyAvailabilityAsync(int availabilityId, UpdateAdvisorAvailabilityRequest request)

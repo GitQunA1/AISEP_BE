@@ -6,6 +6,7 @@
         ApprovedAwaitingPayment,
         Confirmed,
         Completed,
-        Cancel
+        Cancel,
+        NoResponse
     }
 }

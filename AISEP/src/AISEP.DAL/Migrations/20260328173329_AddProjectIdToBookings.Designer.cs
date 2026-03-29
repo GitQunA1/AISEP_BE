@@ -3,17 +3,20 @@ using System;
 using AISEP.DAL.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace AISEP.Migrations
+namespace AISEP.DAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260328173329_AddProjectIdToBookings")]
+    partial class AddProjectIdToBookings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -901,35 +904,6 @@ namespace AISEP.Migrations
                     b.ToTable("project_advisor_assignments", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.DAL.Entities.ProjectFollower", b =>
-                {
-                    b.Property<int>("ProjectFollowerId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ProjectFollowerId"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<int>("FollowerId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("ProjectId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("ProjectFollowerId");
-
-                    b.HasIndex("ProjectId");
-
-                    b.HasIndex("FollowerId", "ProjectId")
-                        .IsUnique();
-
-                    b.ToTable("project_followers", (string)null);
-                });
-
             modelBuilder.Entity("AISEP.DAL.Entities.RefreshToken", b =>
                 {
                     b.Property<int>("RefreshTokenId")
@@ -1142,6 +1116,34 @@ namespace AISEP.Migrations
                         .IsUnique();
 
                     b.ToTable("project_ai_evaluations", (string)null);
+                });
+
+            modelBuilder.Entity("AISEP.DAL.Entities.StartupFollower", b =>
+                {
+                    b.Property<int>("StartupFollowerId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("StartupFollowerId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("FollowedId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("FollowerId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("StartupFollowerId");
+
+                    b.HasIndex("FollowedId");
+
+                    b.HasIndex("FollowerId");
+
+                    b.ToTable("startup_followers", (string)null);
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.Subscription", b =>
@@ -1935,25 +1937,6 @@ namespace AISEP.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("AISEP.DAL.Entities.ProjectFollower", b =>
-                {
-                    b.HasOne("AISEP.DAL.Entities.User", "User")
-                        .WithMany("FollowedProjects")
-                        .HasForeignKey("FollowerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AISEP.DAL.Entities.Project", "Project")
-                        .WithMany("Followers")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Project");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("AISEP.DAL.Entities.RefreshToken", b =>
                 {
                     b.HasOne("AISEP.DAL.Entities.User", "User")
@@ -2022,6 +2005,25 @@ namespace AISEP.Migrations
                         .IsRequired();
 
                     b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("AISEP.DAL.Entities.StartupFollower", b =>
+                {
+                    b.HasOne("AISEP.DAL.Entities.Startup", "Startup")
+                        .WithMany("Followers")
+                        .HasForeignKey("FollowedId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AISEP.DAL.Entities.User", "User")
+                        .WithMany("FollowedStartups")
+                        .HasForeignKey("FollowerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Startup");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.Subscription", b =>
@@ -2244,8 +2246,6 @@ namespace AISEP.Migrations
 
                     b.Navigation("Documents");
 
-                    b.Navigation("Followers");
-
                     b.Navigation("InvestorAIAnalyses");
 
                     b.Navigation("ProjectAdvisorAssignment");
@@ -2257,6 +2257,8 @@ namespace AISEP.Migrations
 
             modelBuilder.Entity("AISEP.DAL.Entities.Startup", b =>
                 {
+                    b.Navigation("Followers");
+
                     b.Navigation("Projects");
                 });
 
@@ -2270,7 +2272,7 @@ namespace AISEP.Migrations
 
                     b.Navigation("CustomerBookings");
 
-                    b.Navigation("FollowedProjects");
+                    b.Navigation("FollowedStartups");
 
                     b.Navigation("Investor");
 

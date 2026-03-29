@@ -62,6 +62,10 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.Advisor != null && src.Advisor.User != null
                         ? src.Advisor.User.UserName
                         : "Unknown"))
+                .ForMember(dest => dest.ProjectName,
+                    opt => opt.MapFrom(src => src.Project != null
+                        ? src.Project.ProjectName
+                        : "Unknown"))
                 .ForMember(dest => dest.CustomerName,
                     opt => opt.MapFrom(src => src.Customer != null
                         ? src.Customer.UserName
@@ -122,7 +126,7 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.ApprovalStatus,
                     opt => opt.MapFrom(src => src.ApprovalStatus.ToString()))
                 .ForMember(dest => dest.FollowerCount,
-                    opt => opt.MapFrom(src => src.Followers != null ? src.Followers.Count : 0))
+                    opt => opt.MapFrom(src => src.Projects != null ? src.Projects.Sum(p => p.Followers.Count) : 0))
                 .ForMember(dest => dest.ApprovedById,    opt => opt.MapFrom(src => src.ApprovedById))
                 .ForMember(dest => dest.ApprovedAt,      opt => opt.MapFrom(src => src.ApprovedAt))
                 .ForMember(dest => dest.RejectedById,    opt => opt.MapFrom(src => src.RejectedById))
@@ -156,14 +160,16 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.Deals,              opt => opt.Ignore())
                 .ForMember(dest => dest.InvestorAIAnalyses, opt => opt.Ignore());
 
-            // StartupFollower Entity → FollowedStartupResponse
-            CreateMap<StartupFollower, FollowedStartupResponse>()
-                .ForMember(dest => dest.CompanyName,
-                    opt => opt.MapFrom(src => src.Startup != null ? src.Startup.CompanyName : "Unknown"))
-                .ForMember(dest => dest.LogoUrl,
-                    opt => opt.MapFrom(src => src.Startup != null ? src.Startup.LogoUrl : null))
+            // ProjectFollower Entity → FollowedProjectResponse
+            CreateMap<ProjectFollower, FollowedProjectResponse>()
+                .ForMember(dest => dest.ProjectName,
+                    opt => opt.MapFrom(src => src.Project != null ? src.Project.ProjectName : "Unknown"))
+                .ForMember(dest => dest.ProjectImageUrl,
+                    opt => opt.MapFrom(src => src.Project != null ? src.Project.ProjectImageUrl : null))
                 .ForMember(dest => dest.Industry,
-                    opt => opt.MapFrom(src => src.Startup != null ? src.Startup.Industry : null));
+                    opt => opt.MapFrom(src => src.Project != null ? src.Project.Industry.ToString() : null))
+                .ForMember(dest => dest.FollowedAt,
+                    opt => opt.MapFrom(src => src.CreatedAt));
 
             // Project Entity → ProjectResponse
             CreateMap<Project, ProjectResponse>()

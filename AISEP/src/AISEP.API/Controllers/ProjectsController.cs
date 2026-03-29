@@ -30,6 +30,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetAll([FromQuery] SieveModel model)
         {
             var result = await _projectService.GetAllProjectsAsync(model);
