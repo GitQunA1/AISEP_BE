@@ -62,6 +62,10 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.Advisor != null && src.Advisor.User != null
                         ? src.Advisor.User.UserName
                         : "Unknown"))
+                .ForMember(dest => dest.ProjectName,
+                    opt => opt.MapFrom(src => src.Project != null
+                        ? src.Project.ProjectName
+                        : "Unknown"))
                 .ForMember(dest => dest.CustomerName,
                     opt => opt.MapFrom(src => src.Customer != null
                         ? src.Customer.UserName
@@ -129,6 +133,7 @@ namespace AISEP.BLL.Helpers
                             .Distinct()
                             .Count()
                         : 0))
+                    //opt => opt.MapFrom(src => src.Followers.Count))
                 .ForMember(dest => dest.ApprovedById,    opt => opt.MapFrom(src => src.ApprovedById))
                 .ForMember(dest => dest.ApprovedAt,      opt => opt.MapFrom(src => src.ApprovedAt))
                 .ForMember(dest => dest.RejectedById,    opt => opt.MapFrom(src => src.RejectedById))

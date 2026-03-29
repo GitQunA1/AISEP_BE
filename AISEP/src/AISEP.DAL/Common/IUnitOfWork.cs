@@ -8,6 +8,7 @@ using AISEP.DAL.Repositories.Documents;
 using AISEP.DAL.Repositories.InvestorAIAnalyses;
 using AISEP.DAL.Repositories.Packages;
 using AISEP.DAL.Repositories.Projects;
+using AISEP.DAL.Repositories.ProjectAdvisorAssignments;
 using AISEP.DAL.Repositories.RefreshTokens;
 using AISEP.DAL.Repositories.Reviews;
 using AISEP.DAL.Repositories.Startups;
@@ -24,6 +25,7 @@ using AISEP.DAL.Repositories.Notifications;
 using AISEP.DAL.Repositories.ConnectionRequests;
 using AISEP.DAL.Repositories.Deals;
 using AISEP.DAL.Repositories.NFTRecords;
+using AISEP.DAL.Repositories.StartupFollowers;
 
 namespace AISEP.DAL.Common
 {
@@ -36,7 +38,9 @@ namespace AISEP.DAL.Common
         IReviewRepository            Reviews            { get; }
         IProjectFollowerRepository   ProjectFollowers   { get; }
         IProjectRepository           Projects           { get; }
+        IProjectAdvisorAssignmentRepository ProjectAdvisorAssignments { get; }
         IStartupRepository           Startups           { get; }
+        IStartupFollowerRepository StartupFollowers { get; }
         IInvestorRepository          Investors          { get; }
         IInvestorAIAnalysisRepository InvestorAIAnalyses { get; }
         IUserRepository              Users              { get; }

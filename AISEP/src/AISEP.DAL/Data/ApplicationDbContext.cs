@@ -18,6 +18,8 @@ namespace AISEP.DAL.Data
         public DbSet<Investor> Investors { get; set; }
         public DbSet<Advisor> Advisors { get; set; }
         public DbSet<Project> Projects { get; set; }
+        public DbSet<ProjectAdvisorAssignment> ProjectAdvisorAssignments { get; set; }
+        public DbSet<ProjectFollower> ProjectFollowers { get; set; }
         public DbSet<Document> Documents { get; set; }
         public DbSet<StartupAIAnalysis> StartupAIAnalyses { get; set; }
         public DbSet<InvestorAIAnalysis> InvestorAIAnalyses { get; set; }
@@ -40,7 +42,7 @@ namespace AISEP.DAL.Data
         public DbSet<WithdrawRequest> WithdrawRequests { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
-        public DbSet<ProjectFollower> ProjectFollowers { get; set; }
+        public DbSet<StartupFollower> StartupFollowers { get; set; }
         public DbSet<UserReport> UserReports { get; set; }
         public DbSet<AdvisorAvailability> AdvisorAvailabilities { get; set; }
         public DbSet<BookingSlot> BookingSlots { get; set; }
@@ -193,6 +195,24 @@ namespace AISEP.DAL.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
+            modelBuilder.Entity<ProjectAdvisorAssignment>(entity =>
+            {
+                entity.ToTable("project_advisor_assignments");
+                entity.HasKey(x => x.ProjectId);
+                entity.Property(x => x.AssignedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.HasIndex(x => x.AdvisorId);
+
+                entity.HasOne(x => x.Project)
+                    .WithOne(p => p.ProjectAdvisorAssignment)
+                    .HasForeignKey<ProjectAdvisorAssignment>(x => x.ProjectId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(x => x.Advisor)
+                    .WithMany(a => a.ProjectAdvisorAssignments)
+                    .HasForeignKey(x => x.AdvisorId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
             modelBuilder.Entity<Document>(entity =>
             {
                 entity.ToTable("documents");
@@ -321,6 +341,11 @@ namespace AISEP.DAL.Data
                 entity.HasOne(b => b.Advisor)
                     .WithMany(a => a.Bookings)
                     .HasForeignKey(b => b.AdvisorId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(b => b.Project)
+                    .WithMany(p => p.Bookings)
+                    .HasForeignKey(b => b.ProjectId)
                     .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(b => b.Customer)
@@ -631,6 +656,7 @@ namespace AISEP.DAL.Data
                     .OnDelete(DeleteBehavior.Cascade);
 
                 entity.Property(pf => pf.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+               
             });
         }
     }

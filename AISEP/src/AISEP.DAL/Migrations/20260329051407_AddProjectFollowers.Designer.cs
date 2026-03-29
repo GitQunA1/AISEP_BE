@@ -3,17 +3,20 @@ using System;
 using AISEP.DAL.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace AISEP.Migrations
+namespace AISEP.DAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260329051407_AddProjectFollowers")]
+    partial class AddProjectFollowers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -412,16 +415,6 @@ namespace AISEP.Migrations
 
                     b.Property<DateTime?>("CompletionDate")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ContractPdfUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<DateTime?>("ContractSignedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("ContractSignedByUserId")
-                        .HasColumnType("integer");
 
                     b.Property<DateTime>("DealDate")
                         .ValueGeneratedOnAdd()
@@ -889,34 +882,6 @@ namespace AISEP.Migrations
                     b.HasIndex("StartupId");
 
                     b.ToTable("projects", (string)null);
-                });
-
-            modelBuilder.Entity("AISEP.DAL.Entities.ProjectFollower", b =>
-                {
-                    b.Property<int>("ProjectFollowerId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ProjectFollowerId"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<int>("FollowerId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("ProjectId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("ProjectFollowerId");
-
-                    b.HasIndex("FollowerId");
-
-                    b.HasIndex("ProjectId");
-
-                    b.ToTable("project_followers", (string)null);
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.ProjectAdvisorAssignment", b =>
@@ -1971,25 +1936,6 @@ namespace AISEP.Migrations
                     b.Navigation("Advisor");
 
                     b.Navigation("Project");
-                });
-
-            modelBuilder.Entity("AISEP.DAL.Entities.ProjectFollower", b =>
-                {
-                    b.HasOne("AISEP.DAL.Entities.User", "User")
-                        .WithMany("FollowedProjects")
-                        .HasForeignKey("FollowerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AISEP.DAL.Entities.Project", "Project")
-                        .WithMany("Followers")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Project");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.ProjectFollower", b =>

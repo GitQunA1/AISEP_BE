@@ -20,8 +20,14 @@ namespace AISEP.BLL.Validators.AdvisorAvailability
                 .GreaterThan(x => x.StartTime).WithMessage("EndTime must be after StartTime.");
 
             RuleFor(x => x)
-                .Must(x => x.EndTime == x.StartTime.AddHours(1))
-                .WithMessage("Availability slot must be exactly 1 hour.");
+                .Must(x =>
+                {
+                    var duration = x.EndTime.ToTimeSpan() - x.StartTime.ToTimeSpan();
+                    return duration > TimeSpan.Zero
+                           && duration.TotalHours >= 1
+                           && duration.Ticks % TimeSpan.TicksPerHour == 0;
+                })
+                .WithMessage("Availability range must be at least 1 hour and aligned to full-hour blocks.");
 
             RuleFor(x => x)
                 .Must(x => x.StartTime.Minute == 0 && x.StartTime.Second == 0 && x.EndTime.Minute == 0 && x.EndTime.Second == 0)

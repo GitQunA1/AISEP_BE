@@ -20,6 +20,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Investor,Startup")]
         public async Task<IActionResult> CreateBooking([FromBody] CreateBookingRequest dto)
         {
             var booking = await _bookingService.CreateBookingAsync(dto);
@@ -46,20 +47,45 @@ namespace AISEP.API.Controllers
             var bookings = await _bookingService.GetAllBookingsAsync(model);
             return Ok(ApiResponse<object>.SuccessResponse(bookings, "Success"));
         }
-
-        [HttpGet("advisor/{advisorId:int}")]
-        public async Task<IActionResult> GetByAdvisor(int advisorId, [FromQuery] SieveModel model)
+        //Trả danh sách project để dropdown booking.
+        [HttpGet("project-options")]
+        [Authorize(Roles = "Investor,Startup")]
+        public async Task<IActionResult> GetBookingProjectOptions()
         {
-            var bookings = await _bookingService.GetBookingsByAdvisorIdAsync(advisorId, model);
-            return Ok(ApiResponse<object>.SuccessResponse(bookings, "Success"));
+            var projects = await _bookingService.GetBookingProjectOptionsAsync();
+            return Ok(ApiResponse<object>.SuccessResponse(projects, "Success"));
+        }
+        //Trả danh sách advisor để dropdown booking, dựa trên project đã chọn.
+        [HttpGet("advisor-options")]
+        [Authorize(Roles = "Investor,Startup")]
+        public async Task<IActionResult> GetBookingAdvisorOptions([FromQuery] int projectId)
+        {
+            var advisors = await _bookingService.GetBookingAdvisorOptionsAsync(projectId);
+            return Ok(ApiResponse<object>.SuccessResponse(advisors, "Success"));
         }
 
-        [HttpGet("customer/{customerId:int}")]
-        public async Task<IActionResult> GetByCustomer(int customerId, [FromQuery] SieveModel model)
+        //Trả danh sách advisor thay thế cho booking đã reject/noresponse
+        [HttpGet("{id:int}/replacement-advisor-options")]
+        [Authorize(Roles = "Investor,Startup")]
+        public async Task<IActionResult> GetReplacementAdvisorOptions(int id)
         {
-            var bookings = await _bookingService.GetBookingsByCustomerIdAsync(customerId, model);
-            return Ok(ApiResponse<object>.SuccessResponse(bookings, "Success"));
+            var advisors = await _bookingService.GetReplacementAdvisorOptionsAsync(id);
+            return Ok(ApiResponse<object>.SuccessResponse(advisors, "Success"));
         }
+
+        //[HttpGet("advisor/{advisorId:int}")]
+        //public async Task<IActionResult> GetByAdvisor(int advisorId, [FromQuery] SieveModel model)
+        //{
+        //    var bookings = await _bookingService.GetBookingsByAdvisorIdAsync(advisorId, model);
+        //    return Ok(ApiResponse<object>.SuccessResponse(bookings, "Success"));
+        //}
+
+        //[HttpGet("customer/{customerId:int}")]
+        //public async Task<IActionResult> GetByCustomer(int customerId, [FromQuery] SieveModel model)
+        //{
+        //    var bookings = await _bookingService.GetBookingsByCustomerIdAsync(customerId, model);
+        //    return Ok(ApiResponse<object>.SuccessResponse(bookings, "Success"));
+        //}
 
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteBooking(int id)

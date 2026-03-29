@@ -14,5 +14,6 @@ namespace AISEP.BLL.DTOs.Responses
         public string? Industry { get; set; }
         public string? ProjectImageUrl { get; set; }
         public int? StartupPotentialScore { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }

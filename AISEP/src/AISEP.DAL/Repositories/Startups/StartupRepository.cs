@@ -20,6 +20,7 @@ namespace AISEP.DAL.Repositories.Startups
                 .Include(s => s.Projects)
                     .ThenInclude(p => p.Followers)
                 .Include(s => s.User)
+                //.Include(s => s.Followers)
                 .Where(s =>
                     s.ApprovalStatus == ApprovalStatus.Approved &&
                     (string.IsNullOrWhiteSpace(industry) || (s.Industry != null && s.Industry.ToString()!.ToLower().Contains(industry.ToLower()))) &&
@@ -35,6 +36,7 @@ namespace AISEP.DAL.Repositories.Startups
                 .Include(s => s.Projects)
                     .ThenInclude(p => p.Followers)
                 .Include(s => s.User)
+                //.Include(s => s.Followers)
                 .FirstOrDefaultAsync(s => s.StartupId == id);
         }
 

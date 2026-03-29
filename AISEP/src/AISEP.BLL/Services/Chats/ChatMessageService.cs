@@ -44,7 +44,7 @@ namespace AISEP.BLL.Services.Chats
             return created is null ? null : MapMessage(created);
         }
 
-        // ── Helpers ──────────────────────────────────────────────────────
+        
 
         private static bool IsParticipant(Booking booking, int userId)
             => booking.CustomerId == userId || booking.Advisor.UserId == userId;

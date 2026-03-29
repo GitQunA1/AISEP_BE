@@ -38,7 +38,7 @@ namespace AISEP.API.Controllers
         public async Task<IActionResult> CreateMyAvailability([FromBody] CreateAdvisorAvailabilityRequest request)
         {
             var result = await _advisorAvailabilityService.CreateMyAvailabilityAsync(request);
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Advisor availability created successfully."));
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Advisor availability slots created successfully."));
         }
 
         [HttpPut("me/{availabilityId:int}")]

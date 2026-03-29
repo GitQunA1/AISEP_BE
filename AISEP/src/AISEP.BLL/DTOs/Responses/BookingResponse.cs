@@ -7,6 +7,8 @@ namespace AISEP.BLL.DTOs.Responses
         public int Id { get; set; }
         public int AdvisorId { get; set; }
         public string AdvisorName { get; set; } = string.Empty;
+        public int? ProjectId { get; set; }
+        public string ProjectName { get; set; } = string.Empty;
         public int CustomerId { get; set; }
         public string CustomerName { get; set; } = string.Empty;
         public DateTime StartTime { get; set; }
