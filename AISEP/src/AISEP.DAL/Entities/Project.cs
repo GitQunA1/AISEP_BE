@@ -42,7 +42,6 @@ namespace AISEP.DAL.Entities
         public ICollection<ConnectionRequest> ConnectionRequests { get; set; } = new List<ConnectionRequest>();
         public ICollection<Deal> Deals { get; set; } = new List<Deal>();
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
-        public ICollection<ProjectFollower> Followers { get; set; } = new List<ProjectFollower>();
         public ProjectAdvisorAssignment? ProjectAdvisorAssignment { get; set; }
     }
 }

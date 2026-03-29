@@ -29,5 +29,6 @@ namespace AISEP.DAL.Entities
         // Navigation properties
         public User User { get; set; } = null!;
         public ICollection<Project> Projects { get; set; } = new List<Project>();
+        public ICollection<StartupFollower> Followers { get; set; } = new List<StartupFollower>();
     }
 }

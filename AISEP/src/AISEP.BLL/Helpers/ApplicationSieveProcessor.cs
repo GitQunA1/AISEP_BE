@@ -64,8 +64,8 @@ namespace AISEP.BLL.Helpers
             mapper.Property<Review>(r => r.CreatedAt)
                 .CanFilter()
                 .CanSort();
-            // ProjectFollower
-            mapper.Property<ProjectFollower>(pf => pf.CreatedAt)
+            // StartupFollower
+            mapper.Property<StartupFollower>(sf => sf.CreatedAt)
                 .CanFilter()
                 .CanSort();
 

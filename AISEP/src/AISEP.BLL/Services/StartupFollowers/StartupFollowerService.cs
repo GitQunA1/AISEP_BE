@@ -7,16 +7,16 @@ using AutoMapper;
 using Sieve.Models;
 using Sieve.Services;
 
-namespace AISEP.BLL.Services.ProjectFollowers
+namespace AISEP.BLL.Services.StartupFollowers
 {
-    public class ProjectFollowerService : IProjectFollowerService
+    public class StartupFollowerService : IStartupFollowerService
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserService _currentUserService;
         private readonly ISieveProcessor _sieveProcessor;
         private readonly IMapper _mapper;
 
-        public ProjectFollowerService(
+        public StartupFollowerService(
             IUnitOfWork unitOfWork,
             IUserService currentUserService,
             ISieveProcessor sieveProcessor,
@@ -28,56 +28,56 @@ namespace AISEP.BLL.Services.ProjectFollowers
             _mapper = mapper;
         }
 
-        public async Task<bool> FollowProjectAsync(int projectId)
+        public async Task<bool> FollowStartupAsync(int startupId)
         {
             var userId = _currentUserService.GetUserId();
-            var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
-            if (project is null)
-                throw new KeyNotFoundException("Project not found.");
+            var startup = await _unitOfWork.Startups.GetByIdAsync(startupId);
+            if (startup is null)
+                throw new KeyNotFoundException("Startup not found.");
 
-            var exists = await _unitOfWork.ProjectFollowers.IsFollowingAsync(userId, projectId);
+            var exists = await _unitOfWork.StartupFollowers.IsFollowingAsync(userId, startupId);
             if (exists)
                 return false;
 
-            var follow = new ProjectFollower
+            var follow = new StartupFollower
             {
                 FollowerId = userId,
-                ProjectId = projectId,
+                FollowedId = startupId,
                 CreatedAt = DateTime.UtcNow
             };
 
-            await _unitOfWork.ProjectFollowers.AddAsync(follow);
+            await _unitOfWork.StartupFollowers.AddAsync(follow);
             await _unitOfWork.SaveChangesAsync();
             return true;
         }
 
-        public async Task<bool> UnfollowProjectAsync(int projectId)
+        public async Task<bool> UnfollowStartupAsync(int startupId)
         {
             var userId = _currentUserService.GetUserId();
 
-            var exists = await _unitOfWork.ProjectFollowers.IsFollowingAsync(userId, projectId);
+            var exists = await _unitOfWork.StartupFollowers.IsFollowingAsync(userId, startupId);
             if (!exists)
                 return false;
 
-            await _unitOfWork.ProjectFollowers.RemoveAsync(userId, projectId);
+            await _unitOfWork.StartupFollowers.RemoveAsync(userId, startupId);
             await _unitOfWork.SaveChangesAsync();
             return true;
         }
 
-        public async Task<bool> IsFollowingAsync(int projectId)
+        public async Task<bool> IsFollowingAsync(int startupId)
         {
             var userId = _currentUserService.GetUserId();
-            return await _unitOfWork.ProjectFollowers.IsFollowingAsync(userId, projectId);
+            return await _unitOfWork.StartupFollowers.IsFollowingAsync(userId, startupId);
         }
 
-        public async Task<PagedResult<FollowedProjectResponse>> GetMyFollowedProjectsAsync(SieveModel model)
+        public async Task<PagedResult<FollowedStartupResponse>> GetMyFollowedStartupsAsync(SieveModel model)
         {
             var userId = _currentUserService.GetUserId();
 
-            var query = _unitOfWork.ProjectFollowers.GetFollowerQuery()
-                .Where(pf => pf.FollowerId == userId);
+            var query = _unitOfWork.StartupFollowers.GetFollowerQuery()
+                .Where(sf => sf.FollowerId == userId);
 
-            return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, pf => _mapper.Map<FollowedProjectResponse>(pf));
+            return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, sf => _mapper.Map<FollowedStartupResponse>(sf));
         }
     }
 }

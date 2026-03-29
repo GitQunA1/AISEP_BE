@@ -32,8 +32,8 @@ namespace AISEP.DAL.Entities
         public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 
-        // Followed projects
-        public ICollection<ProjectFollower> FollowedProjects { get; set; } = new List<ProjectFollower>();
+        // Followed startups
+        public ICollection<StartupFollower> FollowedStartups { get; set; } = new List<StartupFollower>();
 
         // Reports
         public ICollection<UserReport> ReportsMade { get; set; } = new List<UserReport>();

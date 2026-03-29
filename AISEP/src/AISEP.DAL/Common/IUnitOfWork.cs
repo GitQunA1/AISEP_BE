@@ -13,7 +13,7 @@ using AISEP.DAL.Repositories.RefreshTokens;
 using AISEP.DAL.Repositories.Reviews;
 using AISEP.DAL.Repositories.Startups;
 using AISEP.DAL.Repositories.StartupAIAnalyses;
-using AISEP.DAL.Repositories.ProjectFollowers;
+using AISEP.DAL.Repositories.StartupFollowers;
 using AISEP.DAL.Repositories.Investors;
 using AISEP.DAL.Repositories.Subscriptions;
 using AISEP.DAL.Repositories.Transactions;
@@ -35,7 +35,7 @@ namespace AISEP.DAL.Common
         IRefreshTokenRepository      RefreshTokens      { get; }
         IDocumentRepository          Documents          { get; }
         IReviewRepository            Reviews            { get; }
-        IProjectFollowerRepository   ProjectFollowers   { get; }
+        IStartupFollowerRepository   StartupFollowers   { get; }
         IProjectRepository           Projects           { get; }
         IProjectAdvisorAssignmentRepository ProjectAdvisorAssignments { get; }
         IStartupRepository           Startups           { get; }
