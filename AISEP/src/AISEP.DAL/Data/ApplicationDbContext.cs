@@ -19,6 +19,7 @@ namespace AISEP.DAL.Data
         public DbSet<Advisor> Advisors { get; set; }
         public DbSet<Project> Projects { get; set; }
         public DbSet<ProjectAdvisorAssignment> ProjectAdvisorAssignments { get; set; }
+        public DbSet<ProjectFollower> ProjectFollowers { get; set; }
         public DbSet<Document> Documents { get; set; }
         public DbSet<StartupAIAnalysis> StartupAIAnalyses { get; set; }
         public DbSet<InvestorAIAnalysis> InvestorAIAnalyses { get; set; }

@@ -25,6 +25,7 @@ using AISEP.DAL.Repositories.Notifications;
 using AISEP.DAL.Repositories.ConnectionRequests;
 using AISEP.DAL.Repositories.Deals;
 using AISEP.DAL.Repositories.NFTRecords;
+using AISEP.DAL.Repositories.StartupFollowers;
 
 namespace AISEP.DAL.Common
 {
@@ -39,6 +40,7 @@ namespace AISEP.DAL.Common
         IProjectRepository           Projects           { get; }
         IProjectAdvisorAssignmentRepository ProjectAdvisorAssignments { get; }
         IStartupRepository           Startups           { get; }
+        IStartupFollowerRepository StartupFollowers { get; }
         IInvestorRepository          Investors          { get; }
         IInvestorAIAnalysisRepository InvestorAIAnalyses { get; }
         IUserRepository              Users              { get; }
