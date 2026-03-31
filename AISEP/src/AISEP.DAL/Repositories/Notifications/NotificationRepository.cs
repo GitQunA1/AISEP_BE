@@ -13,16 +13,12 @@ namespace AISEP.DAL.Repositories.Notifications
             _context = context;
         }
 
-        public async Task<List<Notification>> GetByUserIdAsync(int userId, int pageIndex, int pageSize)
+        public IQueryable<Notification> GetByUserIdQuery(int userId)
         {
-            var skip = (pageIndex - 1) * pageSize;
-
-            return await _context.Notifications
+            return _context.Notifications
                 .Where(n => n.UserId == userId)
                 .OrderByDescending(n => n.CreatedAt)
-                .Skip(skip)
-                .Take(pageSize)
-                .ToListAsync();
+                .AsQueryable();
         }
 
         public async Task AddAsync(Notification notification)

@@ -3,6 +3,7 @@ using AISEP.BLL.Services.Notifications;
 using AISEP.BLL.Services.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Sieve.Models;
 
 namespace AISEP.API.Controllers
 {
@@ -21,10 +22,10 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetMyNotifications([FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetMyNotifications([FromQuery] SieveModel model)
         {
             var userId = _userService.GetUserId();
-            var data = await _notificationService.GetUserNotificationsAsync(userId, pageIndex, pageSize);
+            var data = await _notificationService.GetUserNotificationsAsync(userId, model);
             return Ok(ApiResponse<object>.SuccessResponse(data, "Notifications retrieved successfully"));
         }
 

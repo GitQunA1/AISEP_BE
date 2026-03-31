@@ -1,7 +1,6 @@
 ﻿using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.Startups;
-using AISEP.BLL.Services.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sieve.Models;
@@ -14,12 +13,10 @@ namespace AISEP.API.Controllers
     public class StartupsController : ControllerBase
     {
         private readonly IStartupService _startupService;
-        private readonly IUserService _currentUserService;
 
-        public StartupsController(IStartupService startupService, IUserService currentUserService)
+        public StartupsController(IStartupService startupService)
         {
             _startupService = startupService;
-            _currentUserService = currentUserService;
         }
 
         [HttpGet]

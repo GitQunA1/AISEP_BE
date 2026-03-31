@@ -3,7 +3,6 @@ using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.BLL.Services.Blockchain;
 using AISEP.BLL.Services.Projects;
-using AISEP.BLL.Services.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sieve.Models;
@@ -17,16 +16,13 @@ namespace AISEP.API.Controllers
     {
         private readonly IProjectService _projectService;
         private readonly IBlockchainService _blockchainService;
-        private readonly IUserService _currentUserService;
 
         public ProjectsController(
             IProjectService projectService,
-            IBlockchainService blockchainService,
-            IUserService currentUserService)
+            IBlockchainService blockchainService)
         {
             _projectService = projectService;
             _blockchainService = blockchainService;
-            _currentUserService = currentUserService;
         }
 
         [HttpGet]
