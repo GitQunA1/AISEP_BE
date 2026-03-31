@@ -5,6 +5,7 @@ using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using AISEP.BLL.Services.Notifications;
+using AISEP.BLL.Services.Chats;
 using AutoMapper;
 
 namespace AISEP.BLL.Services.Connections
@@ -14,15 +15,18 @@ namespace AISEP.BLL.Services.Connections
         private readonly IUnitOfWork _unitOfWork;
         private readonly INotificationService _notificationService;
         private readonly IMapper _mapper;
+        private readonly IChatSessionService _chatSessionService;
 
         public ConnectionService(
             IUnitOfWork unitOfWork,
             INotificationService notificationService,
-            IMapper mapper)
+            IMapper mapper,
+            IChatSessionService chatSessionService)
         {
             _unitOfWork = unitOfWork;
             _notificationService = notificationService;
             _mapper = mapper;
+            _chatSessionService = chatSessionService;
         }
 
         public async Task<ConnectionRequestDto> CreateRequestAsync(int investorId, CreateConnectionRequestDto dto)
@@ -55,7 +59,9 @@ namespace AISEP.BLL.Services.Connections
                 project.Startup.UserId,
                 "New connection request",
                 $"Investor has requested contact access for project '{project.ProjectName}'.",
-                NotificationType.ConnectionRequest);
+                NotificationType.ConnectionRequest,
+                request.ConnectionRequestId,
+                "ConnectionRequest");
 
             return _mapper.Map<ConnectionRequestDto>(request);
         }
@@ -64,6 +70,8 @@ namespace AISEP.BLL.Services.Connections
         {
             var request = await _unitOfWork.ConnectionRequests.GetByIdAsync(requestId)
                 ?? throw new KeyNotFoundException("Connection request not found.");
+
+            ChatSessionResponse? openedSession = null;
 
             if (request.Project.StartupId != startupId)
             {
@@ -81,18 +89,13 @@ namespace AISEP.BLL.Services.Connections
 
             if (isAccepted)
             {
-                var investor = await _unitOfWork.Investors.GetByIdAsync(request.InvestorId)
-                    ?? throw new KeyNotFoundException("Investor not found.");
+                openedSession = await _chatSessionService.OpenSessionByConnectionRequestAsync(
+                    request.ConnectionRequestId,
+                    request.Project.Startup.UserId);
 
-                var alreadyUnlocked = await _unitOfWork.UnlockedProjects.ExistsAsync(investor.UserId, request.ProjectId);
-                if (!alreadyUnlocked)
+                if (openedSession is null)
                 {
-                    await _unitOfWork.UnlockedProjects.AddAsync(new UnlockedProject
-                    {
-                        UserId = investor.UserId,
-                        ProjectId = request.ProjectId,
-                        UnlockedAt = DateTime.UtcNow
-                    });
+                    throw new InvalidOperationException("Failed to open chat session for accepted connection request.");
                 }
             }
 
@@ -109,9 +112,17 @@ namespace AISEP.BLL.Services.Connections
                 investorToNotify.UserId,
                 "Connection request update",
                 notifyMessage,
-                NotificationType.ConnectionRequest);
+                NotificationType.ConnectionRequest,
+                isAccepted ? openedSession?.ChatSessionId : request.ConnectionRequestId,
+                isAccepted ? "ChatSession" : "ConnectionRequest");
 
-            return _mapper.Map<ConnectionRequestDto>(request);
+            var result = _mapper.Map<ConnectionRequestDto>(request);
+            if (isAccepted && openedSession is not null)
+            {
+                result.ChatSessionId = openedSession.ChatSessionId;
+            }
+
+            return result;
         }
 
         public async Task<ContactInfoDto> GetFounderContactAsync(int investorId, int projectId)

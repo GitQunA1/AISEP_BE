@@ -14,6 +14,7 @@ namespace AISEP.DAL.Entities
         // Navigation properties
         public Investor Investor { get; set; } = null!;
         public Project Project { get; set; } = null!;
+        public ChatSession? ChatSession { get; set; }
         public ICollection<PostPr> PostPrs { get; set; } = new List<PostPr>();
     }
 }

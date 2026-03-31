@@ -17,6 +17,7 @@ namespace AISEP.DAL.Repositories.ConnectionRequests
         public async Task<ConnectionRequest?> GetByIdAsync(int requestId)
         {
             return await _context.ConnectionRequests
+                .Include(cr => cr.ChatSession)
                 .Include(cr => cr.Investor)
                 .Include(cr => cr.Project)
                     .ThenInclude(p => p.Startup)
@@ -26,6 +27,7 @@ namespace AISEP.DAL.Repositories.ConnectionRequests
         public async Task<ConnectionRequest?> GetByInvestorAndProjectAsync(int investorId, int projectId)
         {
             return await _context.ConnectionRequests
+                .Include(cr => cr.ChatSession)
                 .FirstOrDefaultAsync(cr => cr.InvestorId == investorId && cr.ProjectId == projectId);
         }
 

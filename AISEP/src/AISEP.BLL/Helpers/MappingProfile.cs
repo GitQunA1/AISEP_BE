@@ -304,7 +304,9 @@ namespace AISEP.BLL.Helpers
             // ConnectionRequest Entity -> ConnectionRequestDto
             CreateMap<ConnectionRequest, ConnectionRequestDto>()
                 .ForMember(dest => dest.Status,
-                    opt => opt.MapFrom(src => src.Status.ToString()));
+                    opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.ChatSessionId,
+                    opt => opt.MapFrom(src => src.ChatSession != null ? (int?)src.ChatSession.ChatSessionId : null));
 
             // Startup Entity -> ContactInfoDto
             CreateMap<Startup, ContactInfoDto>();
