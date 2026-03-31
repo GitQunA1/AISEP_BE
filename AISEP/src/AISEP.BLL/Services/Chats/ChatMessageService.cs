@@ -2,6 +2,7 @@ using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
+using AISEP.DAL.Enums;
 
 namespace AISEP.BLL.Services.Chats
 {
@@ -28,6 +29,14 @@ namespace AISEP.BLL.Services.Chats
             var session = await _unitOfWork.ChatSessions.GetByIdAsync(sessionId);
             if (session is null || !session.IsOpen || !IsParticipant(session, userId))
                 return null;
+            if (session.Booking.Status == BookingStatus.Completed)
+            {
+                session.IsOpen = false;
+                session.EndTime = DateTime.UtcNow;
+                _unitOfWork.ChatSessions.Update(session);
+                await _unitOfWork.SaveChangesAsync();
+                return null;
+            }
 
             var message = new ChatMessage
             {

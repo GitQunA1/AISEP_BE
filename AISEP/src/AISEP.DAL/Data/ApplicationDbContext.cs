@@ -17,6 +17,7 @@ namespace AISEP.DAL.Data
         public DbSet<Startup> Startups { get; set; }
         public DbSet<Investor> Investors { get; set; }
         public DbSet<Advisor> Advisors { get; set; }
+        public DbSet<AdvisorIndustry> AdvisorIndustries { get; set; }
         public DbSet<Project> Projects { get; set; }
         public DbSet<ProjectAdvisorAssignment> ProjectAdvisorAssignments { get; set; }
         public DbSet<ProjectFollower> ProjectFollowers { get; set; }
@@ -144,7 +145,6 @@ namespace AISEP.DAL.Data
                 entity.ToTable("advisors");
                 entity.HasKey(e => e.AdvisorId);
                 entity.Property(e => e.Expertise).HasMaxLength(255);
-                entity.Property(e => e.Industry).HasConversion<string>();
                 entity.Property(e => e.Rating).HasColumnType("decimal(3,2)");
                 entity.Property(e => e.LanguagesSpoken).HasMaxLength(255);
                 entity.Property(e => e.Location).HasMaxLength(255);
@@ -172,6 +172,18 @@ namespace AISEP.DAL.Data
                     .WithMany()
                     .HasForeignKey(a => a.RejectedById)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<AdvisorIndustry>(entity =>
+            {
+                entity.ToTable("advisor_industries");
+                entity.HasKey(x => new { x.AdvisorId, x.Industry });
+                entity.Property(x => x.Industry).HasConversion<string>().HasMaxLength(50).IsRequired();
+
+                entity.HasOne(x => x.Advisor)
+                    .WithMany(a => a.AdvisorIndustries)
+                    .HasForeignKey(x => x.AdvisorId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             // ── MODULE 2: PROJECTS & DOCUMENTS ────────────────────────────
@@ -436,6 +448,9 @@ namespace AISEP.DAL.Data
                 entity.HasKey(e => e.ConsultingReportId);
                 entity.Property(e => e.MeetingTitle).HasMaxLength(255).IsRequired();
                 entity.Property(e => e.Location).HasMaxLength(255);
+                entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
+                entity.Property(e => e.RevisionRequestReason).HasMaxLength(2000);
+                entity.Property(e => e.AdvisorPayoutAmount).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                 entity.HasOne(cr => cr.Booking)
@@ -619,7 +634,11 @@ namespace AISEP.DAL.Data
             {
                 entity.ToTable("user_reports");
                 entity.HasKey(e => e.UserReportId);
+                entity.Property(e => e.Category).HasConversion<string>().HasMaxLength(50).IsRequired();
+                entity.Property(e => e.Reason).HasMaxLength(1000);
                 entity.Property(e => e.EvidenceUrl).HasMaxLength(255);
+                entity.Property(e => e.EvidenceImageUrls);
+                entity.Property(e => e.VideoEvidenceUrl).HasMaxLength(1000);
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 

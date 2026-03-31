@@ -144,8 +144,8 @@ namespace AISEP.API.Controllers
         {
             try
             {
-                var userId = _currentUserService.GetUserId();
-                var result = await _documentService.ApproveProjectAsync(projectId, userId);
+               
+                var result = await _documentService.ApproveProjectAsync(projectId);
                 return Ok(ApiResponse<object>.SuccessResponse(result, "Project approved and document stored on blockchain successfully."));
             }
             catch (KeyNotFoundException ex)
@@ -157,5 +157,6 @@ namespace AISEP.API.Controllers
                 return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Operation not allowed", 409));
             }
         }
+
     }
 }

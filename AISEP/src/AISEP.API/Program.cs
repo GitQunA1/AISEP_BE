@@ -249,6 +249,7 @@ builder.Services.AddScoped<IPinataService, PinataService>();
 builder.Services.AddScoped<INotificationRealtimePublisher, SignalRNotificationRealtimePublisher>();
 builder.Services.AddHostedService<SubscriptionExpiryBackgroundService>();
 builder.Services.AddHostedService<BookingResponseExpiryBackgroundService>();
+builder.Services.AddHostedService<ConsultingReportDeadlineBackgroundService>();
 
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>

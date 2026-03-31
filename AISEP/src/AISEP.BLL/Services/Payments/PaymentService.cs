@@ -237,20 +237,6 @@ namespace AISEP.BLL.Services.Payments
                 return;
 
             booking.Status = BookingStatus.Confirmed;
-
-            if (booking.Advisor?.Wallet is not null)
-            {
-                booking.Advisor.Wallet.Balance += transaction.Amount;
-
-                await _unitOfWork.WalletTransactions.AddAsync(new WalletTransaction
-                {
-                    WalletId = booking.Advisor.Wallet.WalletId,
-                    Amount = transaction.Amount,
-                    Type = WalletTransactionType.Deposit,
-                    Status = WalletTransactionStatus.Completed,
-                    CreatedAt = DateTime.UtcNow
-                });
-            }
         }
 
         private string BuildQrCodeUrl(decimal amount, string paymentCode)

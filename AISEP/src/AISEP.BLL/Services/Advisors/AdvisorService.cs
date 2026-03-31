@@ -67,7 +67,13 @@ namespace AISEP.BLL.Services.Advisors
             advisor.UserId     = userId;
             advisor.ProfileImage   = await UploadIfPresent(dto.ProfileImageFile,  "advisor-profiles");
             advisor.Certifications = await UploadIfPresent(dto.CertificationFile, "advisor-certifications");
-            advisor.Industry       = dto.Industry;
+            var industries = ResolveRequestedIndustries(dto.Industries, dto.Industry);
+            if (industries.Count == 0)
+                throw new InvalidOperationException("At least one industry is required.");
+
+            advisor.AdvisorIndustries = industries
+                .Select(industry => new AdvisorIndustry { Industry = industry })
+                .ToList();
             advisor.ApprovalStatus = ApprovalStatus.Pending;
             //advisor.CreatedAt      = DateTime.UtcNow;
             advisor.CreatedBy      = userId;
@@ -93,7 +99,39 @@ namespace AISEP.BLL.Services.Advisors
             advisor.LanguagesSpoken    = string.IsNullOrWhiteSpace(dto.LanguagesSpoken)    ? advisor.LanguagesSpoken    : dto.LanguagesSpoken;
             advisor.Location           = string.IsNullOrWhiteSpace(dto.Location)           ? advisor.Location           : dto.Location;
             advisor.HourlyRate         = (dto.HourlyRate > 0) ? dto.HourlyRate : advisor.HourlyRate;
-            advisor.Industry           = dto.Industry ?? advisor.Industry;
+
+            var hasIndustryUpdate = dto.Industries is not null || dto.Industry.HasValue;
+            if (hasIndustryUpdate)
+            {
+                var requestedIndustries = ResolveRequestedIndustries(dto.Industries, dto.Industry).ToHashSet();
+                if (requestedIndustries.Count == 0)
+                    throw new InvalidOperationException("At least one industry is required.");
+
+                var currentIndustries = advisor.AdvisorIndustries
+                    .Select(ai => ai.Industry)
+                    .ToHashSet();
+
+                var toRemove = advisor.AdvisorIndustries
+                    .Where(ai => !requestedIndustries.Contains(ai.Industry))
+                    .ToList();
+
+                foreach (var item in toRemove)
+                {
+                    advisor.AdvisorIndustries.Remove(item);
+                }
+
+                var toAdd = requestedIndustries
+                    .Where(industry => !currentIndustries.Contains(industry));
+
+                foreach (var industry in toAdd)
+                {
+                    advisor.AdvisorIndustries.Add(new AdvisorIndustry
+                    {
+                        AdvisorId = advisor.AdvisorId,
+                        Industry = industry
+                    });
+                }
+            }
 
             if (dto.ProfileImageFile is not null)
                 advisor.ProfileImage = await _storage.UploadFileAsync(dto.ProfileImageFile, "advisor-profiles");
@@ -160,5 +198,22 @@ namespace AISEP.BLL.Services.Advisors
 
         private async Task<string?> UploadIfPresent(IFormFile? file, string folder)
             => file is not null ? await _storage.UploadFileAsync(file, folder) : null;
+
+        private static List<Industry> ResolveRequestedIndustries(List<Industry>? industries, Industry? legacyIndustry)
+        {
+            var merged = new List<Industry>();
+
+            if (industries is not null && industries.Count > 0)
+            {
+                merged.AddRange(industries);
+            }
+
+            if (legacyIndustry.HasValue)
+            {
+                merged.Add(legacyIndustry.Value);
+            }
+
+            return merged.Distinct().ToList();
+        }
     }
 }

@@ -11,6 +11,6 @@ namespace AISEP.BLL.Services.Documents
         Task<PagedResult<DocumentResponse>> GetByProjectIdAsync(int projectId, int userId, string role, SieveModel model);
         Task<bool> DeleteAsync(int id, int userId, string role);
         Task<BlockchainVerificationResponse> VerifyDocumentAsync(int documentId);
-        Task<DocumentResponse> ApproveProjectAsync(int projectId, int staffUserId);
+        Task<DocumentResponse> ApproveProjectAsync(int projectId);
     }
 }

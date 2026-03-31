@@ -4,6 +4,7 @@ namespace AISEP.DAL.Enums
     {
         ApprovalStatus,
         BookingStatus,
+        ConsultingReportStatus,
         ConnectionRequestStatus,
         DealStatus,
         DevelopmentStage,
@@ -22,6 +23,7 @@ namespace AISEP.DAL.Enums
         ValidityStatus,
         WalletTransactionType,
         UserRole,
+        UserReportCategory,
         UserReportStatus,
         WithdrawRequestStatus
 

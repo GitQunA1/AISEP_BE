@@ -50,5 +50,21 @@ namespace AISEP.API.Controllers
 
             return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
         }
+
+        [HttpPatch("{id:int}/startup-approve")]
+        [Authorize(Roles = "Startup,Investor")]
+        public async Task<IActionResult> StartupApprove(int id)
+        {
+            var result = await _consultingReportService.StartupApproveAsync(id);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Report approved successfully."));
+        }
+
+        [HttpPatch("{id:int}/startup-request-revision")]
+        [Authorize(Roles = "Startup,Investor")]
+        public async Task<IActionResult> StartupRequestRevision(int id, [FromBody] RequestReportRevisionRequest request)
+        {
+            var result = await _consultingReportService.StartupRequestRevisionAsync(id, request.Reason);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Revision request submitted."));
+        }
     }
 }

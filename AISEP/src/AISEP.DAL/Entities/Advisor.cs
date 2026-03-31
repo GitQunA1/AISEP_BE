@@ -14,7 +14,6 @@ namespace AISEP.DAL.Entities
         public string? LanguagesSpoken { get; set; }
         public string? Location { get; set; }
         public string? ProfileImage { get; set; }
-        public Industry? Industry { get; set; }
         public decimal? HourlyRate { get; set; }
         public ApprovalStatus ApprovalStatus { get; set; } = ApprovalStatus.Unverified;
         public int? CreatedBy { get; set; }
@@ -28,6 +27,7 @@ namespace AISEP.DAL.Entities
         public User User { get; set; } = null!;
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
         public ICollection<AdvisorAvailability> Availabilities { get; set; } = new List<AdvisorAvailability>();
+        public ICollection<AdvisorIndustry> AdvisorIndustries { get; set; } = new List<AdvisorIndustry>();
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
         public ICollection<ProjectAdvisorAssignment> ProjectAdvisorAssignments { get; set; } = new List<ProjectAdvisorAssignment>();
         public Wallet? Wallet { get; set; }

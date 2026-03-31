@@ -457,7 +457,7 @@ namespace AISEP.BLL.Services.Bookings
 
             var advisors = await _unitOfWork.Advisors.GetAllQuery()
                 .Where(a => a.ApprovalStatus == ApprovalStatus.Approved
-                            && a.Industry == project.Industry
+                            && a.AdvisorIndustries.Any(ai => ai.Industry == project.Industry)
                             && a.AdvisorId != excludedAdvisorId)
                 .ToListAsync();
 

@@ -8,5 +8,8 @@ namespace AISEP.BLL.Services.ConsultingReports
         Task<ConsultingReportResponse> CreateAsync(CreateConsultingReportRequest request);
         Task<ConsultingReportResponse?> GetByIdAsync(int id);
         Task<ConsultingReportResponse?> GetByBookingIdAsync(int bookingId);
+        Task<ConsultingReportResponse> StartupApproveAsync(int reportId);
+        Task<ConsultingReportResponse> StartupRequestRevisionAsync(int reportId, string reason);
+        Task<int> ProcessReportDeadlinesAsync();
     }
 }
