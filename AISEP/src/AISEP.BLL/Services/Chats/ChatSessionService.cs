@@ -1,6 +1,7 @@
 using AISEP.BLL.DTOs.Responses;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
+using AISEP.DAL.Enums;
 
 namespace AISEP.BLL.Services.Chats
 {
@@ -17,6 +18,8 @@ namespace AISEP.BLL.Services.Chats
         {
             var booking = await _unitOfWork.Bookings.GetByIdAsync(bookingId);
             if (booking is null || !IsParticipant(booking, userId)) return null;
+            if (booking.Status != BookingStatus.Confirmed)
+                return null;
 
             var existing = await _unitOfWork.ChatSessions.GetByBookingIdAsync(bookingId);
             if (existing is not null)

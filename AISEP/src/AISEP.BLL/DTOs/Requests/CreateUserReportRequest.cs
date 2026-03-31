@@ -1,9 +1,13 @@
+using AISEP.DAL.Enums;
+
 namespace AISEP.BLL.DTOs.Requests
 {
     public class CreateUserReportRequest
     {
         public int ReportedUserId { get; set; }
-        public string? Reason { get; set; }
-        public string? EvidenceUrl { get; set; }
+        public UserReportCategory Category { get; set; }
+        public string Description { get; set; } = string.Empty;
+        public List<IFormFile>? EvidenceImages { get; set; }
+        public string? VideoEvidenceUrl { get; set; }
     }
 }

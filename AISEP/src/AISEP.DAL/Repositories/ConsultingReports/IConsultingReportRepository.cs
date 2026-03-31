@@ -7,5 +7,7 @@ namespace AISEP.DAL.Repositories.ConsultingReports
         Task<ConsultingReport?> GetByIdAsync(int id);
         Task<ConsultingReport?> GetByBookingIdAsync(int bookingId);
         Task AddAsync(ConsultingReport report);
+        void Update(ConsultingReport report);
+        IQueryable<ConsultingReport> GetQuery();
     }
 }

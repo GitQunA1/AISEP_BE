@@ -6,7 +6,8 @@ namespace AISEP.BLL.DTOs.Requests
     {
         public string?   Bio                { get; set; }
         public string?   Expertise          { get; set; }
-        public Industry? Industry            { get; set; }
+        public Industry? Industry           { get; set; }
+        public List<Industry>? Industries   { get; set; }
         public string?   PreviousExperience { get; set; }
         public string?   LanguagesSpoken    { get; set; }
         public string?   Location           { get; set; }

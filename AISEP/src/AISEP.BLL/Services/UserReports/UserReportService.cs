@@ -1,10 +1,11 @@
+using System.Text.Json;
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
+using AISEP.BLL.Services.Storage;
 using AISEP.BLL.Services.Users;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
-using AutoMapper;
 
 namespace AISEP.BLL.Services.UserReports
 {
@@ -12,13 +13,16 @@ namespace AISEP.BLL.Services.UserReports
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserService _userService;
-        private readonly IMapper _mapper;
+        private readonly IStorageService _storageService;
 
-        public UserReportService(IUnitOfWork unitOfWork, IUserService userService, IMapper mapper)
+        public UserReportService(
+            IUnitOfWork unitOfWork,
+            IUserService userService,
+            IStorageService storageService)
         {
             _unitOfWork = unitOfWork;
             _userService = userService;
-            _mapper = mapper;
+            _storageService = storageService;
         }
 
         public async Task<UserReportResponse> CreateAsync(CreateUserReportRequest request)
@@ -36,15 +40,36 @@ namespace AISEP.BLL.Services.UserReports
                 throw new KeyNotFoundException("Reported user not found.");
             }
 
-            var report = _mapper.Map<UserReport>(request);
-            report.ReporterId = reporterId;
-            report.Status = UserReportStatus.Pending;
-            report.CreatedAt = DateTime.UtcNow;
+            var uploadedImageUrls = new List<string>();
+            if (request.EvidenceImages is not null && request.EvidenceImages.Count > 0)
+            {
+                foreach (var image in request.EvidenceImages)
+                {
+                    uploadedImageUrls.Add(await _storageService.UploadFileAsync(image, "user-reports"));
+                }
+            }
+
+            var report = new UserReport
+            {
+                ReporterId = reporterId,
+                ReportedUserId = request.ReportedUserId,
+                Category = request.Category,
+                Reason = request.Description.Trim(),
+                EvidenceImageUrls = uploadedImageUrls.Count == 0
+                    ? null
+                    : JsonSerializer.Serialize(uploadedImageUrls),
+                EvidenceUrl = uploadedImageUrls.FirstOrDefault(), // legacy field for compatibility
+                VideoEvidenceUrl = string.IsNullOrWhiteSpace(request.VideoEvidenceUrl)
+                    ? null
+                    : request.VideoEvidenceUrl.Trim(),
+                Status = UserReportStatus.Pending,
+                CreatedAt = DateTime.UtcNow
+            };
 
             await _unitOfWork.UserReports.AddAsync(report);
             await _unitOfWork.SaveChangesAsync();
 
-            return _mapper.Map<UserReportResponse>(report);
+            return MapResponse(report);
         }
 
         public async Task<UserReportResponse> ResolveAsValidAsync(int reportId)
@@ -74,7 +99,46 @@ namespace AISEP.BLL.Services.UserReports
             _unitOfWork.UserReports.Update(report);
             await _unitOfWork.SaveChangesAsync();
 
-            return _mapper.Map<UserReportResponse>(report);
+            return MapResponse(report);
+        }
+
+        private static UserReportResponse MapResponse(UserReport report)
+        {
+            return new UserReportResponse
+            {
+                UserReportId = report.UserReportId,
+                ReporterId = report.ReporterId,
+                ReportedUserId = report.ReportedUserId,
+                Category = report.Category.ToString(),
+                Description = report.Reason,
+                EvidenceImageUrls = ParseEvidenceImageUrls(report.EvidenceImageUrls, report.EvidenceUrl),
+                VideoEvidenceUrl = report.VideoEvidenceUrl,
+                Status = report.Status.ToString(),
+                CreatedAt = report.CreatedAt
+            };
+        }
+
+        private static List<string> ParseEvidenceImageUrls(string? evidenceImageUrlsJson, string? legacyEvidenceUrl)
+        {
+            if (!string.IsNullOrWhiteSpace(evidenceImageUrlsJson))
+            {
+                try
+                {
+                    var urls = JsonSerializer.Deserialize<List<string>>(evidenceImageUrlsJson);
+                    if (urls is not null && urls.Count > 0)
+                    {
+                        return urls;
+                    }
+                }
+                catch
+                {
+                    // fallback to legacy url
+                }
+            }
+
+            return string.IsNullOrWhiteSpace(legacyEvidenceUrl)
+                ? []
+                : [legacyEvidenceUrl];
         }
     }
 }

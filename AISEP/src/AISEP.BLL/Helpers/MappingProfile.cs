@@ -17,7 +17,13 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.Email,
                     opt => opt.MapFrom(src => src.User != null ? src.User.Email : null))
                 .ForMember(dest => dest.Industry,
-                    opt => opt.MapFrom(src => src.Industry != null ? src.Industry.ToString() : null))
+                    opt => opt.MapFrom(src => src.AdvisorIndustries
+                        .Select(ai => ai.Industry.ToString())
+                        .FirstOrDefault()))
+                .ForMember(dest => dest.Industries,
+                    opt => opt.MapFrom(src => src.AdvisorIndustries
+                        .Select(ai => ai.Industry.ToString())
+                        .ToList()))
                 .ForMember(dest => dest.ApprovalStatus,
                     opt => opt.MapFrom(src => src.ApprovalStatus.ToString()));
 
@@ -97,6 +103,7 @@ namespace AISEP.BLL.Helpers
             CreateMap<ConsultingReport, ConsultingReportResponse>()
                 .ForMember(dest => dest.AdvisorId, opt => opt.MapFrom(src => src.Booking.AdvisorId))
                 .ForMember(dest => dest.CustomerId, opt => opt.MapFrom(src => src.Booking.CustomerId))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.AdvisorName,
                     opt => opt.MapFrom(src => src.Booking.Advisor != null && src.Booking.Advisor.User != null
                         ? src.Booking.Advisor.User.UserName

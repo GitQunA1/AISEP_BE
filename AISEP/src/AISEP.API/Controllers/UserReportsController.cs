@@ -19,7 +19,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateUserReportRequest request)
+        public async Task<IActionResult> Create([FromForm] CreateUserReportRequest request)
         {
             var result = await _userReportService.CreateAsync(request);
             return Ok(ApiResponse<object>.SuccessResponse(result, "User report created successfully."));

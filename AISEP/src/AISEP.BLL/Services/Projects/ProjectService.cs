@@ -154,23 +154,6 @@ namespace AISEP.BLL.Services.Projects
             return _mapper.Map<ProjectResponse>(project);
         }
 
-        public async Task ApproveProjectAsync(int projectId)
-        {
-            var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
-            if (project is null)
-                throw new KeyNotFoundException("Project not found.");
-
-            if (project.Status != ProjectStatus.Pending)
-                throw new InvalidOperationException($"Only Pending projects can be approved. Current status: {project.Status}.");
-
-            project.Status = ProjectStatus.Approved;
-            project.ApprovedAt = DateTime.UtcNow;
-            project.ApprovedById = _userService.GetUserId();
-            _unitOfWork.Projects.Update(project);
-            await AutoAssignAdvisorAsync(project);
-            await _unitOfWork.SaveChangesAsync();
-        }
-
         public async Task SubmitProjectAsync(int projectId)
         {
             var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
@@ -287,81 +270,6 @@ namespace AISEP.BLL.Services.Projects
         private static bool HasValue(string? value)
         {
             return !string.IsNullOrWhiteSpace(value);
-        }
-
-        private async Task AutoAssignAdvisorAsync(Project project)
-        {
-            var advisors = await _unitOfWork.Advisors.GetAllQuery()
-                .Where(a => a.ApprovalStatus == ApprovalStatus.Approved
-                            && a.Industry == project.Industry)
-                .ToListAsync();
-
-            if (advisors.Count == 0)
-            {
-                return;
-            }
-
-            var advisorIds = advisors.Select(a => a.AdvisorId).ToList();
-            var today = DateTime.UtcNow.Date;
-            var weekEndExclusive = today.AddDays(7);
-
-            var availableCounts = await _unitOfWork.AdvisorAvailabilities.GetQuery()
-                .Where(x => advisorIds.Contains(x.AdvisorId)
-                            && x.Status == AdvisorAvailabilityStatus.Available
-                            && x.SlotDate >= today
-                            && x.SlotDate < weekEndExclusive)
-                .GroupBy(x => x.AdvisorId)
-                .Select(g => new { AdvisorId = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(x => x.AdvisorId, x => x.Count);
-
-            var rejectedCounts = await _unitOfWork.Bookings.GetBookingQuery()
-                .Where(b => advisorIds.Contains(b.AdvisorId)
-                            && b.Status == BookingStatus.Cancel
-                            && b.Note != null
-                            && b.Note.Contains("[Advisor Reject]"))
-                .GroupBy(b => b.AdvisorId)
-                .Select(g => new { AdvisorId = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(x => x.AdvisorId, x => x.Count);
-
-            var noResponseCounts = await _unitOfWork.Bookings.GetBookingQuery()
-                .Where(b => advisorIds.Contains(b.AdvisorId)
-                            && b.Status == BookingStatus.NoResponse)
-                .GroupBy(b => b.AdvisorId)
-                .Select(g => new { AdvisorId = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(x => x.AdvisorId, x => x.Count);
-
-            var bestAdvisor = advisors
-                .Select(a =>
-                {
-                    var availability = availableCounts.GetValueOrDefault(a.AdvisorId, 0);
-                    var rejected = rejectedCounts.GetValueOrDefault(a.AdvisorId, 0);
-                    var noResponse = noResponseCounts.GetValueOrDefault(a.AdvisorId, 0);
-                    var rating = (double)(a.Rating ?? 0);
-
-                    var score = availability - (rejected * 2) - (noResponse * 3) + (rating * 0.5);
-                    return new { AdvisorId = a.AdvisorId, Score = score, availability, rejected, noResponse };
-                })
-                .OrderByDescending(x => x.Score)
-                .ThenByDescending(x => x.availability)
-                .ThenBy(x => x.noResponse)
-                .ThenBy(x => x.rejected)
-                .First();
-
-            var existingAssignment = await _unitOfWork.ProjectAdvisorAssignments.GetByProjectIdAsync(project.ProjectId);
-            if (existingAssignment is null)
-            {
-                await _unitOfWork.ProjectAdvisorAssignments.AddAsync(new ProjectAdvisorAssignment
-                {
-                    ProjectId = project.ProjectId,
-                    AdvisorId = bestAdvisor.AdvisorId,
-                    AssignedAt = DateTime.UtcNow
-                });
-                return;
-            }
-
-            existingAssignment.AdvisorId = bestAdvisor.AdvisorId;
-            existingAssignment.AssignedAt = DateTime.UtcNow;
-            _unitOfWork.ProjectAdvisorAssignments.Update(existingAssignment);
         }
 
         private static string? BuildTeaserText(string? value, int maxLength)

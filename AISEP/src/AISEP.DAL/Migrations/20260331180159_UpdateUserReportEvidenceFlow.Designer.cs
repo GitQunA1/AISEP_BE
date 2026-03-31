@@ -3,17 +3,20 @@ using System;
 using AISEP.DAL.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace AISEP.Migrations
+namespace AISEP.DAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260331180159_UpdateUserReportEvidenceFlow")]
+    partial class UpdateUserReportEvidenceFlow
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -90,6 +93,9 @@ namespace AISEP.Migrations
 
                     b.Property<decimal?>("HourlyRate")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Industry")
+                        .HasColumnType("text");
 
                     b.Property<string>("LanguagesSpoken")
                         .HasMaxLength(255)
@@ -177,20 +183,6 @@ namespace AISEP.Migrations
                         .IsUnique();
 
                     b.ToTable("advisor_availabilities", (string)null);
-                });
-
-            modelBuilder.Entity("AISEP.DAL.Entities.AdvisorIndustry", b =>
-                {
-                    b.Property<int>("AdvisorId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Industry")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.HasKey("AdvisorId", "Industry");
-
-                    b.ToTable("advisor_industries", (string)null);
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.Booking", b =>
@@ -373,12 +365,6 @@ namespace AISEP.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ConsultingReportId"));
 
-                    b.Property<decimal?>("AdvisorPayoutAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime?>("AdvisorRevisionDueAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<int>("BookingId")
                         .HasColumnType("integer");
 
@@ -392,12 +378,6 @@ namespace AISEP.Migrations
 
                     b.Property<string>("DecisionsMade")
                         .HasColumnType("text");
-
-                    b.Property<bool>("IsPayoutProcessed")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime>("LastSubmittedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Location")
                         .HasMaxLength(255)
@@ -413,27 +393,6 @@ namespace AISEP.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
-
-                    b.Property<DateTime?>("PayoutProcessedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("RevisionCount")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("RevisionRequestReason")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<DateTime?>("StartupReviewDueAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("StartupReviewedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
 
                     b.HasKey("ConsultingReportId");
 
@@ -1456,26 +1415,17 @@ namespace AISEP.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("UserReportId"));
 
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<string>("EvidenceImageUrls")
-                        .HasColumnType("text");
 
                     b.Property<string>("EvidenceUrl")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
                     b.Property<string>("Reason")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                        .HasColumnType("text");
 
                     b.Property<int>("ReportedUserId")
                         .HasColumnType("integer");
@@ -1487,10 +1437,6 @@ namespace AISEP.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
-
-                    b.Property<string>("VideoEvidenceUrl")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
 
                     b.HasKey("UserReportId");
 
@@ -1783,17 +1729,6 @@ namespace AISEP.Migrations
                 {
                     b.HasOne("AISEP.DAL.Entities.Advisor", "Advisor")
                         .WithMany("Availabilities")
-                        .HasForeignKey("AdvisorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Advisor");
-                });
-
-            modelBuilder.Entity("AISEP.DAL.Entities.AdvisorIndustry", b =>
-                {
-                    b.HasOne("AISEP.DAL.Entities.Advisor", "Advisor")
-                        .WithMany("AdvisorIndustries")
                         .HasForeignKey("AdvisorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -2306,8 +2241,6 @@ namespace AISEP.Migrations
 
             modelBuilder.Entity("AISEP.DAL.Entities.Advisor", b =>
                 {
-                    b.Navigation("AdvisorIndustries");
-
                     b.Navigation("Availabilities");
 
                     b.Navigation("Bookings");
