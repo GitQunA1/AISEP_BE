@@ -21,6 +21,8 @@ namespace AISEP.DAL.Repositories.ConsultingReports
                         .ThenInclude(a => a.User)
                 .Include(r => r.Booking)
                     .ThenInclude(b => b.Customer)
+                .Include(r => r.Booking)
+                    .ThenInclude(b => b.ChatSession)
                 .FirstOrDefaultAsync(r => r.ConsultingReportId == id);
         }
 
@@ -32,12 +34,31 @@ namespace AISEP.DAL.Repositories.ConsultingReports
                         .ThenInclude(a => a.User)
                 .Include(r => r.Booking)
                     .ThenInclude(b => b.Customer)
+                .Include(r => r.Booking)
+                    .ThenInclude(b => b.ChatSession)
                 .FirstOrDefaultAsync(r => r.BookingId == bookingId);
         }
 
         public async Task AddAsync(ConsultingReport report)
         {
             await _context.ConsultingReports.AddAsync(report);
+        }
+
+        public void Update(ConsultingReport report)
+        {
+            _context.ConsultingReports.Update(report);
+        }
+
+        public IQueryable<ConsultingReport> GetQuery()
+        {
+            return _context.ConsultingReports
+                .Include(r => r.Booking)
+                    .ThenInclude(b => b.Advisor)
+                        .ThenInclude(a => a.User)
+                .Include(r => r.Booking)
+                    .ThenInclude(b => b.Customer)
+                .Include(r => r.Booking)
+                    .ThenInclude(b => b.ChatSession);
         }
     }
 }

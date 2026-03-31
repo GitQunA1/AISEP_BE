@@ -3,17 +3,20 @@ using System;
 using AISEP.DAL.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace AISEP.Migrations
+namespace AISEP.DAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260331180835_FixDb")]
+    partial class FixDb
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -309,10 +312,7 @@ namespace AISEP.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ChatSessionId"));
 
-                    b.Property<int?>("BookingId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("ConnectionRequestId")
+                    b.Property<int>("BookingId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("EndTime")
@@ -331,13 +331,7 @@ namespace AISEP.Migrations
                     b.HasIndex("BookingId")
                         .IsUnique();
 
-                    b.HasIndex("ConnectionRequestId")
-                        .IsUnique();
-
-                    b.ToTable("chat_sessions", null, t =>
-                        {
-                            t.HasCheckConstraint("CK_chat_sessions_context", "(\"BookingId\" IS NOT NULL AND \"ConnectionRequestId\" IS NULL) OR (\"BookingId\" IS NULL AND \"ConnectionRequestId\" IS NOT NULL)");
-                        });
+                    b.ToTable("chat_sessions", (string)null);
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.ConnectionRequest", b =>
@@ -755,13 +749,6 @@ namespace AISEP.Migrations
                     b.Property<string>("Message")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<int?>("ReferenceId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("ReferenceType")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Title")
                         .HasMaxLength(255)
@@ -1886,16 +1873,10 @@ namespace AISEP.Migrations
                     b.HasOne("AISEP.DAL.Entities.Booking", "Booking")
                         .WithOne("ChatSession")
                         .HasForeignKey("AISEP.DAL.Entities.ChatSession", "BookingId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("AISEP.DAL.Entities.ConnectionRequest", "ConnectionRequest")
-                        .WithOne("ChatSession")
-                        .HasForeignKey("AISEP.DAL.Entities.ChatSession", "ConnectionRequestId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Booking");
-
-                    b.Navigation("ConnectionRequest");
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.ConnectionRequest", b =>
@@ -2364,8 +2345,6 @@ namespace AISEP.Migrations
 
             modelBuilder.Entity("AISEP.DAL.Entities.ConnectionRequest", b =>
                 {
-                    b.Navigation("ChatSession");
-
                     b.Navigation("PostPrs");
                 });
 

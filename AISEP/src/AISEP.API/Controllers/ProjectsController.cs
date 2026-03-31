@@ -3,7 +3,6 @@ using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.BLL.Services.Blockchain;
 using AISEP.BLL.Services.Projects;
-using AISEP.BLL.Services.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sieve.Models;
@@ -17,16 +16,13 @@ namespace AISEP.API.Controllers
     {
         private readonly IProjectService _projectService;
         private readonly IBlockchainService _blockchainService;
-        private readonly IUserService _currentUserService;
 
         public ProjectsController(
             IProjectService projectService,
-            IBlockchainService blockchainService,
-            IUserService currentUserService)
+            IBlockchainService blockchainService)
         {
             _projectService = projectService;
             _blockchainService = blockchainService;
-            _currentUserService = currentUserService;
         }
 
         [HttpGet]
@@ -172,27 +168,6 @@ namespace AISEP.API.Controllers
                 return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Conflict", 409));
             }
         }
-
-
-        //[HttpPatch("{id:int}/approve")]
-        //[Authorize(Roles = "Staff")]
-        //public async Task<IActionResult> Approve(int id)
-        //{
-
-        //    try
-        //    {
-        //        await _projectService.ApproveProjectAsync(id);
-        //        return Ok(ApiResponse<object>.SuccessResponse(null, "Project approved successfully."));
-        //    }
-        //    catch (KeyNotFoundException ex)
-        //    {
-        //        return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not Found", 404));
-        //    }
-        //    catch (InvalidOperationException ex)
-        //    {
-        //        return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Conflict", 409));
-        //    }
-        //}
 
         [HttpPatch("{id:int}/reject")]
         [Authorize(Roles = "Staff")]

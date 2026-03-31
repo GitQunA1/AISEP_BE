@@ -7,9 +7,11 @@ using AISEP.DAL.Enums;
 using AISEP.BLL.Services.Blockchain;
 using AISEP.BLL.Services.Storage;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Nethereum.ABI.FunctionEncoding;
 using Sieve.Models;
 using Sieve.Services;
+using AISEP.BLL.Services.Users;
 
 namespace AISEP.BLL.Services.Documents
 {
@@ -20,19 +22,23 @@ namespace AISEP.BLL.Services.Documents
         private readonly IBlockchainService _blockchainService;
         private readonly ISieveProcessor _sieveProcessor;
         private readonly IMapper _mapper;
+        private readonly IUserService _currentUserService;
 
         public DocumentService(
             IUnitOfWork unitOfWork,
             IStorageService storageService,
             IBlockchainService blockchainService,
             ISieveProcessor sieveProcessor,
-            IMapper mapper)
+            IMapper mapper,
+            IUserService currentUserService
+            )
         {
             _unitOfWork = unitOfWork;
             _storageService = storageService;
             _blockchainService = blockchainService;
             _sieveProcessor = sieveProcessor;
             _mapper = mapper;
+            _currentUserService = currentUserService;
         }
 
         public async Task<DocumentResponse> UploadDocumentAsync(int projectId, int userId, UploadDocumentRequest request)
@@ -203,8 +209,9 @@ namespace AISEP.BLL.Services.Documents
             };
         }
 
-        public async Task<DocumentResponse> ApproveProjectAsync(int projectId, int staffUserId)
+        public async Task<DocumentResponse> ApproveProjectAsync(int projectId)
         {
+            var userId = _currentUserService.GetUserId();
             var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
             if (project is null)
                 throw new KeyNotFoundException("Project not found.");
@@ -212,7 +219,6 @@ namespace AISEP.BLL.Services.Documents
             if (project.Status != ProjectStatus.Pending)
                 throw new InvalidOperationException("Chỉ duyệt dự án đang chờ duyệt (Pending).");
 
-            // Find document attached to this project
             var document = _unitOfWork.Documents.GetQueryable()
                 .FirstOrDefault(d => d.ProjectId == projectId);
             if (document is null)
@@ -221,24 +227,138 @@ namespace AISEP.BLL.Services.Documents
             if (string.IsNullOrEmpty(document.FileHash))
                 throw new InvalidOperationException("Tài liệu chưa có thông tin hash. Vui lòng upload lại tài liệu.");
 
-            // Store hash trên blockchain (Sepolia) - dùng hash đã tính lúc upload
-            var txHash = await _blockchainService.StoreHashAsync(document.FileHash, projectId);
+            string txHash;
+            try
+            {
+                txHash = await _blockchainService.StoreHashAsync(document.FileHash, projectId);
+            }
+            catch (SmartContractRevertException ex)
+            {
+                if (ex.Message.Contains("already exists on the blockchain", StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidOperationException(
+                        "Document hash already exists on blockchain. This project may have been approved before or the same file was already registered.");
+                }
 
-            // Update document với thông tin blockchain
+                throw new InvalidOperationException($"Blockchain transaction failed: {ex.Message}");
+            }
+
             document.BlockchainTxHash = txHash;
-            document.IsIpProtected    = true;
-            document.VerifiedAt       = DateTime.UtcNow;
+            document.IsIpProtected = true;
+            document.VerifiedAt = DateTime.UtcNow;
             _unitOfWork.Documents.Update(document);
 
-            // Approve project
-            project.Status       = ProjectStatus.Approved;
-            project.ApprovedAt   = DateTime.UtcNow;
-            project.ApprovedById = staffUserId;
+            project.Status = ProjectStatus.Approved;
+            project.ApprovedAt = DateTime.UtcNow;
+            project.ApprovedById = userId;
             _unitOfWork.Projects.Update(project);
 
+            await AutoAssignAdvisorAsync(project);
             await _unitOfWork.SaveChangesAsync();
 
             return _mapper.Map<DocumentResponse>(document);
         }
+
+        private async Task AutoAssignAdvisorAsync(Project project)
+        {
+            var advisorCandidates = await _unitOfWork.Advisors.GetAllQuery()
+                .Where(a => a.ApprovalStatus == ApprovalStatus.Approved
+                            && a.AdvisorIndustries.Any(ai => ai.Industry == project.Industry))
+                .Select(a => new
+                {
+                    Advisor = a,
+                    AssignedProjectCount = a.ProjectAdvisorAssignments.Count
+                })
+                .ToListAsync();
+
+            if (advisorCandidates.Count == 0)
+            {
+                return;
+            }
+
+            var advisorIds = advisorCandidates.Select(x => x.Advisor.AdvisorId).ToList();
+            var advisors = advisorCandidates
+                .Select(x => x.Advisor)
+                .ToList();
+
+            if (advisors.Count == 0)
+            {
+                return;
+            }
+
+            var today = DateTime.UtcNow.Date;
+            var weekEndExclusive = today.AddDays(7);
+
+            var availableCounts = await _unitOfWork.AdvisorAvailabilities.GetQuery()
+                .Where(x => advisorIds.Contains(x.AdvisorId)
+                            && x.Status == AdvisorAvailabilityStatus.Available
+                            && x.SlotDate >= today
+                            && x.SlotDate < weekEndExclusive)
+                .GroupBy(x => x.AdvisorId)
+                .Select(g => new { AdvisorId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.AdvisorId, x => x.Count);
+
+            var rejectedCounts = await _unitOfWork.Bookings.GetBookingQuery()
+                .Where(b => advisorIds.Contains(b.AdvisorId)
+                            && b.Status == BookingStatus.Cancel
+                            && b.Note != null
+                            && b.Note.Contains("[Advisor Reject]"))
+                .GroupBy(b => b.AdvisorId)
+                .Select(g => new { AdvisorId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.AdvisorId, x => x.Count);
+
+            var noResponseCounts = await _unitOfWork.Bookings.GetBookingQuery()
+                .Where(b => advisorIds.Contains(b.AdvisorId)
+                            && b.Status == BookingStatus.NoResponse)
+                .GroupBy(b => b.AdvisorId)
+                .Select(g => new { AdvisorId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.AdvisorId, x => x.Count);
+
+            var rankedCandidates = advisorCandidates
+                .Select(x =>
+                {
+                    var advisorId = x.Advisor.AdvisorId;
+                    var availability = availableCounts.GetValueOrDefault(advisorId, 0);
+                    var rejected = rejectedCounts.GetValueOrDefault(advisorId, 0);
+                    var noResponse = noResponseCounts.GetValueOrDefault(advisorId, 0);
+                    var rating = (double)(x.Advisor.Rating ?? 0);
+                    var score = availability - (rejected * 2) - (noResponse * 3) + (rating * 0.5);
+
+                    return new
+                    {
+                        AdvisorId = advisorId,
+                        AssignedProjectCount = x.AssignedProjectCount,
+                        Score = score,
+                        availability,
+                        rejected,
+                        noResponse
+                    };
+                });
+
+            var bestAdvisor = rankedCandidates
+                .OrderBy(x => x.AssignedProjectCount)
+                .ThenByDescending(x => x.Score)
+                .ThenByDescending(x => x.availability)
+                .ThenBy(x => x.noResponse)
+                .ThenBy(x => x.rejected)
+                .First();
+
+            var existingAssignment = await _unitOfWork.ProjectAdvisorAssignments.GetByProjectIdAsync(project.ProjectId);
+            if (existingAssignment is null)
+            {
+                await _unitOfWork.ProjectAdvisorAssignments.AddAsync(new ProjectAdvisorAssignment
+                {
+                    ProjectId = project.ProjectId,
+                    AdvisorId = bestAdvisor.AdvisorId,
+                    AssignedAt = DateTime.UtcNow
+                });
+                return;
+            }
+
+            existingAssignment.AdvisorId = bestAdvisor.AdvisorId;
+            existingAssignment.AssignedAt = DateTime.UtcNow;
+            _unitOfWork.ProjectAdvisorAssignments.Update(existingAssignment);
+        }
+
     }
 }

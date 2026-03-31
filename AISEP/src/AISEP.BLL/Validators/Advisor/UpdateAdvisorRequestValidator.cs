@@ -53,6 +53,10 @@ namespace AISEP.BLL.Validators.Advisor
             RuleFor(x => x.Industry)
                 .IsInEnum().WithMessage("Industry is invalid.")
                 .When(x => x.Industry.HasValue);
+
+            RuleForEach(x => x.Industries)
+                .IsInEnum().WithMessage("One or more industries are invalid.")
+                .When(x => x.Industries is not null);
         }
     }
 }
