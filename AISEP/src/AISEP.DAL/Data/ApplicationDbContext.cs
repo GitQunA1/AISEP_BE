@@ -43,7 +43,6 @@ namespace AISEP.DAL.Data
         public DbSet<WithdrawRequest> WithdrawRequests { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
-        public DbSet<StartupFollower> StartupFollowers { get; set; }
         public DbSet<UserReport> UserReports { get; set; }
         public DbSet<AdvisorAvailability> AdvisorAvailabilities { get; set; }
         public DbSet<BookingSlot> BookingSlots { get; set; }
@@ -404,13 +403,24 @@ namespace AISEP.DAL.Data
 
             modelBuilder.Entity<ChatSession>(entity =>
             {
-                entity.ToTable("chat_sessions");
+                entity.ToTable("chat_sessions", table =>
+                {
+                    table.HasCheckConstraint(
+                        "CK_chat_sessions_context",
+                        "(\"BookingId\" IS NOT NULL AND \"ConnectionRequestId\" IS NULL) OR (\"BookingId\" IS NULL AND \"ConnectionRequestId\" IS NOT NULL)");
+                });
                 entity.HasKey(e => e.ChatSessionId);
                 entity.Property(e => e.StartTime).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                 entity.HasOne(cs => cs.Booking)
                     .WithOne(b => b.ChatSession)
                     .HasForeignKey<ChatSession>(cs => cs.BookingId)
+                    .IsRequired(false)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(cs => cs.ConnectionRequest)
+                    .WithOne(cr => cr.ChatSession)
+                    .HasForeignKey<ChatSession>(cs => cs.ConnectionRequestId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
@@ -592,6 +602,8 @@ namespace AISEP.DAL.Data
             {
                 entity.ToTable("notifications");
                 entity.HasKey(e => e.NotificationId);
+                entity.Property(e => e.ReferenceType).HasMaxLength(50);
+                entity.Property(e => e.ReferenceId);
                 entity.Property(e => e.Title).HasMaxLength(255);
                 entity.Property(e => e.Message).IsRequired();
                 entity.Property(e => e.Type).HasMaxLength(50);

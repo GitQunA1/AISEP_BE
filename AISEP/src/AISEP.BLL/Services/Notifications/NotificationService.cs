@@ -26,11 +26,13 @@ namespace AISEP.BLL.Services.Notifications
             _logger = logger;
         }
 
-        public async Task SendNotificationAsync(int userId, string title, string message, NotificationType type)
+        public async Task SendNotificationAsync(int userId, string title, string message, NotificationType type, int? referenceId = null, string? referenceType = null)
         {
             var notification = new Notification
             {
                 UserId = userId,
+                ReferenceId = referenceId,
+                ReferenceType = referenceType,
                 Title = title,
                 Message = message,
                 Type = type.ToString(),

@@ -56,6 +56,23 @@ namespace AISEP.API.Controllers
             return Ok(ApiResponse<object>.SuccessResponse(session, "Success"));
         }
 
+        [HttpGet("connection-request/{connectionRequestId:int}")]
+        [Authorize(Roles = "Startup,Investor")]
+        public async Task<IActionResult> GetSessionByConnectionRequest(int connectionRequestId)
+        {
+            var userId = _userService.GetUserId();
+            var session = await _chatSessionService.GetSessionByConnectionRequestAsync(connectionRequestId, userId);
+            if (session is null)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(
+                    "Session not found. Connection request may be unavailable, not accepted, or inaccessible.",
+                    "Not found",
+                    404));
+            }
+
+            return Ok(ApiResponse<object>.SuccessResponse(session, "Success"));
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetMySessions()
         {
