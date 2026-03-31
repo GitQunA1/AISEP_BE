@@ -42,7 +42,6 @@ namespace AISEP.DAL.Data
         public DbSet<WithdrawRequest> WithdrawRequests { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
-        public DbSet<StartupFollower> StartupFollowers { get; set; }
         public DbSet<UserReport> UserReports { get; set; }
         public DbSet<AdvisorAvailability> AdvisorAvailabilities { get; set; }
         public DbSet<BookingSlot> BookingSlots { get; set; }
