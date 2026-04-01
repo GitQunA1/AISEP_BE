@@ -14,24 +14,24 @@ namespace AISEP.API.Controllers
     public class ChatSessionController : ControllerBase
     {
         private readonly IChatSessionService _chatSessionService;
-        private readonly IUserService _userService;
+        //private readonly IUserService _userService;
         private readonly IHubContext<ChatHub> _chatHubContext;
 
         public ChatSessionController(
             IChatSessionService chatSessionService,
-            IUserService userService,
+            //IUserService userService,
             IHubContext<ChatHub> chatHubContext)
         {
             _chatSessionService = chatSessionService;
-            _userService = userService;
+            //_userService = userService;
             _chatHubContext = chatHubContext;
         }
 
         [HttpPost("{bookingId:int}")]
         public async Task<IActionResult> OpenSession(int bookingId)
         {
-            var userId = _userService.GetUserId();
-            var session = await _chatSessionService.OpenSessionAsync(bookingId, userId);
+            //var userId = _userService.GetUserId();
+            var session = await _chatSessionService.OpenSessionAsync(bookingId);
             if (session is null)
             {
                 return BadRequest(ApiResponse<object>.ErrorResponse(
@@ -46,8 +46,8 @@ namespace AISEP.API.Controllers
         [HttpGet("{sessionId:int}")]
         public async Task<IActionResult> GetSession(int sessionId)
         {
-            var userId = _userService.GetUserId();
-            var session = await _chatSessionService.GetSessionAsync(sessionId, userId);
+           
+            var session = await _chatSessionService.GetSessionAsync(sessionId);
             if (session is null)
             {
                 return NotFound(ApiResponse<object>.ErrorResponse("Session not found.", "Not found", 404));
@@ -60,8 +60,8 @@ namespace AISEP.API.Controllers
         [Authorize(Roles = "Startup,Investor")]
         public async Task<IActionResult> GetSessionByConnectionRequest(int connectionRequestId)
         {
-            var userId = _userService.GetUserId();
-            var session = await _chatSessionService.GetSessionByConnectionRequestAsync(connectionRequestId, userId);
+            
+            var session = await _chatSessionService.GetSessionByConnectionRequestAsync(connectionRequestId);
             if (session is null)
             {
                 return NotFound(ApiResponse<object>.ErrorResponse(
@@ -76,16 +76,16 @@ namespace AISEP.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetMySessions()
         {
-            var userId = _userService.GetUserId();
-            var sessions = await _chatSessionService.GetMySessionsAsync(userId);
+            
+            var sessions = await _chatSessionService.GetMySessionsAsync();
             return Ok(ApiResponse<object>.SuccessResponse(sessions, "Success"));
         }
 
         [HttpPatch("{sessionId:int}/close")]
         public async Task<IActionResult> CloseSession(int sessionId)
         {
-            var userId = _userService.GetUserId();
-            var closed = await _chatSessionService.CloseSessionAsync(sessionId, userId);
+            
+            var closed = await _chatSessionService.CloseSessionAsync(sessionId);
             if (!closed)
             {
                 return BadRequest(ApiResponse<object>.ErrorResponse(

@@ -124,6 +124,8 @@ builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
 
     // User settings
     options.User.RequireUniqueEmail = true;
+    // Let FluentValidation handle Vietnamese + spaces username format.
+    options.User.AllowedUserNameCharacters = string.Empty;
     options.SignIn.RequireConfirmedEmail = false;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()

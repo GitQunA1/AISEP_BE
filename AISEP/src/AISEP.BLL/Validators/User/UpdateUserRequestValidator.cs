@@ -10,11 +10,16 @@ namespace AISEP.BLL.Validators.User
 {
     public class UpdateUserRequestValidator : AbstractValidator<UpdateUserRequest>
     {
+        private const string NamePattern = "^[a-zA-ZÀ-ỹ\\s]+$";
         public UpdateUserRequestValidator() 
         {
             RuleFor(x => x.UserName)
-                .Matches("^[a-zA-ZÀ-ỹ\\s]+$").WithMessage("User name must only contain letters and spaces.");
-                //.When(x => !string.IsNullOrWhiteSpace(x.UserName));
+                .Matches(NamePattern).WithMessage("User name must only contain letters and spaces.")
+                .When(x => !string.IsNullOrWhiteSpace(x.UserName));
+
+            RuleFor(x => x.FullName)
+                .Matches(NamePattern).WithMessage("Full name must only contain letters and spaces.")
+                .When(x => !string.IsNullOrWhiteSpace(x.FullName));
         }
     }
 }

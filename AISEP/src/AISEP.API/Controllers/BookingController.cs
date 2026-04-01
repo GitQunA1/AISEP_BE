@@ -42,6 +42,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet]
+
         public async Task<IActionResult> GetAllBookings([FromQuery] SieveModel model)
         {
             var bookings = await _bookingService.GetAllBookingsAsync(model);
@@ -55,7 +56,7 @@ namespace AISEP.API.Controllers
             var projects = await _bookingService.GetBookingProjectOptionsAsync();
             return Ok(ApiResponse<object>.SuccessResponse(projects, "Success"));
         }
-        //Trả danh sách advisor để dropdown booking, dựa trên project đã chọn.
+        //Trả danh sách advisor để dropdown booking, dựa trên project đã chọn
         [HttpGet("advisor-options")]
         [Authorize(Roles = "Investor,Startup")]
         public async Task<IActionResult> GetBookingAdvisorOptions([FromQuery] int projectId)
@@ -87,15 +88,15 @@ namespace AISEP.API.Controllers
         //    return Ok(ApiResponse<object>.SuccessResponse(bookings, "Success"));
         //}
 
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> DeleteBooking(int id)
-        {
-            var result = await _bookingService.DeleteBookingAsync(id);
-            if (!result)
-                return NotFound(ApiResponse<object>.ErrorResponse("Booking not found.", "Not found", 404));
+        //[HttpDelete("{id:int}")]
+        //public async Task<IActionResult> DeleteBooking(int id)
+        //{
+        //    var result = await _bookingService.DeleteBookingAsync(id);
+        //    if (!result)
+        //        return NotFound(ApiResponse<object>.ErrorResponse("Booking not found.", "Not found", 404));
 
-            return Ok(ApiResponse<object>.SuccessResponse(null!, "Deleted successfully"));
-        }
+        //    return Ok(ApiResponse<object>.SuccessResponse(null!, "Deleted successfully"));
+        //}
 
         [HttpPatch("{id:int}/approve")]
         [Authorize(Roles = "Advisor")]

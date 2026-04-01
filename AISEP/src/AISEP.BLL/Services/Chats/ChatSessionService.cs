@@ -1,4 +1,5 @@
 using AISEP.BLL.DTOs.Responses;
+using AISEP.BLL.Services.Users;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
@@ -8,15 +9,18 @@ namespace AISEP.BLL.Services.Chats
     public class ChatSessionService : IChatSessionService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IUserService _userService;
 
-        public ChatSessionService(IUnitOfWork unitOfWork)
+        public ChatSessionService(IUnitOfWork unitOfWork, IUserService userService)
         {
             _unitOfWork = unitOfWork;
+            _userService = userService;
         }
 
-        public async Task<ChatSessionResponse?> OpenSessionAsync(int bookingId, int userId)
+        public async Task<ChatSessionResponse?> OpenSessionAsync(int bookingId)
         {
             var booking = await _unitOfWork.Bookings.GetByIdAsync(bookingId);
+            var userId =  _userService.GetUserId();
             if (booking is null || !IsBookingParticipant(booking, userId)) return null;
             //if (booking is null || !IsParticipant(booking, userId)) return null;
             if (booking.Status != BookingStatus.Confirmed)
@@ -70,15 +74,17 @@ namespace AISEP.BLL.Services.Chats
             return created is null ? null : MapSession(created);
         }
 
-        public async Task<ChatSessionResponse?> GetSessionAsync(int sessionId, int userId)
+        public async Task<ChatSessionResponse?> GetSessionAsync(int sessionId)
         {
+            var userId = _userService.GetUserId();
             var session = await _unitOfWork.ChatSessions.GetByIdAsync(sessionId);
             if (session is null || !IsParticipant(session, userId)) return null;
             return MapSession(session);
         }
 
-        public async Task<ChatSessionResponse?> GetSessionByConnectionRequestAsync(int connectionRequestId, int userId)
+        public async Task<ChatSessionResponse?> GetSessionByConnectionRequestAsync(int connectionRequestId)
         {
+            var userId = _userService.GetUserId();
             var session = await _unitOfWork.ChatSessions.GetByConnectionRequestIdAsync(connectionRequestId);
             if (session is not null)
             {
@@ -88,14 +94,16 @@ namespace AISEP.BLL.Services.Chats
             return await OpenSessionByConnectionRequestAsync(connectionRequestId, userId);
         }
 
-        public async Task<IEnumerable<ChatSessionResponse>> GetMySessionsAsync(int userId)
+        public async Task<IEnumerable<ChatSessionResponse>> GetMySessionsAsync()
         {
+            var userId = _userService.GetUserId();
             var sessions = await _unitOfWork.ChatSessions.GetByUserIdAsync(userId);
             return sessions.Select(MapSession);
         }
 
-        public async Task<bool> CloseSessionAsync(int sessionId, int userId)
+        public async Task<bool> CloseSessionAsync(int sessionId)
         {
+            var userId = _userService.GetUserId();
             var session = await _unitOfWork.ChatSessions.GetByIdAsync(sessionId);
             if (session is null || !session.IsOpen || !IsParticipant(session, userId))
                 return false;
@@ -107,7 +115,7 @@ namespace AISEP.BLL.Services.Chats
             return true;
         }
 
-        // ── Helpers ──────────────────────────────────────────────────────
+       
 
         private static bool IsBookingParticipant(Booking booking, int userId)
             => booking.CustomerId == userId || booking.Advisor.UserId == userId;
@@ -140,10 +148,18 @@ namespace AISEP.BLL.Services.Chats
             IsOpen        = s.IsOpen,
             StartTime     = s.StartTime,
             EndTime       = s.EndTime,
-            AdvisorName   = s.Booking?.Advisor?.User?.UserName ?? string.Empty,
-            CustomerName  = s.Booking?.Customer?.UserName      ?? string.Empty,
-            StartupName   = s.ConnectionRequest?.Project?.Startup?.User?.UserName ?? string.Empty,
-            InvestorName  = s.ConnectionRequest?.Investor?.User?.UserName ?? string.Empty,
+            AdvisorName   = s.Booking?.Advisor?.User is null
+                ? string.Empty
+                : (s.Booking.Advisor.User.UserName ?? string.Empty),
+            CustomerName  = s.Booking?.Customer is null
+                ? string.Empty
+                : (s.Booking.Customer.UserName ?? string.Empty),
+            StartupName   = s.ConnectionRequest?.Project?.Startup?.User is null
+                ? string.Empty
+                : (s.ConnectionRequest.Project.Startup.User.UserName ?? string.Empty),
+            InvestorName  = s.ConnectionRequest?.Investor?.User is null
+                ? string.Empty
+                : (s.ConnectionRequest.Investor.User.UserName ?? string.Empty),
             Messages      = s.ChatMessages?.Select(m => new ChatMessageResponse
             {
                 ChatMessageId = m.ChatMessageId,

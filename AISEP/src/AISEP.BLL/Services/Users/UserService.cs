@@ -85,6 +85,10 @@ namespace AISEP.BLL.Services.Users
                 ? user.UserName
                 : request.UserName;
 
+            user.FullName = string.IsNullOrWhiteSpace(request.FullName)
+                ? user.FullName
+                : request.FullName;
+
             user.DateOfBirth = request.DateOfBirth ?? user.DateOfBirth;
 
             var result = await _userManager.UpdateAsync(user);

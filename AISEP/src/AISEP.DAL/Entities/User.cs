@@ -7,6 +7,8 @@ namespace AISEP.DAL.Entities
 {
     public class User : IdentityUser<int>
     {
+        public string? FullName { get; set; }
+
         public UserRole Role { get; set; }
 
         public UserStatus Status { get; set; }
