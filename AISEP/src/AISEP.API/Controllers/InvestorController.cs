@@ -1,19 +1,9 @@
 ﻿using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.Investors;
-using AISEP.BLL.Services.Users;
-using AISEP.DAL.Entities;
-using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Nethereum.Contracts.QueryHandlers.MultiCall;
-using Newtonsoft.Json.Linq;
-using Org.BouncyCastle.Asn1.Ocsp;
 using Sieve.Models;
-using Swashbuckle.AspNetCore.Swagger;
-using System.Collections;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace AISEP.API.Controllers
 {
@@ -23,12 +13,10 @@ namespace AISEP.API.Controllers
     public class InvestorController : ControllerBase
     {
         private readonly IInvestorService _investorService;
-        private readonly IUserService _currentUserService;
 
-        public InvestorController(IInvestorService investorService, IUserService currentUserService)
+        public InvestorController(IInvestorService investorService)
         {
             _investorService = investorService;
-            _currentUserService = currentUserService;
         }
 
        

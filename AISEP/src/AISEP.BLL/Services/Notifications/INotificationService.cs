@@ -1,12 +1,14 @@
 using AISEP.BLL.DTOs.Responses;
+using AISEP.BLL.Helpers;
 using AISEP.DAL.Enums;
+using Sieve.Models;
 
 namespace AISEP.BLL.Services.Notifications
 {
     public interface INotificationService
     {
         Task SendNotificationAsync(int userId, string title, string message, NotificationType type, int? referenceId = null, string? referenceType = null);
-        Task<List<NotificationDto>> GetUserNotificationsAsync(int userId, int pageIndex = 1, int pageSize = 10);
+        Task<PagedResult<NotificationDto>> GetUserNotificationsAsync(int userId, SieveModel model);
         Task<bool> MarkAsReadAsync(int notificationId, int currentUserId);
         Task<bool> MarkAllAsReadAsync(int currentUserId);
     }

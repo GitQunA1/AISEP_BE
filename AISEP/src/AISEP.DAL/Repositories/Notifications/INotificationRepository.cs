@@ -4,7 +4,7 @@ namespace AISEP.DAL.Repositories.Notifications
 {
     public interface INotificationRepository
     {
-        Task<List<Notification>> GetByUserIdAsync(int userId, int pageIndex, int pageSize);
+        IQueryable<Notification> GetByUserIdQuery(int userId);
         Task AddAsync(Notification notification);
         Task<Notification?> GetByIdAsync(int notificationId);
         Task<bool> MarkAsReadAsync(int notificationId, int userId);

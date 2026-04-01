@@ -2,7 +2,6 @@
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.BLL.Services.Auth;
-using AISEP.BLL.Services.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -14,12 +13,10 @@ namespace AISEP.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
-        private readonly IUserService _currentUserService;
 
-        public AuthController(IAuthService authService, IUserService currentUserService)
+        public AuthController(IAuthService authService)
         {
             _authService = authService;
-            _currentUserService = currentUserService;
         }
 
        

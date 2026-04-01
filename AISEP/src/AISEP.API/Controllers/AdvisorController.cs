@@ -1,7 +1,6 @@
 using AISEP.BLL.Helpers;
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.Services.Advisors;
-using AISEP.BLL.Services.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sieve.Models;
@@ -14,12 +13,10 @@ namespace AISEP.API.Controllers
     public class AdvisorController : ControllerBase
     {
         private readonly IAdvisorService _advisorService;
-        private readonly IUserService    _userService;
 
-        public AdvisorController(IAdvisorService advisorService, IUserService userService)
+        public AdvisorController(IAdvisorService advisorService)
         {
             _advisorService = advisorService;
-            _userService    = userService;
         }
 
        

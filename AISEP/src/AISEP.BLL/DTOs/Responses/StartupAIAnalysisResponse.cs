@@ -2,13 +2,6 @@ using AISEP.BLL.Services.AI;
 
 namespace AISEP.BLL.DTOs.Responses
 {
-    public class ScoreBreakdownItem
-    {
-        public string Component { get; set; } = string.Empty;
-        public double MaxPoints { get; set; }
-        public double Score { get; set; }
-    }
-
     public class StartupAIAnalysisResponse
     {
         public int EvaluationId { get; set; }
