@@ -209,7 +209,9 @@ namespace AISEP.BLL.Services.Bookings
                 new BookingAdvisorOptionResponse
                 {
                     AdvisorId = advisor.AdvisorId,
-                    AdvisorName = advisor.User?.UserName ?? $"Advisor {advisor.AdvisorId}"
+                    AdvisorName = advisor.User is null
+                        ? $"Advisor {advisor.AdvisorId}"
+                        : (advisor.User.UserName ?? $"Advisor {advisor.AdvisorId}")
                 }
             ];
         }
@@ -233,7 +235,9 @@ namespace AISEP.BLL.Services.Bookings
             return suggestedAdvisors.Select(a => new BookingAdvisorOptionResponse
             {
                 AdvisorId = a.AdvisorId,
-                AdvisorName = a.User?.UserName ?? $"Advisor {a.AdvisorId}"
+                AdvisorName = a.User is null
+                    ? $"Advisor {a.AdvisorId}"
+                    : (a.User.UserName ?? $"Advisor {a.AdvisorId}")
             }).ToList();
         }
 
@@ -439,7 +443,8 @@ namespace AISEP.BLL.Services.Bookings
                 return;
             }
 
-            var suggestedText = string.Join(", ", suggestedAdvisors.Select(x => $"{x.User.UserName} (ID: {x.AdvisorId})"));
+            var suggestedText = string.Join(", ", suggestedAdvisors.Select(x =>
+                $"{(x.User.UserName ?? $"Advisor {x.AdvisorId}")} (ID: {x.AdvisorId})"));
 
             await _notificationService.SendNotificationAsync(
                 booking.CustomerId,

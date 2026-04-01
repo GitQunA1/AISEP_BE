@@ -116,7 +116,11 @@ namespace AISEP.BLL.Helpers
             // User Entity → UserResponse
             CreateMap<User, UserResponse>()
                 .ForMember(dest => dest.UserId,
-                    opt => opt.MapFrom(src => src.Id));
+                    opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.UserName,
+                    opt => opt.MapFrom(src => src.UserName))
+                .ForMember(dest => dest.FullName,
+                    opt => opt.MapFrom(src => src.FullName));
 
             // Startup Entity → StartupResponse
             CreateMap<Startup, StartupResponse>()

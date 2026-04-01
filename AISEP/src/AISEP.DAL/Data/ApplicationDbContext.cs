@@ -55,6 +55,7 @@ namespace AISEP.DAL.Data
             modelBuilder.Entity<User>(entity =>
             {
                 entity.ToTable("users");
+                entity.Property(e => e.FullName).HasMaxLength(150);
                 entity.Property(e => e.Role).HasConversion<string>().IsRequired();
                 entity.Property(e => e.Status).HasConversion<string>().IsRequired();
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");

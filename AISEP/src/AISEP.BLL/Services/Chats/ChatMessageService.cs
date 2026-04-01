@@ -29,7 +29,7 @@ namespace AISEP.BLL.Services.Chats
             var session = await _unitOfWork.ChatSessions.GetByIdAsync(sessionId);
             if (session is null || !session.IsOpen || !IsParticipant(session, userId))
                 return null;
-            if (session.Booking.Status == BookingStatus.Completed)
+            if (session.Booking is not null && session.Booking.Status == BookingStatus.Completed)
             {
                 session.IsOpen = false;
                 session.EndTime = DateTime.UtcNow;

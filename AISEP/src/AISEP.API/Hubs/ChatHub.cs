@@ -23,8 +23,8 @@ namespace AISEP.API.Hubs
 
         public async Task JoinSession(int sessionId)
         {
-            var userId = GetUserId();
-            var session = await _chatSessionService.GetSessionAsync(sessionId, userId);
+            //var userId = GetUserId();
+            var session = await _chatSessionService.GetSessionAsync(sessionId);
             if (session is null)
             {
                 throw new HubException("You do not have access to this chat session.");
@@ -62,8 +62,8 @@ namespace AISEP.API.Hubs
 
         public async Task CloseSession(int sessionId)
         {
-            var userId = GetUserId();
-            var closed = await _chatSessionService.CloseSessionAsync(sessionId, userId);
+            //var userId = GetUserId();
+            var closed = await _chatSessionService.CloseSessionAsync(sessionId);
             if (!closed)
             {
                 throw new HubException("Cannot close this session.");

@@ -115,7 +115,7 @@ namespace AISEP.BLL.Services.ConsultingReports
             return _mapper.Map<ConsultingReportResponse>(report);
         }
 
-        public async Task<ConsultingReportResponse> StartupApproveAsync(int reportId)
+        public async Task<ConsultingReportResponse> ApproveAsync(int reportId)
         {
             var report = await _unitOfWork.ConsultingReports.GetByIdAsync(reportId)
                 ?? throw new KeyNotFoundException("Consulting report not found.");
@@ -140,7 +140,7 @@ namespace AISEP.BLL.Services.ConsultingReports
             return _mapper.Map<ConsultingReportResponse>(report);
         }
 
-        public async Task<ConsultingReportResponse> StartupRequestRevisionAsync(int reportId, string reason)
+        public async Task<ConsultingReportResponse> RequestRevisionAsync(int reportId, string reason)
         {
             var report = await _unitOfWork.ConsultingReports.GetByIdAsync(reportId)
                 ?? throw new KeyNotFoundException("Consulting report not found.");

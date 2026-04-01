@@ -52,9 +52,14 @@ namespace AISEP.BLL.Services.Auth
             }
 
 
+            var userName = model.Name.Trim();
+
+         
+
             var user = new User
             {
-                UserName = model.Name,
+                UserName = userName,
+                FullName = model.FullName,
                 Email = model.Email,
                 Role = model.Role,
                 Status = UserStatus.Pending,

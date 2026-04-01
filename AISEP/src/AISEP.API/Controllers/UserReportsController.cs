@@ -1,6 +1,7 @@
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.UserReports;
+using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,6 +20,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Startup,Investor")]
         public async Task<IActionResult> Create([FromForm] CreateUserReportRequest request)
         {
             var result = await _userReportService.CreateAsync(request);

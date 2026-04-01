@@ -1,17 +1,34 @@
-﻿using AISEP.BLL.DTOs.Requests;
+using AISEP.BLL.DTOs.Requests;
+using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using FluentValidation;
+using Microsoft.AspNetCore.Identity;
+using AppUser = AISEP.DAL.Entities.User;
 
 namespace AISEP.BLL.Validators.Auth
 {
     public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
     {
-        public RegisterRequestValidator()
-        {
+        private const string TextPattern = @"^[\p{L}\p{N}\s]*$";
+        //private readonly UserManager<AppUser> _userManager;
+
+        public RegisterRequestValidator() { 
+           // _userManager = userManager;
+
             RuleFor(x => x.Name)
-                .NotEmpty().WithMessage("Name is required.")
+                .NotEmpty().WithMessage("Username is required.")
                 .MinimumLength(2).WithMessage("Name must be at least 2 characters.")
-                .MaximumLength(100).WithMessage("Name must not exceed 100 characters.");
+                .MaximumLength(100).WithMessage("Name must not exceed 100 characters.")
+                .Matches(TextPattern).WithMessage("Name contains invalid characters.");
+
+
+
+            RuleFor(x => x.FullName)
+                .NotEmpty().WithMessage("Fullname is required.")
+                .MinimumLength(2).WithMessage("Fullname must be at least 2 characters.")
+                .MaximumLength(100).WithMessage("Fullname must not exceed 100 characters.")
+                .Matches(TextPattern).WithMessage("Fullname contains invalid characters.");
+                
 
             RuleFor(x => x.Email)
                 .NotEmpty().WithMessage("Email is required.")
@@ -30,5 +47,7 @@ namespace AISEP.BLL.Validators.Auth
             RuleFor(x => x.Role)
                 .IsInEnum().WithMessage("Invalid role.");
         }
+
+        
     }
 }
