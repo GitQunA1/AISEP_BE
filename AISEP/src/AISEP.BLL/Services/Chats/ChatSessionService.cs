@@ -82,18 +82,6 @@ namespace AISEP.BLL.Services.Chats
             return MapSession(session);
         }
 
-        public async Task<ChatSessionResponse?> GetSessionByConnectionRequestAsync(int connectionRequestId)
-        {
-            var userId = _userService.GetUserId();
-            var session = await _unitOfWork.ChatSessions.GetByConnectionRequestIdAsync(connectionRequestId);
-            if (session is not null)
-            {
-                return IsParticipant(session, userId) ? MapSession(session) : null;
-            }
-
-            return await OpenSessionByConnectionRequestAsync(connectionRequestId, userId);
-        }
-
         public async Task<IEnumerable<ChatSessionResponse>> GetMySessionsAsync()
         {
             var userId = _userService.GetUserId();

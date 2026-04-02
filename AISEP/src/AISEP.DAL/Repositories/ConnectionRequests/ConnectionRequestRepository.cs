@@ -19,8 +19,10 @@ namespace AISEP.DAL.Repositories.ConnectionRequests
             return await _context.ConnectionRequests
                 .Include(cr => cr.ChatSession)
                 .Include(cr => cr.Investor)
+                    .ThenInclude(i => i.User)
                 .Include(cr => cr.Project)
                     .ThenInclude(p => p.Startup)
+                        .ThenInclude(s => s.User)
                 .FirstOrDefaultAsync(cr => cr.ConnectionRequestId == requestId);
         }
 
@@ -35,6 +37,11 @@ namespace AISEP.DAL.Repositories.ConnectionRequests
         {
             return _context.ConnectionRequests
                 .Include(cr => cr.ChatSession)
+                .Include(cr => cr.Investor)
+                    .ThenInclude(i => i.User)
+                .Include(cr => cr.Project)
+                    .ThenInclude(p => p.Startup)
+                        .ThenInclude(s => s.User)
                 .Where(cr => cr.InvestorId == investorId)
                 .OrderByDescending(cr => cr.ConnectionRequestId)
                 .AsNoTracking();
@@ -44,6 +51,11 @@ namespace AISEP.DAL.Repositories.ConnectionRequests
         {
             return _context.ConnectionRequests
                 .Include(cr => cr.ChatSession)
+                .Include(cr => cr.Investor)
+                    .ThenInclude(i => i.User)
+                .Include(cr => cr.Project)
+                    .ThenInclude(p => p.Startup)
+                        .ThenInclude(s => s.User)
                 .Where(cr => cr.Project.StartupId == startupId)
                 .OrderByDescending(cr => cr.ConnectionRequestId)
                 .AsNoTracking();
