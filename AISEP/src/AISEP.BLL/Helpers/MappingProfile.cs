@@ -247,12 +247,14 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.Followers.Count))
                 .ForMember(dest => dest.IsFollowedByCurrentUser,
                     opt => opt.MapFrom((src, _, _, context) =>
-                        context.Items.TryGetValue("CurrentUserId", out var currentUserIdObj)
+                        context.TryGetItems(out var items)
+                        && items.TryGetValue("CurrentUserId", out var currentUserIdObj)
                         && currentUserIdObj is int currentUserId
                         && src.Followers.Any(f => f.FollowerId == currentUserId)))
                 .ForMember(dest => dest.IsConnectionRequestedByCurrentInvestor,
                     opt => opt.MapFrom((src, _, _, context) =>
-                        context.Items.TryGetValue("CurrentInvestorId", out var currentInvestorIdObj)
+                        context.TryGetItems(out var items)
+                        && items.TryGetValue("CurrentInvestorId", out var currentInvestorIdObj)
                         && currentInvestorIdObj is int currentInvestorId
                         && src.ConnectionRequests.Any(cr => cr.InvestorId == currentInvestorId)));
 
@@ -270,12 +272,14 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.Followers.Count))
                 .ForMember(dest => dest.IsFollowedByCurrentUser,
                     opt => opt.MapFrom((src, _, _, context) =>
-                        context.Items.TryGetValue("CurrentUserId", out var currentUserIdObj)
+                        context.TryGetItems(out var items)
+                        && items.TryGetValue("CurrentUserId", out var currentUserIdObj)
                         && currentUserIdObj is int currentUserId
                         && src.Followers.Any(f => f.FollowerId == currentUserId)))
                 .ForMember(dest => dest.IsConnectionRequestedByCurrentInvestor,
                     opt => opt.MapFrom((src, _, _, context) =>
-                        context.Items.TryGetValue("CurrentInvestorId", out var currentInvestorIdObj)
+                        context.TryGetItems(out var items)
+                        && items.TryGetValue("CurrentInvestorId", out var currentInvestorIdObj)
                         && currentInvestorIdObj is int currentInvestorId
                         && src.ConnectionRequests.Any(cr => cr.InvestorId == currentInvestorId)));
 
