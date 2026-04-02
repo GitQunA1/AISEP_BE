@@ -161,6 +161,27 @@ namespace AISEP.BLL.Helpers
             // Package Entity -> PackageResponse
             CreateMap<Package, PackageResponse>();
 
+            // Transaction Entity -> Payment responses
+            CreateMap<Transaction, CheckoutResponse>()
+                .ForMember(dest => dest.PaymentCode,
+                    opt => opt.MapFrom(src => src.PaymentCode ?? string.Empty))
+                .ForMember(dest => dest.QrCodeUrl,
+                    opt => opt.Ignore());
+
+            CreateMap<Transaction, TransactionStatusResponse>()
+                .ForMember(dest => dest.Status,
+                    opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.PaymentCode,
+                    opt => opt.MapFrom(src => src.PaymentCode ?? string.Empty));
+
+            CreateMap<Transaction, BookingPaymentTransactionResponse>()
+                .ForMember(dest => dest.BookingId,
+                    opt => opt.MapFrom(src => src.ReferenceId ?? 0))
+                .ForMember(dest => dest.Status,
+                    opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.PaymentCode,
+                    opt => opt.MapFrom(src => src.PaymentCode ?? string.Empty));
+
             // CreateInvestorRequest → Investor Entity
             CreateMap<CreateInvestorRequest, Investor>()
                 .ForMember(dest => dest.InvestorId,         opt => opt.Ignore())
@@ -226,12 +247,14 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.Followers.Count))
                 .ForMember(dest => dest.IsFollowedByCurrentUser,
                     opt => opt.MapFrom((src, _, _, context) =>
-                        context.Items.TryGetValue("CurrentUserId", out var currentUserIdObj)
+                        context.TryGetItems(out var items)
+                        && items.TryGetValue("CurrentUserId", out var currentUserIdObj)
                         && currentUserIdObj is int currentUserId
                         && src.Followers.Any(f => f.FollowerId == currentUserId)))
                 .ForMember(dest => dest.IsConnectionRequestedByCurrentInvestor,
                     opt => opt.MapFrom((src, _, _, context) =>
-                        context.Items.TryGetValue("CurrentInvestorId", out var currentInvestorIdObj)
+                        context.TryGetItems(out var items)
+                        && items.TryGetValue("CurrentInvestorId", out var currentInvestorIdObj)
                         && currentInvestorIdObj is int currentInvestorId
                         && src.ConnectionRequests.Any(cr => cr.InvestorId == currentInvestorId)));
 
@@ -249,12 +272,14 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.Followers.Count))
                 .ForMember(dest => dest.IsFollowedByCurrentUser,
                     opt => opt.MapFrom((src, _, _, context) =>
-                        context.Items.TryGetValue("CurrentUserId", out var currentUserIdObj)
+                        context.TryGetItems(out var items)
+                        && items.TryGetValue("CurrentUserId", out var currentUserIdObj)
                         && currentUserIdObj is int currentUserId
                         && src.Followers.Any(f => f.FollowerId == currentUserId)))
                 .ForMember(dest => dest.IsConnectionRequestedByCurrentInvestor,
                     opt => opt.MapFrom((src, _, _, context) =>
-                        context.Items.TryGetValue("CurrentInvestorId", out var currentInvestorIdObj)
+                        context.TryGetItems(out var items)
+                        && items.TryGetValue("CurrentInvestorId", out var currentInvestorIdObj)
                         && currentInvestorIdObj is int currentInvestorId
                         && src.ConnectionRequests.Any(cr => cr.InvestorId == currentInvestorId)));
 

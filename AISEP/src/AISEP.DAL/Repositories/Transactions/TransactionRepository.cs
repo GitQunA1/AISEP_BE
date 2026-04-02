@@ -18,12 +18,27 @@ namespace AISEP.DAL.Repositories.Transactions
             => await _context.Transactions
                 .FirstOrDefaultAsync(t => t.TransactionId == transactionId && t.UserId == userId);
 
+        public async Task<Transaction?> GetLatestByUserAndReferenceAsync(int userId, string referenceType, int referenceId)
+            => await _context.Transactions
+                .Where(t => t.UserId == userId
+                         && t.ReferenceType == referenceType
+                         && t.ReferenceId == referenceId)
+                .OrderByDescending(t => t.CreatedAt)
+                .ThenByDescending(t => t.TransactionId)
+                .FirstOrDefaultAsync();
+
         public async Task<Transaction?> GetPendingByUserAndReferenceAsync(int userId, string referenceType, int referenceId)
             => await _context.Transactions
                 .FirstOrDefaultAsync(t => t.UserId == userId
                                        && t.ReferenceType == referenceType
                                        && t.ReferenceId == referenceId
                                        && t.Status == TransactionStatus.Pending);
+
+        public IQueryable<Transaction> GetByUserAndReferenceTypeQuery(int userId, string referenceType)
+            => _context.Transactions
+                .Where(t => t.UserId == userId && t.ReferenceType == referenceType)
+                .OrderByDescending(t => t.CreatedAt)
+                .AsQueryable();
 
         public async Task<Transaction?> GetPendingByPaymentCodeAsync(string paymentCode)
             => await _context.Transactions

@@ -1,12 +1,15 @@
 using System.Text.RegularExpressions;
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
+using AISEP.BLL.Helpers;
 using AISEP.BLL.Settings;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using AutoMapper;
 using Microsoft.Extensions.Options;
+using Sieve.Models;
+using Sieve.Services;
 
 namespace AISEP.BLL.Services.Payments
 {
@@ -15,12 +18,18 @@ namespace AISEP.BLL.Services.Payments
         private readonly IUnitOfWork _unitOfWork;
         private readonly SePaySettings _sePaySettings;
         private readonly IMapper _mapper;
+        private readonly ISieveProcessor _sieveProcessor;
 
-        public PaymentService(IUnitOfWork unitOfWork, IOptions<SePaySettings> sePaySettings, IMapper mapper)
+        public PaymentService(
+            IUnitOfWork unitOfWork,
+            IOptions<SePaySettings> sePaySettings,
+            IMapper mapper,
+            ISieveProcessor sieveProcessor)
         {
             _unitOfWork = unitOfWork;
             _sePaySettings = sePaySettings.Value;
             _mapper = mapper;
+            _sieveProcessor = sieveProcessor;
         }
 
         public async Task<IEnumerable<PackageResponse>> GetInvestorPackagesAsync()
@@ -79,13 +88,9 @@ namespace AISEP.BLL.Services.Payments
                 }
                 else
                 {
-                    return new CheckoutResponse
-                    {
-                        TransactionId = existingTransaction.TransactionId,
-                        Amount = existingTransaction.Amount,
-                        PaymentCode = existingTransaction.PaymentCode!,
-                        QrCodeUrl = BuildQrCodeUrl(existingTransaction.Amount, existingTransaction.PaymentCode!)
-                    };
+                    var existingResponse = _mapper.Map<CheckoutResponse>(existingTransaction);
+                    existingResponse.QrCodeUrl = BuildQrCodeUrl(existingTransaction.Amount, existingTransaction.PaymentCode!);
+                    return existingResponse;
                 }
             }
 
@@ -105,13 +110,18 @@ namespace AISEP.BLL.Services.Payments
             transaction.PaymentCode = $"{_sePaySettings.PaymentPrefix}{transaction.TransactionId}";
             await _unitOfWork.SaveChangesAsync();
 
-            return new CheckoutResponse
+            var response = _mapper.Map<CheckoutResponse>(transaction);
+            response.QrCodeUrl = BuildQrCodeUrl(transaction.Amount, transaction.PaymentCode!);
+            return response;
+        }
+
+        public async Task<CheckoutResponse> CheckoutBookingAsync(int userId, int bookingId)
+        {
+            return await CheckoutAsync(userId, new CheckoutRequest
             {
-                TransactionId = transaction.TransactionId,
-                Amount = transaction.Amount,
-                PaymentCode = transaction.PaymentCode,
-                QrCodeUrl = BuildQrCodeUrl(transaction.Amount, transaction.PaymentCode)
-            };
+                ReferenceType = ReferenceType.Booking,
+                ReferenceId = bookingId
+            });
         }
 
         public async Task<TransactionStatusResponse> GetTransactionStatusAsync(int userId, int transactionId)
@@ -129,13 +139,50 @@ namespace AISEP.BLL.Services.Payments
                 await _unitOfWork.SaveChangesAsync();
             }
 
-            return new TransactionStatusResponse
+            return _mapper.Map<TransactionStatusResponse>(transaction);
+        }
+
+        public async Task<BookingPaymentStatusResponse> GetBookingPaymentStatusAsync(int userId, int bookingId)
+        {
+            var booking = await _unitOfWork.Bookings.GetByIdAsync(bookingId)
+                ?? throw new KeyNotFoundException("Booking not found.");
+
+            if (booking.CustomerId != userId)
+                throw new InvalidOperationException("You do not have permission to view this booking payment status.");
+
+            var latest = await _unitOfWork.Transactions.GetLatestByUserAndReferenceAsync(
+                userId,
+                ReferenceType.Booking.ToString(),
+                bookingId);
+
+            if (latest is not null && latest.Status == TransactionStatus.Pending && IsPendingExpired(latest))
             {
-                TransactionId = transaction.TransactionId,
-                Status = transaction.Status.ToString(),
-                PaymentCode = transaction.PaymentCode ?? string.Empty,
-                Amount = transaction.Amount
+                latest.Status = TransactionStatus.Failed;
+                _unitOfWork.Transactions.Update(latest);
+                await _unitOfWork.SaveChangesAsync();
+            }
+
+            return new BookingPaymentStatusResponse
+            {
+                BookingId = booking.BookingId,
+                BookingStatus = booking.Status.ToString(),
+                IsPaid = booking.Status == BookingStatus.Confirmed || booking.Price == 0,
+                TransactionId = latest?.TransactionId,
+                TransactionStatus = latest?.Status.ToString(),
+                PaymentCode = latest?.PaymentCode,
+                Amount = booking.Price
             };
+        }
+
+        public async Task<PagedResult<BookingPaymentTransactionResponse>> GetBookingPaymentTransactionsAsync(int userId, SieveModel model)
+        {
+            var query = _unitOfWork.Transactions.GetByUserAndReferenceTypeQuery(userId, ReferenceType.Booking.ToString());
+
+            return await PaginationHelper.PaginateAsync(
+                query,
+                model,
+                _sieveProcessor,
+                x => _mapper.Map<BookingPaymentTransactionResponse>(x));
         }
 
         public async Task ProcessSePayWebhookAsync(SePayWebhookRequest request)
