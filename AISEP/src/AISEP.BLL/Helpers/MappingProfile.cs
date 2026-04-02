@@ -343,6 +343,16 @@ namespace AISEP.BLL.Helpers
             CreateMap<ConnectionRequest, ConnectionRequestDto>()
                 .ForMember(dest => dest.Status,
                     opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.InvestorName,
+                    opt => opt.MapFrom(src => src.Investor != null && src.Investor.User != null
+                        ? (src.Investor.User.UserName ?? string.Empty)
+                        : string.Empty))
+                .ForMember(dest => dest.StartupName,
+                    opt => opt.MapFrom(src => src.Project != null
+                        && src.Project.Startup != null
+                        && src.Project.Startup.User != null
+                        ? (src.Project.Startup.User.UserName ?? string.Empty)
+                        : string.Empty))
                 .ForMember(dest => dest.ChatSessionId,
                     opt => opt.MapFrom(src => src.ChatSession != null ? (int?)src.ChatSession.ChatSessionId : null));
 
