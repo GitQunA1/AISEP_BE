@@ -87,8 +87,6 @@ namespace AISEP.BLL.Services.Projects
             return _mapper.Map<ProjectResponse>(project);
         }
 
-      
-
         public async Task<PagedResult<ProjectResponse>> GetMyProjectsAsync(SieveModel model)
         {
             var userId = _userService.GetUserId();
@@ -272,21 +270,21 @@ namespace AISEP.BLL.Services.Projects
             return !string.IsNullOrWhiteSpace(value);
         }
 
-        private static string? BuildTeaserText(string? value, int maxLength)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                return null;
-            }
+        //private static string? BuildTeaserText(string? value, int maxLength)
+        //{
+        //    if (string.IsNullOrWhiteSpace(value))
+        //    {
+        //        return null;
+        //    }
 
-            var normalized = System.Text.RegularExpressions.Regex.Replace(value.Trim(), @"\s+", " ");
-            if (normalized.Length <= maxLength)
-            {
-                return normalized;
-            }
+        //    var normalized = System.Text.RegularExpressions.Regex.Replace(value.Trim(), @"\s+", " ");
+        //    if (normalized.Length <= maxLength)
+        //    {
+        //        return normalized;
+        //    }
 
-            return normalized[..maxLength].TrimEnd() + "...";
-        }
+        //    return normalized[..maxLength].TrimEnd() + "...";
+        //}
 
         //private NonPremiumProjectResponse MapNonPremiumProject(Project project)
         //{
