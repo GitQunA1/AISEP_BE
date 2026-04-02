@@ -136,6 +136,23 @@ namespace AISEP.BLL.Helpers
                 .CanFilter()
                 .CanSort();
 
+            // ConnectionRequest
+            mapper.Property<ConnectionRequest>(cr => cr.ConnectionRequestId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<ConnectionRequest>(cr => cr.InvestorId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<ConnectionRequest>(cr => cr.ProjectId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<ConnectionRequest>(cr => cr.Status)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<ConnectionRequest>(cr => cr.ResponseDate)
+                .CanFilter()
+                .CanSort();
+
             return mapper;
         }
     }

@@ -20,12 +20,20 @@ namespace AISEP.API.Controllers
             _currentUserService = currentUserService;
         }
 
-        [HttpGet("packages")]
-        [Authorize]
-        public async Task<IActionResult> GetPackages()
+        [HttpGet("packages/investor")]
+        [Authorize(Roles = "Investor")]
+        public async Task<IActionResult> GetInvestorPackages()
         {
-            var result = await _paymentService.GetPackagesAsync();
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Packages retrieved successfully"));
+            var result = await _paymentService.GetInvestorPackagesAsync();
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Investor packages retrieved successfully"));
+        }
+
+        [HttpGet("packages/startup")]
+        [Authorize(Roles = "Startup")]
+        public async Task<IActionResult> GetStartupPackages()
+        {
+            var result = await _paymentService.GetStartupPackagesAsync();
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Startup packages retrieved successfully"));
         }
 
         // Create transaction + return VietQR code URL

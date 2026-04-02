@@ -38,16 +38,26 @@ namespace AISEP.BLL.Services.Projects
 
         public async Task<PagedResult<ProjectResponse>> GetAllProjectsAsync(SieveModel model)
         {
-            return await PaginationHelper.PaginateAsync(_unitOfWork.Projects.GetAllQuery(), model, _sieveProcessor, p => _mapper.Map<ProjectResponse>(p));
-        }
+            var currentUserId = GetCurrentUserIdOrNull();
+            var currentInvestorId = await GetCurrentInvestorIdOrNullAsync(currentUserId);
 
-        public async Task<PagedResult<NonPremiumProjectResponse>> GetAllProjectsForNonPremiumAsync(SieveModel model)
-        {
             return await PaginationHelper.PaginateAsync(
                 _unitOfWork.Projects.GetAllQuery(),
                 model,
                 _sieveProcessor,
-                p => _mapper.Map<NonPremiumProjectResponse>(p));
+                p => MapProjectResponseWithCurrentUser(p, currentUserId, currentInvestorId));
+        }
+
+        public async Task<PagedResult<NonPremiumProjectResponse>> GetAllProjectsForNonPremiumAsync(SieveModel model)
+        {
+            var currentUserId = GetCurrentUserIdOrNull();
+            var currentInvestorId = await GetCurrentInvestorIdOrNullAsync(currentUserId);
+
+            return await PaginationHelper.PaginateAsync(
+                _unitOfWork.Projects.GetAllQuery(),
+                model,
+                _sieveProcessor,
+                p => MapNonPremiumProjectResponseWithCurrentUser(p, currentUserId, currentInvestorId));
         }
 
         public async Task<NonPremiumProjectResponse?> GetProjectForNonPremiumByIdAsync(int id)
@@ -56,7 +66,9 @@ namespace AISEP.BLL.Services.Projects
             if (project is null)
                 throw new KeyNotFoundException("Project not found.");
 
-            return _mapper.Map<NonPremiumProjectResponse>(project);
+            var currentUserId = GetCurrentUserIdOrNull();
+            var currentInvestorId = await GetCurrentInvestorIdOrNullAsync(currentUserId);
+            return MapNonPremiumProjectResponseWithCurrentUser(project, currentUserId, currentInvestorId);
         }
 
         public async Task<ProjectResponse?> GetProjectByIdAsync(int id)
@@ -67,15 +79,16 @@ namespace AISEP.BLL.Services.Projects
 
             var userId = _userService.GetUserId();
             var role = _userService.GetUserRole();
+            var currentInvestorId = await GetCurrentInvestorIdOrNullAsync(userId);
 
             if (CanBypassViewQuota(project, userId, role))
             {
-                return _mapper.Map<ProjectResponse>(project);
+                return MapProjectResponseWithCurrentUser(project, userId, currentInvestorId);
             }
 
             if (!RequiresViewQuota(role))
             {
-                return _mapper.Map<ProjectResponse>(project);
+                return MapProjectResponseWithCurrentUser(project, userId, currentInvestorId);
             }
 
             var isUnlocked = await _unitOfWork.UnlockedProjects.ExistsAsync(userId, id);
@@ -84,7 +97,7 @@ namespace AISEP.BLL.Services.Projects
                 await ConsumeProjectViewQuotaAndUnlockAsync(userId, id);
             }
 
-            return _mapper.Map<ProjectResponse>(project);
+            return MapProjectResponseWithCurrentUser(project, userId, currentInvestorId);
         }
 
         public async Task<PagedResult<ProjectResponse>> GetMyProjectsAsync(SieveModel model)
@@ -225,6 +238,75 @@ namespace AISEP.BLL.Services.Projects
             });
 
             await _unitOfWork.SaveChangesAsync();
+        }
+
+        private int? GetCurrentUserIdOrNull()
+        {
+            if (!_userService.IsAuthenticated())
+            {
+                return null;
+            }
+
+            return _userService.GetUserId();
+        }
+
+        private async Task<int?> GetCurrentInvestorIdOrNullAsync(int? currentUserId)
+        {
+            if (!currentUserId.HasValue)
+            {
+                return null;
+            }
+
+            var currentRole = _userService.GetUserRole();
+            if (!string.Equals(currentRole, "Investor", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            var investor = await _unitOfWork.Investors.GetByUserIdAsync(currentUserId.Value);
+            return investor?.InvestorId;
+        }
+
+        private ProjectResponse MapProjectResponseWithCurrentUser(Project project, int? currentUserId, int? currentInvestorId)
+        {
+            if (currentUserId.HasValue || currentInvestorId.HasValue)
+            {
+                return _mapper.Map<ProjectResponse>(project, opts =>
+                {
+                    if (currentUserId.HasValue)
+                    {
+                        opts.Items["CurrentUserId"] = currentUserId.Value;
+                    }
+
+                    if (currentInvestorId.HasValue)
+                    {
+                        opts.Items["CurrentInvestorId"] = currentInvestorId.Value;
+                    }
+                });
+            }
+
+            return _mapper.Map<ProjectResponse>(project);
+        }
+
+        private NonPremiumProjectResponse MapNonPremiumProjectResponseWithCurrentUser(Project project, int? currentUserId, int? currentInvestorId)
+        {
+            if (currentUserId.HasValue || currentInvestorId.HasValue)
+            {
+                return _mapper.Map<NonPremiumProjectResponse>(project, opts =>
+                {
+                    if (currentUserId.HasValue)
+                    {
+                        opts.Items["CurrentUserId"] = currentUserId.Value;
+                    }
+
+                    if (currentInvestorId.HasValue)
+                    {
+                        opts.Items["CurrentInvestorId"] = currentInvestorId.Value;
+                    }
+                });
+            }
+
+            return _mapper.Map<NonPremiumProjectResponse>(project);
         }
 
         private static void ValidateByStageLikeCreate(Project project)

@@ -158,6 +158,9 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.Email,
                     opt => opt.MapFrom(src => src.User != null ? src.User.Email : null));
 
+            // Package Entity -> PackageResponse
+            CreateMap<Package, PackageResponse>();
+
             // CreateInvestorRequest → Investor Entity
             CreateMap<CreateInvestorRequest, Investor>()
                 .ForMember(dest => dest.InvestorId,         opt => opt.Ignore())
@@ -218,7 +221,19 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.ApprovedAt, opt => opt.MapFrom(src => src.ApprovedAt))
                 .ForMember(dest => dest.RejectedById, opt => opt.MapFrom(src => src.RejectedById))
                 .ForMember(dest => dest.RejectedAt, opt => opt.MapFrom(src => src.RejectedAt))
-                .ForMember(dest => dest.RejectionReason, opt => opt.MapFrom(src => src.RejectionReason));
+                .ForMember(dest => dest.RejectionReason, opt => opt.MapFrom(src => src.RejectionReason))
+                .ForMember(dest => dest.FollowerCount,
+                    opt => opt.MapFrom(src => src.Followers.Count))
+                .ForMember(dest => dest.IsFollowedByCurrentUser,
+                    opt => opt.MapFrom((src, _, _, context) =>
+                        context.Items.TryGetValue("CurrentUserId", out var currentUserIdObj)
+                        && currentUserIdObj is int currentUserId
+                        && src.Followers.Any(f => f.FollowerId == currentUserId)))
+                .ForMember(dest => dest.IsConnectionRequestedByCurrentInvestor,
+                    opt => opt.MapFrom((src, _, _, context) =>
+                        context.Items.TryGetValue("CurrentInvestorId", out var currentInvestorIdObj)
+                        && currentInvestorIdObj is int currentInvestorId
+                        && src.ConnectionRequests.Any(cr => cr.InvestorId == currentInvestorId)));
 
             // Project Entity → NonPremiumProjectResponse
             CreateMap<Project, NonPremiumProjectResponse>()
@@ -229,7 +244,19 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.Industry,
                     opt => opt.MapFrom(src => src.Industry.ToString()))
                 .ForMember(dest => dest.StartupPotentialScore,
-                    opt => opt.MapFrom(src => src.StartupAIAnalysis != null ? src.StartupAIAnalysis.PotentialScore : null));
+                    opt => opt.MapFrom(src => src.StartupAIAnalysis != null ? src.StartupAIAnalysis.PotentialScore : null))
+                .ForMember(dest => dest.FollowerCount,
+                    opt => opt.MapFrom(src => src.Followers.Count))
+                .ForMember(dest => dest.IsFollowedByCurrentUser,
+                    opt => opt.MapFrom((src, _, _, context) =>
+                        context.Items.TryGetValue("CurrentUserId", out var currentUserIdObj)
+                        && currentUserIdObj is int currentUserId
+                        && src.Followers.Any(f => f.FollowerId == currentUserId)))
+                .ForMember(dest => dest.IsConnectionRequestedByCurrentInvestor,
+                    opt => opt.MapFrom((src, _, _, context) =>
+                        context.Items.TryGetValue("CurrentInvestorId", out var currentInvestorIdObj)
+                        && currentInvestorIdObj is int currentInvestorId
+                        && src.ConnectionRequests.Any(cr => cr.InvestorId == currentInvestorId)));
 
             // CreateProjectRequest -> Project Entity
             CreateMap<CreateProjectRequest, Project>()
