@@ -10,7 +10,7 @@ namespace AISEP.BLL.Validators.User
 {
     public class UpdateUserRequestValidator : AbstractValidator<UpdateUserRequest>
     {
-        private const string NamePattern = "^[a-zA-ZÀ-ỹ\\s]+$";
+        private const string NamePattern = @"^[\p{L}\p{N}\s]+$";
         public UpdateUserRequestValidator() 
         {
             RuleFor(x => x.UserName)

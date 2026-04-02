@@ -192,6 +192,21 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.FollowedAt,
                     opt => opt.MapFrom(src => src.CreatedAt));
 
+            // ProjectAdvisorAssignment Entity -> ProjectAssignedAdvisorResponse
+            CreateMap<ProjectAdvisorAssignment, ProjectAssignedAdvisorResponse>()
+                .ForMember(dest => dest.ProjectId,
+                    opt => opt.MapFrom(src => src.ProjectId))
+                .ForMember(dest => dest.ProjectName,
+                    opt => opt.MapFrom(src => src.Project != null ? src.Project.ProjectName : "Unknown"))
+                .ForMember(dest => dest.AdvisorId,
+                    opt => opt.MapFrom(src => src.AdvisorId))
+                .ForMember(dest => dest.AdvisorName,
+                    opt => opt.MapFrom(src => src.Advisor != null && src.Advisor.User != null
+                        ? src.Advisor.User.UserName
+                        : $"Advisor {src.AdvisorId}"))
+                .ForMember(dest => dest.AssignedAt,
+                    opt => opt.MapFrom(src => src.AssignedAt));
+
             // Project Entity → ProjectResponse
             CreateMap<Project, ProjectResponse>()
                 .ForMember(dest => dest.DevelopmentStage,
