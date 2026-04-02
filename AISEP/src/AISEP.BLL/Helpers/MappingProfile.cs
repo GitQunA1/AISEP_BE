@@ -362,6 +362,10 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.Investor != null && src.Investor.User != null
                         ? (src.Investor.User.UserName ?? string.Empty)
                         : string.Empty))
+                .ForMember(dest => dest.ProjectName,
+                    opt => opt.MapFrom(src => src.Project != null
+                        ? (src.Project.ProjectName ?? string.Empty)
+                        : string.Empty))
                 .ForMember(dest => dest.StartupName,
                     opt => opt.MapFrom(src => src.Project != null
                         && src.Project.Startup != null
