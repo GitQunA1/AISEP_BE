@@ -1,12 +1,15 @@
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.BLL.Exceptions;
+using AISEP.BLL.Helpers;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using AISEP.BLL.Services.Notifications;
 using AISEP.BLL.Services.Chats;
 using AutoMapper;
+using Sieve.Models;
+using Sieve.Services;
 
 namespace AISEP.BLL.Services.Connections
 {
@@ -16,17 +19,32 @@ namespace AISEP.BLL.Services.Connections
         private readonly INotificationService _notificationService;
         private readonly IMapper _mapper;
         private readonly IChatSessionService _chatSessionService;
+        private readonly ISieveProcessor _sieveProcessor;
 
         public ConnectionService(
             IUnitOfWork unitOfWork,
             INotificationService notificationService,
             IMapper mapper,
-            IChatSessionService chatSessionService)
+            IChatSessionService chatSessionService,
+            ISieveProcessor sieveProcessor)
         {
             _unitOfWork = unitOfWork;
             _notificationService = notificationService;
             _mapper = mapper;
             _chatSessionService = chatSessionService;
+            _sieveProcessor = sieveProcessor;
+        }
+
+        public async Task<PagedResult<ConnectionRequestDto>> GetInvestorRequestsAsync(int investorId, SieveModel model, string? status = null)
+        {
+            var query = _unitOfWork.ConnectionRequests.GetByInvestorQuery(investorId);
+            return await GetRequestsAsync(query, model, status);
+        }
+
+        public async Task<PagedResult<ConnectionRequestDto>> GetStartupRequestsAsync(int startupId, SieveModel model, string? status = null)
+        {
+            var query = _unitOfWork.ConnectionRequests.GetByStartupQuery(startupId);
+            return await GetRequestsAsync(query, model, status);
         }
 
         public async Task<ConnectionRequestDto> CreateRequestAsync(int investorId, CreateConnectionRequestDto dto)
@@ -137,6 +155,41 @@ namespace AISEP.BLL.Services.Connections
                 ?? throw new KeyNotFoundException("Project not found.");
 
             return _mapper.Map<ContactInfoDto>(project.Startup);
+        }
+
+        private async Task<PagedResult<ConnectionRequestDto>> GetRequestsAsync(
+            IQueryable<ConnectionRequest> query,
+            SieveModel model,
+            string? status)
+        {
+            model ??= new SieveModel();
+
+            var parsedStatus = ParseStatusOrThrow(status);
+            if (parsedStatus.HasValue)
+            {
+                query = query.Where(cr => cr.Status == parsedStatus.Value);
+            }
+
+            return await PaginationHelper.PaginateAsync(
+                query,
+                model,
+                _sieveProcessor,
+                request => _mapper.Map<ConnectionRequestDto>(request));
+        }
+
+        private static ConnectionRequestStatus? ParseStatusOrThrow(string? status)
+        {
+            if (string.IsNullOrWhiteSpace(status))
+            {
+                return null;
+            }
+
+            if (!Enum.TryParse<ConnectionRequestStatus>(status, true, out var parsedStatus))
+            {
+                throw new InvalidOperationException("Invalid status. Allowed values: Pending, Accepted, Rejected.");
+            }
+
+            return parsedStatus;
         }
     }
 }

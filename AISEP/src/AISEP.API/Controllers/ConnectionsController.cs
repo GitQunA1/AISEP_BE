@@ -5,6 +5,7 @@ using AISEP.BLL.Services.Investors;
 using AISEP.BLL.Services.Startups;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Sieve.Models;
 
 namespace AISEP.API.Controllers
 {
@@ -25,6 +26,38 @@ namespace AISEP.API.Controllers
             _connectionService = connectionService;
             _investorService = investorService;
             _startupService = startupService;
+        }
+
+        [HttpGet("requests")]
+        [Authorize(Roles = "Investor,Startup")]
+        public async Task<IActionResult> GetRequests([FromQuery] SieveModel model, [FromQuery] string? status = null)
+        {
+            try
+            {
+                if (User.IsInRole("Investor"))
+                {
+                    var investor = await _investorService.GetMyProfileAsync()
+                        ?? throw new KeyNotFoundException("Investor profile not found.");
+
+                    var investorRequests = await _connectionService.GetInvestorRequestsAsync(investor.InvestorId, model, status);
+                    return Ok(ApiResponse<object>.SuccessResponse(investorRequests, "Connection requests retrieved successfully."));
+                }
+
+                if (User.IsInRole("Startup"))
+                {
+                    var startup = await _startupService.GetMyProfileAsync()
+                        ?? throw new KeyNotFoundException("Startup profile not found.");
+
+                    var startupRequests = await _connectionService.GetStartupRequestsAsync(startup.Id, model, status);
+                    return Ok(ApiResponse<object>.SuccessResponse(startupRequests, "Connection requests retrieved successfully."));
+                }
+
+                return Forbid();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message, "Bad request", 400));
+            }
         }
 
         [HttpPost("requests")]

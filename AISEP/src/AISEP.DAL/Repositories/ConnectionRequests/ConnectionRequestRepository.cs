@@ -31,6 +31,24 @@ namespace AISEP.DAL.Repositories.ConnectionRequests
                 .FirstOrDefaultAsync(cr => cr.InvestorId == investorId && cr.ProjectId == projectId);
         }
 
+        public IQueryable<ConnectionRequest> GetByInvestorQuery(int investorId)
+        {
+            return _context.ConnectionRequests
+                .Include(cr => cr.ChatSession)
+                .Where(cr => cr.InvestorId == investorId)
+                .OrderByDescending(cr => cr.ConnectionRequestId)
+                .AsNoTracking();
+        }
+
+        public IQueryable<ConnectionRequest> GetByStartupQuery(int startupId)
+        {
+            return _context.ConnectionRequests
+                .Include(cr => cr.ChatSession)
+                .Where(cr => cr.Project.StartupId == startupId)
+                .OrderByDescending(cr => cr.ConnectionRequestId)
+                .AsNoTracking();
+        }
+
         public async Task<bool> ExistsAcceptedAsync(int investorId, int projectId)
         {
             return await _context.ConnectionRequests
