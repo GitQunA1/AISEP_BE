@@ -489,6 +489,7 @@ namespace AISEP.DAL.Data
                 entity.HasKey(e => e.PackageId);
                 entity.Property(e => e.PackageName).HasMaxLength(255).IsRequired();
                 entity.Property(e => e.Price).HasColumnType("decimal(18,2)").IsRequired();
+                entity.Property(e => e.TargetRole).HasConversion<string>().HasMaxLength(50).IsRequired();
             });
 
             modelBuilder.Entity<Subscription>(entity =>

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using AISEP.DAL.Enums;
 
 namespace AISEP.DAL.Entities
 {
@@ -20,6 +21,8 @@ namespace AISEP.DAL.Entities
         public int MaxProjectViews { get; set; }
 
         public int FreeBookingCount { get; set; }
+
+        public UserRole TargetRole { get; set; }
 
         // Navigation properties
         public ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();

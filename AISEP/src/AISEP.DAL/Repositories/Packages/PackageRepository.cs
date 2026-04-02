@@ -1,5 +1,6 @@
 using AISEP.DAL.Data;
 using AISEP.DAL.Entities;
+using AISEP.DAL.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace AISEP.DAL.Repositories.Packages
@@ -15,6 +16,12 @@ namespace AISEP.DAL.Repositories.Packages
 
         public async Task<IEnumerable<Package>> GetAllAsync()
             => await _context.Packages.OrderBy(p => p.Price).ToListAsync();
+
+        public async Task<IEnumerable<Package>> GetByRoleAsync(UserRole role)
+            => await _context.Packages
+                .Where(p => p.TargetRole == role)
+                .OrderBy(p => p.Price)
+                .ToListAsync();
 
         public async Task<Package?> GetByIdAsync(int packageId)
             => await _context.Packages.FirstOrDefaultAsync(p => p.PackageId == packageId);

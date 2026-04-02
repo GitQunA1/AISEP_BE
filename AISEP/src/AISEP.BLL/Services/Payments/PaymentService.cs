@@ -5,6 +5,7 @@ using AISEP.BLL.Settings;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
+using AutoMapper;
 using Microsoft.Extensions.Options;
 
 namespace AISEP.BLL.Services.Payments
@@ -13,27 +14,23 @@ namespace AISEP.BLL.Services.Payments
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly SePaySettings _sePaySettings;
+        private readonly IMapper _mapper;
 
-        public PaymentService(IUnitOfWork unitOfWork, IOptions<SePaySettings> sePaySettings)
+        public PaymentService(IUnitOfWork unitOfWork, IOptions<SePaySettings> sePaySettings, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             _sePaySettings = sePaySettings.Value;
+            _mapper = mapper;
         }
 
-        public async Task<IEnumerable<PackageResponse>> GetPackagesAsync()
+        public async Task<IEnumerable<PackageResponse>> GetInvestorPackagesAsync()
         {
-            var packages = await _unitOfWork.Packages.GetAllAsync();
-            return packages.Select(p => new PackageResponse
-            {
-                PackageId      = p.PackageId,
-                PackageName    = p.PackageName,
-                Description    = p.Description,
-                Price          = p.Price,
-                DurationMonths = p.DurationMonths,
-                MaxAiRequests = p.MaxAiRequests,
-                MaxProjectViews = p.MaxProjectViews,
-                FreeBookingCount = p.FreeBookingCount
-            });
+            return await GetPackagesByRoleAsync(UserRole.Investor);
+        }
+
+        public async Task<IEnumerable<PackageResponse>> GetStartupPackagesAsync()
+        {
+            return await GetPackagesByRoleAsync(UserRole.Startup);
         }
 
         public async Task<CheckoutResponse> CheckoutAsync(int userId, CheckoutRequest request)
@@ -48,6 +45,12 @@ namespace AISEP.BLL.Services.Payments
 
                 if (package is null)
                     throw new KeyNotFoundException("Package not found.");
+
+                var user = await _unitOfWork.Users.GetByIdAsync(userId)
+                    ?? throw new KeyNotFoundException("User not found.");
+
+                if (package.TargetRole != user.Role)
+                    throw new InvalidOperationException("Selected package is not available for your role.");
 
                 amount = package.Price;
             }
@@ -237,6 +240,12 @@ namespace AISEP.BLL.Services.Payments
                 return;
 
             booking.Status = BookingStatus.Confirmed;
+        }
+
+        private async Task<IEnumerable<PackageResponse>> GetPackagesByRoleAsync(UserRole role)
+        {
+            var packages = await _unitOfWork.Packages.GetByRoleAsync(role);
+            return _mapper.Map<IEnumerable<PackageResponse>>(packages);
         }
 
         private string BuildQrCodeUrl(decimal amount, string paymentCode)

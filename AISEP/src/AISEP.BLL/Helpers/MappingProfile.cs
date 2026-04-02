@@ -158,6 +158,9 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.Email,
                     opt => opt.MapFrom(src => src.User != null ? src.User.Email : null));
 
+            // Package Entity -> PackageResponse
+            CreateMap<Package, PackageResponse>();
+
             // CreateInvestorRequest → Investor Entity
             CreateMap<CreateInvestorRequest, Investor>()
                 .ForMember(dest => dest.InvestorId,         opt => opt.Ignore())
