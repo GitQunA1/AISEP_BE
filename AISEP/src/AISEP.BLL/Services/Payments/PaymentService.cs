@@ -44,33 +44,43 @@ namespace AISEP.BLL.Services.Payments
 
         public async Task<CheckoutResponse> CheckoutAsync(int userId, CheckoutRequest request)
         {
+            if (request.ReferenceId <= 0)
+                throw new InvalidOperationException("ReferenceId must be greater than 0.");
+
             var referenceType = request.ReferenceType.ToString();
 
             decimal amount;
 
-            if (request.ReferenceType == ReferenceType.Subscription)
+            switch (request.ReferenceType)
             {
-                var package = await _unitOfWork.Packages.GetByIdAsync(request.ReferenceId);
+                case ReferenceType.Subscription:
+                {
+                    var package = await _unitOfWork.Packages.GetByIdAsync(request.ReferenceId);
 
-                if (package is null)
-                    throw new KeyNotFoundException("Package not found.");
+                    if (package is null)
+                        throw new KeyNotFoundException("Package not found.");
 
-                var user = await _unitOfWork.Users.GetByIdAsync(userId)
-                    ?? throw new KeyNotFoundException("User not found.");
+                    var user = await _unitOfWork.Users.GetByIdAsync(userId)
+                        ?? throw new KeyNotFoundException("User not found.");
 
-                if (package.TargetRole != user.Role)
-                    throw new InvalidOperationException("Selected package is not available for your role.");
+                    if (package.TargetRole != user.Role)
+                        throw new InvalidOperationException("Selected package is not available for your role.");
 
-                amount = package.Price;
-            }
-            else
-            {
-                var booking = await _unitOfWork.Bookings.GetPayableByIdAndCustomerAsync(request.ReferenceId, userId);
+                    amount = package.Price;
+                    break;
+                }
+                case ReferenceType.Booking:
+                {
+                    var booking = await _unitOfWork.Bookings.GetPayableByIdAndCustomerAsync(request.ReferenceId, userId);
 
-                if (booking is null)
-                    throw new KeyNotFoundException("Booking not found or not in ApprovedAwaitingPayment status.");
+                    if (booking is null)
+                        throw new KeyNotFoundException("Booking not found or not in ApprovedAwaitingPayment status.");
 
-                amount = booking.Price;
+                    amount = booking.Price;
+                    break;
+                }
+                default:
+                    throw new InvalidOperationException("Invalid reference type.");
             }
 
             // Return existing pending transaction if one already exists.
@@ -113,15 +123,6 @@ namespace AISEP.BLL.Services.Payments
             var response = _mapper.Map<CheckoutResponse>(transaction);
             response.QrCodeUrl = BuildQrCodeUrl(transaction.Amount, transaction.PaymentCode!);
             return response;
-        }
-
-        public async Task<CheckoutResponse> CheckoutBookingAsync(int userId, int bookingId)
-        {
-            return await CheckoutAsync(userId, new CheckoutRequest
-            {
-                ReferenceType = ReferenceType.Booking,
-                ReferenceId = bookingId
-            });
         }
 
         public async Task<TransactionStatusResponse> GetTransactionStatusAsync(int userId, int transactionId)
