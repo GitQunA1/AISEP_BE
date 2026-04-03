@@ -33,7 +33,7 @@ using AISEP.BLL.Validators.Auth;
 using AISEP.API.Middleware;
 using AISEP.API.Hubs;
 using AISEP.API.Realtime;
-using AISEP.API.Infrastructure;
+//using AISEP.API.Infrastructure;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -297,7 +297,7 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-await DatabaseSeeder.SeedAsync(app);
+//await DatabaseSeeder.SeedAsync(app);
 
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
