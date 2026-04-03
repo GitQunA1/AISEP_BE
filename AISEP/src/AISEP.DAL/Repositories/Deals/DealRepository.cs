@@ -1,5 +1,6 @@
 using AISEP.DAL.Data;
 using AISEP.DAL.Entities;
+using AISEP.DAL.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace AISEP.DAL.Repositories.Deals
@@ -36,6 +37,17 @@ namespace AISEP.DAL.Repositories.Deals
                 .Include(d => d.Investor)
                 .Include(d => d.NFTRecord)
                 .FirstOrDefaultAsync(d => d.DealId == dealId);
+        }
+
+        public async Task<bool> HasBlockingDealAsync(int investorId, int projectId)
+        {
+            return await _context.Deals.AnyAsync(d =>
+                d.InvestorId == investorId &&
+                d.ProjectId == projectId &&
+                (d.Status == DealStatus.Pending ||
+                 d.Status == DealStatus.Confirmed ||
+                 d.Status == DealStatus.Contract_Signed ||
+                 d.Status == DealStatus.Minted_NFT));
         }
 
         public async Task AddAsync(Deal deal)

@@ -8,7 +8,7 @@ namespace AISEP.BLL.Services.Deals
     public interface IDealService
     {
         Task<DealDto> CreateDealAsync(int investorId, CreateDealDto dto);
-        Task<DealDto> ConfirmDealAsync(int startupId, int dealId);
+        Task<DealDto> RespondDealAsync(int startupId, int dealId, bool isAccepted);
         Task<string> GetContractPreviewAsync(int dealId, int investorId);
         Task<DealContractStatusResponse> SignAndFinalizeContractAsync(int dealId, int investorId, int signedByUserId, SignContractRequestDto request);
         Task<DealContractStatusResponse> GetContractStatusForInvestorAsync(int dealId, int investorId);
