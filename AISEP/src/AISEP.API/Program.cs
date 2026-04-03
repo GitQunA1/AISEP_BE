@@ -300,7 +300,7 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-//await DatabaseSeeder.SeedAsync(app);
+
 
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {

@@ -256,7 +256,29 @@ namespace AISEP.BLL.Helpers
                         context.TryGetItems(out var items)
                         && items.TryGetValue("CurrentInvestorId", out var currentInvestorIdObj)
                         && currentInvestorIdObj is int currentInvestorId
-                        && src.ConnectionRequests.Any(cr => cr.InvestorId == currentInvestorId)));
+                        && src.ConnectionRequests.Any(cr => cr.InvestorId == currentInvestorId)))
+                .ForMember(dest => dest.AssignedAdvisorId,
+                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignment != null ? (int?)src.ProjectAdvisorAssignment.AdvisorId : null))
+                .ForMember(dest => dest.AssignedAdvisorName,
+                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignment != null && src.ProjectAdvisorAssignment.Advisor != null && src.ProjectAdvisorAssignment.Advisor.User != null
+                        ? src.ProjectAdvisorAssignment.Advisor.User.UserName
+                        : null))
+                .ForMember(dest => dest.AssignedAdvisorHourlyRate,
+                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignment != null && src.ProjectAdvisorAssignment.Advisor != null
+                        ? src.ProjectAdvisorAssignment.Advisor.HourlyRate
+                        : null))
+                .ForMember(dest => dest.AssignedAdvisorRating,
+                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignment != null && src.ProjectAdvisorAssignment.Advisor != null
+                        ? src.ProjectAdvisorAssignment.Advisor.Rating
+                        : null))
+                .ForMember(dest => dest.AssignedAdvisorIndustries,
+                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignment != null
+                        && src.ProjectAdvisorAssignment.Advisor != null
+                        && src.ProjectAdvisorAssignment.Advisor.AdvisorIndustries != null
+                        ? src.ProjectAdvisorAssignment.Advisor.AdvisorIndustries
+                            .Select(ai => ai.Industry.ToString())
+                            .ToList()
+                        : new List<string>()));
 
             // Project Entity → NonPremiumProjectResponse
             CreateMap<Project, NonPremiumProjectResponse>()
@@ -281,7 +303,29 @@ namespace AISEP.BLL.Helpers
                         context.TryGetItems(out var items)
                         && items.TryGetValue("CurrentInvestorId", out var currentInvestorIdObj)
                         && currentInvestorIdObj is int currentInvestorId
-                        && src.ConnectionRequests.Any(cr => cr.InvestorId == currentInvestorId)));
+                        && src.ConnectionRequests.Any(cr => cr.InvestorId == currentInvestorId)))
+                .ForMember(dest => dest.AssignedAdvisorId,
+                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignment != null ? (int?)src.ProjectAdvisorAssignment.AdvisorId : null))
+                .ForMember(dest => dest.AssignedAdvisorName,
+                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignment != null && src.ProjectAdvisorAssignment.Advisor != null && src.ProjectAdvisorAssignment.Advisor.User != null
+                        ? src.ProjectAdvisorAssignment.Advisor.User.UserName
+                        : null))
+                .ForMember(dest => dest.AssignedAdvisorHourlyRate,
+                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignment != null && src.ProjectAdvisorAssignment.Advisor != null
+                        ? src.ProjectAdvisorAssignment.Advisor.HourlyRate
+                        : null))
+                .ForMember(dest => dest.AssignedAdvisorRating,
+                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignment != null && src.ProjectAdvisorAssignment.Advisor != null
+                        ? src.ProjectAdvisorAssignment.Advisor.Rating
+                        : null))
+                .ForMember(dest => dest.AssignedAdvisorIndustries,
+                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignment != null
+                        && src.ProjectAdvisorAssignment.Advisor != null
+                        && src.ProjectAdvisorAssignment.Advisor.AdvisorIndustries != null
+                        ? src.ProjectAdvisorAssignment.Advisor.AdvisorIndustries
+                            .Select(ai => ai.Industry.ToString())
+                            .ToList()
+                        : new List<string>()));
 
             // CreateProjectRequest -> Project Entity
             CreateMap<CreateProjectRequest, Project>()

@@ -21,6 +21,12 @@ namespace AISEP.DAL.Repositories.Projects
                 .Include(p => p.StartupAIAnalysis)
                 .Include(p => p.Followers)
                 .Include(p => p.ConnectionRequests)
+                .Include(p => p.ProjectAdvisorAssignment)
+                    .ThenInclude(pa => pa.Advisor)
+                        .ThenInclude(a => a.User)
+                .Include(p => p.ProjectAdvisorAssignment)
+                    .ThenInclude(pa => pa.Advisor)
+                        .ThenInclude(a => a.AdvisorIndustries)
                 .OrderBy(p => p.ProjectId)
                 .AsQueryable();
         }
@@ -32,6 +38,12 @@ namespace AISEP.DAL.Repositories.Projects
                 .Include(p => p.StartupAIAnalysis)
                 .Include(p => p.Followers)
                 .Include(p => p.ConnectionRequests)
+                .Include(p => p.ProjectAdvisorAssignment)
+                    .ThenInclude(pa => pa.Advisor)
+                        .ThenInclude(a => a.User)
+                .Include(p => p.ProjectAdvisorAssignment)
+                    .ThenInclude(pa => pa.Advisor)
+                        .ThenInclude(a => a.AdvisorIndustries)
                 .Where(p => p.StartupId == startupId)
                 .OrderBy(p => p.ProjectId)
                 .AsQueryable();
@@ -44,6 +56,12 @@ namespace AISEP.DAL.Repositories.Projects
                 .Include(p => p.StartupAIAnalysis)
                 .Include(p => p.Followers)
                 .Include(p => p.ConnectionRequests)
+                .Include(p => p.ProjectAdvisorAssignment)
+                    .ThenInclude(pa => pa.Advisor)
+                        .ThenInclude(a => a.User)
+                .Include(p => p.ProjectAdvisorAssignment)
+                    .ThenInclude(pa => pa.Advisor)
+                        .ThenInclude(a => a.AdvisorIndustries)
                 .Where(p => p.Status == status)
                 .OrderBy(p => p.ProjectId)
                 .AsQueryable();
@@ -56,6 +74,12 @@ namespace AISEP.DAL.Repositories.Projects
                 .Include(p => p.StartupAIAnalysis)
                 .Include(p => p.Followers)
                 .Include(p => p.ConnectionRequests)
+                .Include(p => p.ProjectAdvisorAssignment)
+                    .ThenInclude(pa => pa.Advisor)
+                        .ThenInclude(a => a.User)
+                .Include(p => p.ProjectAdvisorAssignment)
+                    .ThenInclude(pa => pa.Advisor)
+                        .ThenInclude(a => a.AdvisorIndustries)
                 .FirstOrDefaultAsync(p => p.ProjectId == id);
         }
 

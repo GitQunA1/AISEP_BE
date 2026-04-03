@@ -160,13 +160,15 @@ namespace AISEP.BLL.Services.Bookings
             IQueryable<Project> query;
             if (string.Equals(currentRole, "Investor", StringComparison.OrdinalIgnoreCase))
             {
-                query = _unitOfWork.Projects.GetByStatusQuery(ProjectStatus.Approved);
+                query = _unitOfWork.Projects.GetByStatusQuery(ProjectStatus.Approved)
+                    .Where(p => p.ProjectAdvisorAssignment != null);
             }
             else if (string.Equals(currentRole, "Startup", StringComparison.OrdinalIgnoreCase))
             {
                 var startup = await _unitOfWork.Startups.GetByUserIdAsync(currentUserId)
                     ?? throw new KeyNotFoundException("Startup profile not found for this account.");
-                query = _unitOfWork.Projects.GetByStartupIdQuery(startup.StartupId);
+                query = _unitOfWork.Projects.GetByStartupIdQuery(startup.StartupId)
+                    .Where(p => p.ProjectAdvisorAssignment != null);
             }
             else
             {

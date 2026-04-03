@@ -36,5 +36,10 @@
         public int FollowerCount { get; set; }
         public bool IsFollowedByCurrentUser { get; set; }
         public bool IsConnectionRequestedByCurrentInvestor { get; set; }
+        public int? AssignedAdvisorId { get; set; }
+        public string? AssignedAdvisorName { get; set; }
+        public decimal? AssignedAdvisorHourlyRate { get; set; }
+        public decimal? AssignedAdvisorRating { get; set; }
+        public List<string> AssignedAdvisorIndustries { get; set; } = [];
     }
 }
