@@ -68,6 +68,12 @@ namespace AISEP.BLL.Services.Deals
             var project = await _unitOfWork.Projects.GetByIdAsync(dto.ProjectId)
                 ?? throw new KeyNotFoundException("Project not found.");
 
+            var hasBlockingDeal = await _unitOfWork.Deals.HasBlockingDealAsync(investorId, dto.ProjectId);
+            if (hasBlockingDeal)
+            {
+                throw new InvalidOperationException("You already have an active deal for this project. You can only create a new one after the previous deal is rejected.");
+            }
+
             var deal = _mapper.Map<Deal>(dto);
             deal.InvestorId = investorId;
             deal.InvestorConfirmed = true;
@@ -91,31 +97,79 @@ namespace AISEP.BLL.Services.Deals
             return _mapper.Map<DealDto>(created);
         }
 
-        public async Task<DealDto> ConfirmDealAsync(int startupId, int dealId)
+        public async Task<PagedResult<DealDto>> GetInvestorDealsAsync(int investorId, SieveModel sieveModel)
+        {
+            sieveModel ??= new SieveModel();
+
+            var query = _unitOfWork.Deals.GetQuery()
+                .Where(d => d.InvestorId == investorId);
+
+            return await PaginationHelper.PaginateAsync(
+                query,
+                sieveModel,
+                _sieveProcessor,
+                d => _mapper.Map<DealDto>(d));
+        }
+
+        public async Task<PagedResult<DealDto>> GetStartupDealsAsync(int startupId, SieveModel sieveModel)
+        {
+            sieveModel ??= new SieveModel();
+
+            var query = _unitOfWork.Deals.GetQuery()
+                .Where(d => d.Project.StartupId == startupId);
+
+            return await PaginationHelper.PaginateAsync(
+                query,
+                sieveModel,
+                _sieveProcessor,
+                d => _mapper.Map<DealDto>(d));
+        }
+
+        public async Task<DealDto> RespondDealAsync(int startupId, int dealId, bool isAccepted)
         {
             var deal = await _unitOfWork.Deals.GetByIdWithNftAsync(dealId)
                 ?? throw new KeyNotFoundException("Deal not found.");
 
             if (deal.Project.StartupId != startupId)
             {
-                throw new ForbiddenAccessException("You do not have permission to confirm this deal.");
+                throw new ForbiddenAccessException("You do not have permission to respond to this deal.");
             }
 
             if (deal.Status != DealStatus.Pending)
             {
-                throw new InvalidOperationException("Only pending deals can be confirmed.");
+                throw new InvalidOperationException("Only pending deals can be responded.");
             }
 
-            deal.StartupConfirmed = true;
-            deal.Status = DealStatus.Confirmed;
+            string notificationTitle;
+            string notificationMessage;
+
+            if (isAccepted)
+            {
+                deal.StartupConfirmed = true;
+                deal.Status = DealStatus.Confirmed;
+
+                notificationTitle = "Deal confirmed";
+                notificationMessage = $"Your deal #{deal.DealId} has been confirmed by the startup.";
+            }
+            else
+            {
+                deal.StartupConfirmed = false;
+                deal.Status = DealStatus.Rejected;
+
+                notificationTitle = "Deal rejected";
+                notificationMessage = $"Your deal #{deal.DealId} has been rejected by the startup.";
+            }
+
             _unitOfWork.Deals.Update(deal);
             await _unitOfWork.SaveChangesAsync();
 
             await _notificationService.SendNotificationAsync(
                 deal.Investor.UserId,
-                "Deal confirmed",
-                $"Your deal #{deal.DealId} has been confirmed by the startup.",
-                NotificationType.Deal);
+                notificationTitle,
+                notificationMessage,
+                NotificationType.Deal,
+                deal.DealId,
+                "Deal");
 
             return _mapper.Map<DealDto>(deal);
         }

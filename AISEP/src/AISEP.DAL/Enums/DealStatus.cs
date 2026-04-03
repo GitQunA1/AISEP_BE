@@ -6,6 +6,7 @@
         Confirmed,
         Contract_Signed,
         Minted_NFT,
+        Rejected,
         Failed
     }
 }

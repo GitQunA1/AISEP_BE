@@ -32,6 +32,43 @@ namespace AISEP.API.Controllers
             _startupService = startupService;
         }
 
+        [HttpGet]
+        [Authorize(Roles = "Investor,Startup")]
+        public async Task<IActionResult> GetDeals([FromQuery] SieveModel model)
+        {
+            var userId = _userService.GetUserId();
+
+            if (User.IsInRole("Investor"))
+            {
+                var investor = await _investorService.GetMyProfileAsync()
+                    ?? throw new KeyNotFoundException("Investor profile not found.");
+
+                if (investor.UserId != userId)
+                {
+                    throw new UnauthorizedAccessException("Invalid investor context.");
+                }
+
+                var investorDeals = await _dealService.GetInvestorDealsAsync(investor.InvestorId, model);
+                return Ok(ApiResponse<object>.SuccessResponse(investorDeals, "Deals retrieved successfully."));
+            }
+
+            if (User.IsInRole("Startup"))
+            {
+                var startup = await _startupService.GetMyProfileAsync()
+                    ?? throw new KeyNotFoundException("Startup profile not found.");
+
+                if (startup.UserId != userId)
+                {
+                    throw new UnauthorizedAccessException("Invalid startup context.");
+                }
+
+                var startupDeals = await _dealService.GetStartupDealsAsync(startup.Id, model);
+                return Ok(ApiResponse<object>.SuccessResponse(startupDeals, "Deals retrieved successfully."));
+            }
+
+            throw new UnauthorizedAccessException("Role is not allowed to access deals.");
+        }
+
         [HttpPost]
         [Authorize(Roles = "Investor")]
         public async Task<IActionResult> CreateDeal([FromBody] CreateDealDto dto)
@@ -49,9 +86,9 @@ namespace AISEP.API.Controllers
             return Ok(ApiResponse<object>.SuccessResponse(result, "Deal created successfully."));
         }
 
-        [HttpPatch("{id:int}/confirm")]
+        [HttpPatch("{id:int}/respond")]
         [Authorize(Roles = "Startup")]
-        public async Task<IActionResult> ConfirmDeal(int id)
+        public async Task<IActionResult> RespondDeal(int id, [FromBody] RespondDealRequestDto dto)
         {
             var userId = _userService.GetUserId();
             var startup = await _startupService.GetMyProfileAsync()
@@ -62,8 +99,13 @@ namespace AISEP.API.Controllers
                 throw new UnauthorizedAccessException("Invalid startup context.");
             }
 
-            var result = await _dealService.ConfirmDealAsync(startup.Id, id);
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Deal confirmed successfully."));
+            if (dto?.IsAccepted is null)
+            {
+                throw new InvalidOperationException("IsAccepted is required.");
+            }
+
+            var result = await _dealService.RespondDealAsync(startup.Id, id, dto.IsAccepted.Value);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Deal response submitted successfully."));
         }
 
         [HttpGet("{id:int}/contract-preview")]
