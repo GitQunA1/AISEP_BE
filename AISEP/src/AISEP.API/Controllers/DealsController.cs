@@ -179,7 +179,7 @@ namespace AISEP.API.Controllers
             return Ok(ApiResponse<object>.SuccessResponse(result, "Startup signed contract successfully."));
         }
 
-        [HttpPost("{id:int}/startup-reject")]
+        [HttpPatch("{id:int}/startup-reject")]
         [Authorize(Roles = "Startup")]
         public async Task<IActionResult> StartupRejectContract(int id, [FromBody] StartupRejectContractDto request)
         {
