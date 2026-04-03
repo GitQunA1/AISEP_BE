@@ -324,6 +324,44 @@ namespace AISEP.BLL.Services.Deals
             return _mapper.Map<DealContractStatusResponse>(deal);
         }
 
+        public async Task<DealContractStatusResponse> StartupRejectContractAsync(int dealId, int startupId, StartupRejectContractDto request)
+        {
+            if (request is null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            var deal = await _unitOfWork.Deals.GetByIdWithNftAsync(dealId)
+                ?? throw new KeyNotFoundException("Deal not found.");
+
+            EnsureStartupOwnsDeal(deal, startupId);
+
+            if (deal.Status != DealStatus.Waiting_For_Startup_Signature)
+            {
+                throw new InvalidOperationException("Only deals waiting for startup signature can be rejected at this stage.");
+            }
+
+            deal.StartupSignature = null;
+            deal.StartupSignedAt = null;
+            deal.ContractPdfUrl = null;
+            deal.Status = DealStatus.Rejected;
+
+            _unitOfWork.Deals.Update(deal);
+            await _unitOfWork.SaveChangesAsync();
+
+            var startupReason = request.Reason.Trim();
+
+            await _notificationService.SendNotificationAsync(
+                deal.Investor.UserId,
+                "Contract rejected by startup",
+                $"Startup rejected deal #{deal.DealId}. Reason: {startupReason}",
+                NotificationType.Deal,
+                deal.DealId,
+                "Deal");
+
+            return _mapper.Map<DealContractStatusResponse>(deal);
+        }
+
         public async Task<DealContractStatusResponse> GetContractStatusForInvestorAsync(int dealId, int investorId)
         {
             var deal = await _unitOfWork.Deals.GetByIdWithNftAsync(dealId)
