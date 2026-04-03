@@ -32,6 +32,43 @@ namespace AISEP.API.Controllers
             _startupService = startupService;
         }
 
+        [HttpGet]
+        [Authorize(Roles = "Investor,Startup")]
+        public async Task<IActionResult> GetDeals([FromQuery] SieveModel model)
+        {
+            var userId = _userService.GetUserId();
+
+            if (User.IsInRole("Investor"))
+            {
+                var investor = await _investorService.GetMyProfileAsync()
+                    ?? throw new KeyNotFoundException("Investor profile not found.");
+
+                if (investor.UserId != userId)
+                {
+                    throw new UnauthorizedAccessException("Invalid investor context.");
+                }
+
+                var investorDeals = await _dealService.GetInvestorDealsAsync(investor.InvestorId, model);
+                return Ok(ApiResponse<object>.SuccessResponse(investorDeals, "Deals retrieved successfully."));
+            }
+
+            if (User.IsInRole("Startup"))
+            {
+                var startup = await _startupService.GetMyProfileAsync()
+                    ?? throw new KeyNotFoundException("Startup profile not found.");
+
+                if (startup.UserId != userId)
+                {
+                    throw new UnauthorizedAccessException("Invalid startup context.");
+                }
+
+                var startupDeals = await _dealService.GetStartupDealsAsync(startup.Id, model);
+                return Ok(ApiResponse<object>.SuccessResponse(startupDeals, "Deals retrieved successfully."));
+            }
+
+            throw new UnauthorizedAccessException("Role is not allowed to access deals.");
+        }
+
         [HttpPost]
         [Authorize(Roles = "Investor")]
         public async Task<IActionResult> CreateDeal([FromBody] CreateDealDto dto)

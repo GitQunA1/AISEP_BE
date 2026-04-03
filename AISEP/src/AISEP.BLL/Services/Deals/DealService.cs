@@ -97,6 +97,34 @@ namespace AISEP.BLL.Services.Deals
             return _mapper.Map<DealDto>(created);
         }
 
+        public async Task<PagedResult<DealDto>> GetInvestorDealsAsync(int investorId, SieveModel sieveModel)
+        {
+            sieveModel ??= new SieveModel();
+
+            var query = _unitOfWork.Deals.GetQuery()
+                .Where(d => d.InvestorId == investorId);
+
+            return await PaginationHelper.PaginateAsync(
+                query,
+                sieveModel,
+                _sieveProcessor,
+                d => _mapper.Map<DealDto>(d));
+        }
+
+        public async Task<PagedResult<DealDto>> GetStartupDealsAsync(int startupId, SieveModel sieveModel)
+        {
+            sieveModel ??= new SieveModel();
+
+            var query = _unitOfWork.Deals.GetQuery()
+                .Where(d => d.Project.StartupId == startupId);
+
+            return await PaginationHelper.PaginateAsync(
+                query,
+                sieveModel,
+                _sieveProcessor,
+                d => _mapper.Map<DealDto>(d));
+        }
+
         public async Task<DealDto> RespondDealAsync(int startupId, int dealId, bool isAccepted)
         {
             var deal = await _unitOfWork.Deals.GetByIdWithNftAsync(dealId)

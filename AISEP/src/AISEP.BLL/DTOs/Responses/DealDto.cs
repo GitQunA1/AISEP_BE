@@ -4,7 +4,10 @@ namespace AISEP.BLL.DTOs.Responses
     {
         public int DealId { get; set; }
         public int InvestorId { get; set; }
+        public string InvestorName { get; set; } = string.Empty;
         public int ProjectId { get; set; }
+        public string ProjectName { get; set; } = string.Empty;
+        public string StartupName { get; set; } = string.Empty;
         public decimal Amount { get; set; }
         public bool StartupConfirmed { get; set; }
         public bool InvestorConfirmed { get; set; }
@@ -17,6 +20,5 @@ namespace AISEP.BLL.DTOs.Responses
         public string? ContractPdfUrl { get; set; }
         public DateTime? ContractSignedAt { get; set; }
         public int? ContractSignedByUserId { get; set; }
-        public NFTRecordDto? NFTRecord { get; set; }
     }
 }

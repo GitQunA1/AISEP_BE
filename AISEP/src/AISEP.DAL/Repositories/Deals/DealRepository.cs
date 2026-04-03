@@ -18,9 +18,10 @@ namespace AISEP.DAL.Repositories.Deals
         {
             return _context.Deals
                 .Include(d => d.Investor)
+                    .ThenInclude(i => i.User)
                 .Include(d => d.Project)
                     .ThenInclude(p => p.Startup)
-                .Include(d => d.NFTRecord)
+                        .ThenInclude(s => s.User)
                 .AsQueryable();
         }
 
@@ -34,7 +35,9 @@ namespace AISEP.DAL.Repositories.Deals
             return await _context.Deals
                 .Include(d => d.Project)
                     .ThenInclude(p => p.Startup)
+                        .ThenInclude(s => s.User)
                 .Include(d => d.Investor)
+                    .ThenInclude(i => i.User)
                 .Include(d => d.NFTRecord)
                 .FirstOrDefaultAsync(d => d.DealId == dealId);
         }

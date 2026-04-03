@@ -355,7 +355,28 @@ namespace AISEP.BLL.Helpers
             // Deal Entity -> DealDto
             CreateMap<Deal, DealDto>()
                 .ForMember(dest => dest.Status,
-                    opt => opt.MapFrom(src => src.Status.ToString()));
+                    opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.InvestorName,
+                    opt => opt.MapFrom(src => src.Investor != null
+                        ? (!string.IsNullOrWhiteSpace(src.Investor.OrganizationName)
+                            ? src.Investor.OrganizationName
+                            : (src.Investor.User != null
+                                ? (src.Investor.User.UserName ?? string.Empty)
+                                : string.Empty))
+                        : string.Empty))
+                .ForMember(dest => dest.ProjectName,
+                    opt => opt.MapFrom(src => src.Project != null
+                        ? (src.Project.ProjectName ?? string.Empty)
+                        : string.Empty))
+                .ForMember(dest => dest.StartupName,
+                    opt => opt.MapFrom(src => src.Project != null
+                        && src.Project.Startup != null
+                        ? (!string.IsNullOrWhiteSpace(src.Project.Startup.CompanyName)
+                            ? src.Project.Startup.CompanyName
+                            : (src.Project.Startup.User != null
+                                ? (src.Project.Startup.User.UserName ?? string.Empty)
+                                : string.Empty))
+                        : string.Empty));
 
             // Deal Entity -> DealContractStatusResponse
             CreateMap<Deal, DealContractStatusResponse>()
