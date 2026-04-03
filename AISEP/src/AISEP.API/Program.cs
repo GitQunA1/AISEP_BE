@@ -33,7 +33,6 @@ using AISEP.BLL.Validators.Auth;
 using AISEP.API.Middleware;
 using AISEP.API.Hubs;
 using AISEP.API.Realtime;
-//using AISEP.API.Infrastructure;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
