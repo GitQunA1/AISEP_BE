@@ -16,10 +16,10 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.User != null ? src.User.UserName : null))
                 .ForMember(dest => dest.Email,
                     opt => opt.MapFrom(src => src.User != null ? src.User.Email : null))
-                .ForMember(dest => dest.Industry,
-                    opt => opt.MapFrom(src => src.AdvisorIndustries
-                        .Select(ai => ai.Industry.ToString())
-                        .FirstOrDefault()))
+                //.ForMember(dest => dest.Industry,
+                //    opt => opt.MapFrom(src => src.AdvisorIndustries
+                //        .Select(ai => ai.Industry.ToString())
+                //        .FirstOrDefault()))
                 .ForMember(dest => dest.Industries,
                     opt => opt.MapFrom(src => src.AdvisorIndustries
                         .Select(ai => ai.Industry.ToString())
@@ -288,6 +288,8 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.DevelopmentStage != null ? src.DevelopmentStage.ToString() : null))
                 .ForMember(dest => dest.Industry,
                     opt => opt.MapFrom(src => src.Industry.ToString()))
+                .ForMember(dest => dest.Status,
+                    opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.StartupPotentialScore,
                     opt => opt.MapFrom(src => src.StartupAIAnalysis != null ? src.StartupAIAnalysis.PotentialScore : null))
                 .ForMember(dest => dest.FollowerCount,

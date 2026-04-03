@@ -13,6 +13,7 @@ namespace AISEP.BLL.DTOs.Responses
         public string? UniqueValueProposition { get; set; }
         public string? Industry { get; set; }
         public string? ProjectImageUrl { get; set; }
+        public string Status { get; set; } = string.Empty;
         public int? StartupPotentialScore { get; set; }
         public DateTime CreatedAt { get; set; }
         public int FollowerCount { get; set; }
