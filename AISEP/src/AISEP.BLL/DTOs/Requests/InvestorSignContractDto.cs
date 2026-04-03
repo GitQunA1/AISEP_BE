@@ -1,6 +1,6 @@
 namespace AISEP.BLL.DTOs.Requests
 {
-    public class SignContractRequestDto
+    public class InvestorSignContractDto
     {
         public decimal FinalAmount { get; set; }
         public double FinalEquityPercentage { get; set; }

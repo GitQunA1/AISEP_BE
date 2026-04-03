@@ -15,10 +15,11 @@ namespace AISEP.BLL.DTOs.Responses
         public DateTime DealDate { get; set; }
         public string? PaymentMethod { get; set; }
         public decimal? EquityPercentage { get; set; }
+        public string? AdditionalTerms { get; set; }
         public bool IsCompleted { get; set; }
         public DateTime? CompletionDate { get; set; }
+        public DateTime? InvestorSignedAt { get; set; }
+        public DateTime? StartupSignedAt { get; set; }
         public string? ContractPdfUrl { get; set; }
-        public DateTime? ContractSignedAt { get; set; }
-        public int? ContractSignedByUserId { get; set; }
     }
 }

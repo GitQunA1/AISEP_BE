@@ -428,6 +428,10 @@ namespace AISEP.BLL.Helpers
             CreateMap<Deal, DealContractStatusResponse>()
                 .ForMember(dest => dest.Status,
                     opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.IsInvestorSigned,
+                    opt => opt.MapFrom(src => !string.IsNullOrWhiteSpace(src.InvestorSignature)))
+                .ForMember(dest => dest.IsStartupSigned,
+                    opt => opt.MapFrom(src => !string.IsNullOrWhiteSpace(src.StartupSignature)))
                 .ForMember(dest => dest.IsContractSigned,
                     opt => opt.MapFrom(src => src.Status == AISEP.DAL.Enums.DealStatus.Contract_Signed || src.Status == AISEP.DAL.Enums.DealStatus.Minted_NFT));
 
@@ -439,10 +443,16 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.Amount, opt => opt.MapFrom(_ => 0m))
                 .ForMember(dest => dest.PaymentMethod, opt => opt.Ignore())
                 .ForMember(dest => dest.EquityPercentage, opt => opt.Ignore())
+                .ForMember(dest => dest.AdditionalTerms, opt => opt.Ignore())
                 .ForMember(dest => dest.StartupConfirmed, opt => opt.Ignore())
                 .ForMember(dest => dest.InvestorConfirmed, opt => opt.Ignore())
                 .ForMember(dest => dest.Status, opt => opt.Ignore())
                 .ForMember(dest => dest.DealDate, opt => opt.Ignore())
+                .ForMember(dest => dest.InvestorSignature, opt => opt.Ignore())
+                .ForMember(dest => dest.StartupSignature, opt => opt.Ignore())
+                .ForMember(dest => dest.InvestorSignedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.StartupSignedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.ContractPdfUrl, opt => opt.Ignore())
                 .ForMember(dest => dest.IsCompleted, opt => opt.Ignore())
                 .ForMember(dest => dest.CompletionDate, opt => opt.Ignore())
                 .ForMember(dest => dest.Investor, opt => opt.Ignore())
