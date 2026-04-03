@@ -57,25 +57,24 @@ namespace AISEP.BLL.Services.Deals
 
         public async Task<DealDto> CreateDealAsync(int investorId, CreateDealDto dto)
         {
+            if (dto.ProjectId <= 0)
+            {
+                throw new InvalidOperationException("ProjectId must be greater than 0.");
+            }
+
             var investor = await _unitOfWork.Investors.GetByIdAsync(investorId)
                 ?? throw new KeyNotFoundException("Investor not found.");
 
             var project = await _unitOfWork.Projects.GetByIdAsync(dto.ProjectId)
                 ?? throw new KeyNotFoundException("Project not found.");
 
-            var deal = new Deal
-            {
-                InvestorId = investorId,
-                ProjectId = dto.ProjectId,
-                Amount = dto.Amount,
-                PaymentMethod = dto.PaymentMethod,
-                EquityPercentage = dto.EquityPercentage,
-                InvestorConfirmed = true,
-                StartupConfirmed = false,
-                Status = DealStatus.Pending,
-                DealDate = DateTime.UtcNow,
-                IsCompleted = false
-            };
+            var deal = _mapper.Map<Deal>(dto);
+            deal.InvestorId = investorId;
+            deal.InvestorConfirmed = true;
+            deal.StartupConfirmed = false;
+            deal.Status = DealStatus.Pending;
+            deal.DealDate = DateTime.UtcNow;
+            deal.IsCompleted = false;
 
             await _unitOfWork.Deals.AddAsync(deal);
             await _unitOfWork.SaveChangesAsync();
