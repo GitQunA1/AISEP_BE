@@ -16,10 +16,10 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.User != null ? src.User.UserName : null))
                 .ForMember(dest => dest.Email,
                     opt => opt.MapFrom(src => src.User != null ? src.User.Email : null))
-                .ForMember(dest => dest.Industry,
-                    opt => opt.MapFrom(src => src.AdvisorIndustries
-                        .Select(ai => ai.Industry.ToString())
-                        .FirstOrDefault()))
+                //.ForMember(dest => dest.Industry,
+                //    opt => opt.MapFrom(src => src.AdvisorIndustries
+                //        .Select(ai => ai.Industry.ToString())
+                //        .FirstOrDefault()))
                 .ForMember(dest => dest.Industries,
                     opt => opt.MapFrom(src => src.AdvisorIndustries
                         .Select(ai => ai.Industry.ToString())

@@ -5,8 +5,10 @@ using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using AISEP.BLL.Services.Email;
 using AISEP.BLL.Services.Jwt;
+using AISEP.BLL.Settings;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
 using System.Text;
 
 namespace AISEP.BLL.Services.Auth
@@ -19,6 +21,7 @@ namespace AISEP.BLL.Services.Auth
         private readonly IUnitOfWork _unitOfWork;
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
+        private readonly JwtSettings _jwtSettings;
 
         public AuthService(
             UserManager<User> userManager,
@@ -26,7 +29,8 @@ namespace AISEP.BLL.Services.Auth
             IJwtService jwtService,
             IUnitOfWork unitOfWork,
             IEmailService emailService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IOptions<JwtSettings> jwtSettings)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -34,6 +38,7 @@ namespace AISEP.BLL.Services.Auth
             _unitOfWork = unitOfWork;
             _emailService = emailService;
             _configuration = configuration;
+            _jwtSettings = jwtSettings.Value;
         }
 
         public async Task<(bool Success, string Message, int? UserId, string? Email)> RegisterAsync(RegisterRequest model)
@@ -196,7 +201,7 @@ namespace AISEP.BLL.Services.Auth
             {
                 UserId = user.Id,
                 Token = refreshToken,
-                ExpiryDate = DateTime.UtcNow.AddDays(7),
+                ExpiryDate = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays),
                 CreatedAt = DateTime.UtcNow,
                 CreatedByIp = null 
             };
@@ -209,7 +214,7 @@ namespace AISEP.BLL.Services.Auth
                 UserId = user.Id,
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
-                AccessTokenExpiration = DateTime.UtcNow.AddMinutes(15),
+                AccessTokenExpiration = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes),
                 RefreshTokenExpiration = refreshTokenEntity.ExpiryDate
 
             };
@@ -254,7 +259,7 @@ namespace AISEP.BLL.Services.Auth
             {
                 UserId = refreshTokenEntity.UserId,
                 Token = newRefreshToken,
-                ExpiryDate = DateTime.UtcNow.AddDays(7),
+                ExpiryDate = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays),
                 CreatedAt = DateTime.UtcNow,
                 CreatedByIp = null 
             };
@@ -267,7 +272,7 @@ namespace AISEP.BLL.Services.Auth
             {
                 AccessToken = newAccessToken,
                 RefreshToken = newRefreshToken,
-                AccessTokenExpiration = DateTime.UtcNow.AddMinutes(15),
+                AccessTokenExpiration = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes),
                 RefreshTokenExpiration = newRefreshTokenEntity.ExpiryDate
             };
 
