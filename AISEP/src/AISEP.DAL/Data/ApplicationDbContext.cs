@@ -297,6 +297,9 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.PaymentMethod).HasMaxLength(50);
                 entity.Property(e => e.EquityPercentage).HasColumnType("decimal(5,2)");
+                entity.Property(e => e.AdditionalTerms).HasColumnType("text");
+                entity.Property(e => e.InvestorSignature).HasColumnType("text");
+                entity.Property(e => e.StartupSignature).HasColumnType("text");
                 entity.Property(e => e.DealDate).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 entity.Property(e => e.ContractPdfUrl).HasMaxLength(500);
 

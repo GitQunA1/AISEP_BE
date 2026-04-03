@@ -1,4 +1,4 @@
-﻿using AISEP.BLL.Helpers;
+using AISEP.BLL.Helpers;
 using AISEP.DAL.Common;
 using AISEP.DAL.Data;
 using AISEP.DAL.Entities;
@@ -41,12 +41,16 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
+using QuestPDF.Infrastructure;
 using Sieve.Models;
 using Sieve.Services;
 using System.Text;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
+
+QuestPDF.Settings.License = LicenseType.Community;
+QuestPDF.Settings.EnableDebugging = true;
 
 // Add services to the container.
 builder.Services.AddControllers()
@@ -317,3 +321,5 @@ app.MapHub<NotificationHub>("/hubs/notifications");
 app.MapHub<ChatHub>("/hubs/chat");
 
 app.Run();
+
+

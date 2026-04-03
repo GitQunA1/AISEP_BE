@@ -18,11 +18,14 @@ namespace AISEP.DAL.Entities
         public DateTime DealDate { get; set; }
         public string? PaymentMethod { get; set; }
         public decimal? EquityPercentage { get; set; }
+        public string? AdditionalTerms { get; set; }
         public bool IsCompleted { get; set; }
         public DateTime? CompletionDate { get; set; }
+        public string? InvestorSignature { get; set; }
+        public string? StartupSignature { get; set; }
+        public DateTime? InvestorSignedAt { get; set; }
+        public DateTime? StartupSignedAt { get; set; }
         public string? ContractPdfUrl { get; set; }
-        public DateTime? ContractSignedAt { get; set; }
-        public int? ContractSignedByUserId { get; set; }
 
         // Navigation properties
         public Investor Investor { get; set; } = null!;

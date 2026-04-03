@@ -49,6 +49,7 @@ namespace AISEP.DAL.Repositories.Deals
                 d.ProjectId == projectId &&
                 (d.Status == DealStatus.Pending ||
                  d.Status == DealStatus.Confirmed ||
+                 d.Status == DealStatus.Waiting_For_Startup_Signature ||
                  d.Status == DealStatus.Contract_Signed ||
                  d.Status == DealStatus.Minted_NFT));
         }

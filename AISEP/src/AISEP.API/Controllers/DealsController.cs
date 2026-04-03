@@ -109,25 +109,45 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("{id:int}/contract-preview")]
-        [Authorize(Roles = "Investor")]
+        [Authorize(Roles = "Investor,Startup")]
         public async Task<IActionResult> GetContractPreview(int id)
         {
             var userId = _userService.GetUserId();
-            var investor = await _investorService.GetMyProfileAsync()
-                ?? throw new KeyNotFoundException("Investor profile not found.");
 
-            if (investor.UserId != userId)
+            if (User.IsInRole("Investor"))
             {
-                throw new UnauthorizedAccessException("Invalid investor context.");
+                var investor = await _investorService.GetMyProfileAsync()
+                    ?? throw new KeyNotFoundException("Investor profile not found.");
+
+                if (investor.UserId != userId)
+                {
+                    throw new UnauthorizedAccessException("Invalid investor context.");
+                }
+
+                var investorHtml = await _dealService.GetContractPreviewForInvestorAsync(id, investor.InvestorId);
+                return Ok(ApiResponse<object>.SuccessResponse(investorHtml, "Contract preview loaded successfully."));
             }
 
-            var html = await _dealService.GetContractPreviewAsync(id, investor.InvestorId);
-            return Ok(ApiResponse<object>.SuccessResponse(html, "Contract preview loaded successfully."));
+            if (User.IsInRole("Startup"))
+            {
+                var startup = await _startupService.GetMyProfileAsync()
+                    ?? throw new KeyNotFoundException("Startup profile not found.");
+
+                if (startup.UserId != userId)
+                {
+                    throw new UnauthorizedAccessException("Invalid startup context.");
+                }
+
+                var startupHtml = await _dealService.GetContractPreviewForStartupAsync(id, startup.Id);
+                return Ok(ApiResponse<object>.SuccessResponse(startupHtml, "Contract preview loaded successfully."));
+            }
+
+            throw new UnauthorizedAccessException("Role is not allowed to access contract preview.");
         }
 
-        [HttpPost("{id:int}/sign")]
+        [HttpPost("{id:int}/investor-sign")]
         [Authorize(Roles = "Investor")]
-        public async Task<IActionResult> SignContract(int id, [FromBody] SignContractRequestDto request)
+        public async Task<IActionResult> InvestorSignContract(int id, [FromBody] InvestorSignContractDto request)
         {
             var userId = _userService.GetUserId();
             var investor = await _investorService.GetMyProfileAsync()
@@ -138,8 +158,25 @@ namespace AISEP.API.Controllers
                 throw new UnauthorizedAccessException("Invalid investor context.");
             }
 
-            var result = await _dealService.SignAndFinalizeContractAsync(id, investor.InvestorId, userId, request);
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Contract signed successfully."));
+            var result = await _dealService.InvestorSignContractAsync(id, investor.InvestorId, request);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Investor signed contract successfully."));
+        }
+
+        [HttpPost("{id:int}/startup-sign")]
+        [Authorize(Roles = "Startup")]
+        public async Task<IActionResult> StartupSignContract(int id, [FromBody] StartupSignContractDto request)
+        {
+            var userId = _userService.GetUserId();
+            var startup = await _startupService.GetMyProfileAsync()
+                ?? throw new KeyNotFoundException("Startup profile not found.");
+
+            if (startup.UserId != userId)
+            {
+                throw new UnauthorizedAccessException("Invalid startup context.");
+            }
+
+            var result = await _dealService.StartupSignContractAsync(id, startup.Id, request);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Startup signed contract successfully."));
         }
 
         [HttpGet("{id:int}/contract-status")]
