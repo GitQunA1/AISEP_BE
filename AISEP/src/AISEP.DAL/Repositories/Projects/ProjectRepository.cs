@@ -21,6 +21,9 @@ namespace AISEP.DAL.Repositories.Projects
                 .Include(p => p.StartupAIAnalysis)
                 .Include(p => p.Followers)
                 .Include(p => p.ConnectionRequests)
+                .Include(p => p.ProjectAdvisorAssignment)
+                    .ThenInclude(pa => pa.Advisor)
+                        .ThenInclude(a => a.User)
                 .OrderBy(p => p.ProjectId)
                 .AsQueryable();
         }
@@ -32,6 +35,9 @@ namespace AISEP.DAL.Repositories.Projects
                 .Include(p => p.StartupAIAnalysis)
                 .Include(p => p.Followers)
                 .Include(p => p.ConnectionRequests)
+                .Include(p => p.ProjectAdvisorAssignment)
+                    .ThenInclude(pa => pa.Advisor)
+                        .ThenInclude(a => a.User)
                 .Where(p => p.StartupId == startupId)
                 .OrderBy(p => p.ProjectId)
                 .AsQueryable();
@@ -44,6 +50,9 @@ namespace AISEP.DAL.Repositories.Projects
                 .Include(p => p.StartupAIAnalysis)
                 .Include(p => p.Followers)
                 .Include(p => p.ConnectionRequests)
+                .Include(p => p.ProjectAdvisorAssignment)
+                    .ThenInclude(pa => pa.Advisor)
+                        .ThenInclude(a => a.User)
                 .Where(p => p.Status == status)
                 .OrderBy(p => p.ProjectId)
                 .AsQueryable();
@@ -56,6 +65,9 @@ namespace AISEP.DAL.Repositories.Projects
                 .Include(p => p.StartupAIAnalysis)
                 .Include(p => p.Followers)
                 .Include(p => p.ConnectionRequests)
+                .Include(p => p.ProjectAdvisorAssignment)
+                    .ThenInclude(pa => pa.Advisor)
+                        .ThenInclude(a => a.User)
                 .FirstOrDefaultAsync(p => p.ProjectId == id);
         }
 
