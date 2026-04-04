@@ -34,7 +34,7 @@ namespace AISEP.BLL.Services.AdvisorAvailabilities
 
         public async Task<PagedResult<AdvisorAvailabilityResponse>> GetByAdvisorIdAsync(int advisorId, SieveModel model)
         {
-            _ = await _unitOfWork.Advisors.GetByIdAsync(advisorId)
+            var advisor = await _unitOfWork.Advisors.GetByIdAsync(advisorId)
                 ?? throw new KeyNotFoundException("Advisor not found.");
 
             var query = _unitOfWork.AdvisorAvailabilities.GetQuery()

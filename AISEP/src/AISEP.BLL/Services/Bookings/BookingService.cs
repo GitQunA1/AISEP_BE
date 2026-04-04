@@ -17,7 +17,7 @@ namespace AISEP.BLL.Services.Bookings
     public class BookingService : IBookingService
     {
         private static readonly TimeSpan MinAdvanceNotice = TimeSpan.FromHours(12);
-        private static readonly TimeSpan AdvisorResponseDeadline = TimeSpan.FromMinutes(1);
+        private static readonly TimeSpan AdvisorResponseDeadline = TimeSpan.FromMinutes(5);
 
         private readonly IUnitOfWork _unitOfWork;
         private readonly ISieveProcessor _sieveProcessor;
