@@ -128,6 +128,11 @@ namespace AISEP.BLL.Services.Startups
             if (dto.BusinessLicenseFile is not null)
                 startup.BusinessLicenseUrl = await _storage.UploadFileAsync(dto.BusinessLicenseFile, "startup-licenses");
 
+            if (startup.ApprovalStatus == ApprovalStatus.Rejected)
+            {
+                startup.ApprovalStatus = ApprovalStatus.Pending;
+            }
+
             _unitOfWork.Startups.Update(startup);
             await _unitOfWork.SaveChangesAsync();
 

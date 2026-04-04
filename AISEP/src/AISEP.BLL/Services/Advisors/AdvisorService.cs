@@ -139,6 +139,11 @@ namespace AISEP.BLL.Services.Advisors
             if (dto.CertificationFile is not null)
                 advisor.Certifications = await _storage.UploadFileAsync(dto.CertificationFile, "advisor-certifications");
 
+            if (advisor.ApprovalStatus == ApprovalStatus.Rejected)
+            {
+                advisor.ApprovalStatus = ApprovalStatus.Pending;
+            }
+
             _unitOfWork.Advisors.Update(advisor);
             await _unitOfWork.SaveChangesAsync();
 

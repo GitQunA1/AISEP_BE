@@ -91,6 +91,11 @@ namespace AISEP.BLL.Services.Investors
             investor.PreferredStage      = dto.PreferredStage      ?? investor.PreferredStage;
             investor.PreviousInvestments = dto.PreviousInvestments ?? investor.PreviousInvestments;
 
+            if (investor.ApprovalStatus == ApprovalStatus.Rejected)
+            {
+                investor.ApprovalStatus = ApprovalStatus.Pending;
+            }
+
             _unitOfWork.Investors.Update(investor);
             await _unitOfWork.SaveChangesAsync();
 
