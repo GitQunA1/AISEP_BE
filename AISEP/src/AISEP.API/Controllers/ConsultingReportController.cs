@@ -3,6 +3,7 @@ using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.ConsultingReports;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Sieve.Models;
 
 namespace AISEP.API.Controllers
 {
@@ -16,6 +17,14 @@ namespace AISEP.API.Controllers
         public ConsultingReportController(IConsultingReportService consultingReportService)
         {
             _consultingReportService = consultingReportService;
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Staff,Admin")]
+        public async Task<IActionResult> GetAll([FromQuery] SieveModel model)
+        {
+            var result = await _consultingReportService.GetAllAsync(model);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
         }
 
         [HttpPost]

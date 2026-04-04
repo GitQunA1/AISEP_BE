@@ -108,10 +108,18 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.Booking.Advisor != null && src.Booking.Advisor.User != null
                         ? src.Booking.Advisor.User.UserName
                         : "Unknown"))
+                .ForMember(dest => dest.AdvisorFullName,
+                    opt => opt.MapFrom(src => src.Booking.Advisor != null && src.Booking.Advisor.User != null
+                        ? src.Booking.Advisor.User.FullName ?? string.Empty
+                        : string.Empty))
                 .ForMember(dest => dest.CustomerName,
                     opt => opt.MapFrom(src => src.Booking.Customer != null
                         ? src.Booking.Customer.UserName
-                        : "Unknown"));
+                        : "Unknown"))
+                .ForMember(dest => dest.CustomerFullName,
+                    opt => opt.MapFrom(src => src.Booking.Customer != null
+                        ? src.Booking.Customer.FullName ?? string.Empty
+                        : string.Empty));
 
             // User Entity → UserResponse
             CreateMap<User, UserResponse>()
