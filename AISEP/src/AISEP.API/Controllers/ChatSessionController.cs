@@ -1,9 +1,7 @@
 using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.Chats;
-using AISEP.API.Hubs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 
 namespace AISEP.API.Controllers
 {
@@ -13,14 +11,11 @@ namespace AISEP.API.Controllers
     public class ChatSessionController : ControllerBase
     {
         private readonly IChatSessionService _chatSessionService;
-        private readonly IHubContext<ChatHub> _chatHubContext;
 
         public ChatSessionController(
-            IChatSessionService chatSessionService,
-            IHubContext<ChatHub> chatHubContext)
+            IChatSessionService chatSessionService)
         {
             _chatSessionService = chatSessionService;
-            _chatHubContext = chatHubContext;
         }
 
         [HttpPost("{bookingId:int}")]
@@ -55,25 +50,6 @@ namespace AISEP.API.Controllers
         {
             var sessions = await _chatSessionService.GetMySessionsAsync();
             return Ok(ApiResponse<object>.SuccessResponse(sessions, "Success"));
-        }
-
-        [HttpPatch("{sessionId:int}/close")]
-        public async Task<IActionResult> CloseSession(int sessionId)
-        {
-            var closed = await _chatSessionService.CloseSessionAsync(sessionId);
-            if (!closed)
-            {
-                return BadRequest(ApiResponse<object>.ErrorResponse(
-                    "Cannot close session. Session does not exist or you do not have permission.",
-                    "Bad request",
-                    400));
-            }
-
-            await _chatHubContext.Clients
-                .Group($"chat_session_{sessionId}")
-                .SendAsync(ChatHub.ClientMethodSessionClosed, new { sessionId });
-
-            return Ok(ApiResponse<object>.SuccessResponse(null!, "Session closed."));
         }
     }
 }
