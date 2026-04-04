@@ -392,7 +392,7 @@ namespace AISEP.DAL.Data
                 entity.ToTable("booking_slots");
                 entity.HasKey(e => e.BookingSlotId);
                 entity.HasIndex(e => new { e.BookingId, e.AdvisorAvailabilityId }).IsUnique();
-                entity.HasIndex(e => e.AdvisorAvailabilityId).IsUnique();
+                entity.HasIndex(e => e.AdvisorAvailabilityId);
 
                 entity.HasOne(bs => bs.Booking)
                     .WithMany(b => b.BookingSlots)
