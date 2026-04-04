@@ -1,12 +1,15 @@
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.BLL.Exceptions;
+using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.Users;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Sieve.Models;
+using Sieve.Services;
 
 namespace AISEP.BLL.Services.ConsultingReports
 {
@@ -20,12 +23,18 @@ namespace AISEP.BLL.Services.ConsultingReports
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserService _userService;
         private readonly IMapper _mapper;
+        private readonly ISieveProcessor _sieveProcessor;
 
-        public ConsultingReportService(IUnitOfWork unitOfWork, IUserService userService, IMapper mapper)
+        public ConsultingReportService(
+            IUnitOfWork unitOfWork,
+            IUserService userService,
+            IMapper mapper,
+            ISieveProcessor sieveProcessor)
         {
             _unitOfWork = unitOfWork;
             _userService = userService;
             _mapper = mapper;
+            _sieveProcessor = sieveProcessor;
         }
 
         public async Task<ConsultingReportResponse> CreateAsync(CreateConsultingReportRequest request)
@@ -89,6 +98,16 @@ namespace AISEP.BLL.Services.ConsultingReports
                 ?? throw new InvalidOperationException("Failed to load consulting report.");
 
             return _mapper.Map<ConsultingReportResponse>(created);
+        }
+
+        public async Task<PagedResult<ConsultingReportResponse>> GetAllAsync(SieveModel model)
+        {
+            var query = _unitOfWork.ConsultingReports.GetQuery();
+            return await PaginationHelper.PaginateAsync(
+                query,
+                model,
+                _sieveProcessor,
+                x => _mapper.Map<ConsultingReportResponse>(x));
         }
 
         public async Task<ConsultingReportResponse?> GetByIdAsync(int id)

@@ -23,7 +23,9 @@ namespace AISEP.BLL.DTOs.Responses
         public DateTime CreatedAt { get; set; }
         public int AdvisorId { get; set; }
         public string AdvisorName { get; set; } = string.Empty;
+        public string AdvisorFullName { get; set; } = string.Empty;
         public int CustomerId { get; set; }
         public string CustomerName { get; set; } = string.Empty;
+        public string CustomerFullName { get; set; } = string.Empty;
     }
 }
