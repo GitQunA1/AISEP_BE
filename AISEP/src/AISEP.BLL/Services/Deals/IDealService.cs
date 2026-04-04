@@ -15,6 +15,7 @@ namespace AISEP.BLL.Services.Deals
         Task<string> GetContractPreviewForStartupAsync(int dealId, int startupId);
         Task<DealContractStatusResponse> InvestorSignContractAsync(int dealId, int investorId, InvestorSignContractDto request);
         Task<DealContractStatusResponse> StartupSignContractAsync(int dealId, int startupId, StartupSignContractDto request);
+        Task<DealContractStatusResponse> StartupRejectContractAsync(int dealId, int startupId, StartupRejectContractDto request);
         Task<DealContractStatusResponse> GetContractStatusForInvestorAsync(int dealId, int investorId);
         Task<DealContractStatusResponse> GetContractStatusForStartupAsync(int dealId, int startupId);
         Task<DealDto> MintNftForDealAsync(int dealId, MintNftRequestDto request);

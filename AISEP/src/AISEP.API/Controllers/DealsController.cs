@@ -179,6 +179,23 @@ namespace AISEP.API.Controllers
             return Ok(ApiResponse<object>.SuccessResponse(result, "Startup signed contract successfully."));
         }
 
+        [HttpPatch("{id:int}/startup-reject")]
+        [Authorize(Roles = "Startup")]
+        public async Task<IActionResult> StartupRejectContract(int id, [FromBody] StartupRejectContractDto request)
+        {
+            var userId = _userService.GetUserId();
+            var startup = await _startupService.GetMyProfileAsync()
+                ?? throw new KeyNotFoundException("Startup profile not found.");
+
+            if (startup.UserId != userId)
+            {
+                throw new UnauthorizedAccessException("Invalid startup context.");
+            }
+
+            var result = await _dealService.StartupRejectContractAsync(id, startup.Id, request);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Startup rejected contract successfully."));
+        }
+
         [HttpGet("{id:int}/contract-status")]
         [Authorize(Roles = "Investor,Startup")]
         public async Task<IActionResult> GetContractStatus(int id)
