@@ -8,6 +8,7 @@ using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Sieve.Models;
 using Sieve.Services;
 
@@ -40,6 +41,9 @@ namespace AISEP.BLL.Services.Bookings
 
         public async Task<BookingResponse?> CreateBookingAsync(CreateBookingRequest dto)
         {
+            if (dto.AdvisorAvailabilitySlotIds is null || dto.AdvisorAvailabilitySlotIds.Count == 0)
+                throw new InvalidOperationException("At least one slot must be selected.");
+
             var currentUser = _currentUserService.GetUserId();
             var currentRole = _currentUserService.GetUserRole();
             var advisor = await _unitOfWork.Advisors.GetByIdAsync(dto.AdvisorId)
@@ -101,8 +105,12 @@ namespace AISEP.BLL.Services.Bookings
                     throw new InvalidOperationException("Selected slots must be consecutive in time.");
             }
 
-            var bookingStart = selectedSlots[0].SlotDate.Date.Add(selectedSlots[0].StartTime.ToTimeSpan());
-            var bookingEnd = selectedSlots[^1].SlotDate.Date.Add(selectedSlots[^1].EndTime.ToTimeSpan());
+            var bookingStart = DateTime.SpecifyKind(
+                selectedSlots[0].SlotDate.Date.Add(selectedSlots[0].StartTime.ToTimeSpan()),
+                DateTimeKind.Utc);
+            var bookingEnd = DateTime.SpecifyKind(
+                selectedSlots[^1].SlotDate.Date.Add(selectedSlots[^1].EndTime.ToTimeSpan()),
+                DateTimeKind.Utc);
             if (bookingStart < DateTime.UtcNow.Add(MinAdvanceNotice))
                 throw new InvalidOperationException("Bookings must be made at least 12 hours in advance.");
 
@@ -130,23 +138,48 @@ namespace AISEP.BLL.Services.Bookings
                 booking.Price = Math.Round(hourlyRate * selectedSlots.Count, 2, MidpointRounding.AwayFromZero);
             }
 
-            await _unitOfWork.Bookings.AddAsync(booking);
-            await _unitOfWork.SaveChangesAsync();
-
-            foreach (var slot in selectedSlots)
+            try
             {
-                slot.Status = AdvisorAvailabilityStatus.Booked;
-                slot.UpdatedAt = DateTime.UtcNow;
-                _unitOfWork.AdvisorAvailabilities.Update(slot);
+                await _unitOfWork.Bookings.AddAsync(booking);
+                await _unitOfWork.SaveChangesAsync();
+
+                foreach (var slot in selectedSlots)
+                {
+                    slot.Status = AdvisorAvailabilityStatus.Booked;
+                    slot.UpdatedAt = DateTime.UtcNow;
+                    _unitOfWork.AdvisorAvailabilities.Update(slot);
+                }
+
+                await _unitOfWork.BookingSlots.AddRangeAsync(selectedSlots.Select(slot => new BookingSlot
+                {
+                    BookingId = booking.BookingId,
+                    AdvisorAvailabilityId = slot.AdvisorAvailabilityId
+                }));
+
+                await _unitOfWork.SaveChangesAsync();
             }
-
-            await _unitOfWork.BookingSlots.AddRangeAsync(selectedSlots.Select(slot => new BookingSlot
+            catch (DbUpdateException ex) when (ex.InnerException is PostgresException pgEx)
             {
-                BookingId = booking.BookingId,
-                AdvisorAvailabilityId = slot.AdvisorAvailabilityId
-            }));
+                if (pgEx.ConstraintName?.Contains("IX_booking_slots_AdvisorAvailabilityId", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    throw new InvalidOperationException(
+                        "Database still has unique index on booking_slots.AdvisorAvailabilityId. Please run latest migration/update DB.");
+                }
 
-            await _unitOfWork.SaveChangesAsync();
+                if (pgEx.SqlState == PostgresErrorCodes.UniqueViolation)
+                {
+                    throw new InvalidOperationException(
+                        $"Unique constraint violated while creating booking (constraint: {pgEx.ConstraintName ?? "unknown"}).");
+                }
+
+                throw new InvalidOperationException(
+                    $"Database error while creating booking (SQLSTATE: {pgEx.SqlState}).");
+            }
+            catch (DbUpdateException)
+            {
+                throw new InvalidOperationException(
+                    "Database update failed while creating booking. Please check database schema/migrations.");
+            }
 
             var createdBooking = await _unitOfWork.Bookings.GetByIdAsync(booking.BookingId);
             return createdBooking != null ? _mapper.Map<BookingResponse>(createdBooking) : null;
