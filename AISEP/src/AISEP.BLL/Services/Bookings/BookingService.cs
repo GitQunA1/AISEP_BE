@@ -255,15 +255,25 @@ namespace AISEP.BLL.Services.Bookings
             return await PaginationHelper.PaginateAsync(query, sieveModel, _sieveProcessor, b => _mapper.Map<BookingResponse>(b));
         }
 
-        public async Task<BookingResponse?> GetMyBookingAsync()
+        public async Task<PagedResult<BookingResponse>> GetMyCustomerBookingsAsync(SieveModel sieveModel)
         {
             var currentUserId = _currentUserService.GetUserId();
-            var booking = _unitOfWork.Bookings.GetBookingQuery()
-                .Where(b => b.CustomerId == currentUserId)
-                .OrderByDescending(b => b.BookingId)
-                .FirstOrDefault();
+            var query = _unitOfWork.Bookings.GetBookingQuery()
+                .Where(b => b.CustomerId == currentUserId);
 
-            return await Task.FromResult(booking != null ? _mapper.Map<BookingResponse>(booking) : null);
+            return await PaginationHelper.PaginateAsync(query, sieveModel, _sieveProcessor, b => _mapper.Map<BookingResponse>(b));
+        }
+
+        public async Task<PagedResult<BookingResponse>> GetMyAdvisorBookingsAsync(SieveModel sieveModel)
+        {
+            var currentUserId = _currentUserService.GetUserId();
+            var advisor = await _unitOfWork.Advisors.GetByUserIdAsync(currentUserId)
+                ?? throw new KeyNotFoundException("Advisor profile not found for this account.");
+
+            var query = _unitOfWork.Bookings.GetBookingQuery()
+                .Where(b => b.AdvisorId == advisor.AdvisorId);
+
+            return await PaginationHelper.PaginateAsync(query, sieveModel, _sieveProcessor, b => _mapper.Map<BookingResponse>(b));
         }
 
         public async Task<PagedResult<BookingResponse>> GetBookingsByAdvisorIdAsync(int advisorId, SieveModel sieveModel)

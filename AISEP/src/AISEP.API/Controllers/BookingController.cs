@@ -48,6 +48,23 @@ namespace AISEP.API.Controllers
             var bookings = await _bookingService.GetAllBookingsAsync(model);
             return Ok(ApiResponse<object>.SuccessResponse(bookings, "Success"));
         }
+
+        [HttpGet("me/customer")]
+        [Authorize(Roles = "Investor,Startup")]
+        public async Task<IActionResult> GetMyCustomerBookings([FromQuery] SieveModel model)
+        {
+            var bookings = await _bookingService.GetMyCustomerBookingsAsync(model);
+            return Ok(ApiResponse<object>.SuccessResponse(bookings, "Success"));
+        }
+
+        [HttpGet("me/advisor")]
+        [Authorize(Roles = "Advisor")]
+        public async Task<IActionResult> GetMyAdvisorBookings([FromQuery] SieveModel model)
+        {
+            var bookings = await _bookingService.GetMyAdvisorBookingsAsync(model);
+            return Ok(ApiResponse<object>.SuccessResponse(bookings, "Success"));
+        }
+
         //Trả danh sách project để dropdown booking.
         [HttpGet("project-options")]
         [Authorize(Roles = "Investor,Startup")]
