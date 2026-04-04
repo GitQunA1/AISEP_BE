@@ -12,6 +12,7 @@ using Nethereum.ABI.FunctionEncoding;
 using Sieve.Models;
 using Sieve.Services;
 using AISEP.BLL.Services.Users;
+using AISEP.BLL.Services.ProjectAdvisorAssignments;
 
 namespace AISEP.BLL.Services.Documents
 {
@@ -23,6 +24,7 @@ namespace AISEP.BLL.Services.Documents
         private readonly ISieveProcessor _sieveProcessor;
         private readonly IMapper _mapper;
         private readonly IUserService _currentUserService;
+        private readonly IProjectAdvisorAutoAssignService _projectAdvisorAutoAssignService;
 
         public DocumentService(
             IUnitOfWork unitOfWork,
@@ -30,7 +32,8 @@ namespace AISEP.BLL.Services.Documents
             IBlockchainService blockchainService,
             ISieveProcessor sieveProcessor,
             IMapper mapper,
-            IUserService currentUserService
+            IUserService currentUserService,
+            IProjectAdvisorAutoAssignService projectAdvisorAutoAssignService
             )
         {
             _unitOfWork = unitOfWork;
@@ -39,6 +42,7 @@ namespace AISEP.BLL.Services.Documents
             _sieveProcessor = sieveProcessor;
             _mapper = mapper;
             _currentUserService = currentUserService;
+            _projectAdvisorAutoAssignService = projectAdvisorAutoAssignService;
         }
 
         public async Task<DocumentResponse> UploadDocumentAsync(int projectId, int userId, UploadDocumentRequest request)
@@ -253,112 +257,10 @@ namespace AISEP.BLL.Services.Documents
             project.ApprovedById = userId;
             _unitOfWork.Projects.Update(project);
 
-            await AutoAssignAdvisorAsync(project);
+            await _projectAdvisorAutoAssignService.TryAssignAdvisorAsync(project);
             await _unitOfWork.SaveChangesAsync();
 
             return _mapper.Map<DocumentResponse>(document);
         }
-
-        private async Task AutoAssignAdvisorAsync(Project project)
-        {
-            var advisorCandidates = await _unitOfWork.Advisors.GetAllQuery()
-                .Where(a => a.ApprovalStatus == ApprovalStatus.Approved
-                            && a.AdvisorIndustries.Any(ai => ai.Industry == project.Industry))
-                .Select(a => new
-                {
-                    Advisor = a,
-                    AssignedProjectCount = a.ProjectAdvisorAssignments.Count
-                })
-                .ToListAsync();
-
-            if (advisorCandidates.Count == 0)
-            {
-                return;
-            }
-
-            var advisorIds = advisorCandidates.Select(x => x.Advisor.AdvisorId).ToList();
-            var advisors = advisorCandidates
-                .Select(x => x.Advisor)
-                .ToList();
-
-            if (advisors.Count == 0)
-            {
-                return;
-            }
-
-            var today = DateTime.UtcNow.Date;
-            var weekEndExclusive = today.AddDays(7);
-
-            var availableCounts = await _unitOfWork.AdvisorAvailabilities.GetQuery()
-                .Where(x => advisorIds.Contains(x.AdvisorId)
-                            && x.Status == AdvisorAvailabilityStatus.Available
-                            && x.SlotDate >= today
-                            && x.SlotDate < weekEndExclusive)
-                .GroupBy(x => x.AdvisorId)
-                .Select(g => new { AdvisorId = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(x => x.AdvisorId, x => x.Count);
-
-            var rejectedCounts = await _unitOfWork.Bookings.GetBookingQuery()
-                .Where(b => advisorIds.Contains(b.AdvisorId)
-                            && b.Status == BookingStatus.Cancel
-                            && b.Note != null
-                            && b.Note.Contains("[Advisor Reject]"))
-                .GroupBy(b => b.AdvisorId)
-                .Select(g => new { AdvisorId = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(x => x.AdvisorId, x => x.Count);
-
-            var noResponseCounts = await _unitOfWork.Bookings.GetBookingQuery()
-                .Where(b => advisorIds.Contains(b.AdvisorId)
-                            && b.Status == BookingStatus.NoResponse)
-                .GroupBy(b => b.AdvisorId)
-                .Select(g => new { AdvisorId = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(x => x.AdvisorId, x => x.Count);
-
-            var rankedCandidates = advisorCandidates
-                .Select(x =>
-                {
-                    var advisorId = x.Advisor.AdvisorId;
-                    var availability = availableCounts.GetValueOrDefault(advisorId, 0);
-                    var rejected = rejectedCounts.GetValueOrDefault(advisorId, 0);
-                    var noResponse = noResponseCounts.GetValueOrDefault(advisorId, 0);
-                    var rating = (double)(x.Advisor.Rating ?? 0);
-                    var score = availability - (rejected * 2) - (noResponse * 3) + (rating * 0.5);
-
-                    return new
-                    {
-                        AdvisorId = advisorId,
-                        AssignedProjectCount = x.AssignedProjectCount,
-                        Score = score,
-                        availability,
-                        rejected,
-                        noResponse
-                    };
-                });
-
-            var bestAdvisor = rankedCandidates
-                .OrderBy(x => x.AssignedProjectCount)
-                .ThenByDescending(x => x.Score)
-                .ThenByDescending(x => x.availability)
-                .ThenBy(x => x.noResponse)
-                .ThenBy(x => x.rejected)
-                .First();
-
-            var existingAssignment = await _unitOfWork.ProjectAdvisorAssignments.GetByProjectIdAsync(project.ProjectId);
-            if (existingAssignment is null)
-            {
-                await _unitOfWork.ProjectAdvisorAssignments.AddAsync(new ProjectAdvisorAssignment
-                {
-                    ProjectId = project.ProjectId,
-                    AdvisorId = bestAdvisor.AdvisorId,
-                    AssignedAt = DateTime.UtcNow
-                });
-                return;
-            }
-
-            existingAssignment.AdvisorId = bestAdvisor.AdvisorId;
-            existingAssignment.AssignedAt = DateTime.UtcNow;
-            _unitOfWork.ProjectAdvisorAssignments.Update(existingAssignment);
-        }
-
     }
 }

@@ -238,6 +238,7 @@ builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IProjectFollowerService, ProjectFollowerService>();
 builder.Services.AddScoped<IProjectAdvisorAssignmentService, ProjectAdvisorAssignmentService>();
+builder.Services.AddScoped<IProjectAdvisorAutoAssignService, ProjectAdvisorAutoAssignService>();
 builder.Services.AddScoped<IStartupService, StartupService>();
 builder.Services.AddScoped<IInvestorService, InvestorService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
@@ -258,6 +259,7 @@ builder.Services.AddScoped<INotificationRealtimePublisher, SignalRNotificationRe
 builder.Services.AddHostedService<SubscriptionExpiryBackgroundService>();
 builder.Services.AddHostedService<BookingResponseExpiryBackgroundService>();
 builder.Services.AddHostedService<ConsultingReportDeadlineBackgroundService>();
+builder.Services.AddHostedService<ProjectAdvisorAutoAssignBackgroundService>();
 
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>
