@@ -91,8 +91,7 @@ namespace AISEP.BLL.Services.Email
                             <div style='text-align: center;'>
                                 <a href='{confirmationLink}' class='button'>✅ Xác thực Email</a>
                             </div>
-                            <p>Hoặc bạn có thể copy và paste link sau vào trình duyệt:</p>
-                            <div class='code-box'>{confirmationLink}</div>
+
                             <div class='warning'>
                                 <strong>⚠️ Lưu ý quan trọng:</strong>
                                 <ul style='margin: 10px 0; padding-left: 20px;'>
