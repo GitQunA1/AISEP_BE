@@ -67,7 +67,7 @@ namespace AISEP.BLL.Services.Advisors
             advisor.UserId     = userId;
             advisor.ProfileImage   = await UploadIfPresent(dto.ProfileImageFile,  "advisor-profiles");
             advisor.Certifications = await UploadIfPresent(dto.CertificationFile, "advisor-certifications");
-            var industries = ResolveRequestedIndustries(dto.Industries, dto.Industry);
+            var industries = ResolveRequestedIndustries(dto.Industries);
             if (industries.Count == 0)
                 throw new InvalidOperationException("At least one industry is required.");
 
@@ -100,10 +100,10 @@ namespace AISEP.BLL.Services.Advisors
             advisor.Location           = string.IsNullOrWhiteSpace(dto.Location)           ? advisor.Location           : dto.Location;
             advisor.HourlyRate         = (dto.HourlyRate > 0) ? dto.HourlyRate : advisor.HourlyRate;
 
-            var hasIndustryUpdate = dto.Industries is not null || dto.Industry.HasValue;
+            var hasIndustryUpdate = dto.Industries is not null;
             if (hasIndustryUpdate)
             {
-                var requestedIndustries = ResolveRequestedIndustries(dto.Industries, dto.Industry).ToHashSet();
+                var requestedIndustries = ResolveRequestedIndustries(dto.Industries).ToHashSet();
                 if (requestedIndustries.Count == 0)
                     throw new InvalidOperationException("At least one industry is required.");
 
@@ -199,18 +199,13 @@ namespace AISEP.BLL.Services.Advisors
         private async Task<string?> UploadIfPresent(IFormFile? file, string folder)
             => file is not null ? await _storage.UploadFileAsync(file, folder) : null;
 
-        private static List<Industry> ResolveRequestedIndustries(List<Industry>? industries, Industry? legacyIndustry)
+        private static List<Industry> ResolveRequestedIndustries(List<Industry>? industries)
         {
             var merged = new List<Industry>();
 
             if (industries is not null && industries.Count > 0)
             {
                 merged.AddRange(industries);
-            }
-
-            if (legacyIndustry.HasValue)
-            {
-                merged.Add(legacyIndustry.Value);
             }
 
             return merged.Distinct().ToList();
