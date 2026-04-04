@@ -139,6 +139,8 @@ namespace AISEP.BLL.Services.Chats
             AdvisorName   = s.Booking?.Advisor?.User is null
                 ? string.Empty
                 : (s.Booking.Advisor.User.UserName ?? string.Empty),
+            AdvisorUsername = s.Booking?.Advisor?.User?.UserName ?? string.Empty,
+            AdvisorFullName = s.Booking?.Advisor?.User?.FullName ?? string.Empty,
             CustomerName  = s.Booking?.Customer is null
                 ? string.Empty
                 : (s.Booking.Customer.UserName ?? string.Empty),

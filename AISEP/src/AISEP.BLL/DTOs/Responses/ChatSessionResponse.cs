@@ -11,6 +11,8 @@ namespace AISEP.BLL.DTOs.Responses
         public DateTime? EndTime { get; set; }
 
         public string AdvisorName { get; set; } = string.Empty;
+        public string AdvisorUsername { get; set; } = string.Empty;
+        public string AdvisorFullName { get; set; } = string.Empty;
         public string CustomerName { get; set; } = string.Empty;
         public string StartupName { get; set; } = string.Empty;
         public string InvestorName { get; set; } = string.Empty;
