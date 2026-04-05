@@ -23,7 +23,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("packages/investor")]
-        [Authorize(Roles = "Investor")]
+        [Authorize(Roles = "Investor,Staff,Admin")]
         public async Task<IActionResult> GetInvestorPackages()
         {
             var result = await _paymentService.GetInvestorPackagesAsync();
@@ -31,7 +31,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("packages/startup")]
-        [Authorize(Roles = "Startup")]
+        [Authorize(Roles = "Startup,Staff,Admin")]
         public async Task<IActionResult> GetStartupPackages()
         {
             var result = await _paymentService.GetStartupPackagesAsync();
@@ -91,7 +91,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("bookings/{bookingId:int}/status")]
-        [Authorize(Roles = "Investor,Startup")]
+        [Authorize(Roles = "Investor,Startup,Staff,Admin")]
         public async Task<IActionResult> GetBookingPaymentStatus(int bookingId)
         {
             try
@@ -111,7 +111,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("bookings/transactions")]
-        [Authorize(Roles = "Investor,Startup")]
+        [Authorize(Roles = "Investor,Startup,Staff,Admin")]
         public async Task<IActionResult> GetBookingPaymentTransactions([FromQuery] SieveModel model)
         {
             var userId = _currentUserService.GetUserId();

@@ -33,7 +33,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Investor,Startup")]
+        [Authorize(Roles = "Investor,Startup,Staff,Admin")]
         public async Task<IActionResult> GetDeals([FromQuery] SieveModel model)
         {
             var userId = _userService.GetUserId();
@@ -109,7 +109,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("{id:int}/contract-preview")]
-        [Authorize(Roles = "Investor,Startup")]
+        [Authorize(Roles = "Investor,Startup,Staff,Admin")]
         public async Task<IActionResult> GetContractPreview(int id)
         {
             var userId = _userService.GetUserId();
@@ -197,7 +197,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("{id:int}/contract-status")]
-        [Authorize(Roles = "Investor,Startup")]
+        [Authorize(Roles = "Investor,Startup,Staff,Admin")]
         public async Task<IActionResult> GetContractStatus(int id)
         {
             var userId = _userService.GetUserId();

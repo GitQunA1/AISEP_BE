@@ -8,7 +8,7 @@ namespace AISEP.API.Controllers
 {
     [ApiController]
     [Route("api/projects")]
-    [Authorize(Roles = "Startup,Investor")]
+    [Authorize]
     public class ProjectFollowerController : ControllerBase
     {
         private readonly IProjectFollowerService _followerService;
@@ -19,6 +19,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpPost("{projectId:int}/follow")]
+        [Authorize(Roles = "Startup,Investor")]
         public async Task<IActionResult> FollowProject(int projectId)
         {
             var result = await _followerService.FollowProjectAsync(projectId);
@@ -31,6 +32,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpDelete("{projectId:int}/follow")]
+        [Authorize(Roles = "Startup,Investor")]
         public async Task<IActionResult> UnfollowProject(int projectId)
         {
             var result = await _followerService.UnfollowProjectAsync(projectId);
@@ -43,6 +45,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("my-followed")]
+        [Authorize(Roles = "Startup,Investor,Staff,Admin")]
         public async Task<IActionResult> GetMyFollowedProjects([FromQuery] SieveModel model)
         {
             var result = await _followerService.GetMyFollowedProjectsAsync(model);

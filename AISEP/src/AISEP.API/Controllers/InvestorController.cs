@@ -43,7 +43,7 @@ namespace AISEP.API.Controllers
        
      
         [HttpGet("me")]
-        [Authorize(Roles ="Investor")]
+        [Authorize(Roles = "Investor,Staff,Admin")]
         public async Task<IActionResult> GetMyProfile()
         {
             try
