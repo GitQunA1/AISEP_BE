@@ -7,5 +7,6 @@ namespace AISEP.DAL.Repositories.UserReports
         Task<UserReport?> GetByIdAsync(int id);
         Task AddAsync(UserReport report);
         void Update(UserReport report);
+        IQueryable<UserReport> GetAll();
     }
 }

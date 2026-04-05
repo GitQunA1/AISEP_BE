@@ -27,5 +27,10 @@ namespace AISEP.DAL.Repositories.UserReports
         {
             _context.UserReports.Update(report);
         }
+
+        public IQueryable<UserReport> GetAll()
+        {
+            return _context.UserReports.Include(r => r.ReportedUser).Include(r => r.Reporter).AsQueryable();
+        }
     }
 }

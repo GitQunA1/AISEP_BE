@@ -1,11 +1,15 @@
-using System.Text.Json;
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
+using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.Storage;
 using AISEP.BLL.Services.Users;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
+using AutoMapper;
+using Sieve.Models;
+using Sieve.Services;
+using System.Text.Json;
 
 namespace AISEP.BLL.Services.UserReports
 {
@@ -14,15 +18,21 @@ namespace AISEP.BLL.Services.UserReports
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserService _userService;
         private readonly IStorageService _storageService;
+        private readonly ISieveProcessor _sieveProcessor;
+        private readonly IMapper _mapper;
 
         public UserReportService(
             IUnitOfWork unitOfWork,
             IUserService userService,
-            IStorageService storageService)
+            IStorageService storageService,
+            ISieveProcessor sieveProcessor,
+            IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             _userService = userService;
             _storageService = storageService;
+            _sieveProcessor = sieveProcessor;
+            _mapper = mapper;
         }
 
         public async Task<UserReportResponse> CreateAsync(CreateUserReportRequest request)
@@ -49,27 +59,20 @@ namespace AISEP.BLL.Services.UserReports
                 }
             }
 
-            var report = new UserReport
-            {
-                ReporterId = reporterId,
-                ReportedUserId = request.ReportedUserId,
-                Category = request.Category,
-                Reason = request.Description.Trim(),
-                EvidenceImageUrls = uploadedImageUrls.Count == 0
-                    ? null
-                    : JsonSerializer.Serialize(uploadedImageUrls),
-                EvidenceUrl = uploadedImageUrls.FirstOrDefault(), // legacy field for compatibility
-                VideoEvidenceUrl = string.IsNullOrWhiteSpace(request.VideoEvidenceUrl)
-                    ? null
-                    : request.VideoEvidenceUrl.Trim(),
-                Status = UserReportStatus.Pending,
-                CreatedAt = DateTime.UtcNow
-            };
+            var report = _mapper.Map<UserReport>(request);
+            report.ReporterId = reporterId;
+            report.Reason = request.Description.Trim();
+            report.EvidenceImageUrls = uploadedImageUrls.Count == 0
+                ? null
+                : JsonSerializer.Serialize(uploadedImageUrls);
+            report.EvidenceUrl = uploadedImageUrls.FirstOrDefault(); // legacy field for compatibility
+            report.Status = UserReportStatus.Pending;
+            report.CreatedAt = DateTime.UtcNow;
 
             await _unitOfWork.UserReports.AddAsync(report);
             await _unitOfWork.SaveChangesAsync();
 
-            return MapResponse(report);
+            return _mapper.Map<UserReportResponse>(report);
         }
 
         public async Task<UserReportResponse> ResolveAsValidAsync(int reportId)
@@ -99,46 +102,41 @@ namespace AISEP.BLL.Services.UserReports
             _unitOfWork.UserReports.Update(report);
             await _unitOfWork.SaveChangesAsync();
 
-            return MapResponse(report);
+            return _mapper.Map<UserReportResponse>(report);
         }
 
-        private static UserReportResponse MapResponse(UserReport report)
+        public async Task<PagedResult<UserReportResponse>> GetUserReports(SieveModel sieveModel)
         {
-            return new UserReportResponse
-            {
-                UserReportId = report.UserReportId,
-                ReporterId = report.ReporterId,
-                ReportedUserId = report.ReportedUserId,
-                Category = report.Category.ToString(),
-                Description = report.Reason,
-                EvidenceImageUrls = ParseEvidenceImageUrls(report.EvidenceImageUrls, report.EvidenceUrl),
-                VideoEvidenceUrl = report.VideoEvidenceUrl,
-                Status = report.Status.ToString(),
-                CreatedAt = report.CreatedAt
-            };
+            //return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, s => _mapper.Map<StartupResponse>(s));
+            var query = _unitOfWork.UserReports.GetAll();
+            return await PaginationHelper.PaginateAsync(query, sieveModel, _sieveProcessor, s=> _mapper.Map<UserReportResponse>(s));
+
         }
 
-        private static List<string> ParseEvidenceImageUrls(string? evidenceImageUrlsJson, string? legacyEvidenceUrl)
+        public async Task<PagedResult<UserReportResponse>> GetMyReportsAsReporterAsync(SieveModel sieveModel)
         {
-            if (!string.IsNullOrWhiteSpace(evidenceImageUrlsJson))
-            {
-                try
-                {
-                    var urls = JsonSerializer.Deserialize<List<string>>(evidenceImageUrlsJson);
-                    if (urls is not null && urls.Count > 0)
-                    {
-                        return urls;
-                    }
-                }
-                catch
-                {
-                    // fallback to legacy url
-                }
-            }
+            var currentUserId = _userService.GetUserId();
+            var query = _unitOfWork.UserReports.GetAll()
+                .Where(x => x.ReporterId == currentUserId);
 
-            return string.IsNullOrWhiteSpace(legacyEvidenceUrl)
-                ? []
-                : [legacyEvidenceUrl];
+            return await PaginationHelper.PaginateAsync(
+                query,
+                sieveModel,
+                _sieveProcessor,
+                x => _mapper.Map<UserReportResponse>(x));
+        }
+
+        public async Task<PagedResult<UserReportResponse>> GetMyReportsAsReportedUserAsync(SieveModel sieveModel)
+        {
+            var currentUserId = _userService.GetUserId();
+            var query = _unitOfWork.UserReports.GetAll()
+                .Where(x => x.ReportedUserId == currentUserId);
+
+            return await PaginationHelper.PaginateAsync(
+                query,
+                sieveModel,
+                _sieveProcessor,
+                x => _mapper.Map<UserReportResponse>(x));
         }
     }
 }
