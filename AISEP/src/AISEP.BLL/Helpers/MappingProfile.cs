@@ -3,6 +3,7 @@ using AutoMapper;
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.DAL.Entities;
+using System.Text.Json;
 
 namespace AISEP.BLL.Helpers
 {
@@ -490,6 +491,55 @@ namespace AISEP.BLL.Helpers
 
             // Startup Entity -> ContactInfoDto
             CreateMap<Startup, ContactInfoDto>();
+
+            // CreateUserReportRequest -> UserReport Entity
+            CreateMap<CreateUserReportRequest, UserReport>()
+                .ForMember(dest => dest.UserReportId, opt => opt.Ignore())
+                .ForMember(dest => dest.ReporterId, opt => opt.Ignore())
+                .ForMember(dest => dest.Reason, opt => opt.MapFrom(src => src.Description))
+                .ForMember(dest => dest.EvidenceUrl, opt => opt.Ignore())
+                .ForMember(dest => dest.EvidenceImageUrls, opt => opt.Ignore())
+                .ForMember(dest => dest.VideoEvidenceUrl, opt => opt.MapFrom(src =>
+                    string.IsNullOrWhiteSpace(src.VideoEvidenceUrl) ? null : src.VideoEvidenceUrl.Trim()))
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.Reporter, opt => opt.Ignore())
+                .ForMember(dest => dest.ReportedUser, opt => opt.Ignore());
+
+            // UserReport Entity -> UserReportResponse
+            CreateMap<UserReport, UserReportResponse>()
+                .ForMember(dest => dest.Category,
+                    opt => opt.MapFrom(src => src.Category.ToString()))
+                .ForMember(dest => dest.Description,
+                    opt => opt.MapFrom(src => src.Reason))
+                .ForMember(dest => dest.Status,
+                    opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.EvidenceImageUrls,
+                    opt => opt.MapFrom(src => ParseEvidenceImageUrls(src.EvidenceImageUrls, src.EvidenceUrl)));
+
+        }
+
+        private static List<string> ParseEvidenceImageUrls(string? evidenceImageUrlsJson, string? legacyEvidenceUrl)
+        {
+            if (!string.IsNullOrWhiteSpace(evidenceImageUrlsJson))
+            {
+                try
+                {
+                    var urls = JsonSerializer.Deserialize<List<string>>(evidenceImageUrlsJson);
+                    if (urls is not null && urls.Count > 0)
+                    {
+                        return urls;
+                    }
+                }
+                catch
+                {
+                    // fallback to legacy url
+                }
+            }
+
+            return string.IsNullOrWhiteSpace(legacyEvidenceUrl)
+                ? []
+                : [legacyEvidenceUrl];
         }
     }
 }
