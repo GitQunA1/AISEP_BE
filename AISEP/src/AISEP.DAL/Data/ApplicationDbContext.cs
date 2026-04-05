@@ -336,10 +336,11 @@ namespace AISEP.DAL.Data
                 entity.ToTable("postprs");
                 entity.HasKey(e => e.PostPrId);
                 entity.Property(e => e.Title).HasMaxLength(255);
+                entity.Property(e => e.Content).HasColumnType("text");
 
-                entity.HasOne(p => p.ConnectionRequest)
-                    .WithMany(cr => cr.PostPrs)
-                    .HasForeignKey(p => p.ConnectionId)
+                entity.HasOne(p => p.Deal)
+                    .WithMany()
+                    .HasForeignKey(p => p.DealId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
