@@ -170,6 +170,21 @@ namespace AISEP.BLL.Helpers
             // Package Entity -> PackageResponse
             CreateMap<Package, PackageResponse>();
 
+            // Subscription Entity -> SubscriptionResponseDto
+            CreateMap<Subscription, SubscriptionResponseDto>()
+                .ForMember(dest => dest.PackageName,
+                    opt => opt.MapFrom(src => src.Package != null
+                        ? src.Package.PackageName
+                        : string.Empty))
+                .ForMember(dest => dest.UserName,
+                    opt => opt.MapFrom(src => src.User != null
+                        ? (src.User.FullName ?? src.User.UserName ?? string.Empty)
+                        : string.Empty))
+                .ForMember(dest => dest.UserEmail,
+                    opt => opt.MapFrom(src => src.User != null
+                        ? (src.User.Email ?? string.Empty)
+                        : string.Empty));
+
             // Transaction Entity -> Payment responses
             CreateMap<Transaction, CheckoutResponse>()
                 .ForMember(dest => dest.PaymentCode,

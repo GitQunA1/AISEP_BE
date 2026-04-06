@@ -14,6 +14,9 @@ namespace AISEP.DAL.Repositories.Subscriptions
             _context = context;
         }
 
+        public IQueryable<Subscription> GetQuery()
+            => _context.Subscriptions.AsQueryable();
+
         public async Task AddAsync(Subscription subscription)
             => await _context.Subscriptions.AddAsync(subscription);
 

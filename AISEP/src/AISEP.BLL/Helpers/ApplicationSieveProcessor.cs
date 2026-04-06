@@ -153,6 +153,35 @@ namespace AISEP.BLL.Helpers
                 .CanFilter()
                 .CanSort();
 
+            // Subscription
+            mapper.Property<Subscription>(s => s.SubscriptionId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Subscription>(s => s.PackageId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Subscription>(s => s.UserId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Subscription>(s => s.StartDate)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Subscription>(s => s.EndDate)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Subscription>(s => s.Status)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Subscription>(s => s.UsedAiRequests)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Subscription>(s => s.UsedProjectViews)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Subscription>(s => s.RemainingFreeBookings)
+                .CanFilter()
+                .CanSort();
+
             return mapper;
         }
     }
