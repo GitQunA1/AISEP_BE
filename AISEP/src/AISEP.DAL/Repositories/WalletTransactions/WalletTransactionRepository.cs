@@ -17,8 +17,8 @@ namespace AISEP.DAL.Repositories.WalletTransactions
         public async Task AddAsync(WalletTransaction walletTransaction)
             => await _context.WalletTransactions.AddAsync(walletTransaction);
 
-        public async Task<bool> ExistsWithdrawalByWithdrawRequestIdAsync(int withdrawRequestId)
-            => await _context.WalletTransactions.AnyAsync(x =>
+        public async Task<WalletTransaction?> GetWithdrawalByWithdrawRequestIdAsync(int withdrawRequestId)
+            => await _context.WalletTransactions.FirstOrDefaultAsync(x =>
                 x.WithdrawRequestId == withdrawRequestId
                 && x.Type == WalletTransactionType.Withdrawal);
     }

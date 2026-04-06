@@ -91,6 +91,17 @@ namespace AISEP.BLL.Services.Wallets
             await _unitOfWork.WithdrawRequests.AddAsync(request);
             await _unitOfWork.SaveChangesAsync();
 
+            await _unitOfWork.WalletTransactions.AddAsync(new WalletTransaction
+            {
+                WalletId = wallet.WalletId,
+                WithdrawRequestId = request.WithdrawRequestId,
+                Amount = request.Amount,
+                Type = WalletTransactionType.Withdrawal,
+                Status = WalletTransactionStatus.Pending,
+                CreatedAt = DateTime.UtcNow
+            });
+            await _unitOfWork.SaveChangesAsync();
+
             var created = await _unitOfWork.WithdrawRequests.GetByIdAsync(request.WithdrawRequestId)
                 ?? throw new InvalidOperationException("Failed to load created withdraw request.");
             return _mapper.Map<WithdrawRequestResponse>(created);
@@ -121,10 +132,6 @@ namespace AISEP.BLL.Services.Wallets
             if (request.Status != WithdrawRequestStatus.Pending)
                 throw new InvalidOperationException("Only pending withdraw requests can be approved.");
 
-            var hasTransaction = await _unitOfWork.WalletTransactions.ExistsWithdrawalByWithdrawRequestIdAsync(withdrawRequestId);
-            if (hasTransaction)
-                throw new InvalidOperationException("This withdraw request already has a withdrawal transaction.");
-
             var wallet = request.Wallet;
             if (!wallet.IsActive)
                 throw new InvalidOperationException("Wallet is not active.");
@@ -146,15 +153,23 @@ namespace AISEP.BLL.Services.Wallets
             request.ProofImageUrl = string.IsNullOrWhiteSpace(proofImageUrl) ? null : proofImageUrl.Trim();
             _unitOfWork.WithdrawRequests.Update(request);
 
-            await _unitOfWork.WalletTransactions.AddAsync(new WalletTransaction
+            var transaction = await _unitOfWork.WalletTransactions.GetWithdrawalByWithdrawRequestIdAsync(withdrawRequestId);
+            if (transaction is null)
             {
-                WalletId = wallet.WalletId,
-                WithdrawRequestId = request.WithdrawRequestId,
-                Amount = request.Amount,
-                Type = WalletTransactionType.Withdrawal,
-                Status = WalletTransactionStatus.Completed,
-                CreatedAt = DateTime.UtcNow
-            });
+                await _unitOfWork.WalletTransactions.AddAsync(new WalletTransaction
+                {
+                    WalletId = wallet.WalletId,
+                    WithdrawRequestId = request.WithdrawRequestId,
+                    Amount = request.Amount,
+                    Type = WalletTransactionType.Withdrawal,
+                    Status = WalletTransactionStatus.Completed,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+            else
+            {
+                transaction.Status = WalletTransactionStatus.Completed;
+            }
 
             await _unitOfWork.SaveChangesAsync();
             return _mapper.Map<WithdrawRequestResponse>(request);
@@ -175,6 +190,12 @@ namespace AISEP.BLL.Services.Wallets
             request.ApprovedAt = null;
             request.ApprovedById = null;
             _unitOfWork.WithdrawRequests.Update(request);
+
+            var transaction = await _unitOfWork.WalletTransactions.GetWithdrawalByWithdrawRequestIdAsync(withdrawRequestId);
+            if (transaction is not null)
+            {
+                transaction.Status = WalletTransactionStatus.Rejected;
+            }
 
             await _unitOfWork.SaveChangesAsync();
             return _mapper.Map<WithdrawRequestResponse>(request);
