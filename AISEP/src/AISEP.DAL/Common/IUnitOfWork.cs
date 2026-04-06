@@ -20,12 +20,14 @@ using AISEP.DAL.Repositories.Transactions;
 using AISEP.DAL.Repositories.Users;
 using AISEP.DAL.Repositories.UserReports;
 using AISEP.DAL.Repositories.WalletTransactions;
+using AISEP.DAL.Repositories.Wallets;
 using AISEP.DAL.Repositories.UnlockedProjects;
 using AISEP.DAL.Repositories.Notifications;
 using AISEP.DAL.Repositories.ConnectionRequests;
 using AISEP.DAL.Repositories.Deals;
 using AISEP.DAL.Repositories.NFTRecords;
 using AISEP.DAL.Repositories.PostPrs;
+using AISEP.DAL.Repositories.WithdrawRequests;
 namespace AISEP.DAL.Common
 {
     public interface IUnitOfWork : IDisposable
@@ -55,6 +57,8 @@ namespace AISEP.DAL.Common
         IUnlockedProjectRepository   UnlockedProjects   { get; }
         INotificationRepository      Notifications      { get; }
         IWalletTransactionRepository WalletTransactions { get; }
+        IWalletRepository            Wallets            { get; }
+        IWithdrawRequestRepository   WithdrawRequests   { get; }
         IConnectionRequestRepository ConnectionRequests { get; }
         IDealRepository              Deals              { get; }
         INFTRecordRepository         NFTRecords         { get; }

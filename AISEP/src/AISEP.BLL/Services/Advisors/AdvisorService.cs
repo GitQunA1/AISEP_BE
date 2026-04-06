@@ -8,6 +8,7 @@ using AutoMapper;
 using Sieve.Models;
 using Sieve.Services;
 using AISEP.BLL.Services.Users;
+using AISEP.BLL.Services.Wallets;
 using AISEP.DAL.Enums;
 using AISEP.BLL.Exceptions;
 
@@ -20,14 +21,16 @@ namespace AISEP.BLL.Services.Advisors
         private readonly IMapper         _mapper;
         private readonly IStorageService _storage;
         private readonly IUserService _userService;
+        private readonly IWalletService _walletService;
 
-        public AdvisorService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IStorageService storage, IUserService userService)
+        public AdvisorService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IStorageService storage, IUserService userService, IWalletService walletService)
         {
             _unitOfWork     = unitOfWork;
             _sieveProcessor = sieveProcessor;
             _mapper         = mapper;
             _storage        = storage;
             _userService = userService;
+            _walletService = walletService;
         }
 
         public async Task<PagedResult<AdvisorResponse>> GetAllAsync(SieveModel model)
@@ -143,6 +146,7 @@ namespace AISEP.BLL.Services.Advisors
             {
                 advisor.ApprovalStatus = ApprovalStatus.Pending;
             }
+            await _walletService.SyncWithAdvisorApprovalStatusAsync(advisor.AdvisorId, advisor.ApprovalStatus, createWalletIfApproved: false);
 
             _unitOfWork.Advisors.Update(advisor);
             await _unitOfWork.SaveChangesAsync();
@@ -174,6 +178,7 @@ namespace AISEP.BLL.Services.Advisors
             advisor.ApprovalStatus = ApprovalStatus.Approved;
             advisor.ApprovedAt     = DateTime.UtcNow;
             advisor.ApprovedById   = userId;
+            await _walletService.SyncWithAdvisorApprovalStatusAsync(advisor.AdvisorId, advisor.ApprovalStatus, createWalletIfApproved: true);
 
             _unitOfWork.Advisors.Update(advisor);
             await _unitOfWork.SaveChangesAsync();
@@ -194,6 +199,7 @@ namespace AISEP.BLL.Services.Advisors
             advisor.RejectedAt      = DateTime.UtcNow;
             advisor.RejectedById    = userId;
             advisor.RejectionReason = rejectionReason;
+            await _walletService.SyncWithAdvisorApprovalStatusAsync(advisor.AdvisorId, advisor.ApprovalStatus, createWalletIfApproved: false);
 
             _unitOfWork.Advisors.Update(advisor);
             await _unitOfWork.SaveChangesAsync();

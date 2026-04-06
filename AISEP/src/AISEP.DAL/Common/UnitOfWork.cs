@@ -21,11 +21,13 @@ using AISEP.DAL.Repositories.Transactions;
 using AISEP.DAL.Repositories.Users;
 using AISEP.DAL.Repositories.UserReports;
 using AISEP.DAL.Repositories.WalletTransactions;
+using AISEP.DAL.Repositories.Wallets;
 using AISEP.DAL.Repositories.UnlockedProjects;
 using AISEP.DAL.Repositories.Notifications;
 using AISEP.DAL.Repositories.ConnectionRequests;
 using AISEP.DAL.Repositories.Deals;
 using AISEP.DAL.Repositories.NFTRecords;
+using AISEP.DAL.Repositories.WithdrawRequests;
 using AISEP.DAL.Repositories.PostPrs;
 
 namespace AISEP.DAL.Common
@@ -59,6 +61,8 @@ namespace AISEP.DAL.Common
         private IUnlockedProjectRepository?   _unlockedProjects;
         private INotificationRepository?      _notifications;
         private IWalletTransactionRepository? _walletTransactions;
+        private IWalletRepository?            _wallets;
+        private IWithdrawRequestRepository?   _withdrawRequests;
         private IConnectionRequestRepository? _connectionRequests;
         private IDealRepository?              _deals;
         private INFTRecordRepository?         _nftRecords;
@@ -93,6 +97,8 @@ namespace AISEP.DAL.Common
         public IUnlockedProjectRepository   UnlockedProjects   => _unlockedProjects   ??= new UnlockedProjectRepository(_context);
         public INotificationRepository      Notifications      => _notifications      ??= new NotificationRepository(_context);
         public IWalletTransactionRepository WalletTransactions => _walletTransactions ??= new WalletTransactionRepository(_context);
+        public IWalletRepository            Wallets            => _wallets            ??= new WalletRepository(_context);
+        public IWithdrawRequestRepository   WithdrawRequests   => _withdrawRequests   ??= new WithdrawRequestRepository(_context);
         public IConnectionRequestRepository ConnectionRequests => _connectionRequests ??= new ConnectionRequestRepository(_context);
         public IDealRepository              Deals              => _deals              ??= new DealRepository(_context);
         public INFTRecordRepository         NFTRecords         => _nftRecords         ??= new NFTRecordRepository(_context);

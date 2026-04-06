@@ -3,6 +3,7 @@
     public enum WalletTransactionStatus
     {
         Completed,
-        Pending
+        Pending,
+        Rejected
     }
 }

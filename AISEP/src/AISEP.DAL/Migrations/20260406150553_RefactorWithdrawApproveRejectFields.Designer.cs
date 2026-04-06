@@ -3,17 +3,20 @@ using System;
 using AISEP.DAL.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace AISEP.Migrations
+namespace AISEP.DAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260406150553_RefactorWithdrawApproveRejectFields")]
+    partial class RefactorWithdrawApproveRejectFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -838,14 +841,20 @@ namespace AISEP.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PostPrId"));
 
+                    b.Property<int>("ConnectionId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Content")
                         .HasColumnType("text");
 
-                    b.Property<int>("DealId")
-                        .HasColumnType("integer");
+                    b.Property<bool>("InvestorApproved")
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime?>("PublishedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("StartupApproved")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Title")
                         .HasMaxLength(255)
@@ -853,7 +862,7 @@ namespace AISEP.Migrations
 
                     b.HasKey("PostPrId");
 
-                    b.HasIndex("DealId");
+                    b.HasIndex("ConnectionId");
 
                     b.ToTable("postprs", (string)null);
                 });
@@ -2039,13 +2048,13 @@ namespace AISEP.Migrations
 
             modelBuilder.Entity("AISEP.DAL.Entities.PostPr", b =>
                 {
-                    b.HasOne("AISEP.DAL.Entities.Deal", "Deal")
-                        .WithMany()
-                        .HasForeignKey("DealId")
+                    b.HasOne("AISEP.DAL.Entities.ConnectionRequest", "ConnectionRequest")
+                        .WithMany("PostPrs")
+                        .HasForeignKey("ConnectionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Deal");
+                    b.Navigation("ConnectionRequest");
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.Project", b =>
@@ -2379,6 +2388,8 @@ namespace AISEP.Migrations
             modelBuilder.Entity("AISEP.DAL.Entities.ConnectionRequest", b =>
                 {
                     b.Navigation("ChatSession");
+
+                    b.Navigation("PostPrs");
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.Deal", b =>
