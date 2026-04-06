@@ -552,11 +552,20 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.Type).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.ToTable(tb => tb.HasCheckConstraint("CK_wallet_transactions_amount_positive", "\"Amount\" > 0"));
+                entity.HasIndex(e => e.WithdrawRequestId)
+                    .IsUnique()
+                    .HasFilter("\"WithdrawRequestId\" IS NOT NULL AND \"Type\" = 'Withdrawal'");
 
                 entity.HasOne(wt => wt.Wallet)
                     .WithMany(w => w.WalletTransactions)
                     .HasForeignKey(wt => wt.WalletId)
                     .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(wt => wt.WithdrawRequest)
+                    .WithMany()
+                    .HasForeignKey(wt => wt.WithdrawRequestId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
             modelBuilder.Entity<WithdrawRequest>(entity =>
@@ -569,11 +578,23 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.ProofImageUrl).HasMaxLength(255);
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.RequestedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.RejectionReason).HasMaxLength(1000);
+                entity.ToTable(tb => tb.HasCheckConstraint("CK_withdraw_requests_amount_positive", "\"Amount\" > 0"));
 
                 entity.HasOne(wr => wr.Wallet)
                     .WithMany(w => w.WithdrawRequests)
                     .HasForeignKey(wr => wr.WalletId)
                     .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(wr => wr.ApprovedBy)
+                    .WithMany()
+                    .HasForeignKey(wr => wr.ApprovedById)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(wr => wr.RejectedBy)
+                    .WithMany()
+                    .HasForeignKey(wr => wr.RejectedById)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
             modelBuilder.Entity<Transaction>(entity =>

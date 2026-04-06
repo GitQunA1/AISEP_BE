@@ -517,6 +517,16 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.EvidenceImageUrls,
                     opt => opt.MapFrom(src => ParseEvidenceImageUrls(src.EvidenceImageUrls, src.EvidenceUrl)));
 
+            CreateMap<WithdrawRequest, WithdrawRequestResponse>()
+                .ForMember(dest => dest.Status,
+                    opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.AdvisorId,
+                    opt => opt.MapFrom(src => src.Wallet.AdvisorId))
+                .ForMember(dest => dest.AdvisorName,
+                    opt => opt.MapFrom(src => src.Wallet.Advisor.User != null
+                        ? (src.Wallet.Advisor.User.UserName ?? $"Advisor {src.Wallet.AdvisorId}")
+                        : $"Advisor {src.Wallet.AdvisorId}"));
+
         }
 
         private static List<string> ParseEvidenceImageUrls(string? evidenceImageUrlsJson, string? legacyEvidenceUrl)

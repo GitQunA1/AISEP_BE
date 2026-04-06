@@ -3,17 +3,20 @@ using System;
 using AISEP.DAL.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace AISEP.Migrations
+namespace AISEP.DAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260406125048_WalletWithdrawFlow_Update")]
+    partial class WalletWithdrawFlow_Update
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1589,12 +1592,6 @@ namespace AISEP.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime?>("ApprovedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("ApprovedById")
-                        .HasColumnType("integer");
-
                     b.Property<string>("BankAccount")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
@@ -1607,20 +1604,20 @@ namespace AISEP.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<DateTime?>("RejectedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("RejectedById")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("RejectionReason")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
                     b.Property<DateTime>("RequestedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("ReviewReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ReviewedById")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -1632,9 +1629,7 @@ namespace AISEP.Migrations
 
                     b.HasKey("WithdrawRequestId");
 
-                    b.HasIndex("ApprovedById");
-
-                    b.HasIndex("RejectedById");
+                    b.HasIndex("ReviewedById");
 
                     b.HasIndex("WalletId");
 
@@ -2272,14 +2267,9 @@ namespace AISEP.Migrations
 
             modelBuilder.Entity("AISEP.DAL.Entities.WithdrawRequest", b =>
                 {
-                    b.HasOne("AISEP.DAL.Entities.User", "ApprovedBy")
+                    b.HasOne("AISEP.DAL.Entities.User", "ReviewedBy")
                         .WithMany()
-                        .HasForeignKey("ApprovedById")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("AISEP.DAL.Entities.User", "RejectedBy")
-                        .WithMany()
-                        .HasForeignKey("RejectedById")
+                        .HasForeignKey("ReviewedById")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("AISEP.DAL.Entities.Wallet", "Wallet")
@@ -2288,9 +2278,7 @@ namespace AISEP.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("ApprovedBy");
-
-                    b.Navigation("RejectedBy");
+                    b.Navigation("ReviewedBy");
 
                     b.Navigation("Wallet");
                 });

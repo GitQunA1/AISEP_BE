@@ -1,26 +1,21 @@
-﻿using AISEP.DAL.Enums;
-
-namespace AISEP.DAL.Entities
+namespace AISEP.BLL.DTOs.Responses
 {
-    public class WithdrawRequest
+    public class WithdrawRequestResponse
     {
         public int WithdrawRequestId { get; set; }
         public int WalletId { get; set; }
+        public int AdvisorId { get; set; }
+        public string AdvisorName { get; set; } = string.Empty;
         public decimal Amount { get; set; }
         public string? BankName { get; set; }
         public string? BankAccount { get; set; }
         public string? ProofImageUrl { get; set; }
-        public WithdrawRequestStatus Status { get; set; }
-        public DateTime RequestedAt { get; set; } = DateTime.UtcNow;
+        public string Status { get; set; } = string.Empty;
+        public DateTime RequestedAt { get; set; }
         public DateTime? ApprovedAt { get; set; }
         public int? ApprovedById { get; set; }
         public DateTime? RejectedAt { get; set; }
         public int? RejectedById { get; set; }
         public string? RejectionReason { get; set; }
-
-        // Navigation properties
-        public Wallet Wallet { get; set; } = null!;
-        public User? ApprovedBy { get; set; }
-        public User? RejectedBy { get; set; }
     }
 }
