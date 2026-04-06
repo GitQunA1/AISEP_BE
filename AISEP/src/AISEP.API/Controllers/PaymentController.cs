@@ -2,7 +2,6 @@ using AISEP.BLL.Helpers;
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.Services.Payments;
 using AISEP.BLL.Services.Users;
-using AISEP.DAL.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sieve.Models;
@@ -23,7 +22,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("packages/investor")]
-        [Authorize(Roles = "Investor")]
+        [Authorize(Roles = "Investor,Staff,Admin")]
         public async Task<IActionResult> GetInvestorPackages()
         {
             var result = await _paymentService.GetInvestorPackagesAsync();
@@ -31,7 +30,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("packages/startup")]
-        [Authorize(Roles = "Startup")]
+        [Authorize(Roles = "Startup,Staff,Admin")]
         public async Task<IActionResult> GetStartupPackages()
         {
             var result = await _paymentService.GetStartupPackagesAsync();
@@ -45,11 +44,7 @@ namespace AISEP.API.Controllers
             try
             {
                 var userId = _currentUserService.GetUserId();
-                var result = await _paymentService.CheckoutAsync(userId, new CheckoutRequest
-                {
-                    ReferenceType = ReferenceType.Booking,
-                    ReferenceId = bookingId
-                });
+                var result = await _paymentService.CheckoutBookingAsync(userId, bookingId);
                 return Ok(ApiResponse<object>.SuccessResponse(result, "Booking checkout created successfully"));
             }
             catch (KeyNotFoundException ex)
@@ -61,23 +56,15 @@ namespace AISEP.API.Controllers
                 return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message, "Bad request", 400));
             }
         }
-        // Backward-compatible endpoint for subscription checkout
-        [HttpPost("checkout")]
+
+        [HttpPost("subscriptions/checkout")]
         [Authorize(Roles = "Investor,Startup")]
-        public async Task<IActionResult> Checkout([FromBody] CheckoutRequest request)
+        public async Task<IActionResult> CheckoutSubscription([FromBody] SubscriptionCheckoutRequest request)
         {
             try
             {
-                if (request.ReferenceType != ReferenceType.Subscription)
-                {
-                    return BadRequest(ApiResponse<object>.ErrorResponse(
-                        "This endpoint only supports subscription checkout.",
-                        "Bad request",
-                        400));
-                }
-
                 var userId = _currentUserService.GetUserId();
-                var result = await _paymentService.CheckoutAsync(userId, request);
+                var result = await _paymentService.CheckoutSubscriptionAsync(userId, request.PackageId);
                 return Ok(ApiResponse<object>.SuccessResponse(result, "Subscription checkout created successfully"));
             }
             catch (KeyNotFoundException ex)
@@ -90,8 +77,32 @@ namespace AISEP.API.Controllers
             }
         }
 
+        [HttpPut("packages/{packageId:int}")]
+        [Authorize(Roles = "Staff,Admin")]
+        public async Task<IActionResult> UpdatePackage(int packageId, [FromBody] UpdatePackageRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse("Invalid input data.", "Bad request", 400));
+            }
+
+            try
+            {
+                var result = await _paymentService.UpdatePackageAsync(packageId, request);
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Package updated successfully"));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not found", 404));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message, "Bad request", 400));
+            }
+        }
+
         [HttpGet("bookings/{bookingId:int}/status")]
-        [Authorize(Roles = "Investor,Startup")]
+        [Authorize(Roles = "Investor,Startup,Staff,Admin")]
         public async Task<IActionResult> GetBookingPaymentStatus(int bookingId)
         {
             try
@@ -111,7 +122,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("bookings/transactions")]
-        [Authorize(Roles = "Investor,Startup")]
+        [Authorize(Roles = "Investor,Startup,Staff,Admin")]
         public async Task<IActionResult> GetBookingPaymentTransactions([FromQuery] SieveModel model)
         {
             var userId = _currentUserService.GetUserId();

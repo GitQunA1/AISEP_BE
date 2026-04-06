@@ -9,7 +9,9 @@ namespace AISEP.BLL.Services.Payments
     {
         Task<IEnumerable<PackageResponse>> GetInvestorPackagesAsync();
         Task<IEnumerable<PackageResponse>> GetStartupPackagesAsync();
-        Task<CheckoutResponse> CheckoutAsync(int userId, CheckoutRequest request);
+        Task<CheckoutResponse> CheckoutSubscriptionAsync(int userId, int packageId);
+        Task<CheckoutResponse> CheckoutBookingAsync(int userId, int bookingId);
+        Task<PackageResponse> UpdatePackageAsync(int packageId, UpdatePackageRequest request);
         Task<TransactionStatusResponse> GetTransactionStatusAsync(int userId, int transactionId);
         Task<BookingPaymentStatusResponse> GetBookingPaymentStatusAsync(int userId, int bookingId);
         Task<PagedResult<BookingPaymentTransactionResponse>> GetBookingPaymentTransactionsAsync(int userId, SieveModel model);

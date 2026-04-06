@@ -29,7 +29,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("requests")]
-        [Authorize(Roles = "Investor,Startup")]
+        [Authorize(Roles = "Investor,Startup,Staff,Admin")]
         public async Task<IActionResult> GetRequests([FromQuery] SieveModel model, [FromQuery] string? status = null)
         {
             try
@@ -83,7 +83,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("/api/projects/{id:int}/founder-contact")]
-        [Authorize(Roles = "Investor")]
+        [Authorize(Roles = "Investor,Staff,Admin")]
         public async Task<IActionResult> GetFounderContact(int id)
         {
             var investor = await _investorService.GetMyProfileAsync()

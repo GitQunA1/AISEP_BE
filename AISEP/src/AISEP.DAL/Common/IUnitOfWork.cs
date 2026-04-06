@@ -26,6 +26,7 @@ using AISEP.DAL.Repositories.Notifications;
 using AISEP.DAL.Repositories.ConnectionRequests;
 using AISEP.DAL.Repositories.Deals;
 using AISEP.DAL.Repositories.NFTRecords;
+using AISEP.DAL.Repositories.PostPrs;
 using AISEP.DAL.Repositories.WithdrawRequests;
 namespace AISEP.DAL.Common
 {
@@ -61,6 +62,7 @@ namespace AISEP.DAL.Common
         IConnectionRequestRepository ConnectionRequests { get; }
         IDealRepository              Deals              { get; }
         INFTRecordRepository         NFTRecords         { get; }
+        IPostPrRepository            PostPrs            { get; }
 
         Task<int> SaveChangesAsync();
     }

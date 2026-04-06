@@ -43,7 +43,7 @@ namespace AISEP.API.Controllers
 
       
         [HttpGet("{projectId:int}")]
-        [Authorize(Roles = "Startup")]
+        [Authorize(Roles = "Startup,Staff,Admin")]
         public async Task<IActionResult> GetAnalysis(int projectId)
         {
             try

@@ -28,6 +28,7 @@ using AISEP.DAL.Repositories.ConnectionRequests;
 using AISEP.DAL.Repositories.Deals;
 using AISEP.DAL.Repositories.NFTRecords;
 using AISEP.DAL.Repositories.WithdrawRequests;
+using AISEP.DAL.Repositories.PostPrs;
 
 namespace AISEP.DAL.Common
 {
@@ -64,7 +65,8 @@ namespace AISEP.DAL.Common
         private IWithdrawRequestRepository?   _withdrawRequests;
         private IConnectionRequestRepository? _connectionRequests;
         private IDealRepository?              _deals;
-        private INFTRecordRepository?         _nftRecords;            
+        private INFTRecordRepository?         _nftRecords;
+        private IPostPrRepository?            _postPrs;
         public UnitOfWork(ApplicationDbContext context)
         {
             _context = context;
@@ -100,6 +102,7 @@ namespace AISEP.DAL.Common
         public IConnectionRequestRepository ConnectionRequests => _connectionRequests ??= new ConnectionRequestRepository(_context);
         public IDealRepository              Deals              => _deals              ??= new DealRepository(_context);
         public INFTRecordRepository         NFTRecords         => _nftRecords         ??= new NFTRecordRepository(_context);
+        public IPostPrRepository            PostPrs            => _postPrs            ??= new PostPrRepository(_context);
 
         public async Task<int> SaveChangesAsync()
         {

@@ -170,6 +170,21 @@ namespace AISEP.BLL.Helpers
             // Package Entity -> PackageResponse
             CreateMap<Package, PackageResponse>();
 
+            // Subscription Entity -> SubscriptionResponseDto
+            CreateMap<Subscription, SubscriptionResponseDto>()
+                .ForMember(dest => dest.PackageName,
+                    opt => opt.MapFrom(src => src.Package != null
+                        ? src.Package.PackageName
+                        : string.Empty))
+                .ForMember(dest => dest.UserName,
+                    opt => opt.MapFrom(src => src.User != null
+                        ? (src.User.FullName ?? src.User.UserName ?? string.Empty)
+                        : string.Empty))
+                .ForMember(dest => dest.UserEmail,
+                    opt => opt.MapFrom(src => src.User != null
+                        ? (src.User.Email ?? string.Empty)
+                        : string.Empty));
+
             // Transaction Entity -> Payment responses
             CreateMap<Transaction, CheckoutResponse>()
                 .ForMember(dest => dest.PaymentCode,
@@ -467,6 +482,47 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.Investor, opt => opt.Ignore())
                 .ForMember(dest => dest.Project, opt => opt.Ignore())
                 .ForMember(dest => dest.NFTRecord, opt => opt.Ignore());
+
+            // CreatePostPrRequest -> PostPr Entity
+            CreateMap<CreatePostPrRequest, PostPr>()
+                .ForMember(dest => dest.PostPrId, opt => opt.Ignore())
+                .ForMember(dest => dest.PublishedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.Deal, opt => opt.Ignore());
+
+            // PostPr Entity -> PostPrResponseDto
+            CreateMap<PostPr, PostPrResponseDto>()
+                .ForMember(dest => dest.ProjectId,
+                    opt => opt.MapFrom(src => src.Deal != null ? src.Deal.ProjectId : 0))
+                .ForMember(dest => dest.ProjectName,
+                    opt => opt.MapFrom(src => src.Deal != null && src.Deal.Project != null
+                        ? src.Deal.Project.ProjectName
+                        : string.Empty))
+                .ForMember(dest => dest.ProjectImage,
+                    opt => opt.MapFrom(src => src.Deal != null && src.Deal.Project != null
+                        ? src.Deal.Project.ProjectImageUrl
+                        : null))
+                .ForMember(dest => dest.InvestorId,
+                    opt => opt.MapFrom(src => src.Deal != null ? src.Deal.InvestorId : 0))
+                .ForMember(dest => dest.InvestorName,
+                    opt => opt.MapFrom(src => src.Deal != null && src.Deal.Investor != null
+                        ? (!string.IsNullOrWhiteSpace(src.Deal.Investor.OrganizationName)
+                            ? src.Deal.Investor.OrganizationName
+                            : (src.Deal.Investor.User != null
+                                ? (src.Deal.Investor.User.UserName ?? string.Empty)
+                                : string.Empty))
+                        : string.Empty))
+                .ForMember(dest => dest.StartupId,
+                    opt => opt.MapFrom(src => src.Deal != null && src.Deal.Project != null
+                        ? src.Deal.Project.StartupId
+                        : 0))
+                .ForMember(dest => dest.StartupName,
+                    opt => opt.MapFrom(src => src.Deal != null && src.Deal.Project != null && src.Deal.Project.Startup != null
+                        ? (!string.IsNullOrWhiteSpace(src.Deal.Project.Startup.CompanyName)
+                            ? src.Deal.Project.Startup.CompanyName
+                            : (src.Deal.Project.Startup.User != null
+                                ? (src.Deal.Project.Startup.User.UserName ?? string.Empty)
+                                : string.Empty))
+                        : string.Empty));
 
             // ConnectionRequest Entity -> ConnectionRequestDto
             CreateMap<ConnectionRequest, ConnectionRequestDto>()

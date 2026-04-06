@@ -42,51 +42,89 @@ namespace AISEP.BLL.Services.Payments
             return await GetPackagesByRoleAsync(UserRole.Startup);
         }
 
-        public async Task<CheckoutResponse> CheckoutAsync(int userId, CheckoutRequest request)
+        public async Task<CheckoutResponse> CheckoutSubscriptionAsync(int userId, int packageId)
         {
-            if (request.ReferenceId <= 0)
-                throw new InvalidOperationException("ReferenceId must be greater than 0.");
+            if (packageId <= 0)
+                throw new InvalidOperationException("PackageId must be greater than 0.");
 
-            var referenceType = request.ReferenceType.ToString();
+            var package = await _unitOfWork.Packages.GetByIdAsync(packageId)
+                ?? throw new KeyNotFoundException("Package not found.");
 
-            decimal amount;
+            var user = await _unitOfWork.Users.GetByIdAsync(userId)
+                ?? throw new KeyNotFoundException("User not found.");
 
-            switch (request.ReferenceType)
-            {
-                case ReferenceType.Subscription:
-                {
-                    var package = await _unitOfWork.Packages.GetByIdAsync(request.ReferenceId);
+            if (package.TargetRole != user.Role)
+                throw new InvalidOperationException("Selected package is not available for your role.");
 
-                    if (package is null)
-                        throw new KeyNotFoundException("Package not found.");
+            return await CreateOrReusePendingTransactionAsync(
+                userId,
+                ReferenceType.Subscription,
+                packageId,
+                package.Price);
+        }
 
-                    var user = await _unitOfWork.Users.GetByIdAsync(userId)
-                        ?? throw new KeyNotFoundException("User not found.");
+        public async Task<CheckoutResponse> CheckoutBookingAsync(int userId, int bookingId)
+        {
+            if (bookingId <= 0)
+                throw new InvalidOperationException("BookingId must be greater than 0.");
 
-                    if (package.TargetRole != user.Role)
-                        throw new InvalidOperationException("Selected package is not available for your role.");
+            var booking = await _unitOfWork.Bookings.GetPayableByIdAndCustomerAsync(bookingId, userId);
 
-                    amount = package.Price;
-                    break;
-                }
-                case ReferenceType.Booking:
-                {
-                    var booking = await _unitOfWork.Bookings.GetPayableByIdAndCustomerAsync(request.ReferenceId, userId);
+            if (booking is null)
+                throw new KeyNotFoundException("Booking not found or not in ApprovedAwaitingPayment status.");
 
-                    if (booking is null)
-                        throw new KeyNotFoundException("Booking not found or not in ApprovedAwaitingPayment status.");
+            return await CreateOrReusePendingTransactionAsync(
+                userId,
+                ReferenceType.Booking,
+                bookingId,
+                booking.Price);
+        }
 
-                    amount = booking.Price;
-                    break;
-                }
-                default:
-                    throw new InvalidOperationException("Invalid reference type.");
-            }
+        public async Task<PackageResponse> UpdatePackageAsync(int packageId, UpdatePackageRequest request)
+        {
+            if (packageId <= 0)
+                throw new InvalidOperationException("PackageId must be greater than 0.");
+
+            var package = await _unitOfWork.Packages.GetByIdAsync(packageId)
+                ?? throw new KeyNotFoundException("Package not found.");
+
+            if (package.TargetRole != UserRole.Investor && package.TargetRole != UserRole.Startup)
+                throw new InvalidOperationException("Only Investor and Startup packages can be updated from this endpoint.");
+
+            if (request.Price <= 0)
+                throw new InvalidOperationException("Price must be greater than 0.");
+
+            if (request.DurationMonths <= 0)
+                throw new InvalidOperationException("DurationMonths must be greater than 0.");
+
+            if (string.IsNullOrWhiteSpace(request.PackageName))
+                throw new InvalidOperationException("PackageName is required.");
+
+            package.PackageName = request.PackageName.Trim();
+            package.Description = request.Description?.Trim();
+            package.Price = request.Price;
+            package.DurationMonths = request.DurationMonths;
+            package.MaxAiRequests = request.MaxAiRequests;
+            package.MaxProjectViews = request.MaxProjectViews;
+            package.FreeBookingCount = request.FreeBookingCount;
+
+            await _unitOfWork.SaveChangesAsync();
+
+            return _mapper.Map<PackageResponse>(package);
+        }
+
+        private async Task<CheckoutResponse> CreateOrReusePendingTransactionAsync(
+            int userId,
+            ReferenceType referenceType,
+            int referenceId,
+            decimal amount)
+        {
+            var referenceTypeText = referenceType.ToString();
 
             // Return existing pending transaction if one already exists.
             // If the pending transaction is too old, mark it as Failed and create a new one.
             var existingTransaction = await _unitOfWork.Transactions
-                .GetPendingByUserAndReferenceAsync(userId, referenceType, request.ReferenceId);
+                .GetPendingByUserAndReferenceAsync(userId, referenceTypeText, referenceId);
 
             if (existingTransaction is not null)
             {
@@ -110,8 +148,8 @@ namespace AISEP.BLL.Services.Payments
                 Amount = amount,
                 Type = TransactionType.Payment,
                 Status = TransactionStatus.Pending,
-                ReferenceType = referenceType,
-                ReferenceId = request.ReferenceId
+                ReferenceType = referenceTypeText,
+                ReferenceId = referenceId
             };
 
             await _unitOfWork.Transactions.AddAsync(transaction);

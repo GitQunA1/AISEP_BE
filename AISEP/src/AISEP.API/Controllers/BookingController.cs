@@ -50,7 +50,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("me/customer")]
-        [Authorize(Roles = "Investor,Startup")]
+        [Authorize(Roles = "Investor,Startup,Staff,Admin")]
         public async Task<IActionResult> GetMyCustomerBookings([FromQuery] SieveModel model)
         {
             var bookings = await _bookingService.GetMyCustomerBookingsAsync(model);
@@ -58,7 +58,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("me/advisor")]
-        [Authorize(Roles = "Advisor")]
+        [Authorize(Roles = "Advisor,Staff,Admin")]
         public async Task<IActionResult> GetMyAdvisorBookings([FromQuery] SieveModel model)
         {
             var bookings = await _bookingService.GetMyAdvisorBookingsAsync(model);
@@ -67,7 +67,7 @@ namespace AISEP.API.Controllers
 
         //Trả danh sách project để dropdown booking.
         [HttpGet("project-options")]
-        [Authorize(Roles = "Investor,Startup")]
+        [Authorize(Roles = "Investor,Startup,Staff,Admin")]
         public async Task<IActionResult> GetBookingProjectOptions()
         {
             var projects = await _bookingService.GetBookingProjectOptionsAsync();
@@ -75,7 +75,7 @@ namespace AISEP.API.Controllers
         }
         //Trả danh sách advisor để dropdown booking, dựa trên project đã chọn
         [HttpGet("advisor-options")]
-        [Authorize(Roles = "Investor,Startup")]
+        [Authorize(Roles = "Investor,Startup,Staff,Admin")]
         public async Task<IActionResult> GetBookingAdvisorOptions([FromQuery] int projectId)
         {
             var advisors = await _bookingService.GetBookingAdvisorOptionsAsync(projectId);
@@ -84,7 +84,7 @@ namespace AISEP.API.Controllers
 
         //Trả danh sách advisor thay thế cho booking đã reject/noresponse
         [HttpGet("{id:int}/replacement-advisor-options")]
-        [Authorize(Roles = "Investor,Startup")]
+        [Authorize(Roles = "Investor,Startup,Staff,Admin")]
         public async Task<IActionResult> GetReplacementAdvisorOptions(int id)
         {
             var advisors = await _bookingService.GetReplacementAdvisorOptionsAsync(id);

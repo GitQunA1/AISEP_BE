@@ -3,17 +3,20 @@ using System;
 using AISEP.DAL.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace AISEP.Migrations
+namespace AISEP.DAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260405135111_RefactorPostPrToDeal")]
+    partial class RefactorPostPrToDeal
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -844,8 +847,14 @@ namespace AISEP.Migrations
                     b.Property<int>("DealId")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("InvestorApproved")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime?>("PublishedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("StartupApproved")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Title")
                         .HasMaxLength(255)
@@ -1555,21 +1564,11 @@ namespace AISEP.Migrations
                     b.Property<int>("WalletId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("WithdrawRequestId")
-                        .HasColumnType("integer");
-
                     b.HasKey("WalletTransactionId");
 
                     b.HasIndex("WalletId");
 
-                    b.HasIndex("WithdrawRequestId")
-                        .IsUnique()
-                        .HasFilter("\"WithdrawRequestId\" IS NOT NULL AND \"Type\" = 'Withdrawal'");
-
-                    b.ToTable("wallet_transactions", null, t =>
-                        {
-                            t.HasCheckConstraint("CK_wallet_transactions_amount_positive", "\"Amount\" > 0");
-                        });
+                    b.ToTable("wallet_transactions", (string)null);
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.WithdrawRequest", b =>
@@ -1583,12 +1582,6 @@ namespace AISEP.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime?>("ApprovedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("ApprovedById")
-                        .HasColumnType("integer");
-
                     b.Property<string>("BankAccount")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
@@ -1600,16 +1593,6 @@ namespace AISEP.Migrations
                     b.Property<string>("ProofImageUrl")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
-
-                    b.Property<DateTime?>("RejectedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("RejectedById")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("RejectionReason")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
 
                     b.Property<DateTime>("RequestedAt")
                         .ValueGeneratedOnAdd()
@@ -1626,16 +1609,9 @@ namespace AISEP.Migrations
 
                     b.HasKey("WithdrawRequestId");
 
-                    b.HasIndex("ApprovedById");
-
-                    b.HasIndex("RejectedById");
-
                     b.HasIndex("WalletId");
 
-                    b.ToTable("withdraw_requests", null, t =>
-                        {
-                            t.HasCheckConstraint("CK_withdraw_requests_amount_positive", "\"Amount\" > 0");
-                        });
+                    b.ToTable("withdraw_requests", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
@@ -2254,37 +2230,16 @@ namespace AISEP.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("AISEP.DAL.Entities.WithdrawRequest", "WithdrawRequest")
-                        .WithMany()
-                        .HasForeignKey("WithdrawRequestId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.Navigation("Wallet");
-
-                    b.Navigation("WithdrawRequest");
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.WithdrawRequest", b =>
                 {
-                    b.HasOne("AISEP.DAL.Entities.User", "ApprovedBy")
-                        .WithMany()
-                        .HasForeignKey("ApprovedById")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("AISEP.DAL.Entities.User", "RejectedBy")
-                        .WithMany()
-                        .HasForeignKey("RejectedById")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("AISEP.DAL.Entities.Wallet", "Wallet")
                         .WithMany("WithdrawRequests")
                         .HasForeignKey("WalletId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("ApprovedBy");
-
-                    b.Navigation("RejectedBy");
 
                     b.Navigation("Wallet");
                 });

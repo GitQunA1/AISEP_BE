@@ -7,7 +7,7 @@ namespace AISEP.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Investor")]
+    [Authorize]
     public class InvestorAIAnalysisController : ControllerBase
     {
         private readonly IInvestorAIAnalysisService _analysisService;
@@ -18,6 +18,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpPost("{projectId:int}/analyze")]
+        [Authorize(Roles = "Investor")]
         public async Task<IActionResult> Analyze(int projectId)
         {
             try
@@ -40,6 +41,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("{projectId:int}")]
+        [Authorize(Roles = "Investor,Staff,Admin")]
         public async Task<IActionResult> GetAnalysis(int projectId)
         {
             try
