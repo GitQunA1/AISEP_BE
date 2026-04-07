@@ -16,6 +16,9 @@ namespace AISEP.BLL.DTOs.Responses
         public decimal Price { get; set; }
         public BookingStatus Status { get; set; }
         public string? Note { get; set; }
+        public decimal SystemCommissionPercent { get; set; }
+        public decimal SystemCommissionAmount { get; set; }
+        public string SystemCommissionMessage { get; set; } = string.Empty;
         public List<int> AdvisorAvailabilitySlotIds { get; set; } = [];
         public int SlotCount { get; set; }
     }

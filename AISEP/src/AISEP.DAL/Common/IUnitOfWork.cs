@@ -28,6 +28,8 @@ using AISEP.DAL.Repositories.Deals;
 using AISEP.DAL.Repositories.NFTRecords;
 using AISEP.DAL.Repositories.PostPrs;
 using AISEP.DAL.Repositories.WithdrawRequests;
+using AISEP.DAL.Repositories.SystemCommissionConfigs;
+using AISEP.DAL.Repositories.SystemCommissionChangeLogs;
 namespace AISEP.DAL.Common
 {
     public interface IUnitOfWork : IDisposable
@@ -59,6 +61,8 @@ namespace AISEP.DAL.Common
         IWalletTransactionRepository WalletTransactions { get; }
         IWalletRepository            Wallets            { get; }
         IWithdrawRequestRepository   WithdrawRequests   { get; }
+        ISystemCommissionConfigRepository SystemCommissionConfigs { get; }
+        ISystemCommissionChangeLogRepository SystemCommissionChangeLogs { get; }
         IConnectionRequestRepository ConnectionRequests { get; }
         IDealRepository              Deals              { get; }
         INFTRecordRepository         NFTRecords         { get; }

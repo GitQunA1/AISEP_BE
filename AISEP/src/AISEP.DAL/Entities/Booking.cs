@@ -11,6 +11,9 @@ namespace AISEP.DAL.Entities
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public decimal Price { get; set; }
+        public int? SystemCommissionConfigId { get; set; }
+        public decimal SystemCommissionPercent { get; set; }
+        public decimal SystemCommissionAmount { get; set; }
         public BookingStatus Status { get; set; }
         public string? Note { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -19,6 +22,7 @@ namespace AISEP.DAL.Entities
         public Advisor Advisor { get; set; } = null!;
         public Project? Project { get; set; }
         public User Customer { get; set; } = null!;
+        public SystemCommissionConfig? SystemCommissionConfig { get; set; }
         public ChatSession? ChatSession { get; set; }
         public ConsultingReport? ConsultingReport { get; set; }
         public Review? Review { get; set; }

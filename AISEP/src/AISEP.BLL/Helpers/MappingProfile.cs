@@ -77,6 +77,9 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.Customer != null
                         ? src.Customer.UserName
                         : "Unknown"))
+                .ForMember(dest => dest.SystemCommissionMessage,
+                    opt => opt.MapFrom(src =>
+                        $"Số phần trăm hoa hồng hệ thống AISEP sẽ nhận được cho đơn hàng này sẽ là {src.SystemCommissionPercent:0.##}% ({src.SystemCommissionAmount:0}₫). Đây là mức hoa hồng duy nhất được áp dụng cho đơn hàng này trong suốt quá trình Booking."))
                 .ForMember(dest => dest.AdvisorAvailabilitySlotIds,
                     opt => opt.MapFrom(src => src.BookingSlots.Select(bs => bs.AdvisorAvailabilityId)))
                 .ForMember(dest => dest.SlotCount,
