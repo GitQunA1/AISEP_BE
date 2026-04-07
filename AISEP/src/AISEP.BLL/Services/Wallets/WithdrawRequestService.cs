@@ -76,14 +76,14 @@ namespace AISEP.BLL.Services.Wallets
 
             await _notificationService.SendNotificationAsync(
                 userId,
-                "Withdrawal request submitted",
-                $"Your withdrawal request for {request.Amount:0.##} has been submitted and is pending review.",
+                "Đã gửi yêu cầu rút tiền",
+                $"Yêu cầu rút {request.Amount:0.##} của bạn đã được gửi và đang chờ duyệt.",
                 NotificationType.General,
                 request.WithdrawRequestId,
                 "WithdrawRequest");
             await NotifyStaffAndAdminsAsync(
-                "New withdrawal request",
-                $"A new withdrawal request #{request.WithdrawRequestId} is waiting for approval.");
+                "Có yêu cầu rút tiền mới",
+                $"Yêu cầu rút tiền #{request.WithdrawRequestId} đang chờ phê duyệt.");
 
             var created = await _unitOfWork.WithdrawRequests.GetByIdAsync(request.WithdrawRequestId)
                 ?? throw new InvalidOperationException("Failed to load created withdraw request.");
@@ -157,8 +157,8 @@ namespace AISEP.BLL.Services.Wallets
             await _unitOfWork.SaveChangesAsync();
             await _notificationService.SendNotificationAsync(
                 request.Wallet.Advisor.UserId,
-                "Withdrawal request approved",
-                $"Your withdrawal request #{request.WithdrawRequestId} has been approved.",
+                "Yêu cầu rút tiền đã được duyệt",
+                $"Yêu cầu rút tiền #{request.WithdrawRequestId} của bạn đã được duyệt.",
                 NotificationType.General,
                 request.WithdrawRequestId,
                 "WithdrawRequest");
@@ -190,8 +190,8 @@ namespace AISEP.BLL.Services.Wallets
             await _unitOfWork.SaveChangesAsync();
             await _notificationService.SendNotificationAsync(
                 request.Wallet.Advisor.UserId,
-                "Withdrawal request rejected",
-                $"Your withdrawal request #{request.WithdrawRequestId} was rejected. Reason: {request.RejectionReason ?? "N/A"}",
+                "Yêu cầu rút tiền bị từ chối",
+                $"Yêu cầu rút tiền #{request.WithdrawRequestId} của bạn bị từ chối. Lý do: {request.RejectionReason ?? "Không có"}",
                 NotificationType.General,
                 request.WithdrawRequestId,
                 "WithdrawRequest");

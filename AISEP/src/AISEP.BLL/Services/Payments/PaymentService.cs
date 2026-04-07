@@ -332,15 +332,15 @@ namespace AISEP.BLL.Services.Payments
             booking.Status = BookingStatus.Confirmed;
             await _notificationService.SendNotificationAsync(
                 booking.CustomerId,
-                "Booking payment successful",
-                $"Payment for booking #{booking.BookingId} was successful.",
+                "Thanh toán booking thành công",
+                $"Thanh toán cho booking #{booking.BookingId} đã thành công.",
                 NotificationType.General,
                 booking.BookingId,
                 "Booking");
             await _notificationService.SendNotificationAsync(
                 booking.Advisor.UserId,
-                "Booking confirmed",
-                $"Booking #{booking.BookingId} has been confirmed after payment.",
+                "Booking đã được xác nhận",
+                $"Booking #{booking.BookingId} đã được xác nhận sau khi thanh toán.",
                 NotificationType.General,
                 booking.BookingId,
                 "Booking");

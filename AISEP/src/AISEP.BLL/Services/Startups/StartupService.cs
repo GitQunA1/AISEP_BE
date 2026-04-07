@@ -103,8 +103,8 @@ namespace AISEP.BLL.Services.Startups
             await _unitOfWork.Startups.AddAsync(startup);
             await _unitOfWork.SaveChangesAsync();
             await NotifyStaffAndAdminsAsync(
-                "Startup profile pending review",
-                $"Startup profile #{startup.StartupId} has been submitted and is waiting for approval.");
+                "Hồ sơ startup chờ duyệt",
+                $"Hồ sơ startup #{startup.StartupId} đã được gửi và đang chờ phê duyệt.");
 
             return _mapper.Map<StartupResponse>(startup);
         }
@@ -135,10 +135,12 @@ namespace AISEP.BLL.Services.Startups
             if (dto.BusinessLicenseFile is not null)
                 startup.BusinessLicenseUrl = await _storage.UploadFileAsync(dto.BusinessLicenseFile, "startup-licenses");
 
-            if (startup.ApprovalStatus == ApprovalStatus.Rejected)
-            {
-                startup.ApprovalStatus = ApprovalStatus.Pending;
-            }
+            startup.ApprovalStatus = ApprovalStatus.Pending;
+            startup.ApprovedAt = null;
+            startup.ApprovedById = null;
+            startup.RejectedAt = null;
+            startup.RejectedById = null;
+            startup.RejectionReason = null;
 
             _unitOfWork.Startups.Update(startup);
             await _unitOfWork.SaveChangesAsync();
@@ -165,8 +167,8 @@ namespace AISEP.BLL.Services.Startups
             await _unitOfWork.SaveChangesAsync();
             await _notificationService.SendNotificationAsync(
                 startup.UserId,
-                "Startup profile approved",
-                "Your startup profile has been approved.",
+                "Hồ sơ startup đã được duyệt",
+                "Hồ sơ startup của bạn đã được duyệt.",
                 NotificationType.General,
                 startup.StartupId,
                 "Startup");
@@ -192,8 +194,8 @@ namespace AISEP.BLL.Services.Startups
             await _unitOfWork.SaveChangesAsync();
             await _notificationService.SendNotificationAsync(
                 startup.UserId,
-                "Startup profile rejected",
-                $"Your startup profile was rejected. Reason: {startup.RejectionReason}",
+                "Hồ sơ startup bị từ chối",
+                $"Hồ sơ startup của bạn đã bị từ chối. Lý do: {startup.RejectionReason}",
                 NotificationType.General,
                 startup.StartupId,
                 "Startup");
