@@ -182,6 +182,29 @@ namespace AISEP.BLL.Helpers
                 .CanFilter()
                 .CanSort();
 
+            // Wallet
+            mapper.Property<Wallet>(w => w.WalletId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Wallet>(w => w.AdvisorId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Wallet>(w => w.Balance)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Wallet>(w => w.Currency)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Wallet>(w => w.IsActive)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Wallet>(w => w.Advisor.User.UserName)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Wallet>(w => w.Advisor.User.Email)
+                .CanFilter()
+                .CanSort();
+
             return mapper;
         }
     }

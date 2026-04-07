@@ -7,5 +7,6 @@ namespace AISEP.BLL.Services.Wallets
     {
         Task<WalletSummaryResponse> GetMyWalletAsync(int userId);
         Task<PagedResult<WalletTransactionResponse>> GetMyWalletTransactionsAsync(int userId, SieveModel model);
+        Task<PagedResult<AdvisorWalletResponse>> GetAllAdvisorWalletsAsync(SieveModel model);
     }
 }

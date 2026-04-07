@@ -52,5 +52,13 @@ namespace AISEP.API.Controllers
                 return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not Found", 404));
             }
         }
+
+        [HttpGet]
+        [Authorize(Roles = "Staff,Admin")]
+        public async Task<IActionResult> GetAllAdvisorWallets([FromQuery] SieveModel model)
+        {
+            var result = await _walletQueryService.GetAllAdvisorWalletsAsync(model);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Advisor wallets retrieved successfully."));
+        }
     }
 }

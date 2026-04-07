@@ -576,6 +576,28 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.EvidenceImageUrls,
                     opt => opt.MapFrom(src => ParseEvidenceImageUrls(src.EvidenceImageUrls, src.EvidenceUrl)));
 
+            CreateMap<Wallet, WalletSummaryResponse>()
+                .ForMember(dest => dest.PendingWithdrawAmount, opt => opt.Ignore())
+                .ForMember(dest => dest.AvailableBalance, opt => opt.Ignore());
+
+            CreateMap<Wallet, AdvisorWalletResponse>()
+                .ForMember(dest => dest.AdvisorUserId,
+                    opt => opt.MapFrom(src => src.Advisor.UserId))
+                .ForMember(dest => dest.AdvisorName,
+                    opt => opt.MapFrom(src => src.Advisor.User != null
+                        ? (src.Advisor.User.UserName ?? $"Advisor {src.AdvisorId}")
+                        : $"Advisor {src.AdvisorId}"))
+                .ForMember(dest => dest.AdvisorEmail,
+                    opt => opt.MapFrom(src => src.Advisor.User != null
+                        ? (src.Advisor.User.Email ?? string.Empty)
+                        : string.Empty));
+
+            CreateMap<WalletTransaction, WalletTransactionResponse>()
+                .ForMember(dest => dest.Type,
+                    opt => opt.MapFrom(src => src.Type.ToString()))
+                .ForMember(dest => dest.Status,
+                    opt => opt.MapFrom(src => src.Status.ToString()));
+
             CreateMap<WithdrawRequest, WithdrawRequestResponse>()
                 .ForMember(dest => dest.Status,
                     opt => opt.MapFrom(src => src.Status.ToString()))

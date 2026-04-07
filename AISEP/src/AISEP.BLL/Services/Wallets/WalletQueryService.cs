@@ -1,6 +1,7 @@
 using AISEP.BLL.DTOs.Responses;
 using AISEP.BLL.Helpers;
 using AISEP.DAL.Common;
+using AutoMapper;
 using Sieve.Models;
 using Sieve.Services;
 
@@ -10,11 +11,13 @@ namespace AISEP.BLL.Services.Wallets
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ISieveProcessor _sieveProcessor;
+        private readonly IMapper _mapper;
 
-        public WalletQueryService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor)
+        public WalletQueryService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             _sieveProcessor = sieveProcessor;
+            _mapper = mapper;
         }
 
         public async Task<WalletSummaryResponse> GetMyWalletAsync(int userId)
@@ -27,16 +30,10 @@ namespace AISEP.BLL.Services.Wallets
 
             var pendingAmount = await _unitOfWork.WithdrawRequests.GetPendingTotalByWalletIdAsync(wallet.WalletId);
 
-            return new WalletSummaryResponse
-            {
-                WalletId = wallet.WalletId,
-                AdvisorId = advisor.AdvisorId,
-                Balance = wallet.Balance,
-                Currency = wallet.Currency,
-                IsActive = wallet.IsActive,
-                PendingWithdrawAmount = pendingAmount,
-                AvailableBalance = wallet.Balance - pendingAmount
-            };
+            var response = _mapper.Map<WalletSummaryResponse>(wallet);
+            response.PendingWithdrawAmount = pendingAmount;
+            response.AvailableBalance = wallet.Balance - pendingAmount;
+            return response;
         }
 
         public async Task<PagedResult<WalletTransactionResponse>> GetMyWalletTransactionsAsync(int userId, SieveModel model)
@@ -48,16 +45,13 @@ namespace AISEP.BLL.Services.Wallets
                 ?? throw new KeyNotFoundException("Wallet not found.");
 
             var query = _unitOfWork.WalletTransactions.GetByWalletIdQuery(wallet.WalletId);
-            return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, x => new WalletTransactionResponse
-            {
-                WalletTransactionId = x.WalletTransactionId,
-                WalletId = x.WalletId,
-                WithdrawRequestId = x.WithdrawRequestId,
-                Amount = x.Amount,
-                Type = x.Type.ToString(),
-                Status = x.Status.ToString(),
-                CreatedAt = x.CreatedAt
-            });
+            return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, x => _mapper.Map<WalletTransactionResponse>(x));
+        }
+
+        public async Task<PagedResult<AdvisorWalletResponse>> GetAllAdvisorWalletsAsync(SieveModel model)
+        {
+            var query = _unitOfWork.Wallets.GetAllQuery();
+            return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, x => _mapper.Map<AdvisorWalletResponse>(x));
         }
     }
 }

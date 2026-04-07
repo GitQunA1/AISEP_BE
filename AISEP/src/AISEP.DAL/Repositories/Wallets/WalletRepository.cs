@@ -16,6 +16,13 @@ namespace AISEP.DAL.Repositories.Wallets
         public async Task<Wallet?> GetByAdvisorIdAsync(int advisorId)
             => await _context.Wallets.FirstOrDefaultAsync(x => x.AdvisorId == advisorId);
 
+        public IQueryable<Wallet> GetAllQuery()
+            => _context.Wallets
+                .Include(x => x.Advisor)
+                    .ThenInclude(a => a.User)
+                .OrderByDescending(x => x.WalletId)
+                .AsNoTracking();
+
         public async Task AddAsync(Wallet wallet)
             => await _context.Wallets.AddAsync(wallet);
 
