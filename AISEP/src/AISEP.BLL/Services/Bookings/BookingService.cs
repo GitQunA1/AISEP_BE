@@ -195,6 +195,13 @@ namespace AISEP.BLL.Services.Bookings
             }
 
             var createdBooking = await _unitOfWork.Bookings.GetByIdAsync(booking.BookingId);
+            await _notificationService.SendNotificationAsync(
+                advisor.UserId,
+                "New booking request",
+                $"You have a new booking request #{booking.BookingId} awaiting your response.",
+                NotificationType.General,
+                booking.BookingId,
+                "Booking");
             return createdBooking != null ? _mapper.Map<BookingResponse>(createdBooking) : null;
         }
 
@@ -367,6 +374,13 @@ namespace AISEP.BLL.Services.Bookings
 
             booking.Status = BookingStatus.ApprovedAwaitingPayment;
             await _unitOfWork.SaveChangesAsync();
+            await _notificationService.SendNotificationAsync(
+                booking.CustomerId,
+                "Booking approved",
+                "Your booking has been approved. Please proceed to payment.",
+                NotificationType.General,
+                booking.BookingId,
+                "Booking");
             return _mapper.Map<BookingResponse>(booking);
         }
 

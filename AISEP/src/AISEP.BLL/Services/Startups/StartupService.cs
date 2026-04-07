@@ -4,10 +4,12 @@ using AISEP.BLL.Exceptions;
 using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.Storage;
 using AISEP.BLL.Services.Users;
+using AISEP.BLL.Services.Notifications;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
 using Sieve.Services;
 
@@ -20,14 +22,16 @@ namespace AISEP.BLL.Services.Startups
         private readonly IMapper         _mapper;
         private readonly IUserService    _userService;
         private readonly IStorageService _storage;
+        private readonly INotificationService _notificationService;
 
-        public StartupService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IUserService userService, IStorageService storage)
+        public StartupService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IUserService userService, IStorageService storage, INotificationService notificationService)
         {
             _unitOfWork     = unitOfWork;
             _sieveProcessor = sieveProcessor;
             _mapper         = mapper;
             _userService    = userService;
             _storage        = storage;
+            _notificationService = notificationService;
         }
 
         public async Task<PagedResult<StartupResponse>> SearchStartupsAsync(SieveModel model, string? industry = null, string? stage = null)
@@ -98,6 +102,9 @@ namespace AISEP.BLL.Services.Startups
 
             await _unitOfWork.Startups.AddAsync(startup);
             await _unitOfWork.SaveChangesAsync();
+            await NotifyStaffAndAdminsAsync(
+                "Startup profile pending review",
+                $"Startup profile #{startup.StartupId} has been submitted and is waiting for approval.");
 
             return _mapper.Map<StartupResponse>(startup);
         }
@@ -156,6 +163,13 @@ namespace AISEP.BLL.Services.Startups
 
             _unitOfWork.Startups.Update(startup);
             await _unitOfWork.SaveChangesAsync();
+            await _notificationService.SendNotificationAsync(
+                startup.UserId,
+                "Startup profile approved",
+                "Your startup profile has been approved.",
+                NotificationType.General,
+                startup.StartupId,
+                "Startup");
         }
 
         public async Task RejectStartupAsync(int startupId, RejectStartupRequest dto)
@@ -176,6 +190,13 @@ namespace AISEP.BLL.Services.Startups
 
             _unitOfWork.Startups.Update(startup);
             await _unitOfWork.SaveChangesAsync();
+            await _notificationService.SendNotificationAsync(
+                startup.UserId,
+                "Startup profile rejected",
+                $"Your startup profile was rejected. Reason: {startup.RejectionReason}",
+                NotificationType.General,
+                startup.StartupId,
+                "Startup");
         }
 
 
@@ -183,6 +204,22 @@ namespace AISEP.BLL.Services.Startups
         private async Task<string?> UploadIfPresent(IFormFile? file, string folder)
             => file is not null ? await _storage.UploadFileAsync(file, folder) : null;
 
+        private async Task NotifyStaffAndAdminsAsync(string title, string message)
+        {
+            var reviewerIds = await _unitOfWork.Users.GetAllQuery()
+                .Where(u => u.Role == UserRole.Staff || u.Role == UserRole.Admin)
+                .Select(u => u.Id)
+                .ToListAsync();
+
+            foreach (var reviewerId in reviewerIds)
+            {
+                await _notificationService.SendNotificationAsync(
+                    reviewerId,
+                    title,
+                    message,
+                    NotificationType.System);
+            }
+        }
        
     }
         }

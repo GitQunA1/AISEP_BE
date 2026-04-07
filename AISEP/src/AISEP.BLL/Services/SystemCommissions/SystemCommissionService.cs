@@ -1,11 +1,14 @@
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.BLL.Helpers;
+using AISEP.BLL.Services.Notifications;
 using AISEP.BLL.Services.Users;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
+using AISEP.DAL.Enums;
 using Sieve.Models;
 using Sieve.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace AISEP.BLL.Services.SystemCommissions
 {
@@ -14,15 +17,18 @@ namespace AISEP.BLL.Services.SystemCommissions
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserService _userService;
         private readonly ISieveProcessor _sieveProcessor;
+        private readonly INotificationService _notificationService;
 
         public SystemCommissionService(
             IUnitOfWork unitOfWork,
             IUserService userService,
-            ISieveProcessor sieveProcessor)
+            ISieveProcessor sieveProcessor,
+            INotificationService notificationService)
         {
             _unitOfWork = unitOfWork;
             _userService = userService;
             _sieveProcessor = sieveProcessor;
+            _notificationService = notificationService;
         }
 
         public async Task<SystemCommissionCurrentResponse> GetCurrentAsync()
@@ -92,6 +98,9 @@ namespace AISEP.BLL.Services.SystemCommissions
                 ChangedAt = now
             });
             await _unitOfWork.SaveChangesAsync();
+            await NotifyStaffAndAdminsAsync(
+                "System commission updated",
+                $"System commission has been updated to {config.Percent:0.##}%.");
 
             return new SystemCommissionCurrentResponse
             {
@@ -121,6 +130,23 @@ namespace AISEP.BLL.Services.SystemCommissions
                 ChangedByName = x.ChangedBy.UserName ?? $"User {x.ChangedById}",
                 ChangedAt = x.ChangedAt
             });
+        }
+
+        private async Task NotifyStaffAndAdminsAsync(string title, string message)
+        {
+            var reviewerIds = await _unitOfWork.Users.GetAllQuery()
+                .Where(u => u.Role == UserRole.Staff || u.Role == UserRole.Admin)
+                .Select(u => u.Id)
+                .ToListAsync();
+
+            foreach (var reviewerId in reviewerIds)
+            {
+                await _notificationService.SendNotificationAsync(
+                    reviewerId,
+                    title,
+                    message,
+                    NotificationType.System);
+            }
         }
     }
 }

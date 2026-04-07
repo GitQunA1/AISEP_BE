@@ -21,5 +21,11 @@ namespace AISEP.DAL.Repositories.WalletTransactions
             => await _context.WalletTransactions.FirstOrDefaultAsync(x =>
                 x.WithdrawRequestId == withdrawRequestId
                 && x.Type == WalletTransactionType.Withdrawal);
+
+        public IQueryable<WalletTransaction> GetByWalletIdQuery(int walletId)
+            => _context.WalletTransactions
+                .Where(x => x.WalletId == walletId)
+                .OrderByDescending(x => x.CreatedAt)
+                .AsNoTracking();
     }
 }

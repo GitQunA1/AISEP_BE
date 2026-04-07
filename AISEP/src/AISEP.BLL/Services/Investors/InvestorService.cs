@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
 using Sieve.Services;
 using AISEP.BLL.Services.Users;
+using AISEP.BLL.Services.Notifications;
 using AISEP.BLL.Exceptions;
 
 namespace AISEP.BLL.Services.Investors
@@ -20,13 +21,15 @@ namespace AISEP.BLL.Services.Investors
         private readonly ISieveProcessor _sieveProcessor;
         private readonly IMapper _mapper;
         private readonly IUserService _userService;
+        private readonly INotificationService _notificationService;
 
-        public InvestorService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IUserService userService)
+        public InvestorService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IUserService userService, INotificationService notificationService)
         {
             _unitOfWork = unitOfWork;
             _sieveProcessor = sieveProcessor;
             _mapper = mapper;
             _userService = userService;
+            _notificationService = notificationService;
         }
 
         public async Task<PagedResult<InvestorResponse>> GetAllAsync(SieveModel model)
@@ -65,6 +68,9 @@ namespace AISEP.BLL.Services.Investors
             investor.ApprovalStatus = ApprovalStatus.Pending;
             await _unitOfWork.Investors.AddAsync(investor);
             await _unitOfWork.SaveChangesAsync();
+            await NotifyStaffAndAdminsAsync(
+                "Investor profile pending review",
+                $"Investor profile #{investor.InvestorId} has been submitted and is waiting for approval.");
 
             var created = await _unitOfWork.Investors.GetByIdAsync(investor.InvestorId);
             return _mapper.Map<InvestorResponse>(created!);
@@ -119,6 +125,13 @@ namespace AISEP.BLL.Services.Investors
 
             _unitOfWork.Investors.Update(investor);
             await _unitOfWork.SaveChangesAsync();
+            await _notificationService.SendNotificationAsync(
+                investor.UserId,
+                "Investor profile approved",
+                "Your investor profile has been approved.",
+                NotificationType.General,
+                investor.InvestorId,
+                "Investor");
         }
 
         public async Task RejectInvestorAsync(int investorId, string rejectionReason)
@@ -139,6 +152,30 @@ namespace AISEP.BLL.Services.Investors
 
             _unitOfWork.Investors.Update(investor);
             await _unitOfWork.SaveChangesAsync();
+            await _notificationService.SendNotificationAsync(
+                investor.UserId,
+                "Investor profile rejected",
+                $"Your investor profile was rejected. Reason: {rejectionReason}",
+                NotificationType.General,
+                investor.InvestorId,
+                "Investor");
+        }
+
+        private async Task NotifyStaffAndAdminsAsync(string title, string message)
+        {
+            var reviewerIds = await _unitOfWork.Users.GetAllQuery()
+                .Where(u => u.Role == UserRole.Staff || u.Role == UserRole.Admin)
+                .Select(u => u.Id)
+                .ToListAsync();
+
+            foreach (var reviewerId in reviewerIds)
+            {
+                await _notificationService.SendNotificationAsync(
+                    reviewerId,
+                    title,
+                    message,
+                    NotificationType.System);
+            }
         }
     }
 }

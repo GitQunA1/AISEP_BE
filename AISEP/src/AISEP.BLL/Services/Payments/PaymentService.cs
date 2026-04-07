@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.BLL.Helpers;
+using AISEP.BLL.Services.Notifications;
 using AISEP.BLL.Settings;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
@@ -19,17 +20,20 @@ namespace AISEP.BLL.Services.Payments
         private readonly SePaySettings _sePaySettings;
         private readonly IMapper _mapper;
         private readonly ISieveProcessor _sieveProcessor;
+        private readonly INotificationService _notificationService;
 
         public PaymentService(
             IUnitOfWork unitOfWork,
             IOptions<SePaySettings> sePaySettings,
             IMapper mapper,
-            ISieveProcessor sieveProcessor)
+            ISieveProcessor sieveProcessor,
+            INotificationService notificationService)
         {
             _unitOfWork = unitOfWork;
             _sePaySettings = sePaySettings.Value;
             _mapper = mapper;
             _sieveProcessor = sieveProcessor;
+            _notificationService = notificationService;
         }
 
         public async Task<IEnumerable<PackageResponse>> GetInvestorPackagesAsync()
@@ -326,6 +330,20 @@ namespace AISEP.BLL.Services.Payments
                 return;
 
             booking.Status = BookingStatus.Confirmed;
+            await _notificationService.SendNotificationAsync(
+                booking.CustomerId,
+                "Booking payment successful",
+                $"Payment for booking #{booking.BookingId} was successful.",
+                NotificationType.General,
+                booking.BookingId,
+                "Booking");
+            await _notificationService.SendNotificationAsync(
+                booking.Advisor.UserId,
+                "Booking confirmed",
+                $"Booking #{booking.BookingId} has been confirmed after payment.",
+                NotificationType.General,
+                booking.BookingId,
+                "Booking");
         }
 
         private async Task<IEnumerable<PackageResponse>> GetPackagesByRoleAsync(UserRole role)
