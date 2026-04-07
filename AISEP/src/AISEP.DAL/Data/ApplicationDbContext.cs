@@ -28,6 +28,8 @@ namespace AISEP.DAL.Data
         public DbSet<Deal> Deals { get; set; }
         public DbSet<NFTRecord> NFTRecords { get; set; }
         public DbSet<Booking> Bookings { get; set; }
+        public DbSet<SystemCommissionConfig> SystemCommissionConfigs { get; set; }
+        public DbSet<SystemCommissionChangeLog> SystemCommissionChangeLogs { get; set; }
         public DbSet<Wallet> Wallets { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
@@ -350,6 +352,8 @@ namespace AISEP.DAL.Data
                 entity.ToTable("bookings");
                 entity.HasKey(e => e.BookingId);
                 entity.Property(e => e.Price).HasColumnType("decimal(18,2)").IsRequired();
+                entity.Property(e => e.SystemCommissionPercent).HasColumnType("decimal(5,2)").HasDefaultValue(0m);
+                entity.Property(e => e.SystemCommissionAmount).HasColumnType("decimal(18,2)").HasDefaultValue(0m);
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.Note).HasMaxLength(1000);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
@@ -368,6 +372,54 @@ namespace AISEP.DAL.Data
                     .WithMany(u => u.CustomerBookings)
                     .HasForeignKey(b => b.CustomerId)
                     .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(b => b.SystemCommissionConfig)
+                    .WithMany(c => c.Bookings)
+                    .HasForeignKey(b => b.SystemCommissionConfigId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<SystemCommissionConfig>(entity =>
+            {
+                entity.ToTable("system_commission_configs");
+                entity.HasKey(e => e.SystemCommissionConfigId);
+                entity.Property(e => e.Percent).HasColumnType("decimal(5,2)").IsRequired();
+                entity.Property(e => e.EffectiveFrom).IsRequired();
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.IsActive).IsRequired();
+                entity.ToTable(tb => tb.HasCheckConstraint("CK_system_commission_configs_percent_range", "\"Percent\" >= 0 AND \"Percent\" <= 100"));
+                entity.ToTable(tb => tb.HasCheckConstraint("CK_system_commission_configs_effective_range", "\"EffectiveTo\" IS NULL OR \"EffectiveTo\" > \"EffectiveFrom\""));
+
+                entity.HasOne(e => e.CreatedBy)
+                    .WithMany()
+                    .HasForeignKey(e => e.CreatedById)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => e.IsActive)
+                    .HasFilter("\"IsActive\" = TRUE")
+                    .IsUnique();
+            });
+
+            modelBuilder.Entity<SystemCommissionChangeLog>(entity =>
+            {
+                entity.ToTable("system_commission_change_logs");
+                entity.HasKey(e => e.SystemCommissionChangeLogId);
+                entity.Property(e => e.OldPercent).HasColumnType("decimal(5,2)");
+                entity.Property(e => e.NewPercent).HasColumnType("decimal(5,2)").IsRequired();
+                entity.Property(e => e.Reason).HasMaxLength(1000);
+                entity.Property(e => e.ChangedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                entity.HasOne(e => e.SystemCommissionConfig)
+                    .WithMany(c => c.ChangeLogs)
+                    .HasForeignKey(e => e.SystemCommissionConfigId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(e => e.ChangedBy)
+                    .WithMany()
+                    .HasForeignKey(e => e.ChangedById)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => e.ChangedAt);
             });
 
             modelBuilder.Entity<AdvisorAvailability>(entity =>

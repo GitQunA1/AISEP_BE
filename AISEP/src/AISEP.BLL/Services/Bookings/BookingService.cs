@@ -126,7 +126,12 @@ namespace AISEP.BLL.Services.Bookings
             };
 
             var subscription = await _unitOfWork.Subscriptions.GetLatestActiveAsync(currentUser);
-            if (subscription is not null && subscription.RemainingFreeBookings > 0)
+            var bookingDurationHours = (decimal)(bookingEnd - bookingStart).TotalHours;
+            var isEligibleForFreeBooking = bookingDurationHours <= 3m;
+
+            if (subscription is not null
+                && subscription.RemainingFreeBookings > 0
+                && isEligibleForFreeBooking)
             {
                 booking.Price = 0;
                 subscription.RemainingFreeBookings -= 1;
@@ -137,6 +142,14 @@ namespace AISEP.BLL.Services.Bookings
                 var hourlyRate = advisor.HourlyRate ?? 0;
                 booking.Price = Math.Round(hourlyRate * selectedSlots.Count, 2, MidpointRounding.AwayFromZero);
             }
+
+            var commissionConfig = await _unitOfWork.SystemCommissionConfigs.GetCurrentAsync(DateTime.UtcNow);
+            booking.SystemCommissionConfigId = commissionConfig?.SystemCommissionConfigId;
+            booking.SystemCommissionPercent = commissionConfig?.Percent ?? 0m;
+            booking.SystemCommissionAmount = Math.Round(
+                booking.Price * (booking.SystemCommissionPercent / 100m),
+                2,
+                MidpointRounding.AwayFromZero);
 
             try
             {

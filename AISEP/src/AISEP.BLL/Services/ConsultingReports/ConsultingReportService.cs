@@ -18,7 +18,7 @@ namespace AISEP.BLL.Services.ConsultingReports
         private static readonly TimeSpan AdvisorSubmitWindow = TimeSpan.FromHours(24);
         private static readonly TimeSpan StartupReviewWindow = TimeSpan.FromHours(24);
         private const int MaxRevisionCount = 3;
-        private const decimal AdvisorPayoutRate = 0.8m;
+        private const decimal LegacyAdvisorPayoutRate = 0.8m;
 
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserService _userService;
@@ -254,7 +254,9 @@ namespace AISEP.BLL.Services.ConsultingReports
             if (bookingWithWallet.Advisor?.Wallet is null)
                 throw new InvalidOperationException("Advisor wallet not found.");
 
-            var payoutAmount = Math.Round(bookingWithWallet.Price * AdvisorPayoutRate, 2, MidpointRounding.AwayFromZero);
+            var payoutAmount = bookingWithWallet.SystemCommissionPercent > 0m || bookingWithWallet.SystemCommissionConfigId.HasValue
+                ? Math.Round(bookingWithWallet.Price - bookingWithWallet.SystemCommissionAmount, 2, MidpointRounding.AwayFromZero)
+                : Math.Round(bookingWithWallet.Price * LegacyAdvisorPayoutRate, 2, MidpointRounding.AwayFromZero);
             if (payoutAmount > 0)
             {
                 bookingWithWallet.Advisor.Wallet.Balance += payoutAmount;
