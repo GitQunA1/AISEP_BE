@@ -66,6 +66,12 @@ namespace AISEP.API.Controllers
                 return Ok(ApiResponse<object>.SuccessResponse(startupDeals, "Deals retrieved successfully."));
             }
 
+            if (User.IsInRole("Staff") || User.IsInRole("Admin"))
+            {
+                var allDeals = await _dealService.GetDealsAsync(model);
+                return Ok(ApiResponse<object>.SuccessResponse(allDeals, "Deals retrieved successfully."));
+            }
+
             throw new UnauthorizedAccessException("Role is not allowed to access deals.");
         }
 
@@ -140,6 +146,12 @@ namespace AISEP.API.Controllers
 
                 var startupHtml = await _dealService.GetContractPreviewForStartupAsync(id, startup.Id);
                 return Ok(ApiResponse<object>.SuccessResponse(startupHtml, "Contract preview loaded successfully."));
+            }
+
+            if (User.IsInRole("Staff") || User.IsInRole("Admin"))
+            {
+                var html = await _dealService.GetContractPreviewAsync(id);
+                return Ok(ApiResponse<object>.SuccessResponse(html, "Contract preview loaded successfully."));
             }
 
             throw new UnauthorizedAccessException("Role is not allowed to access contract preview.");
@@ -228,6 +240,12 @@ namespace AISEP.API.Controllers
 
                 var startupResult = await _dealService.GetContractStatusForStartupAsync(id, startup.Id);
                 return Ok(ApiResponse<object>.SuccessResponse(startupResult, "Contract status loaded successfully."));
+            }
+
+            if (User.IsInRole("Staff") || User.IsInRole("Admin"))
+            {
+                var result = await _dealService.GetContractStatusAsync(id);
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Contract status loaded successfully."));
             }
 
             throw new UnauthorizedAccessException("Role is not allowed to access contract status.");

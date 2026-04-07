@@ -98,6 +98,19 @@ namespace AISEP.BLL.Services.Deals
             return _mapper.Map<DealDto>(created);
         }
 
+        public async Task<PagedResult<DealDto>> GetDealsAsync(SieveModel sieveModel)
+        {
+            sieveModel ??= new SieveModel();
+
+            var query = _unitOfWork.Deals.GetQuery();
+
+            return await PaginationHelper.PaginateAsync(
+                query,
+                sieveModel,
+                _sieveProcessor,
+                d => _mapper.Map<DealDto>(d));
+        }
+
         public async Task<PagedResult<DealDto>> GetInvestorDealsAsync(int investorId, SieveModel sieveModel)
         {
             sieveModel ??= new SieveModel();
@@ -181,6 +194,17 @@ namespace AISEP.BLL.Services.Deals
                 ?? throw new KeyNotFoundException("Deal not found.");
 
             EnsureInvestorOwnsDeal(deal, investorId);
+            EnsureDealAllowsContractPreview(deal);
+
+            var templateHtml = await ReadContractTemplateAsync();
+            return BuildContractHtml(templateHtml, deal);
+        }
+
+        public async Task<string> GetContractPreviewAsync(int dealId)
+        {
+            var deal = await _unitOfWork.Deals.GetByIdWithNftAsync(dealId)
+                ?? throw new KeyNotFoundException("Deal not found.");
+
             EnsureDealAllowsContractPreview(deal);
 
             var templateHtml = await ReadContractTemplateAsync();
@@ -377,6 +401,14 @@ namespace AISEP.BLL.Services.Deals
                 ?? throw new KeyNotFoundException("Deal not found.");
 
             EnsureStartupOwnsDeal(deal, startupId);
+            return _mapper.Map<DealContractStatusResponse>(deal);
+        }
+
+        public async Task<DealContractStatusResponse> GetContractStatusAsync(int dealId)
+        {
+            var deal = await _unitOfWork.Deals.GetByIdWithNftAsync(dealId)
+                ?? throw new KeyNotFoundException("Deal not found.");
+
             return _mapper.Map<DealContractStatusResponse>(deal);
         }
 
