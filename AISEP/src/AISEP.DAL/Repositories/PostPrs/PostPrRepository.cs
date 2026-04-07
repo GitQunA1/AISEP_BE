@@ -32,10 +32,5 @@ namespace AISEP.DAL.Repositories.PostPrs
         {
             _context.PostPrs.Update(postPr);
         }
-
-        public void Delete(PostPr postPr)
-        {
-            _context.PostPrs.Remove(postPr);
-        }
     }
 }

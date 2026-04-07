@@ -10,6 +10,7 @@ namespace AISEP.BLL.Services.PostPrs
         Task<PostPrResponseDto> GetByIdAsync(int id);
         Task<PostPrResponseDto> CreateAsync(CreatePostPrRequest request);
         Task<PostPrResponseDto> UpdateAsync(int id, UpdatePostPrRequest request);
-        Task DeleteAsync(int id);
+        Task<PostPrResponseDto> PatchPublishAsync(int id);
+        Task PatchDeleteAsync(int id, bool isDelete);
     }
 }

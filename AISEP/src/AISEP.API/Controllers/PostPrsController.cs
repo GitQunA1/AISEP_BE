@@ -53,12 +53,23 @@ namespace AISEP.API.Controllers
             return Ok(ApiResponse<object>.SuccessResponse(result, "Post PR updated successfully."));
         }
 
-        [HttpDelete("{id:int}")]
+        [HttpPatch("{id:int}/publish")]
         [Authorize(Roles = "Admin, Staff")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> PatchPublish(int id)
         {
-            await _postPrService.DeleteAsync(id);
-            return Ok(ApiResponse<object>.SuccessResponse(null!, "Post PR deleted successfully."));
+            var result = await _postPrService.PatchPublishAsync(id);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Post PR published successfully."));
+        }
+
+        [HttpPatch("{id:int}/delete")]
+        [Authorize(Roles = "Admin, Staff")]
+        public async Task<IActionResult> PatchDelete(int id, [FromBody] PatchPostPrDeleteRequest request)
+        {
+            await _postPrService.PatchDeleteAsync(id, request.IsDelete);
+            var message = request.IsDelete
+                ? "Post PR soft-deleted successfully."
+                : "Post PR restored successfully.";
+            return Ok(ApiResponse<object>.SuccessResponse(null!, message));
         }
     }
 }

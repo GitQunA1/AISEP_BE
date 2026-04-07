@@ -8,6 +8,5 @@ namespace AISEP.DAL.Repositories.PostPrs
         Task<PostPr?> GetByIdAsync(int id);
         Task AddAsync(PostPr postPr);
         void Update(PostPr postPr);
-        void Delete(PostPr postPr);
     }
 }

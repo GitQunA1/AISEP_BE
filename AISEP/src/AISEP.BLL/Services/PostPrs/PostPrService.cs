@@ -52,7 +52,9 @@ namespace AISEP.BLL.Services.PostPrs
             }
 
             var postPr = _mapper.Map<PostPr>(request);
-            postPr.PublishedAt = DateTime.UtcNow;
+            postPr.Status = PostPrStatus.Pending;
+            postPr.IsDelete = false;
+            postPr.PublishedAt = null;
 
             await _unitOfWork.PostPrs.AddAsync(postPr);
             await _unitOfWork.SaveChangesAsync();
@@ -62,7 +64,7 @@ namespace AISEP.BLL.Services.PostPrs
 
         public async Task<PostPrResponseDto> UpdateAsync(int id, UpdatePostPrRequest request)
         {
-            var postPr = await _unitOfWork.PostPrs.GetByIdAsync(id)
+            var postPr = await BuildQuery().FirstOrDefaultAsync(p => p.PostPrId == id)
                 ?? throw new KeyNotFoundException("Post PR not found.");
 
             postPr.Title = request.Title;
@@ -74,18 +76,36 @@ namespace AISEP.BLL.Services.PostPrs
             return await GetByIdAsync(postPr.PostPrId);
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task<PostPrResponseDto> PatchPublishAsync(int id)
+        {
+            var postPr = await BuildQuery().FirstOrDefaultAsync(p => p.PostPrId == id)
+                ?? throw new KeyNotFoundException("Post PR not found.");
+
+            if (postPr.Status != PostPrStatus.Public)
+            {
+                postPr.Status = PostPrStatus.Public;
+                postPr.PublishedAt = postPr.PublishedAt ?? DateTime.UtcNow;
+                _unitOfWork.PostPrs.Update(postPr);
+                await _unitOfWork.SaveChangesAsync();
+            }
+
+            return await GetByIdAsync(postPr.PostPrId);
+        }
+
+        public async Task PatchDeleteAsync(int id, bool isDelete)
         {
             var postPr = await _unitOfWork.PostPrs.GetByIdAsync(id)
                 ?? throw new KeyNotFoundException("Post PR not found.");
 
-            _unitOfWork.PostPrs.Delete(postPr);
+            postPr.IsDelete = isDelete;
+            _unitOfWork.PostPrs.Update(postPr);
             await _unitOfWork.SaveChangesAsync();
         }
 
         private IQueryable<PostPr> BuildQuery()
         {
             return _unitOfWork.PostPrs.GetQuery()
+                .Where(p => !p.IsDelete)
                 .Include(p => p.Deal)
                     .ThenInclude(d => d.Project)
                         .ThenInclude(project => project.Startup)

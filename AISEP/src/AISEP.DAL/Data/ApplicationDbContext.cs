@@ -339,6 +339,8 @@ namespace AISEP.DAL.Data
                 entity.HasKey(e => e.PostPrId);
                 entity.Property(e => e.Title).HasMaxLength(255);
                 entity.Property(e => e.Content).HasColumnType("text");
+                entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired().HasDefaultValue(PostPrStatus.Pending);
+                entity.Property(e => e.IsDelete).HasDefaultValue(false);
 
                 entity.HasOne(p => p.Deal)
                     .WithMany()

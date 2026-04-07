@@ -5,6 +5,8 @@ namespace AISEP.BLL.DTOs.Responses
         public int PostPrId { get; set; }
         public string? Title { get; set; }
         public string? Content { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public bool IsDelete { get; set; }
         public DateTime? PublishedAt { get; set; }
         public int DealId { get; set; }
 

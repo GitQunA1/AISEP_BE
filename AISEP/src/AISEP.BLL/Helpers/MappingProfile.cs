@@ -489,11 +489,15 @@ namespace AISEP.BLL.Helpers
             // CreatePostPrRequest -> PostPr Entity
             CreateMap<CreatePostPrRequest, PostPr>()
                 .ForMember(dest => dest.PostPrId, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.IsDelete, opt => opt.Ignore())
                 .ForMember(dest => dest.PublishedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.Deal, opt => opt.Ignore());
 
             // PostPr Entity -> PostPrResponseDto
             CreateMap<PostPr, PostPrResponseDto>()
+                .ForMember(dest => dest.Status,
+                    opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.ProjectId,
                     opt => opt.MapFrom(src => src.Deal != null ? src.Deal.ProjectId : 0))
                 .ForMember(dest => dest.ProjectName,

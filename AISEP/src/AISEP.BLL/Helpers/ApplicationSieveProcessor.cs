@@ -205,6 +205,26 @@ namespace AISEP.BLL.Helpers
                 .CanFilter()
                 .CanSort();
 
+            // PostPr
+            mapper.Property<PostPr>(p => p.PostPrId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<PostPr>(p => p.DealId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<PostPr>(p => p.Title)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<PostPr>(p => p.Status)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<PostPr>(p => p.IsDelete)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<PostPr>(p => p.PublishedAt)
+                .CanFilter()
+                .CanSort();
+
             return mapper;
         }
     }
