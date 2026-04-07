@@ -197,8 +197,8 @@ namespace AISEP.BLL.Services.Bookings
             var createdBooking = await _unitOfWork.Bookings.GetByIdAsync(booking.BookingId);
             await _notificationService.SendNotificationAsync(
                 advisor.UserId,
-                "New booking request",
-                $"You have a new booking request #{booking.BookingId} awaiting your response.",
+                "Có yêu cầu booking mới",
+                $"Bạn có yêu cầu booking mới #{booking.BookingId} đang chờ phản hồi.",
                 NotificationType.General,
                 booking.BookingId,
                 "Booking");
@@ -376,8 +376,8 @@ namespace AISEP.BLL.Services.Bookings
             await _unitOfWork.SaveChangesAsync();
             await _notificationService.SendNotificationAsync(
                 booking.CustomerId,
-                "Booking approved",
-                "Your booking has been approved. Please proceed to payment.",
+                "Booking đã được chấp nhận",
+                "Booking của bạn đã được chấp nhận. Vui lòng tiến hành thanh toán.",
                 NotificationType.General,
                 booking.BookingId,
                 "Booking");
@@ -407,8 +407,8 @@ namespace AISEP.BLL.Services.Bookings
 
             await _notificationService.SendNotificationAsync(
                 booking.CustomerId,
-                "Booking rejected",
-                "Advisor rejected this booking. You can rebook another time, or cancel to choose another advisor.",
+                "Booking bị từ chối",
+                "Advisor đã từ chối booking này. Bạn có thể đặt lại thời gian khác hoặc chọn advisor khác.",
                 NotificationType.General);
 
             return _mapper.Map<BookingResponse>(booking);
@@ -509,8 +509,8 @@ namespace AISEP.BLL.Services.Bookings
             {
                 await _notificationService.SendNotificationAsync(
                     booking.CustomerId,
-                    "Advisor no response",
-                    "Booking timed out and was marked as NoResponse. No suitable replacement advisor is available now. Please choose another advisor.",
+                    "Advisor chưa phản hồi",
+                    "Booking đã quá thời gian phản hồi và được chuyển sang NoResponse. Hiện chưa có advisor thay thế phù hợp, vui lòng chọn advisor khác.",
                     NotificationType.General);
                 return;
             }
@@ -520,8 +520,8 @@ namespace AISEP.BLL.Services.Bookings
 
             await _notificationService.SendNotificationAsync(
                 booking.CustomerId,
-                "Advisor no response",
-                $"Booking timed out and was marked as NoResponse. Suggested advisors: {suggestedText}. Please book again with one of them.",
+                "Advisor chưa phản hồi",
+                $"Booking đã quá thời gian phản hồi và được chuyển sang NoResponse. Gợi ý advisor thay thế: {suggestedText}. Vui lòng đặt lại với một advisor trong danh sách.",
                 NotificationType.General);
         }
 

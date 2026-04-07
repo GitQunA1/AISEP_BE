@@ -69,8 +69,8 @@ namespace AISEP.BLL.Services.Investors
             await _unitOfWork.Investors.AddAsync(investor);
             await _unitOfWork.SaveChangesAsync();
             await NotifyStaffAndAdminsAsync(
-                "Investor profile pending review",
-                $"Investor profile #{investor.InvestorId} has been submitted and is waiting for approval.");
+                "Hồ sơ investor chờ duyệt",
+                $"Hồ sơ investor #{investor.InvestorId} đã được gửi và đang chờ phê duyệt.");
 
             var created = await _unitOfWork.Investors.GetByIdAsync(investor.InvestorId);
             return _mapper.Map<InvestorResponse>(created!);
@@ -97,10 +97,12 @@ namespace AISEP.BLL.Services.Investors
             investor.PreferredStage      = dto.PreferredStage      ?? investor.PreferredStage;
             investor.PreviousInvestments = dto.PreviousInvestments ?? investor.PreviousInvestments;
 
-            if (investor.ApprovalStatus == ApprovalStatus.Rejected)
-            {
-                investor.ApprovalStatus = ApprovalStatus.Pending;
-            }
+            investor.ApprovalStatus = ApprovalStatus.Pending;
+            investor.ApprovedAt = null;
+            investor.ApprovedById = null;
+            investor.RejectedAt = null;
+            investor.RejectedById = null;
+            investor.RejectionReason = null;
 
             _unitOfWork.Investors.Update(investor);
             await _unitOfWork.SaveChangesAsync();
@@ -127,8 +129,8 @@ namespace AISEP.BLL.Services.Investors
             await _unitOfWork.SaveChangesAsync();
             await _notificationService.SendNotificationAsync(
                 investor.UserId,
-                "Investor profile approved",
-                "Your investor profile has been approved.",
+                "Hồ sơ investor đã được duyệt",
+                "Hồ sơ investor của bạn đã được duyệt.",
                 NotificationType.General,
                 investor.InvestorId,
                 "Investor");
@@ -154,8 +156,8 @@ namespace AISEP.BLL.Services.Investors
             await _unitOfWork.SaveChangesAsync();
             await _notificationService.SendNotificationAsync(
                 investor.UserId,
-                "Investor profile rejected",
-                $"Your investor profile was rejected. Reason: {rejectionReason}",
+                "Hồ sơ investor bị từ chối",
+                $"Hồ sơ investor của bạn đã bị từ chối. Lý do: {rejectionReason}",
                 NotificationType.General,
                 investor.InvestorId,
                 "Investor");

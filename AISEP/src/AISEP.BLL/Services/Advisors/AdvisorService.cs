@@ -87,8 +87,8 @@ namespace AISEP.BLL.Services.Advisors
             await _unitOfWork.Advisors.AddAsync(advisor);
             await _unitOfWork.SaveChangesAsync();
             await NotifyStaffAndAdminsAsync(
-                "Advisor profile pending review",
-                $"Advisor profile #{advisor.AdvisorId} has been submitted and is waiting for approval.");
+                "Hồ sơ advisor chờ duyệt",
+                $"Hồ sơ advisor #{advisor.AdvisorId} đã được gửi và đang chờ phê duyệt.");
 
             var created = await _unitOfWork.Advisors.GetByIdAsync(advisor.AdvisorId);
             return _mapper.Map<AdvisorResponse>(created!);
@@ -149,10 +149,12 @@ namespace AISEP.BLL.Services.Advisors
             if (dto.CertificationFile is not null)
                 advisor.Certifications = await _storage.UploadFileAsync(dto.CertificationFile, "advisor-certifications");
 
-            if (advisor.ApprovalStatus == ApprovalStatus.Rejected)
-            {
-                advisor.ApprovalStatus = ApprovalStatus.Pending;
-            }
+            advisor.ApprovalStatus = ApprovalStatus.Pending;
+            advisor.ApprovedAt = null;
+            advisor.ApprovedById = null;
+            advisor.RejectedAt = null;
+            advisor.RejectedById = null;
+            advisor.RejectionReason = null;
             await _walletService.SyncWithAdvisorApprovalStatusAsync(advisor.AdvisorId, advisor.ApprovalStatus, createWalletIfApproved: false);
 
             _unitOfWork.Advisors.Update(advisor);
@@ -191,8 +193,8 @@ namespace AISEP.BLL.Services.Advisors
             await _unitOfWork.SaveChangesAsync();
             await _notificationService.SendNotificationAsync(
                 advisor.UserId,
-                "Advisor profile approved",
-                "Your advisor profile has been approved and your wallet is now active.",
+                "Hồ sơ advisor đã được duyệt",
+                "Hồ sơ advisor của bạn đã được duyệt và ví hiện đang hoạt động.",
                 NotificationType.General,
                 advisor.AdvisorId,
                 "Advisor");
@@ -219,8 +221,8 @@ namespace AISEP.BLL.Services.Advisors
             await _unitOfWork.SaveChangesAsync();
             await _notificationService.SendNotificationAsync(
                 advisor.UserId,
-                "Advisor profile rejected",
-                $"Your advisor profile was rejected. Reason: {rejectionReason}",
+                "Hồ sơ advisor bị từ chối",
+                $"Hồ sơ advisor của bạn đã bị từ chối. Lý do: {rejectionReason}",
                 NotificationType.General,
                 advisor.AdvisorId,
                 "Advisor");
