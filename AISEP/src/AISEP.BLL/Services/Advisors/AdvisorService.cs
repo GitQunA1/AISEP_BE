@@ -9,8 +9,10 @@ using Sieve.Models;
 using Sieve.Services;
 using AISEP.BLL.Services.Users;
 using AISEP.BLL.Services.Wallets;
+using AISEP.BLL.Services.Notifications;
 using AISEP.DAL.Enums;
 using AISEP.BLL.Exceptions;
+using Microsoft.EntityFrameworkCore;
 
 namespace AISEP.BLL.Services.Advisors
 {
@@ -22,8 +24,9 @@ namespace AISEP.BLL.Services.Advisors
         private readonly IStorageService _storage;
         private readonly IUserService _userService;
         private readonly IWalletService _walletService;
+        private readonly INotificationService _notificationService;
 
-        public AdvisorService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IStorageService storage, IUserService userService, IWalletService walletService)
+        public AdvisorService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IStorageService storage, IUserService userService, IWalletService walletService, INotificationService notificationService)
         {
             _unitOfWork     = unitOfWork;
             _sieveProcessor = sieveProcessor;
@@ -31,6 +34,7 @@ namespace AISEP.BLL.Services.Advisors
             _storage        = storage;
             _userService = userService;
             _walletService = walletService;
+            _notificationService = notificationService;
         }
 
         public async Task<PagedResult<AdvisorResponse>> GetAllAsync(SieveModel model)
@@ -82,6 +86,9 @@ namespace AISEP.BLL.Services.Advisors
             advisor.CreatedBy      = userId;
             await _unitOfWork.Advisors.AddAsync(advisor);
             await _unitOfWork.SaveChangesAsync();
+            await NotifyStaffAndAdminsAsync(
+                "Advisor profile pending review",
+                $"Advisor profile #{advisor.AdvisorId} has been submitted and is waiting for approval.");
 
             var created = await _unitOfWork.Advisors.GetByIdAsync(advisor.AdvisorId);
             return _mapper.Map<AdvisorResponse>(created!);
@@ -182,6 +189,13 @@ namespace AISEP.BLL.Services.Advisors
 
             _unitOfWork.Advisors.Update(advisor);
             await _unitOfWork.SaveChangesAsync();
+            await _notificationService.SendNotificationAsync(
+                advisor.UserId,
+                "Advisor profile approved",
+                "Your advisor profile has been approved and your wallet is now active.",
+                NotificationType.General,
+                advisor.AdvisorId,
+                "Advisor");
         }
 
         public async Task RejectAdvisorAsync(int advisorId, string rejectionReason)
@@ -203,6 +217,13 @@ namespace AISEP.BLL.Services.Advisors
 
             _unitOfWork.Advisors.Update(advisor);
             await _unitOfWork.SaveChangesAsync();
+            await _notificationService.SendNotificationAsync(
+                advisor.UserId,
+                "Advisor profile rejected",
+                $"Your advisor profile was rejected. Reason: {rejectionReason}",
+                NotificationType.General,
+                advisor.AdvisorId,
+                "Advisor");
         }
 
         
@@ -220,6 +241,23 @@ namespace AISEP.BLL.Services.Advisors
             }
 
             return merged.Distinct().ToList();
+        }
+
+        private async Task NotifyStaffAndAdminsAsync(string title, string message)
+        {
+            var reviewerIds = await _unitOfWork.Users.GetAllQuery()
+                .Where(u => u.Role == UserRole.Staff || u.Role == UserRole.Admin)
+                .Select(u => u.Id)
+                .ToListAsync();
+
+            foreach (var reviewerId in reviewerIds)
+            {
+                await _notificationService.SendNotificationAsync(
+                    reviewerId,
+                    title,
+                    message,
+                    NotificationType.System);
+            }
         }
     }
 }

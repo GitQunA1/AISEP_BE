@@ -3,6 +3,7 @@ using AISEP.BLL.DTOs.Responses;
 using AISEP.BLL.Exceptions;
 using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.Users;
+using AISEP.BLL.Services.Notifications;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
@@ -24,17 +25,20 @@ namespace AISEP.BLL.Services.ConsultingReports
         private readonly IUserService _userService;
         private readonly IMapper _mapper;
         private readonly ISieveProcessor _sieveProcessor;
+        private readonly INotificationService _notificationService;
 
         public ConsultingReportService(
             IUnitOfWork unitOfWork,
             IUserService userService,
             IMapper mapper,
-            ISieveProcessor sieveProcessor)
+            ISieveProcessor sieveProcessor,
+            INotificationService notificationService)
         {
             _unitOfWork = unitOfWork;
             _userService = userService;
             _mapper = mapper;
             _sieveProcessor = sieveProcessor;
+            _notificationService = notificationService;
         }
 
         public async Task<ConsultingReportResponse> CreateAsync(CreateConsultingReportRequest request)
@@ -269,6 +273,13 @@ namespace AISEP.BLL.Services.ConsultingReports
                     Status = WalletTransactionStatus.Completed,
                     CreatedAt = DateTime.UtcNow
                 });
+                await _notificationService.SendNotificationAsync(
+                    bookingWithWallet.Advisor.UserId,
+                    "Wallet credited from completed booking",
+                    $"Your wallet has been credited {payoutAmount:0.##} from booking #{bookingWithWallet.BookingId}.",
+                    NotificationType.General,
+                    bookingWithWallet.BookingId,
+                    "Booking");
             }
 
             report.IsPayoutProcessed = true;

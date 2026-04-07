@@ -39,6 +39,8 @@ namespace AISEP.DAL.Repositories.Bookings
         public async Task<Booking?> GetByIdWithAdvisorWalletAsync(int id)
             => await _context.Bookings
                 .Include(b => b.Advisor)
+                    .ThenInclude(a => a.User)
+                .Include(b => b.Advisor)
                     .ThenInclude(a => a.Wallet)
                 .FirstOrDefaultAsync(b => b.BookingId == id);
 

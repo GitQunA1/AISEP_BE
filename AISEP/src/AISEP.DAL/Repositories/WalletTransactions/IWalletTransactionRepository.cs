@@ -6,5 +6,6 @@ namespace AISEP.DAL.Repositories.WalletTransactions
     {
         Task AddAsync(WalletTransaction walletTransaction);
         Task<WalletTransaction?> GetWithdrawalByWithdrawRequestIdAsync(int withdrawRequestId);
+        IQueryable<WalletTransaction> GetByWalletIdQuery(int walletId);
     }
 }

@@ -250,6 +250,8 @@ builder.Services.AddScoped<IStorageService, CloudinaryStorageService>();
 builder.Services.AddScoped<IBlockchainService, BlockchainService>();
 builder.Services.AddScoped<IAdvisorService, AdvisorService>();
 builder.Services.AddScoped<IWalletService, WalletService>();
+builder.Services.AddScoped<IWithdrawRequestService, WithdrawRequestService>();
+builder.Services.AddScoped<IWalletQueryService, WalletQueryService>();
 builder.Services.AddScoped<ISystemCommissionService, SystemCommissionService>();
 builder.Services.AddScoped<IAdvisorAvailabilityService, AdvisorAvailabilityService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
