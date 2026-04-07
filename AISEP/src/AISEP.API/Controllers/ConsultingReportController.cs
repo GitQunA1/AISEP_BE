@@ -75,5 +75,21 @@ namespace AISEP.API.Controllers
             var result = await _consultingReportService.RequestRevisionAsync(id, request.Reason);
             return Ok(ApiResponse<object>.SuccessResponse(result, "Revision request submitted."));
         }
+
+        [HttpPatch("{id:int}/staff-accept-complaint")]
+        [Authorize(Roles = "Staff,Admin")]
+        public async Task<IActionResult> AcceptComplaintByStaff(int id)
+        {
+            var result = await _consultingReportService.AcceptComplaintByStaffAsync(id);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Complaint accepted. Advisor payout is skipped."));
+        }
+
+        [HttpPatch("{id:int}/staff-reject-complaint")]
+        [Authorize(Roles = "Staff,Admin")]
+        public async Task<IActionResult> RejectComplaintByStaff(int id)
+        {
+            var result = await _consultingReportService.RejectComplaintByStaffAsync(id);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Complaint rejected. Advisor payout is processed."));
+        }
     }
 }

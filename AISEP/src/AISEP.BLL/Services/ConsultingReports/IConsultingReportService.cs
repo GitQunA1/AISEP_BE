@@ -12,6 +12,8 @@ namespace AISEP.BLL.Services.ConsultingReports
         Task<ConsultingReportResponse?> GetByBookingIdAsync(int bookingId);
         Task<ConsultingReportResponse> ApproveAsync(int reportId);
         Task<ConsultingReportResponse> RequestRevisionAsync(int reportId, string reason);
+        Task<ConsultingReportResponse> AcceptComplaintByStaffAsync(int reportId);
+        Task<ConsultingReportResponse> RejectComplaintByStaffAsync(int reportId);
         Task<int> ProcessReportDeadlinesAsync();
     }
 }

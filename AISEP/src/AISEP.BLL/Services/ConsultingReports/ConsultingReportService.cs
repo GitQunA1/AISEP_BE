@@ -154,7 +154,7 @@ namespace AISEP.BLL.Services.ConsultingReports
             report.StartupReviewDueAt = null;
             report.AdvisorRevisionDueAt = null;
 
-            MarkBookingCompletedAndCloseChat(report.Booking);
+            MarkBookingCompletedAndCloseChat(report.Booking, BookingStatus.Completed);
             await DisburseAdvisorAsync(report);
 
             _unitOfWork.ConsultingReports.Update(report);
@@ -199,6 +199,88 @@ namespace AISEP.BLL.Services.ConsultingReports
             return _mapper.Map<ConsultingReportResponse>(report);
         }
 
+        public async Task<ConsultingReportResponse> AcceptComplaintByStaffAsync(int reportId)
+        {
+            var report = await _unitOfWork.ConsultingReports.GetByIdAsync(reportId)
+                ?? throw new KeyNotFoundException("Consulting report not found.");
+
+            if (report.Status != ConsultingReportStatus.EscalatedToStaff)
+                throw new InvalidOperationException("Only escalated report can be resolved by staff.");
+
+            var now = DateTime.UtcNow;
+            report.Status = ConsultingReportStatus.ComplaintAcceptedByStaff;
+            report.StartupReviewedAt = now;
+            report.StartupReviewDueAt = null;
+            report.AdvisorRevisionDueAt = null;
+
+            MarkBookingCompletedAndCloseChat(report.Booking, BookingStatus.ComplaintAccepted);
+
+            // Complaint accepted: advisor does not receive payout.
+            report.IsPayoutProcessed = true;
+            report.AdvisorPayoutAmount = 0m;
+            report.PayoutProcessedAt = now;
+
+            _unitOfWork.ConsultingReports.Update(report);
+            await _unitOfWork.SaveChangesAsync();
+
+            await _notificationService.SendNotificationAsync(
+                report.Booking.CustomerId,
+                "Khiếu nại đã được chấp nhận",
+                $"Khiếu nại cho booking #{report.BookingId} đã được staff chấp nhận. Số tiền sẽ được hoàn theo quy trình xử lý ngoài hệ thống.",
+                NotificationType.General,
+                report.BookingId,
+                "Booking");
+
+            await _notificationService.SendNotificationAsync(
+                report.Booking.Advisor.UserId,
+                "Khiếu nại được chấp nhận",
+                $"Khiếu nại cho booking #{report.BookingId} đã được staff chấp nhận. Khoản tiền booking này sẽ không được cộng vào ví của bạn.",
+                NotificationType.General,
+                report.BookingId,
+                "Booking");
+
+            return _mapper.Map<ConsultingReportResponse>(report);
+        }
+
+        public async Task<ConsultingReportResponse> RejectComplaintByStaffAsync(int reportId)
+        {
+            var report = await _unitOfWork.ConsultingReports.GetByIdAsync(reportId)
+                ?? throw new KeyNotFoundException("Consulting report not found.");
+
+            if (report.Status != ConsultingReportStatus.EscalatedToStaff)
+                throw new InvalidOperationException("Only escalated report can be resolved by staff.");
+
+            var now = DateTime.UtcNow;
+            report.Status = ConsultingReportStatus.ComplaintRejectedByStaff;
+            report.StartupReviewedAt = now;
+            report.StartupReviewDueAt = null;
+            report.AdvisorRevisionDueAt = null;
+
+            MarkBookingCompletedAndCloseChat(report.Booking, BookingStatus.Completed);
+            await DisburseAdvisorAsync(report);
+
+            _unitOfWork.ConsultingReports.Update(report);
+            await _unitOfWork.SaveChangesAsync();
+
+            await _notificationService.SendNotificationAsync(
+                report.Booking.CustomerId,
+                "Khiếu nại bị từ chối",
+                $"Khiếu nại cho booking #{report.BookingId} đã bị từ chối. Tiền booking sẽ được chuyển cho advisor theo quy trình hiện tại.",
+                NotificationType.General,
+                report.BookingId,
+                "Booking");
+
+            await _notificationService.SendNotificationAsync(
+                report.Booking.Advisor.UserId,
+                "Khiếu nại bị từ chối",
+                $"Khiếu nại cho booking #{report.BookingId} đã bị từ chối. Tiền booking đã được xử lý cộng vào ví theo quy định.",
+                NotificationType.General,
+                report.BookingId,
+                "Booking");
+
+            return _mapper.Map<ConsultingReportResponse>(report);
+        }
+
         public async Task<int> ProcessReportDeadlinesAsync()
         {
             var now = DateTime.UtcNow;
@@ -216,7 +298,7 @@ namespace AISEP.BLL.Services.ConsultingReports
                 report.StartupReviewedAt = now;
                 report.StartupReviewDueAt = null;
                 report.AdvisorRevisionDueAt = null;
-                MarkBookingCompletedAndCloseChat(report.Booking);
+                MarkBookingCompletedAndCloseChat(report.Booking, BookingStatus.Completed);
                 await DisburseAdvisorAsync(report);
                 _unitOfWork.ConsultingReports.Update(report);
                 changed += 1;
@@ -313,9 +395,9 @@ namespace AISEP.BLL.Services.ConsultingReports
                 throw new ForbiddenAccessException("Only booking customer can review this report.");
         }
 
-        private static void MarkBookingCompletedAndCloseChat(Booking booking)
+        private static void MarkBookingCompletedAndCloseChat(Booking booking, BookingStatus finalStatus)
         {
-            booking.Status = BookingStatus.Completed;
+            booking.Status = finalStatus;
 
             if (booking.ChatSession is not null && booking.ChatSession.IsOpen)
             {
@@ -325,3 +407,4 @@ namespace AISEP.BLL.Services.ConsultingReports
         }
     }
 }
+

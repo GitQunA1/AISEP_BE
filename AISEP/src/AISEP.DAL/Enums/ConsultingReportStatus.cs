@@ -5,6 +5,8 @@ namespace AISEP.DAL.Enums
         Submitted,
         RevisionRequested,
         ApprovedByStartup,
-        EscalatedToStaff
+        EscalatedToStaff,
+        ComplaintAcceptedByStaff,
+        ComplaintRejectedByStaff
     }
 }
