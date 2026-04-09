@@ -9,5 +9,6 @@ namespace AISEP.DAL.Repositories.Notifications
         Task<Notification?> GetByIdAsync(int notificationId);
         Task<bool> MarkAsReadAsync(int notificationId, int userId);
         Task<int> MarkAllAsReadAsync(int userId);
+        Task<bool> DeleteAsync(int notificationId, int userId);
     }
 }

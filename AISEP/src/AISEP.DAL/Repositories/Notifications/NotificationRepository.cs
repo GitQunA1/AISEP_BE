@@ -52,5 +52,14 @@ namespace AISEP.DAL.Repositories.Notifications
                 .Where(n => n.UserId == userId && !n.IsRead)
                 .ExecuteUpdateAsync(updates => updates.SetProperty(n => n.IsRead, true));
         }
+
+        public async Task<bool> DeleteAsync(int notificationId, int userId)
+        {
+            var deletedRows = await _context.Notifications
+                .Where(n => n.NotificationId == notificationId && n.UserId == userId)
+                .ExecuteDeleteAsync();
+
+            return deletedRows > 0;
+        }
     }
 }

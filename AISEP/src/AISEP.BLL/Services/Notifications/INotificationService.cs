@@ -11,5 +11,6 @@ namespace AISEP.BLL.Services.Notifications
         Task<PagedResult<NotificationDto>> GetUserNotificationsAsync(int userId, SieveModel model);
         Task<bool> MarkAsReadAsync(int notificationId, int currentUserId);
         Task<bool> MarkAllAsReadAsync(int currentUserId);
+        Task<bool> DeleteNotificationAsync(int notificationId, int currentUserId);
     }
 }
