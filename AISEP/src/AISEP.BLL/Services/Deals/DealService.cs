@@ -88,8 +88,8 @@ namespace AISEP.BLL.Services.Deals
 
             await _notificationService.SendNotificationAsync(
                 project.Startup.UserId,
-                "New deal proposal",
-                $"A new deal was proposed for project '{project.ProjectName}'.",
+                "Đề xuất deal mới",
+                $"Có đề xuất deal mới cho dự án '{project.ProjectName}'.",
                 NotificationType.Deal);
 
             var created = await _unitOfWork.Deals.GetByIdWithNftAsync(deal.DealId)
@@ -162,16 +162,16 @@ namespace AISEP.BLL.Services.Deals
                 deal.StartupConfirmed = true;
                 deal.Status = DealStatus.Confirmed;
 
-                notificationTitle = "Deal confirmed";
-                notificationMessage = $"Your deal #{deal.DealId} has been confirmed by the startup.";
+                notificationTitle = "Deal đã được xác nhận";
+                notificationMessage = $"Deal của bạn đã được startup xác nhận.";
             }
             else
             {
                 deal.StartupConfirmed = false;
                 deal.Status = DealStatus.Rejected;
 
-                notificationTitle = "Deal rejected";
-                notificationMessage = $"Your deal #{deal.DealId} has been rejected by the startup.";
+                notificationTitle = "Deal bị từ chối";
+                notificationMessage = $"Deal của bạn đã bị startup từ chối.";
             }
 
             _unitOfWork.Deals.Update(deal);
@@ -267,8 +267,8 @@ namespace AISEP.BLL.Services.Deals
 
             await _notificationService.SendNotificationAsync(
                 deal.Project.Startup.UserId,
-                "Investor signed contract",
-                $"Investor has signed deal #{deal.DealId}. Please review and sign to finalize.",
+                "Nhà đầu tư đã ký hợp đồng",
+                $"Nhà đầu tư đã ký deal. Vui lòng xem lại và ký để hoàn tất.",
                 NotificationType.Deal,
                 deal.DealId,
                 "Deal");
@@ -338,8 +338,8 @@ namespace AISEP.BLL.Services.Deals
 
             await _notificationService.SendNotificationAsync(
                 deal.Investor.UserId,
-                "Contract finalized",
-                $"Startup has signed deal #{deal.DealId}. The contract is now finalized.",
+                "Hợp đồng đã hoàn tất",
+                $"Startup đã ký deal. Hợp đồng hiện đã hoàn tất.",
                 NotificationType.Deal,
                 deal.DealId,
                 "Deal");
@@ -377,8 +377,8 @@ namespace AISEP.BLL.Services.Deals
 
             await _notificationService.SendNotificationAsync(
                 deal.Investor.UserId,
-                "Contract rejected by startup",
-                $"Startup rejected deal #{deal.DealId}. Reason: {startupReason}",
+                "Hợp đồng bị startup từ chối",
+                $"Startup đã từ chối deal. Lý do: {startupReason}",
                 NotificationType.Deal,
                 deal.DealId,
                 "Deal");
