@@ -129,11 +129,6 @@ namespace AISEP.DAL.Data
 
                 entity.HasOne<User>()
                     .WithMany()
-                    .HasForeignKey(i => i.CreatedBy)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                entity.HasOne<User>()
-                    .WithMany()
                     .HasForeignKey(i => i.ApprovedById)
                     .OnDelete(DeleteBehavior.Restrict);
 
@@ -160,11 +155,6 @@ namespace AISEP.DAL.Data
                     .WithOne(u => u.Advisor)
                     .HasForeignKey<Advisor>(a => a.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne<User>()
-                    .WithMany()
-                    .HasForeignKey(a => a.CreatedBy)
-                    .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne<User>()
                     .WithMany()

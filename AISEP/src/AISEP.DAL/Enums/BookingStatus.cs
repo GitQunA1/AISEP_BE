@@ -7,6 +7,7 @@
         Confirmed,
         Completed,
         ComplaintAccepted,
+        ComplaintRejected,
         Cancel,
         NoResponse
     }

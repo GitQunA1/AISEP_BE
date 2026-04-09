@@ -18,7 +18,6 @@ namespace AISEP.DAL.Entities
         public string? PreviousInvestments { get; set; }
         public string? IdentityDocumentUrl { get; set; }
         public ApprovalStatus ApprovalStatus { get; set; } = ApprovalStatus.Unverified;
-        public int? CreatedBy { get; set; }
         public int? ApprovedById { get; set; }
         public DateTime? ApprovedAt { get; set; }
         public int? RejectedById { get; set; }
