@@ -81,33 +81,60 @@ namespace AISEP.BLL.Services.Blockchain
             return receipt.TransactionHash;
         }
 
-        public async Task<string> AddDocumentOwnerAsync(string fileHash, string investorWallet)
+        public async Task<string> AssignDocumentOwnerAsync(string fileHash, string investorWallet)
         {
-            var account = new Account(_settings.AdminPrivateKey, 11155111);
-            var web3 = new Web3(account, _settings.RpcUrl);
+            if (string.IsNullOrWhiteSpace(fileHash))
+            {
+                throw new InvalidOperationException("Document hash is required for blockchain owner assignment.");
+            }
 
-            var contract = web3.Eth.GetContract(_contractAbi, _settings.ContractAddress);
-            var addOwnerFunction = contract.GetFunction("addDocumentOwner");
+            if (string.IsNullOrWhiteSpace(investorWallet))
+            {
+                throw new InvalidOperationException("Investor wallet is required for blockchain owner assignment.");
+            }
 
-            var estimatedGas = await addOwnerFunction.EstimateGasAsync(
-                account.Address,
-                null,
-                null,
-                fileHash,
-                investorWallet);
+            try
+            {
+                var account = new Account(_settings.AdminPrivateKey, 11155111);
+                var web3 = new Web3(account, _settings.RpcUrl);
 
-            var receipt = await addOwnerFunction.SendTransactionAndWaitForReceiptAsync(
-                account.Address,
-                estimatedGas,
-                new HexBigInteger(0),
-                null,
-                fileHash,
-                investorWallet);
+                var contract = web3.Eth.GetContract(_contractAbi, _settings.ContractAddress);
+                var addOwnerFunction = contract.GetFunction("addDocumentOwner");
 
-            if (receipt.Status.Value == 0)
-                throw new InvalidOperationException("Blockchain transaction failed (reverted).");
+                var estimatedGas = await addOwnerFunction.EstimateGasAsync(
+                    account.Address,
+                    null,
+                    null,
+                    fileHash,
+                    investorWallet);
 
-            return receipt.TransactionHash;
+                var receipt = await addOwnerFunction.SendTransactionAndWaitForReceiptAsync(
+                    account.Address,
+                    estimatedGas,
+                    new HexBigInteger(0),
+                    null,
+                    fileHash,
+                    investorWallet);
+
+                if (receipt.Status.Value == 0)
+                {
+                    throw new InvalidOperationException("Blockchain transaction failed (reverted).");
+                }
+
+                return receipt.TransactionHash;
+            }
+            catch (SmartContractRevertException ex)
+            {
+                throw new InvalidOperationException($"addDocumentOwner reverted: {ex.Message}", ex);
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new InvalidOperationException($"Cannot connect to blockchain RPC endpoint: {ex.Message}", ex);
+            }
+            catch (TaskCanceledException ex)
+            {
+                throw new InvalidOperationException($"Blockchain request timed out: {ex.Message}", ex);
+            }
         }
 
         public async Task<(int StartupId, long Timestamp, IReadOnlyList<string> Owners)> VerifyDocumentAsync(string fileHash)

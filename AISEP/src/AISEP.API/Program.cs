@@ -247,6 +247,7 @@ builder.Services.AddScoped<IInvestorService, InvestorService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IStorageService, CloudinaryStorageService>();
 builder.Services.AddScoped<IBlockchainService, BlockchainService>();
+builder.Services.AddSingleton<IBlockchainOwnershipAssignmentQueue, BlockchainOwnershipAssignmentQueue>();
 builder.Services.AddScoped<IAdvisorService, AdvisorService>();
 builder.Services.AddScoped<IWalletService, WalletService>();
 builder.Services.AddScoped<IWithdrawRequestService, WithdrawRequestService>();
@@ -268,6 +269,7 @@ builder.Services.AddHostedService<SubscriptionExpiryBackgroundService>();
 builder.Services.AddHostedService<BookingResponseExpiryBackgroundService>();
 builder.Services.AddHostedService<ConsultingReportDeadlineBackgroundService>();
 builder.Services.AddHostedService<ProjectAdvisorAutoAssignBackgroundService>();
+builder.Services.AddHostedService<BlockchainOwnershipAssignmentBackgroundService>();
 
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>
