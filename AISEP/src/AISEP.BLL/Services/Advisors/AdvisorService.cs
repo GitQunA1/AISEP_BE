@@ -83,7 +83,6 @@ namespace AISEP.BLL.Services.Advisors
                 .ToList();
             advisor.ApprovalStatus = ApprovalStatus.Pending;
             //advisor.CreatedAt      = DateTime.UtcNow;
-            advisor.CreatedBy      = userId;
             await _unitOfWork.Advisors.AddAsync(advisor);
             await _unitOfWork.SaveChangesAsync();
             await NotifyStaffAndAdminsAsync(
@@ -100,7 +99,7 @@ namespace AISEP.BLL.Services.Advisors
             var advisor = await _unitOfWork.Advisors.GetByIdAsync(id);
             if (advisor is null)
                 throw new KeyNotFoundException("Advisor profile not found.");
-            if (advisor.CreatedBy != userId)
+            if (advisor.UserId != userId)
                 throw new ForbiddenAccessException("You do not have permission to update this advisor.");
 
             advisor.Bio                = string.IsNullOrWhiteSpace(dto.Bio)                ? advisor.Bio                : dto.Bio;

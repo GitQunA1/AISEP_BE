@@ -64,7 +64,6 @@ namespace AISEP.BLL.Services.Investors
 
             var investor = _mapper.Map<Investor>(dto);
             investor.UserId = userId;
-            investor.CreatedBy = userId;
             investor.ApprovalStatus = ApprovalStatus.Pending;
             await _unitOfWork.Investors.AddAsync(investor);
             await _unitOfWork.SaveChangesAsync();
@@ -83,7 +82,7 @@ namespace AISEP.BLL.Services.Investors
             var investor = await _unitOfWork.Investors.GetByIdAsync(id);
             if (investor is null)
                 throw new KeyNotFoundException("Investor profile not found.");
-            if (investor.CreatedBy != userId)
+            if (investor.UserId != userId)
                 throw new ForbiddenAccessException("You do not have permission to update this investor.");
 
             investor.OrganizationName    = dto.OrganizationName    ?? investor.OrganizationName;

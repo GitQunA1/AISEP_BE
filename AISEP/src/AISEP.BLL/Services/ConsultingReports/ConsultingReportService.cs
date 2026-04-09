@@ -256,7 +256,7 @@ namespace AISEP.BLL.Services.ConsultingReports
             report.StartupReviewDueAt = null;
             report.AdvisorRevisionDueAt = null;
 
-            MarkBookingCompletedAndCloseChat(report.Booking, BookingStatus.Completed);
+            MarkBookingCompletedAndCloseChat(report.Booking, BookingStatus.ComplaintRejected);
             await DisburseAdvisorAsync(report);
 
             _unitOfWork.ConsultingReports.Update(report);
