@@ -2,9 +2,7 @@ using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.BLL.Exceptions;
 using AISEP.BLL.Helpers;
-using AISEP.BLL.Services.Blockchain;
 using AISEP.BLL.Services.Notifications;
-using AISEP.BLL.Services.Pinata;
 using AISEP.BLL.Services.Storage;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
@@ -12,7 +10,6 @@ using AISEP.DAL.Enums;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
 using Sieve.Models;
@@ -27,9 +24,6 @@ namespace AISEP.BLL.Services.Deals
         private readonly IUnitOfWork _unitOfWork;
         private readonly INotificationService _notificationService;
         private readonly IMapper _mapper;
-        private readonly IConfiguration _configuration;
-        private readonly IBlockchainService _blockchainService;
-        private readonly IPinataService _pinataService;
         private readonly IStorageService _storageService;
         private readonly ISieveProcessor _sieveProcessor;
         private readonly IWebHostEnvironment _environment;
@@ -38,9 +32,6 @@ namespace AISEP.BLL.Services.Deals
             IUnitOfWork unitOfWork,
             INotificationService notificationService,
             IMapper mapper,
-            IConfiguration configuration,
-            IBlockchainService blockchainService,
-            IPinataService pinataService,
             IStorageService storageService,
             ISieveProcessor sieveProcessor,
             IWebHostEnvironment environment)
@@ -48,9 +39,6 @@ namespace AISEP.BLL.Services.Deals
             _unitOfWork = unitOfWork;
             _notificationService = notificationService;
             _mapper = mapper;
-            _configuration = configuration;
-            _blockchainService = blockchainService;
-            _pinataService = pinataService;
             _storageService = storageService;
             _sieveProcessor = sieveProcessor;
             _environment = environment;
@@ -92,7 +80,7 @@ namespace AISEP.BLL.Services.Deals
                 $"Có đề xuất deal mới cho dự án '{project.ProjectName}'.",
                 NotificationType.Deal);
 
-            var created = await _unitOfWork.Deals.GetByIdWithNftAsync(deal.DealId)
+            var created = await _unitOfWork.Deals.GetByIdWithDetailsAsync(deal.DealId)
                 ?? throw new KeyNotFoundException("Created deal not found.");
 
             return _mapper.Map<DealDto>(created);
@@ -141,7 +129,7 @@ namespace AISEP.BLL.Services.Deals
 
         public async Task<DealDto> RespondDealAsync(int startupId, int dealId, bool isAccepted)
         {
-            var deal = await _unitOfWork.Deals.GetByIdWithNftAsync(dealId)
+            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
                 ?? throw new KeyNotFoundException("Deal not found.");
 
             if (deal.Project.StartupId != startupId)
@@ -190,7 +178,7 @@ namespace AISEP.BLL.Services.Deals
 
         public async Task<string> GetContractPreviewForInvestorAsync(int dealId, int investorId)
         {
-            var deal = await _unitOfWork.Deals.GetByIdWithNftAsync(dealId)
+            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
                 ?? throw new KeyNotFoundException("Deal not found.");
 
             EnsureInvestorOwnsDeal(deal, investorId);
@@ -202,7 +190,7 @@ namespace AISEP.BLL.Services.Deals
 
         public async Task<string> GetContractPreviewAsync(int dealId)
         {
-            var deal = await _unitOfWork.Deals.GetByIdWithNftAsync(dealId)
+            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
                 ?? throw new KeyNotFoundException("Deal not found.");
 
             EnsureDealAllowsContractPreview(deal);
@@ -213,7 +201,7 @@ namespace AISEP.BLL.Services.Deals
 
         public async Task<string> GetContractPreviewForStartupAsync(int dealId, int startupId)
         {
-            var deal = await _unitOfWork.Deals.GetByIdWithNftAsync(dealId)
+            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
                 ?? throw new KeyNotFoundException("Deal not found.");
 
             EnsureStartupOwnsDeal(deal, startupId);
@@ -240,7 +228,7 @@ namespace AISEP.BLL.Services.Deals
                 throw new InvalidOperationException("FinalEquityPercentage must be greater than or equal to 0.");
             }
 
-            var deal = await _unitOfWork.Deals.GetByIdWithNftAsync(dealId)
+            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
                 ?? throw new KeyNotFoundException("Deal not found.");
 
             EnsureInvestorOwnsDeal(deal, investorId);
@@ -283,7 +271,7 @@ namespace AISEP.BLL.Services.Deals
                 throw new ArgumentNullException(nameof(request));
             }
 
-            var deal = await _unitOfWork.Deals.GetByIdWithNftAsync(dealId)
+            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
                 ?? throw new KeyNotFoundException("Deal not found.");
 
             EnsureStartupOwnsDeal(deal, startupId);
@@ -355,7 +343,7 @@ namespace AISEP.BLL.Services.Deals
                 throw new ArgumentNullException(nameof(request));
             }
 
-            var deal = await _unitOfWork.Deals.GetByIdWithNftAsync(dealId)
+            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
                 ?? throw new KeyNotFoundException("Deal not found.");
 
             EnsureStartupOwnsDeal(deal, startupId);
@@ -388,7 +376,7 @@ namespace AISEP.BLL.Services.Deals
 
         public async Task<DealContractStatusResponse> GetContractStatusForInvestorAsync(int dealId, int investorId)
         {
-            var deal = await _unitOfWork.Deals.GetByIdWithNftAsync(dealId)
+            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
                 ?? throw new KeyNotFoundException("Deal not found.");
 
             EnsureInvestorOwnsDeal(deal, investorId);
@@ -397,7 +385,7 @@ namespace AISEP.BLL.Services.Deals
 
         public async Task<DealContractStatusResponse> GetContractStatusForStartupAsync(int dealId, int startupId)
         {
-            var deal = await _unitOfWork.Deals.GetByIdWithNftAsync(dealId)
+            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
                 ?? throw new KeyNotFoundException("Deal not found.");
 
             EnsureStartupOwnsDeal(deal, startupId);
@@ -406,106 +394,10 @@ namespace AISEP.BLL.Services.Deals
 
         public async Task<DealContractStatusResponse> GetContractStatusAsync(int dealId)
         {
-            var deal = await _unitOfWork.Deals.GetByIdWithNftAsync(dealId)
+            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
                 ?? throw new KeyNotFoundException("Deal not found.");
 
             return _mapper.Map<DealContractStatusResponse>(deal);
-        }
-
-        public async Task<DealDto> MintNftForDealAsync(int dealId, MintNftRequestDto request)
-        {
-            if (string.IsNullOrWhiteSpace(request.OwnerWallet))
-            {
-                throw new InvalidOperationException("Owner wallet is required.");
-            }
-
-            var deal = await _unitOfWork.Deals.GetByIdWithNftAsync(dealId)
-                ?? throw new KeyNotFoundException("Deal not found.");
-
-            if (deal.Status != DealStatus.Contract_Signed)
-            {
-                throw new InvalidOperationException("Only fully signed contracts can mint NFT.");
-            }
-
-            if (deal.NFTRecord is not null)
-            {
-                throw new InvalidOperationException("NFT has already been minted for this deal.");
-            }
-
-            var imageUrl = _configuration["Pinata:NftTemplateImage"];
-            if (string.IsNullOrWhiteSpace(imageUrl))
-            {
-                throw new InvalidOperationException("Pinata:NftTemplateImage is missing in configuration.");
-            }
-
-            if (!imageUrl.StartsWith("ipfs://", StringComparison.OrdinalIgnoreCase))
-            {
-                throw new InvalidOperationException("Pinata:NftTemplateImage must start with 'ipfs://'.");
-            }
-
-            var investorName = string.IsNullOrWhiteSpace(deal.Investor.OrganizationName)
-                ? $"Investor #{deal.InvestorId}"
-                : deal.Investor.OrganizationName;
-
-            var metadata = new NftMetadataDto
-            {
-                Name = $"AISEP Investment Certificate #{deal.DealId}",
-                Description = $"NFT certificate for investment in project '{deal.Project.ProjectName}'.",
-                Image = imageUrl,
-                Attributes =
-                [
-                    new NftAttributeDto { TraitType = "Project Name", Value = deal.Project.ProjectName },
-                    new NftAttributeDto { TraitType = "Investor Name", Value = investorName },
-                    new NftAttributeDto
-                    {
-                        TraitType = "Investment Amount",
-                        Value = deal.Amount.ToString("F2", CultureInfo.InvariantCulture)
-                    }
-                ]
-            };
-
-            var ipfsHash = await _pinataService.UploadJsonToIpfsAsync(metadata);
-            var metadataUri = $"ipfs://{ipfsHash}";
-            var (tokenId, txHash) = await _blockchainService.MintCertificateAsync(request.OwnerWallet, metadataUri);
-
-            var nftRecord = new NFTRecord
-            {
-                DealId = deal.DealId,
-                TokenId = tokenId,
-                TxHash = txHash,
-                OwnerWallet = request.OwnerWallet,
-                MintedAt = DateTime.UtcNow,
-                ValidityStatus = ValidityStatus.Valid,
-                Transferable = false
-            };
-
-            await _unitOfWork.NFTRecords.AddAsync(nftRecord);
-
-            deal.Status = DealStatus.Minted_NFT;
-            deal.IsCompleted = true;
-            deal.CompletionDate = DateTime.UtcNow;
-            _unitOfWork.Deals.Update(deal);
-
-            await _unitOfWork.SaveChangesAsync();
-
-            var updated = await _unitOfWork.Deals.GetByIdWithNftAsync(deal.DealId)
-                ?? throw new KeyNotFoundException("Minted deal not found.");
-
-            return _mapper.Map<DealDto>(updated);
-        }
-
-        public async Task<PagedResult<DealDto>> GetMyNftsAsync(int investorId, SieveModel sieveModel)
-        {
-            sieveModel ??= new SieveModel();
-
-            var query = _unitOfWork.Deals.GetQuery()
-                .Where(d => d.InvestorId == investorId && d.Status == DealStatus.Minted_NFT);
-
-            return await PaginationHelper.PaginateAsync(
-                query,
-                sieveModel,
-                _sieveProcessor,
-                d => _mapper.Map<DealDto>(d));
         }
 
         private async Task<string> ReadContractTemplateAsync()
@@ -828,8 +720,7 @@ namespace AISEP.BLL.Services.Deals
         {
             if (deal.Status != DealStatus.Confirmed
                 && deal.Status != DealStatus.Waiting_For_Startup_Signature
-                && deal.Status != DealStatus.Contract_Signed
-                && deal.Status != DealStatus.Minted_NFT)
+                && deal.Status != DealStatus.Contract_Signed)
             {
                 throw new InvalidOperationException("Contract preview is only available for deals in signing flow.");
             }

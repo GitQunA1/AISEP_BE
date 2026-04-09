@@ -26,7 +26,6 @@ namespace AISEP.DAL.Data
         public DbSet<InvestorAIAnalysis> InvestorAIAnalyses { get; set; }
         public DbSet<ConnectionRequest> ConnectionRequests { get; set; }
         public DbSet<Deal> Deals { get; set; }
-        public DbSet<NFTRecord> NFTRecords { get; set; }
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<SystemCommissionConfig> SystemCommissionConfigs { get; set; }
         public DbSet<SystemCommissionChangeLog> SystemCommissionChangeLogs { get; set; }
@@ -263,7 +262,7 @@ namespace AISEP.DAL.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // ── MODULE 4: CONNECTIONS, DEALS & NFT ────────────────────────
+            // ── MODULE 4: CONNECTIONS & DEALS ─────────────────────────────
             modelBuilder.Entity<ConnectionRequest>(entity =>
             {
                 entity.ToTable("connection_requests");
@@ -304,23 +303,6 @@ namespace AISEP.DAL.Data
                     .WithMany(p => p.Deals)
                     .HasForeignKey(d => d.ProjectId)
                     .OnDelete(DeleteBehavior.Restrict);
-            });
-
-            modelBuilder.Entity<NFTRecord>(entity =>
-            {
-                entity.ToTable("nft_records");
-                entity.HasKey(e => e.NFTRecordId);
-                entity.Property(e => e.TokenId).HasMaxLength(255).IsRequired();
-                entity.Property(e => e.TxHash).HasMaxLength(255).IsRequired();
-                entity.Property(e => e.OwnerWallet).HasMaxLength(255).IsRequired();
-                entity.Property(e => e.ValidityStatus).HasConversion<string>().HasMaxLength(50).IsRequired();
-                entity.Property(e => e.PreviousOwnerWallet).HasMaxLength(255);
-                entity.Property(e => e.MintedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                entity.HasOne(n => n.Deal)
-                    .WithOne(d => d.NFTRecord)
-                    .HasForeignKey<NFTRecord>(n => n.DealId)
-                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<PostPr>(entity =>

@@ -20,7 +20,6 @@ namespace AISEP.DAL.Enums
         TransactionStatus,
         TransactionType,
         UserStatus,
-        ValidityStatus,
         WalletTransactionType,
         UserRole,
         UserReportCategory,

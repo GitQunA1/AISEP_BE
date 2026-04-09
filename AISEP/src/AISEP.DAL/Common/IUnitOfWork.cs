@@ -25,7 +25,6 @@ using AISEP.DAL.Repositories.UnlockedProjects;
 using AISEP.DAL.Repositories.Notifications;
 using AISEP.DAL.Repositories.ConnectionRequests;
 using AISEP.DAL.Repositories.Deals;
-using AISEP.DAL.Repositories.NFTRecords;
 using AISEP.DAL.Repositories.PostPrs;
 using AISEP.DAL.Repositories.WithdrawRequests;
 using AISEP.DAL.Repositories.SystemCommissionConfigs;
@@ -65,7 +64,6 @@ namespace AISEP.DAL.Common
         ISystemCommissionChangeLogRepository SystemCommissionChangeLogs { get; }
         IConnectionRequestRepository ConnectionRequests { get; }
         IDealRepository              Deals              { get; }
-        INFTRecordRepository         NFTRecords         { get; }
         IPostPrRepository            PostPrs            { get; }
 
         Task<int> SaveChangesAsync();

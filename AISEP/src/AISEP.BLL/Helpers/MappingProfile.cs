@@ -420,11 +420,6 @@ namespace AISEP.BLL.Helpers
             // Notification Entity -> NotificationDto
             CreateMap<Notification, NotificationDto>();
 
-            // NFTRecord Entity -> NFTRecordDto
-            CreateMap<NFTRecord, NFTRecordDto>()
-                .ForMember(dest => dest.ValidityStatus,
-                    opt => opt.MapFrom(src => src.ValidityStatus.ToString()));
-
             // Deal Entity -> DealDto
             CreateMap<Deal, DealDto>()
                 .ForMember(dest => dest.Status,
@@ -460,7 +455,7 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.IsStartupSigned,
                     opt => opt.MapFrom(src => !string.IsNullOrWhiteSpace(src.StartupSignature)))
                 .ForMember(dest => dest.IsContractSigned,
-                    opt => opt.MapFrom(src => src.Status == AISEP.DAL.Enums.DealStatus.Contract_Signed || src.Status == AISEP.DAL.Enums.DealStatus.Minted_NFT));
+                    opt => opt.MapFrom(src => src.Status == AISEP.DAL.Enums.DealStatus.Contract_Signed));
 
             // CreateDealDto -> Deal Entity
             CreateMap<CreateDealDto, Deal>()
@@ -483,8 +478,7 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.IsCompleted, opt => opt.Ignore())
                 .ForMember(dest => dest.CompletionDate, opt => opt.Ignore())
                 .ForMember(dest => dest.Investor, opt => opt.Ignore())
-                .ForMember(dest => dest.Project, opt => opt.Ignore())
-                .ForMember(dest => dest.NFTRecord, opt => opt.Ignore());
+                .ForMember(dest => dest.Project, opt => opt.Ignore());
 
             // CreatePostPrRequest -> PostPr Entity
             CreateMap<CreatePostPrRequest, PostPr>()
