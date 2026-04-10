@@ -75,8 +75,8 @@ namespace AISEP.BLL.Services.Connections
 
             await _notificationService.SendNotificationAsync(
                 project.Startup.UserId,
-                "New connection request",
-                $"Investor has requested contact access for project '{project.ProjectName}'.",
+                "Yêu cầu kết nối mới",
+                $"Nhà đầu tư đã gửi yêu cầu liên hệ với dự án '{project.ProjectName}'.",
                 NotificationType.ConnectionRequest,
                 request.ConnectionRequestId,
                 "ConnectionRequest");
@@ -120,15 +120,15 @@ namespace AISEP.BLL.Services.Connections
             await _unitOfWork.SaveChangesAsync();
 
             var notifyMessage = isAccepted
-                ? $"Your connection request for project '{request.Project.ProjectName}' was accepted."
-                : $"Your connection request for project '{request.Project.ProjectName}' was rejected.";
+                ? $"Yêu cầu kết nối của bạn cho dự án '{request.Project.ProjectName}' đã được chấp nhận."
+                : $"Yêu cầu kết nối của bạn cho dự án '{request.Project.ProjectName}' đã bị từ chối.";
 
             var investorToNotify = await _unitOfWork.Investors.GetByIdAsync(request.InvestorId)
                 ?? throw new KeyNotFoundException("Investor not found.");
 
             await _notificationService.SendNotificationAsync(
                 investorToNotify.UserId,
-                "Connection request update",
+                "Cập nhật yêu cầu kết nối",
                 notifyMessage,
                 NotificationType.ConnectionRequest,
                 isAccepted ? openedSession?.ChatSessionId : request.ConnectionRequestId,

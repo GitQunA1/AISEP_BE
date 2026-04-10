@@ -96,5 +96,17 @@ namespace AISEP.BLL.Services.Notifications
             await _unitOfWork.SaveChangesAsync();
             return true;
         }
+
+        public async Task<bool> DeleteNotificationAsync(int notificationId, int currentUserId)
+        {
+            var result = await _unitOfWork.Notifications.DeleteAsync(notificationId, currentUserId);
+            if (!result)
+            {
+                return false;
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+            return true;
+        }
     }
 }

@@ -6,7 +6,7 @@ namespace AISEP.DAL.Repositories.Deals
     {
         IQueryable<Deal> GetQuery();
         Task<Deal?> GetByIdAsync(int dealId);
-        Task<Deal?> GetByIdWithNftAsync(int dealId);
+        Task<Deal?> GetByIdWithDetailsAsync(int dealId);
         Task<bool> HasBlockingDealAsync(int investorId, int projectId);
         Task AddAsync(Deal deal);
         void Update(Deal deal);

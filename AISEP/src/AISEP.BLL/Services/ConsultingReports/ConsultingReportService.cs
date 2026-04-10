@@ -358,8 +358,8 @@ namespace AISEP.BLL.Services.ConsultingReports
                 });
                 await _notificationService.SendNotificationAsync(
                     bookingWithWallet.Advisor.UserId,
-                    "Wallet credited from completed booking",
-                    $"Your wallet has been credited {payoutAmount:0.##} from booking #{bookingWithWallet.BookingId}.",
+                    "Ví đã được cộng tiền từ booking hoàn tất",
+                    $"Ví của bạn đã được cộng {payoutAmount:0.##} từ booking.",
                     NotificationType.General,
                     bookingWithWallet.BookingId,
                     "Booking");

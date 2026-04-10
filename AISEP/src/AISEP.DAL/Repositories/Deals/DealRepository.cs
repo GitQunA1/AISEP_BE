@@ -30,7 +30,7 @@ namespace AISEP.DAL.Repositories.Deals
             return await GetQuery().FirstOrDefaultAsync(d => d.DealId == dealId);
         }
 
-        public async Task<Deal?> GetByIdWithNftAsync(int dealId)
+        public async Task<Deal?> GetByIdWithDetailsAsync(int dealId)
         {
             return await _context.Deals
                 .Include(d => d.Project)
@@ -38,7 +38,6 @@ namespace AISEP.DAL.Repositories.Deals
                         .ThenInclude(s => s.User)
                 .Include(d => d.Investor)
                     .ThenInclude(i => i.User)
-                .Include(d => d.NFTRecord)
                 .FirstOrDefaultAsync(d => d.DealId == dealId);
         }
 
@@ -50,8 +49,7 @@ namespace AISEP.DAL.Repositories.Deals
                 (d.Status == DealStatus.Pending ||
                  d.Status == DealStatus.Confirmed ||
                  d.Status == DealStatus.Waiting_For_Startup_Signature ||
-                 d.Status == DealStatus.Contract_Signed ||
-                 d.Status == DealStatus.Minted_NFT));
+                 d.Status == DealStatus.Contract_Signed));
         }
 
         public async Task AddAsync(Deal deal)

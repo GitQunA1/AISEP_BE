@@ -30,6 +30,5 @@ namespace AISEP.DAL.Entities
         // Navigation properties
         public Investor Investor { get; set; } = null!;
         public Project Project { get; set; } = null!;
-        public NFTRecord? NFTRecord { get; set; }
     }
 }

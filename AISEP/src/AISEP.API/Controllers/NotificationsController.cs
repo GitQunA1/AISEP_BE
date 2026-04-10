@@ -49,5 +49,18 @@ namespace AISEP.API.Controllers
             var result = await _notificationService.MarkAllAsReadAsync(userId);
             return Ok(ApiResponse<object>.SuccessResponse(result, "All notifications marked as read"));
         }
+
+        [HttpDelete("{notificationId:int}")]
+        public async Task<IActionResult> DeleteNotification(int notificationId)
+        {
+            var userId = _userService.GetUserId();
+            var result = await _notificationService.DeleteNotificationAsync(notificationId, userId);
+            if (!result)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse("Notification not found or access denied.", "Not found", 404));
+            }
+
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Notification deleted successfully"));
+        }
     }
 }

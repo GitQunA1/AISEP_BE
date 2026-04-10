@@ -3,17 +3,20 @@ using System;
 using AISEP.DAL.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace AISEP.Migrations
+namespace AISEP.DAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260409161623_DropNftArtifacts")]
+    partial class DropNftArtifacts
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -210,27 +213,9 @@ namespace AISEP.Migrations
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsFreeRebookFromComplaint")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
-                    b.Property<bool>("IsPaymentWaived")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
                     b.Property<string>("Note")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
-
-                    b.Property<int?>("OldBookingId")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("PremiumFreeQuotaRefunded")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
@@ -259,18 +244,11 @@ namespace AISEP.Migrations
                         .HasColumnType("decimal(5,2)")
                         .HasDefaultValue(0m);
 
-                    b.Property<bool>("UsedPremiumFreeQuota")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
                     b.HasKey("BookingId");
 
                     b.HasIndex("AdvisorId");
 
                     b.HasIndex("CustomerId");
-
-                    b.HasIndex("OldBookingId");
 
                     b.HasIndex("ProjectId");
 
@@ -723,119 +701,6 @@ namespace AISEP.Migrations
                     b.ToTable("investor_ai_analyses", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.DAL.Entities.MonthlyPayout", b =>
-                {
-                    b.Property<int>("MonthlyPayoutId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MonthlyPayoutId"));
-
-                    b.Property<int>("AdvisorId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<int>("Month")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Note")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<DateTime?>("PaidAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("PaidById")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<int>("WalletId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Year")
-                        .HasColumnType("integer");
-
-                    b.HasKey("MonthlyPayoutId");
-
-                    b.HasIndex("PaidById");
-
-                    b.HasIndex("WalletId");
-
-                    b.HasIndex("AdvisorId", "Year", "Month")
-                        .IsUnique();
-
-                    b.HasIndex("Year", "Month", "Status");
-
-                    b.ToTable("monthly_payouts", null, t =>
-                        {
-                            t.HasCheckConstraint("CK_monthly_payouts_amount_positive", "\"Amount\" > 0");
-
-                            t.HasCheckConstraint("CK_monthly_payouts_month_range", "\"Month\" >= 1 AND \"Month\" <= 12");
-                        });
-                });
-
-            modelBuilder.Entity("AISEP.DAL.Entities.NFTRecord", b =>
-                {
-                    b.Property<int>("NFTRecordId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("NFTRecordId"));
-
-                    b.Property<int>("DealId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("MintedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<string>("OwnerWallet")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("PreviousOwnerWallet")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("TokenId")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<bool>("Transferable")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("TxHash")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("ValidityStatus")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.HasKey("NFTRecordId");
-
-                    b.HasIndex("DealId")
-                        .IsUnique();
-
-                    b.ToTable("nft_records", (string)null);
-                });
-
             modelBuilder.Entity("AISEP.DAL.Entities.Notification", b =>
                 {
                     b.Property<int>("NotificationId")
@@ -962,50 +827,6 @@ namespace AISEP.Migrations
                     b.ToTable("postprs", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.DAL.Entities.PremiumFreeBookingUsageLog", b =>
-                {
-                    b.Property<int>("PremiumFreeBookingUsageLogId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PremiumFreeBookingUsageLogId"));
-
-                    b.Property<decimal>("BookingDurationHours")
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<int>("BookingId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Note")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<int>("SubscriptionId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("UsedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("PremiumFreeBookingUsageLogId");
-
-                    b.HasIndex("BookingId")
-                        .IsUnique();
-
-                    b.HasIndex("SubscriptionId");
-
-                    b.HasIndex("UserId", "UsedAt");
-
-                    b.ToTable("premium_free_booking_usage_logs", null, t =>
-                        {
-                            t.HasCheckConstraint("CK_premium_free_booking_usage_logs_duration_positive", "\"BookingDurationHours\" > 0");
-                        });
-                });
-
             modelBuilder.Entity("AISEP.DAL.Entities.Project", b =>
                 {
                     b.Property<int>("ProjectId")
@@ -1119,11 +940,9 @@ namespace AISEP.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.HasKey("ProjectId", "AdvisorId");
+                    b.HasKey("ProjectId");
 
                     b.HasIndex("AdvisorId");
-
-                    b.HasIndex("ProjectId");
 
                     b.ToTable("project_advisor_assignments", (string)null);
                 });
@@ -1788,9 +1607,6 @@ namespace AISEP.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int?>("MonthlyPayoutId")
-                        .HasColumnType("integer");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -1804,15 +1620,86 @@ namespace AISEP.Migrations
                     b.Property<int>("WalletId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("WithdrawRequestId")
+                        .HasColumnType("integer");
+
                     b.HasKey("WalletTransactionId");
 
-                    b.HasIndex("MonthlyPayoutId");
-
                     b.HasIndex("WalletId");
+
+                    b.HasIndex("WithdrawRequestId")
+                        .IsUnique()
+                        .HasFilter("\"WithdrawRequestId\" IS NOT NULL AND \"Type\" = 'Withdrawal'");
 
                     b.ToTable("wallet_transactions", null, t =>
                         {
                             t.HasCheckConstraint("CK_wallet_transactions_amount_positive", "\"Amount\" > 0");
+                        });
+                });
+
+            modelBuilder.Entity("AISEP.DAL.Entities.WithdrawRequest", b =>
+                {
+                    b.Property<int>("WithdrawRequestId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("WithdrawRequestId"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ApprovedById")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("BankAccount")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("BankName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("ProofImageUrl")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime?>("RejectedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("RejectedById")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("WalletId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("WithdrawRequestId");
+
+                    b.HasIndex("ApprovedById");
+
+                    b.HasIndex("RejectedById");
+
+                    b.HasIndex("WalletId");
+
+                    b.ToTable("withdraw_requests", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_withdraw_requests_amount_positive", "\"Amount\" > 0");
                         });
                 });
 
@@ -2016,11 +1903,6 @@ namespace AISEP.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("AISEP.DAL.Entities.Booking", "OldBooking")
-                        .WithMany("Rebookings")
-                        .HasForeignKey("OldBookingId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("AISEP.DAL.Entities.Project", "Project")
                         .WithMany("Bookings")
                         .HasForeignKey("ProjectId")
@@ -2034,8 +1916,6 @@ namespace AISEP.Migrations
                     b.Navigation("Advisor");
 
                     b.Navigation("Customer");
-
-                    b.Navigation("OldBooking");
 
                     b.Navigation("Project");
 
@@ -2197,43 +2077,6 @@ namespace AISEP.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("AISEP.DAL.Entities.MonthlyPayout", b =>
-                {
-                    b.HasOne("AISEP.DAL.Entities.Advisor", "Advisor")
-                        .WithMany()
-                        .HasForeignKey("AdvisorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("AISEP.DAL.Entities.User", "PaidBy")
-                        .WithMany()
-                        .HasForeignKey("PaidById")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("AISEP.DAL.Entities.Wallet", "Wallet")
-                        .WithMany("MonthlyPayouts")
-                        .HasForeignKey("WalletId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Advisor");
-
-                    b.Navigation("PaidBy");
-
-                    b.Navigation("Wallet");
-                });
-
-            modelBuilder.Entity("AISEP.DAL.Entities.NFTRecord", b =>
-                {
-                    b.HasOne("AISEP.DAL.Entities.Deal", "Deal")
-                        .WithOne("NFTRecord")
-                        .HasForeignKey("AISEP.DAL.Entities.NFTRecord", "DealId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Deal");
-                });
-
             modelBuilder.Entity("AISEP.DAL.Entities.Notification", b =>
                 {
                     b.HasOne("AISEP.DAL.Entities.User", "User")
@@ -2256,33 +2099,6 @@ namespace AISEP.Migrations
                     b.Navigation("Deal");
                 });
 
-            modelBuilder.Entity("AISEP.DAL.Entities.PremiumFreeBookingUsageLog", b =>
-                {
-                    b.HasOne("AISEP.DAL.Entities.Booking", "Booking")
-                        .WithMany()
-                        .HasForeignKey("BookingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AISEP.DAL.Entities.Subscription", "Subscription")
-                        .WithMany()
-                        .HasForeignKey("SubscriptionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("AISEP.DAL.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Booking");
-
-                    b.Navigation("Subscription");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("AISEP.DAL.Entities.Project", b =>
                 {
                     b.HasOne("AISEP.DAL.Entities.Startup", "Startup")
@@ -2303,8 +2119,8 @@ namespace AISEP.Migrations
                         .IsRequired();
 
                     b.HasOne("AISEP.DAL.Entities.Project", "Project")
-                        .WithMany("ProjectAdvisorAssignments")
-                        .HasForeignKey("ProjectId")
+                        .WithOne("ProjectAdvisorAssignment")
+                        .HasForeignKey("AISEP.DAL.Entities.ProjectAdvisorAssignment", "ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -2512,18 +2328,43 @@ namespace AISEP.Migrations
 
             modelBuilder.Entity("AISEP.DAL.Entities.WalletTransaction", b =>
                 {
-                    b.HasOne("AISEP.DAL.Entities.MonthlyPayout", "MonthlyPayout")
-                        .WithMany("WalletTransactions")
-                        .HasForeignKey("MonthlyPayoutId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("AISEP.DAL.Entities.Wallet", "Wallet")
                         .WithMany("WalletTransactions")
                         .HasForeignKey("WalletId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("MonthlyPayout");
+                    b.HasOne("AISEP.DAL.Entities.WithdrawRequest", "WithdrawRequest")
+                        .WithMany()
+                        .HasForeignKey("WithdrawRequestId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Wallet");
+
+                    b.Navigation("WithdrawRequest");
+                });
+
+            modelBuilder.Entity("AISEP.DAL.Entities.WithdrawRequest", b =>
+                {
+                    b.HasOne("AISEP.DAL.Entities.User", "ApprovedBy")
+                        .WithMany()
+                        .HasForeignKey("ApprovedById")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("AISEP.DAL.Entities.User", "RejectedBy")
+                        .WithMany()
+                        .HasForeignKey("RejectedById")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("AISEP.DAL.Entities.Wallet", "Wallet")
+                        .WithMany("WithdrawRequests")
+                        .HasForeignKey("WalletId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApprovedBy");
+
+                    b.Navigation("RejectedBy");
 
                     b.Navigation("Wallet");
                 });
@@ -2607,8 +2448,6 @@ namespace AISEP.Migrations
 
                     b.Navigation("ConsultingReport");
 
-                    b.Navigation("Rebookings");
-
                     b.Navigation("Review");
                 });
 
@@ -2631,11 +2470,6 @@ namespace AISEP.Migrations
                     b.Navigation("InvestorAIAnalyses");
                 });
 
-            modelBuilder.Entity("AISEP.DAL.Entities.MonthlyPayout", b =>
-                {
-                    b.Navigation("WalletTransactions");
-                });
-
             modelBuilder.Entity("AISEP.DAL.Entities.Package", b =>
                 {
                     b.Navigation("Subscriptions");
@@ -2655,7 +2489,7 @@ namespace AISEP.Migrations
 
                     b.Navigation("InvestorAIAnalyses");
 
-                    b.Navigation("ProjectAdvisorAssignments");
+                    b.Navigation("ProjectAdvisorAssignment");
 
                     b.Navigation("StartupAIAnalysis");
 
@@ -2709,9 +2543,9 @@ namespace AISEP.Migrations
 
             modelBuilder.Entity("AISEP.DAL.Entities.Wallet", b =>
                 {
-                    b.Navigation("MonthlyPayouts");
-
                     b.Navigation("WalletTransactions");
+
+                    b.Navigation("WithdrawRequests");
                 });
 #pragma warning restore 612, 618
         }

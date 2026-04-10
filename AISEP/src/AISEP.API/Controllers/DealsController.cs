@@ -251,38 +251,48 @@ namespace AISEP.API.Controllers
             throw new UnauthorizedAccessException("Role is not allowed to access contract status.");
         }
 
-        // [HttpPost("{id:int}/mint-nft")]
-        // [Authorize(Roles = "Investor")]
-        // public async Task<IActionResult> MintNft(int id, [FromBody] MintNftRequestDto request)
-        // {
-        //     var userId = _userService.GetUserId();
-        //     var investor = await _investorService.GetMyProfileAsync()
-        //         ?? throw new KeyNotFoundException("Investor profile not found.");
+        [HttpGet("{id:int}/ownership-status")]
+        [Authorize(Roles = "Investor,Startup,Staff,Admin")]
+        public async Task<IActionResult> GetOwnershipStatus(int id)
+        {
+            var userId = _userService.GetUserId();
 
-        //     if (investor.UserId != userId)
-        //     {
-        //         throw new UnauthorizedAccessException("Invalid investor context.");
-        //     }
+            if (User.IsInRole("Investor"))
+            {
+                var investor = await _investorService.GetMyProfileAsync()
+                    ?? throw new KeyNotFoundException("Investor profile not found.");
 
-        //     var result = await _dealService.MintNftForDealAsync(id, request);
-        //     return Ok(ApiResponse<object>.SuccessResponse(result, "NFT minted successfully."));
-        // }
+                if (investor.UserId != userId)
+                {
+                    throw new UnauthorizedAccessException("Invalid investor context.");
+                }
 
-        // [HttpGet("my-nfts")]
-        // [Authorize(Roles = "Investor")]
-        // public async Task<IActionResult> GetMyNfts([FromQuery] SieveModel sieveModel)
-        // {
-        //     var userId = _userService.GetUserId();
-        //     var investor = await _investorService.GetMyProfileAsync()
-        //         ?? throw new KeyNotFoundException("Investor profile not found.");
+                var investorResult = await _dealService.GetOwnershipAssignmentStatusForInvestorAsync(id, investor.InvestorId);
+                return Ok(ApiResponse<object>.SuccessResponse(investorResult, "Ownership status loaded successfully."));
+            }
 
-        //     if (investor.UserId != userId)
-        //     {
-        //         throw new UnauthorizedAccessException("Invalid investor context.");
-        //     }
+            if (User.IsInRole("Startup"))
+            {
+                var startup = await _startupService.GetMyProfileAsync()
+                    ?? throw new KeyNotFoundException("Startup profile not found.");
 
-        //     var result = await _dealService.GetMyNftsAsync(investor.InvestorId, sieveModel);
-        //     return Ok(ApiResponse<object>.SuccessResponse(result, "NFT deals retrieved successfully."));
-        // }
+                if (startup.UserId != userId)
+                {
+                    throw new UnauthorizedAccessException("Invalid startup context.");
+                }
+
+                var startupResult = await _dealService.GetOwnershipAssignmentStatusForStartupAsync(id, startup.Id);
+                return Ok(ApiResponse<object>.SuccessResponse(startupResult, "Ownership status loaded successfully."));
+            }
+
+            if (User.IsInRole("Staff") || User.IsInRole("Admin"))
+            {
+                var result = await _dealService.GetOwnershipAssignmentStatusAsync(id);
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Ownership status loaded successfully."));
+            }
+
+            throw new UnauthorizedAccessException("Role is not allowed to access ownership status.");
+        }
+
     }
 }

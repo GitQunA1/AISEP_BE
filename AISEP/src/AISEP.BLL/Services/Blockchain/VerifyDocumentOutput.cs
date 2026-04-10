@@ -7,9 +7,12 @@ namespace AISEP.BLL.Services.Blockchain
     public class VerifyDocumentOutput
     {
         [Parameter("uint256", 1)]
-        public BigInteger EntityId { get; set; }
+        public BigInteger StartupId { get; set; }
 
         [Parameter("uint256", 2)]
         public BigInteger Timestamp { get; set; }
+
+        [Parameter("address[]", 3)]
+        public List<string> Owners { get; set; } = new();
     }
 }

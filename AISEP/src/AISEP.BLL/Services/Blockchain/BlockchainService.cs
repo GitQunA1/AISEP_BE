@@ -4,7 +4,6 @@ using AISEP.DAL.Common;
 using Microsoft.Extensions.Options;
 using Nethereum.ABI.FunctionEncoding;
 using Nethereum.Hex.HexTypes;
-using Nethereum.RPC.Eth.DTOs;
 using Nethereum.Web3;
 using Nethereum.Web3.Accounts;
 using System.Numerics;
@@ -51,29 +50,29 @@ namespace AISEP.BLL.Services.Blockchain
             return "0x" + BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
         }
 
-        public async Task<string> StoreHashAsync(string fileHash, int entityId)
+        public async Task<string> RegisterDocumentAsync(string fileHash, int startupId)
         {
             var account = new Account(_settings.AdminPrivateKey, 11155111);
             var web3 = new Web3(account, _settings.RpcUrl);
 
             var contract = web3.Eth.GetContract(_contractAbi, _settings.ContractAddress);
-            var storeFunction = contract.GetFunction("storeDocument");
+            var registerFunction = contract.GetFunction("registerDocument");
 
-            var estimatedGas = await storeFunction.EstimateGasAsync(
+            var estimatedGas = await registerFunction.EstimateGasAsync(
                 account.Address,
                 null,
                 null,
                 fileHash,
-                new BigInteger(entityId)
+                new BigInteger(startupId)
             );
 
-            var receipt = await storeFunction.SendTransactionAndWaitForReceiptAsync(
+            var receipt = await registerFunction.SendTransactionAndWaitForReceiptAsync(
                 account.Address,
                 estimatedGas,
                 new HexBigInteger(0),
                 null,
                 fileHash,
-                new BigInteger(entityId)
+                new BigInteger(startupId)
             );
 
             if (receipt.Status.Value == 0)
@@ -82,47 +81,63 @@ namespace AISEP.BLL.Services.Blockchain
             return receipt.TransactionHash;
         }
 
-        public async Task<(string TokenId, string TxHash)> MintCertificateAsync(string ownerWallet, string metadataUri)
+        public async Task<string> AssignDocumentOwnerAsync(string fileHash, string investorWallet)
         {
-            var account = new Account(_settings.AdminPrivateKey, 11155111);
-            var web3 = new Web3(account, _settings.RpcUrl);
+            if (string.IsNullOrWhiteSpace(fileHash))
+            {
+                throw new InvalidOperationException("Document hash is required for blockchain owner assignment.");
+            }
 
-            var contract = web3.Eth.GetContract(_contractAbi, _settings.ContractAddress);
-            Nethereum.Contracts.Function mintFunction;
+            if (string.IsNullOrWhiteSpace(investorWallet))
+            {
+                throw new InvalidOperationException("Investor wallet is required for blockchain owner assignment.");
+            }
+
             try
             {
-                mintFunction = contract.GetFunction("mintCertificate");
+                var account = new Account(_settings.AdminPrivateKey, 11155111);
+                var web3 = new Web3(account, _settings.RpcUrl);
+
+                var contract = web3.Eth.GetContract(_contractAbi, _settings.ContractAddress);
+                var addOwnerFunction = contract.GetFunction("addDocumentOwner");
+
+                var estimatedGas = await addOwnerFunction.EstimateGasAsync(
+                    account.Address,
+                    null,
+                    null,
+                    fileHash,
+                    investorWallet);
+
+                var receipt = await addOwnerFunction.SendTransactionAndWaitForReceiptAsync(
+                    account.Address,
+                    estimatedGas,
+                    new HexBigInteger(0),
+                    null,
+                    fileHash,
+                    investorWallet);
+
+                if (receipt.Status.Value == 0)
+                {
+                    throw new InvalidOperationException("Blockchain transaction failed (reverted).");
+                }
+
+                return receipt.TransactionHash;
             }
-            catch (Exception ex)
+            catch (SmartContractRevertException ex)
             {
-                throw new InvalidOperationException("mintCertificate function was not found in ContractABI.json.", ex);
+                throw new InvalidOperationException($"addDocumentOwner reverted: {ex.Message}", ex);
             }
-
-            var estimatedGas = await mintFunction.EstimateGasAsync(
-                account.Address,
-                null,
-                null,
-                ownerWallet,
-                metadataUri);
-
-            var receipt = await mintFunction.SendTransactionAndWaitForReceiptAsync(
-                account.Address,
-                estimatedGas,
-                new HexBigInteger(0),
-                null,
-                ownerWallet,
-                metadataUri);
-
-            if (receipt.Status.Value == 0)
-                throw new InvalidOperationException("Mint NFT transaction failed (reverted).");
-
-            var tokenId = TryExtractTokenId(receipt)
-                ?? throw new InvalidOperationException("Mint NFT succeeded but TokenId was not found in transaction logs.");
-
-            return (tokenId, receipt.TransactionHash);
+            catch (HttpRequestException ex)
+            {
+                throw new InvalidOperationException($"Cannot connect to blockchain RPC endpoint: {ex.Message}", ex);
+            }
+            catch (TaskCanceledException ex)
+            {
+                throw new InvalidOperationException($"Blockchain request timed out: {ex.Message}", ex);
+            }
         }
 
-        public async Task<(int EntityId, long Timestamp)> VerifyDocumentAsync(string fileHash)
+        public async Task<(int StartupId, long Timestamp, IReadOnlyList<string> Owners)> VerifyDocumentAsync(string fileHash)
         {
             var web3 = new Web3(_settings.RpcUrl);
             var contract = web3.Eth.GetContract(_contractAbi, _settings.ContractAddress);
@@ -131,14 +146,14 @@ namespace AISEP.BLL.Services.Blockchain
             try
             {
                 var result = await verifyFunction.CallDeserializingToObjectAsync<VerifyDocumentOutput>(fileHash);
-                return ((int)result.EntityId, (long)result.Timestamp);
+                return ((int)result.StartupId, (long)result.Timestamp, result.Owners);
             }
             catch (SmartContractRevertException ex)
             {
                 if (ex.Message.Contains("Document hash not found", StringComparison.OrdinalIgnoreCase))
                 {
                     // Hash chua ton tai tren chain -> tra ve "not found" an toan.
-                    return (0, 0);
+                    return (0, 0, Array.Empty<string>());
                 }
 
                 throw new InvalidOperationException($"Blockchain verify failed: {ex.Message}");
@@ -178,8 +193,8 @@ namespace AISEP.BLL.Services.Blockchain
 
                 try
                 {
-                    var (entityId, timestamp) = await VerifyDocumentAsync(doc.FileHash!);
-                    var isVerified = timestamp > 0 && entityId == projectId;
+                    var (startupId, timestamp, _) = await VerifyDocumentAsync(doc.FileHash!);
+                    var isVerified = timestamp > 0 && startupId == projectId;
 
                     if (!isVerified)
                     {
@@ -226,35 +241,6 @@ namespace AISEP.BLL.Services.Blockchain
                 VerifiedDocumentDetails = verifiedDetails,
                 UnverifiedDocumentIds = unverifiedIds
             };
-        }
-
-        private static string? TryExtractTokenId(TransactionReceipt receipt)
-        {
-            const string transferEventTopic0 = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
-
-            foreach (var logObject in receipt.Logs)
-            {
-                if (logObject is not FilterLog log || log.Topics is null || log.Topics.Length < 4)
-                {
-                    continue;
-                }
-
-                var topic0 = log.Topics[0]?.ToString();
-                if (!string.Equals(topic0, transferEventTopic0, StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                var tokenTopic = log.Topics[3]?.ToString();
-                if (string.IsNullOrWhiteSpace(tokenTopic))
-                {
-                    continue;
-                }
-
-                return new HexBigInteger(tokenTopic).Value.ToString();
-            }
-
-            return null;
         }
     }
 }

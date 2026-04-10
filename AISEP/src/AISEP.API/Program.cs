@@ -30,7 +30,6 @@ using AISEP.BLL.Services.Wallets;
 using AISEP.BLL.Services.SystemCommissions;
 using AISEP.BLL.Services.PostPrs;
 using AISEP.BLL.Services.Subscriptions;
-using AISEP.BLL.Services.Pinata;
 using AISEP.BLL.Services.BackgroundServices;
 using AISEP.BLL.Settings;
 using AISEP.BLL.Validators.Auth;
@@ -248,6 +247,7 @@ builder.Services.AddScoped<IInvestorService, InvestorService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IStorageService, CloudinaryStorageService>();
 builder.Services.AddScoped<IBlockchainService, BlockchainService>();
+builder.Services.AddSingleton<IBlockchainOwnershipAssignmentQueue, BlockchainOwnershipAssignmentQueue>();
 builder.Services.AddScoped<IAdvisorService, AdvisorService>();
 builder.Services.AddScoped<IWalletService, WalletService>();
 builder.Services.AddScoped<IWalletQueryService, WalletQueryService>();
@@ -264,12 +264,12 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IConnectionService, ConnectionService>();
 builder.Services.AddScoped<IDealService, DealService>();
 builder.Services.AddScoped<IPostPrService, PostPrService>();
-builder.Services.AddScoped<IPinataService, PinataService>();
 builder.Services.AddScoped<INotificationRealtimePublisher, SignalRNotificationRealtimePublisher>();
 builder.Services.AddHostedService<SubscriptionExpiryBackgroundService>();
 builder.Services.AddHostedService<BookingResponseExpiryBackgroundService>();
 builder.Services.AddHostedService<ConsultingReportDeadlineBackgroundService>();
 builder.Services.AddHostedService<ProjectAdvisorAutoAssignBackgroundService>();
+builder.Services.AddHostedService<BlockchainOwnershipAssignmentBackgroundService>();
 
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>

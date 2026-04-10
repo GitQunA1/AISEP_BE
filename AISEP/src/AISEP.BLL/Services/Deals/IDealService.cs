@@ -21,7 +21,8 @@ namespace AISEP.BLL.Services.Deals
         Task<DealContractStatusResponse> GetContractStatusAsync(int dealId);
         Task<DealContractStatusResponse> GetContractStatusForInvestorAsync(int dealId, int investorId);
         Task<DealContractStatusResponse> GetContractStatusForStartupAsync(int dealId, int startupId);
-        Task<DealDto> MintNftForDealAsync(int dealId, MintNftRequestDto request);
-        Task<PagedResult<DealDto>> GetMyNftsAsync(int investorId, SieveModel sieveModel);
+        Task<DealOwnershipAssignmentStatusResponse> GetOwnershipAssignmentStatusAsync(int dealId);
+        Task<DealOwnershipAssignmentStatusResponse> GetOwnershipAssignmentStatusForInvestorAsync(int dealId, int investorId);
+        Task<DealOwnershipAssignmentStatusResponse> GetOwnershipAssignmentStatusForStartupAsync(int dealId, int startupId);
     }
 }

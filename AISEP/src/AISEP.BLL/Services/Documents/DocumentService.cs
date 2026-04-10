@@ -71,7 +71,7 @@ namespace AISEP.BLL.Services.Documents
             long timestampOnChain;
             try
             {
-                (_, timestampOnChain) = await _blockchainService.VerifyDocumentAsync(fileHash);
+                (_, timestampOnChain, _) = await _blockchainService.VerifyDocumentAsync(fileHash);
             }
             catch (SmartContractRevertException ex)
             {
@@ -187,7 +187,7 @@ namespace AISEP.BLL.Services.Documents
             if (string.IsNullOrEmpty(document.FileHash) || string.IsNullOrEmpty(document.BlockchainTxHash))
                 throw new InvalidOperationException("This document was not registered on the blockchain.");
 
-            var (entityId, timestamp) = await _blockchainService.VerifyDocumentAsync(document.FileHash);
+            var (startupId, timestamp, _) = await _blockchainService.VerifyDocumentAsync(document.FileHash);
 
             if (timestamp <= 0)
             {
@@ -200,7 +200,7 @@ namespace AISEP.BLL.Services.Documents
                 };
             }
 
-            var isAuthentic = entityId == document.ProjectId;
+            var isAuthentic = startupId == document.ProjectId;
 
             return new BlockchainVerificationResponse
             {
@@ -234,11 +234,11 @@ namespace AISEP.BLL.Services.Documents
             string txHash;
             try
             {
-                txHash = await _blockchainService.StoreHashAsync(document.FileHash, projectId);
+                txHash = await _blockchainService.RegisterDocumentAsync(document.FileHash, projectId);
             }
             catch (SmartContractRevertException ex)
             {
-                if (ex.Message.Contains("already exists on the blockchain", StringComparison.OrdinalIgnoreCase))
+                if (ex.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase))
                 {
                     throw new InvalidOperationException(
                         "Document hash already exists on blockchain. This project may have been approved before or the same file was already registered.");

@@ -1,6 +1,7 @@
 using AISEP.BLL.DTOs.Requests;
 using AISEP.DAL.Enums;
 using FluentValidation;
+using Nethereum.Util;
 
 namespace AISEP.BLL.Validators.Investor
 {
@@ -27,9 +28,11 @@ namespace AISEP.BLL.Validators.Investor
 
 
             RuleFor(x => x.WalletAddress)
-                .NotEmpty().WithMessage("Wallet address is required.")
-                .MaximumLength(255).WithMessage("Wallet address must not exceed 255 characters.");
-            //.When(x => x.WalletAddress is not null);
+                .Cascade(CascadeMode.Stop)
+                .NotEmpty().WithMessage("Wallet address must not be empty when provided.")
+                .MaximumLength(255).WithMessage("Wallet address must not exceed 255 characters.")
+                .Must(BeValidEthereumWalletAddress).WithMessage("Wallet address must be a valid Ethereum address with a correct EIP-55 checksum.")
+                .When(x => x.WalletAddress is not null);
 
             RuleFor(x => x.PreviousInvestments)
                 .NotEmpty().WithMessage("Previous investments are required.")
@@ -52,6 +55,20 @@ namespace AISEP.BLL.Validators.Investor
                 .NotEmpty().WithMessage("Preferred stage is required.")
                 .IsInEnum().WithMessage("Preferred stage is not valid. Allowed: Idea, MVP, Growth, Scale.");
                // .When(x => x.PreferredStage.HasValue);
+        }
+
+        private static bool BeValidEthereumWalletAddress(string? walletAddress)
+        {
+            if (string.IsNullOrWhiteSpace(walletAddress))
+            {
+                return false;
+            }
+
+            var address = walletAddress.Trim();
+            var addressUtil = AddressUtil.Current;
+
+            return addressUtil.IsValidEthereumAddressHexFormat(address)
+                   && addressUtil.IsChecksumAddress(address);
         }
     }
 }
