@@ -7,6 +7,7 @@ using AISEP.DAL.Repositories.ConsultingReports;
 using AISEP.DAL.Repositories.Documents;
 using AISEP.DAL.Repositories.InvestorAIAnalyses;
 using AISEP.DAL.Repositories.Packages;
+using AISEP.DAL.Repositories.PremiumFreeBookingUsageLogs;
 using AISEP.DAL.Repositories.Projects;
 using AISEP.DAL.Repositories.ProjectAdvisorAssignments;
 using AISEP.DAL.Repositories.RefreshTokens;
@@ -15,6 +16,7 @@ using AISEP.DAL.Repositories.Startups;
 using AISEP.DAL.Repositories.StartupAIAnalyses;
 using AISEP.DAL.Repositories.ProjectFollowers;
 using AISEP.DAL.Repositories.Investors;
+using AISEP.DAL.Repositories.MonthlyPayouts;
 using AISEP.DAL.Repositories.Subscriptions;
 using AISEP.DAL.Repositories.Transactions;
 using AISEP.DAL.Repositories.Users;
@@ -26,7 +28,6 @@ using AISEP.DAL.Repositories.Notifications;
 using AISEP.DAL.Repositories.ConnectionRequests;
 using AISEP.DAL.Repositories.Deals;
 using AISEP.DAL.Repositories.PostPrs;
-using AISEP.DAL.Repositories.WithdrawRequests;
 using AISEP.DAL.Repositories.SystemCommissionConfigs;
 using AISEP.DAL.Repositories.SystemCommissionChangeLogs;
 namespace AISEP.DAL.Common
@@ -55,11 +56,12 @@ namespace AISEP.DAL.Common
         ITransactionRepository       Transactions       { get; }
         IPackageRepository           Packages           { get; }
         ISubscriptionRepository      Subscriptions      { get; }
+        IPremiumFreeBookingUsageLogRepository PremiumFreeBookingUsageLogs { get; }
         IUnlockedProjectRepository   UnlockedProjects   { get; }
         INotificationRepository      Notifications      { get; }
         IWalletTransactionRepository WalletTransactions { get; }
         IWalletRepository            Wallets            { get; }
-        IWithdrawRequestRepository   WithdrawRequests   { get; }
+        IMonthlyPayoutRepository     MonthlyPayouts     { get; }
         ISystemCommissionConfigRepository SystemCommissionConfigs { get; }
         ISystemCommissionChangeLogRepository SystemCommissionChangeLogs { get; }
         IConnectionRequestRepository ConnectionRequests { get; }

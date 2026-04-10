@@ -28,12 +28,7 @@ namespace AISEP.BLL.Services.Wallets
             var wallet = await _unitOfWork.Wallets.GetByAdvisorIdAsync(advisor.AdvisorId)
                 ?? throw new KeyNotFoundException("Wallet not found.");
 
-            var pendingAmount = await _unitOfWork.WithdrawRequests.GetPendingTotalByWalletIdAsync(wallet.WalletId);
-
-            var response = _mapper.Map<WalletSummaryResponse>(wallet);
-            response.PendingWithdrawAmount = pendingAmount;
-            response.AvailableBalance = wallet.Balance - pendingAmount;
-            return response;
+            return _mapper.Map<WalletSummaryResponse>(wallet);
         }
 
         public async Task<PagedResult<WalletTransactionResponse>> GetMyWalletTransactionsAsync(int userId, SieveModel model)

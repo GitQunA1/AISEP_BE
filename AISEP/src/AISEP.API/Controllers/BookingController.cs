@@ -76,9 +76,9 @@ namespace AISEP.API.Controllers
         //Trả danh sách advisor để dropdown booking, dựa trên project đã chọn
         [HttpGet("advisor-options")]
         [Authorize(Roles = "Investor,Startup,Staff,Admin")]
-        public async Task<IActionResult> GetBookingAdvisorOptions([FromQuery] int projectId)
+        public async Task<IActionResult> GetBookingAdvisorOptions([FromQuery] int projectId, [FromQuery] int? oldBookingId = null)
         {
-            var advisors = await _bookingService.GetBookingAdvisorOptionsAsync(projectId);
+            var advisors = await _bookingService.GetBookingAdvisorOptionsAsync(projectId, oldBookingId);
             return Ok(ApiResponse<object>.SuccessResponse(advisors, "Success"));
         }
 

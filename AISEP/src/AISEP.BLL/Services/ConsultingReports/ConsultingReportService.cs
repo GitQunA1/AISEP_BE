@@ -214,6 +214,7 @@ namespace AISEP.BLL.Services.ConsultingReports
             report.AdvisorRevisionDueAt = null;
 
             MarkBookingCompletedAndCloseChat(report.Booking, BookingStatus.ComplaintAccepted);
+            await RefundPremiumFreeQuotaIfNeededAsync(report.Booking);
 
             // Complaint accepted: advisor does not receive payout.
             report.IsPayoutProcessed = true;
@@ -404,6 +405,29 @@ namespace AISEP.BLL.Services.ConsultingReports
                 booking.ChatSession.IsOpen = false;
                 booking.ChatSession.EndTime = DateTime.UtcNow;
             }
+        }
+
+        private async Task RefundPremiumFreeQuotaIfNeededAsync(Booking booking)
+        {
+            if (!booking.UsedPremiumFreeQuota || booking.PremiumFreeQuotaRefunded)
+            {
+                return;
+            }
+
+            var latestSubscription = await _unitOfWork.Subscriptions.GetQuery()
+                .Where(s => s.UserId == booking.CustomerId)
+                .OrderByDescending(s => s.EndDate)
+                .ThenByDescending(s => s.SubscriptionId)
+                .FirstOrDefaultAsync();
+
+            if (latestSubscription is null)
+            {
+                return;
+            }
+
+            latestSubscription.RemainingFreeBookings += 1;
+            _unitOfWork.Subscriptions.Update(latestSubscription);
+            booking.PremiumFreeQuotaRefunded = true;
         }
     }
 }

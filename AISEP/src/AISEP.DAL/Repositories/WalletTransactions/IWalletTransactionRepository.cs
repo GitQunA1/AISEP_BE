@@ -5,7 +5,7 @@ namespace AISEP.DAL.Repositories.WalletTransactions
     public interface IWalletTransactionRepository
     {
         Task AddAsync(WalletTransaction walletTransaction);
-        Task<WalletTransaction?> GetWithdrawalByWithdrawRequestIdAsync(int withdrawRequestId);
         IQueryable<WalletTransaction> GetByWalletIdQuery(int walletId);
+        IQueryable<WalletTransaction> GetCompletedDepositsWithoutPayoutQuery(DateTime periodStartUtc, DateTime periodEndUtc);
     }
 }

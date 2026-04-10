@@ -285,27 +285,32 @@ namespace AISEP.BLL.Helpers
                         && currentInvestorIdObj is int currentInvestorId
                         && src.ConnectionRequests.Any(cr => cr.InvestorId == currentInvestorId)))
                 .ForMember(dest => dest.AssignedAdvisorId,
-                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignment != null ? (int?)src.ProjectAdvisorAssignment.AdvisorId : null))
+                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignments
+                        .OrderByDescending(pa => pa.AssignedAt)
+                        .Select(pa => (int?)pa.AdvisorId)
+                        .FirstOrDefault()))
                 .ForMember(dest => dest.AssignedAdvisorName,
-                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignment != null && src.ProjectAdvisorAssignment.Advisor != null && src.ProjectAdvisorAssignment.Advisor.User != null
-                        ? src.ProjectAdvisorAssignment.Advisor.User.UserName
-                        : null))
+                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignments
+                        .OrderByDescending(pa => pa.AssignedAt)
+                        .Select(pa => pa.Advisor != null && pa.Advisor.User != null ? pa.Advisor.User.UserName : null)
+                        .FirstOrDefault()))
                 .ForMember(dest => dest.AssignedAdvisorHourlyRate,
-                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignment != null && src.ProjectAdvisorAssignment.Advisor != null
-                        ? src.ProjectAdvisorAssignment.Advisor.HourlyRate
-                        : null))
+                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignments
+                        .OrderByDescending(pa => pa.AssignedAt)
+                        .Select(pa => pa.Advisor != null ? pa.Advisor.HourlyRate : null)
+                        .FirstOrDefault()))
                 .ForMember(dest => dest.AssignedAdvisorRating,
-                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignment != null && src.ProjectAdvisorAssignment.Advisor != null
-                        ? src.ProjectAdvisorAssignment.Advisor.Rating
-                        : null))
+                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignments
+                        .OrderByDescending(pa => pa.AssignedAt)
+                        .Select(pa => pa.Advisor != null ? pa.Advisor.Rating : null)
+                        .FirstOrDefault()))
                 .ForMember(dest => dest.AssignedAdvisorIndustries,
-                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignment != null
-                        && src.ProjectAdvisorAssignment.Advisor != null
-                        && src.ProjectAdvisorAssignment.Advisor.AdvisorIndustries != null
-                        ? src.ProjectAdvisorAssignment.Advisor.AdvisorIndustries
-                            .Select(ai => ai.Industry.ToString())
-                            .ToList()
-                        : new List<string>()));
+                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignments
+                        .OrderByDescending(pa => pa.AssignedAt)
+                        .Select(pa => pa.Advisor != null && pa.Advisor.AdvisorIndustries != null
+                            ? pa.Advisor.AdvisorIndustries.Select(ai => ai.Industry.ToString()).ToList()
+                            : new List<string>())
+                        .FirstOrDefault() ?? new List<string>()));
 
             // Project Entity → NonPremiumProjectResponse
             CreateMap<Project, NonPremiumProjectResponse>()
@@ -334,27 +339,32 @@ namespace AISEP.BLL.Helpers
                         && currentInvestorIdObj is int currentInvestorId
                         && src.ConnectionRequests.Any(cr => cr.InvestorId == currentInvestorId)))
                 .ForMember(dest => dest.AssignedAdvisorId,
-                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignment != null ? (int?)src.ProjectAdvisorAssignment.AdvisorId : null))
+                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignments
+                        .OrderByDescending(pa => pa.AssignedAt)
+                        .Select(pa => (int?)pa.AdvisorId)
+                        .FirstOrDefault()))
                 .ForMember(dest => dest.AssignedAdvisorName,
-                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignment != null && src.ProjectAdvisorAssignment.Advisor != null && src.ProjectAdvisorAssignment.Advisor.User != null
-                        ? src.ProjectAdvisorAssignment.Advisor.User.UserName
-                        : null))
+                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignments
+                        .OrderByDescending(pa => pa.AssignedAt)
+                        .Select(pa => pa.Advisor != null && pa.Advisor.User != null ? pa.Advisor.User.UserName : null)
+                        .FirstOrDefault()))
                 .ForMember(dest => dest.AssignedAdvisorHourlyRate,
-                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignment != null && src.ProjectAdvisorAssignment.Advisor != null
-                        ? src.ProjectAdvisorAssignment.Advisor.HourlyRate
-                        : null))
+                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignments
+                        .OrderByDescending(pa => pa.AssignedAt)
+                        .Select(pa => pa.Advisor != null ? pa.Advisor.HourlyRate : null)
+                        .FirstOrDefault()))
                 .ForMember(dest => dest.AssignedAdvisorRating,
-                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignment != null && src.ProjectAdvisorAssignment.Advisor != null
-                        ? src.ProjectAdvisorAssignment.Advisor.Rating
-                        : null))
+                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignments
+                        .OrderByDescending(pa => pa.AssignedAt)
+                        .Select(pa => pa.Advisor != null ? pa.Advisor.Rating : null)
+                        .FirstOrDefault()))
                 .ForMember(dest => dest.AssignedAdvisorIndustries,
-                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignment != null
-                        && src.ProjectAdvisorAssignment.Advisor != null
-                        && src.ProjectAdvisorAssignment.Advisor.AdvisorIndustries != null
-                        ? src.ProjectAdvisorAssignment.Advisor.AdvisorIndustries
-                            .Select(ai => ai.Industry.ToString())
-                            .ToList()
-                        : new List<string>()));
+                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignments
+                        .OrderByDescending(pa => pa.AssignedAt)
+                        .Select(pa => pa.Advisor != null && pa.Advisor.AdvisorIndustries != null
+                            ? pa.Advisor.AdvisorIndustries.Select(ai => ai.Industry.ToString()).ToList()
+                            : new List<string>())
+                        .FirstOrDefault() ?? new List<string>()));
 
             // CreateProjectRequest -> Project Entity
             CreateMap<CreateProjectRequest, Project>()
@@ -575,8 +585,7 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => ParseEvidenceImageUrls(src.EvidenceImageUrls, src.EvidenceUrl)));
 
             CreateMap<Wallet, WalletSummaryResponse>()
-                .ForMember(dest => dest.PendingWithdrawAmount, opt => opt.Ignore())
-                .ForMember(dest => dest.AvailableBalance, opt => opt.Ignore());
+                ;
 
             CreateMap<Wallet, AdvisorWalletResponse>()
                 .ForMember(dest => dest.AdvisorUserId,
@@ -596,15 +605,17 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.Status,
                     opt => opt.MapFrom(src => src.Status.ToString()));
 
-            CreateMap<WithdrawRequest, WithdrawRequestResponse>()
+            CreateMap<MonthlyPayout, MonthlyPayoutResponse>()
                 .ForMember(dest => dest.Status,
                     opt => opt.MapFrom(src => src.Status.ToString()))
-                .ForMember(dest => dest.AdvisorId,
-                    opt => opt.MapFrom(src => src.Wallet.AdvisorId))
                 .ForMember(dest => dest.AdvisorName,
-                    opt => opt.MapFrom(src => src.Wallet.Advisor.User != null
-                        ? (src.Wallet.Advisor.User.UserName ?? $"Advisor {src.Wallet.AdvisorId}")
-                        : $"Advisor {src.Wallet.AdvisorId}"));
+                    opt => opt.MapFrom(src => src.Advisor.User != null
+                        ? (src.Advisor.User.UserName ?? $"Advisor {src.AdvisorId}")
+                        : $"Advisor {src.AdvisorId}"))
+                .ForMember(dest => dest.PaidByName,
+                    opt => opt.MapFrom(src => src.PaidBy != null
+                        ? (src.PaidBy.UserName ?? string.Empty)
+                        : null));
 
         }
 

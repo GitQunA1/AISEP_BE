@@ -13,12 +13,14 @@ namespace AISEP.DAL.Repositories.ProjectAdvisorAssignments
             _context = context;
         }
 
-        public async Task<ProjectAdvisorAssignment?> GetByProjectIdAsync(int projectId)
+        public async Task<List<ProjectAdvisorAssignment>> GetByProjectIdAsync(int projectId)
             => await _context.ProjectAdvisorAssignments
                 .Include(x => x.Project)
                 .Include(x => x.Advisor)
                     .ThenInclude(a => a.User)
-                .FirstOrDefaultAsync(x => x.ProjectId == projectId);
+                .Where(x => x.ProjectId == projectId)
+                .OrderByDescending(x => x.AssignedAt)
+                .ToListAsync();
 
         public IQueryable<ProjectAdvisorAssignment> GetAllQuery()
             => _context.ProjectAdvisorAssignments
@@ -42,5 +44,8 @@ namespace AISEP.DAL.Repositories.ProjectAdvisorAssignments
 
         public void Update(ProjectAdvisorAssignment assignment)
             => _context.ProjectAdvisorAssignments.Update(assignment);
+
+        public void Remove(ProjectAdvisorAssignment assignment)
+            => _context.ProjectAdvisorAssignments.Remove(assignment);
     }
 }

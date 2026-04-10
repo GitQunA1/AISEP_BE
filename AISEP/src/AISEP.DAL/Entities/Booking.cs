@@ -14,6 +14,11 @@ namespace AISEP.DAL.Entities
         public int? SystemCommissionConfigId { get; set; }
         public decimal SystemCommissionPercent { get; set; }
         public decimal SystemCommissionAmount { get; set; }
+        public int? OldBookingId { get; set; }
+        public bool IsFreeRebookFromComplaint { get; set; }
+        public bool IsPaymentWaived { get; set; }
+        public bool UsedPremiumFreeQuota { get; set; }
+        public bool PremiumFreeQuotaRefunded { get; set; }
         public BookingStatus Status { get; set; }
         public string? Note { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -23,6 +28,8 @@ namespace AISEP.DAL.Entities
         public Project? Project { get; set; }
         public User Customer { get; set; } = null!;
         public SystemCommissionConfig? SystemCommissionConfig { get; set; }
+        public Booking? OldBooking { get; set; }
+        public ICollection<Booking> Rebookings { get; set; } = new List<Booking>();
         public ChatSession? ChatSession { get; set; }
         public ConsultingReport? ConsultingReport { get; set; }
         public Review? Review { get; set; }

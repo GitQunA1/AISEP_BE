@@ -3,7 +3,7 @@
     public enum WalletTransactionType
     {
         Deposit,
-        Withdrawal
-        
+        Withdrawal,
+        Payout
     }
 }
