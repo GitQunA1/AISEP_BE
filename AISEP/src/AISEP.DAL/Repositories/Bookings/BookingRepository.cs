@@ -59,6 +59,11 @@ namespace AISEP.DAL.Repositories.Bookings
                          && b.CreatedAt <= thresholdUtc)
                 .ToListAsync();
 
+        public async Task<bool> ExistsFreeRebookFromComplaintByOldBookingIdAsync(int oldBookingId)
+            => await _context.Bookings.AnyAsync(b =>
+                b.OldBookingId == oldBookingId
+                && b.IsFreeRebookFromComplaint);
+
         public async Task AddAsync(Booking booking)
         {
             await _context.Bookings.AddAsync(booking);

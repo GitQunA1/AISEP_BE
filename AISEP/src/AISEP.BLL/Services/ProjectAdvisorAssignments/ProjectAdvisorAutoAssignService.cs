@@ -7,6 +7,7 @@ namespace AISEP.BLL.Services.ProjectAdvisorAssignments
 {
     public class ProjectAdvisorAutoAssignService : IProjectAdvisorAutoAssignService
     {
+        private const int MaxAdvisorsPerProject = 3;
         private readonly IUnitOfWork _unitOfWork;
 
         public ProjectAdvisorAutoAssignService(IUnitOfWork unitOfWork)
@@ -18,7 +19,7 @@ namespace AISEP.BLL.Services.ProjectAdvisorAssignments
         {
             var projects = await _unitOfWork.Projects
                 .GetByStatusQuery(ProjectStatus.Approved)
-                .Where(p => p.ProjectAdvisorAssignment == null)
+                .Where(p => !p.ProjectAdvisorAssignments.Any())
                 .ToListAsync(cancellationToken);
 
             if (projects.Count == 0)
@@ -95,7 +96,7 @@ namespace AISEP.BLL.Services.ProjectAdvisorAssignments
                 .Select(g => new { AdvisorId = g.Key, Count = g.Count() })
                 .ToDictionaryAsync(x => x.AdvisorId, x => x.Count, cancellationToken);
 
-            var bestAdvisorId = advisorCandidates
+            var rankedAdvisorIds = advisorCandidates
                 .Select(x =>
                 {
                     var advisorId = x.Advisor.AdvisorId;
@@ -121,28 +122,37 @@ namespace AISEP.BLL.Services.ProjectAdvisorAssignments
                 .ThenBy(x => x.NoResponse)
                 .ThenBy(x => x.Rejected)
                 .Select(x => x.AdvisorId)
-                .First();
+                .ToList();
 
-            var existingAssignment = await _unitOfWork.ProjectAdvisorAssignments.GetByProjectIdAsync(project.ProjectId);
-            if (existingAssignment is null)
-            {
-                await _unitOfWork.ProjectAdvisorAssignments.AddAsync(new ProjectAdvisorAssignment
-                {
-                    ProjectId = project.ProjectId,
-                    AdvisorId = bestAdvisorId,
-                    AssignedAt = DateTime.UtcNow
-                });
-                return true;
-            }
+            var existingAssignments = await _unitOfWork.ProjectAdvisorAssignments.GetByProjectIdAsync(project.ProjectId);
+            var existingAdvisorIds = existingAssignments.Select(x => x.AdvisorId).ToHashSet();
 
-            if (existingAssignment.AdvisorId == bestAdvisorId)
+            if (existingAssignments.Count >= MaxAdvisorsPerProject)
             {
                 return false;
             }
 
-            existingAssignment.AdvisorId = bestAdvisorId;
-            existingAssignment.AssignedAt = DateTime.UtcNow;
-            _unitOfWork.ProjectAdvisorAssignments.Update(existingAssignment);
+            var requiredCount = MaxAdvisorsPerProject - existingAssignments.Count;
+            var newAdvisorIds = rankedAdvisorIds
+                .Where(id => !existingAdvisorIds.Contains(id))
+                .Take(requiredCount)
+                .ToList();
+
+            if (newAdvisorIds.Count == 0)
+            {
+                return false;
+            }
+
+            foreach (var advisorId in newAdvisorIds)
+            {
+                await _unitOfWork.ProjectAdvisorAssignments.AddAsync(new ProjectAdvisorAssignment
+                {
+                    ProjectId = project.ProjectId,
+                    AdvisorId = advisorId,
+                    AssignedAt = DateTime.UtcNow
+                });
+            }
+
             return true;
         }
     }

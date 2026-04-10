@@ -7,7 +7,5 @@ namespace AISEP.BLL.DTOs.Responses
         public decimal Balance { get; set; }
         public string Currency { get; set; } = string.Empty;
         public bool IsActive { get; set; }
-        public decimal PendingWithdrawAmount { get; set; }
-        public decimal AvailableBalance { get; set; }
     }
 }

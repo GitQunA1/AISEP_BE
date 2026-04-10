@@ -19,6 +19,11 @@ namespace AISEP.BLL.DTOs.Responses
         public decimal SystemCommissionPercent { get; set; }
         public decimal SystemCommissionAmount { get; set; }
         public string SystemCommissionMessage { get; set; } = string.Empty;
+        public int? OldBookingId { get; set; }
+        public bool IsFreeRebookFromComplaint { get; set; }
+        public bool IsPaymentWaived { get; set; }
+        public bool UsedPremiumFreeQuota { get; set; }
+        public bool PremiumFreeQuotaRefunded { get; set; }
         public List<int> AdvisorAvailabilitySlotIds { get; set; } = [];
         public int SlotCount { get; set; }
     }

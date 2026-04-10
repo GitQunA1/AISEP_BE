@@ -9,6 +9,7 @@ namespace AISEP.DAL.Repositories.Bookings
         Task<Booking?> GetByIdWithAdvisorWalletAsync(int id);
         Task<Booking?> GetPayableByIdAndCustomerAsync(int bookingId, int customerId);
         Task<List<Booking>> GetExpiredAwaitingAdvisorResponseAsync(DateTime thresholdUtc);
+        Task<bool> ExistsFreeRebookFromComplaintByOldBookingIdAsync(int oldBookingId);
         Task AddAsync(Booking booking);
         Task DeleteAsync(int id);
         IQueryable<Booking> GetBookingQuery();

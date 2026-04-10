@@ -19,6 +19,6 @@ namespace AISEP.DAL.Entities
         public Advisor Advisor { get; set; } = null!;
 
         public ICollection<WalletTransaction> WalletTransactions { get; set; } = new List<WalletTransaction>();
-        public ICollection<WithdrawRequest> WithdrawRequests { get; set; } = new List<WithdrawRequest>();
+        public ICollection<MonthlyPayout> MonthlyPayouts { get; set; } = new List<MonthlyPayout>();
     }
 }

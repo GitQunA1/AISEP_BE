@@ -17,15 +17,20 @@ namespace AISEP.DAL.Repositories.WalletTransactions
         public async Task AddAsync(WalletTransaction walletTransaction)
             => await _context.WalletTransactions.AddAsync(walletTransaction);
 
-        public async Task<WalletTransaction?> GetWithdrawalByWithdrawRequestIdAsync(int withdrawRequestId)
-            => await _context.WalletTransactions.FirstOrDefaultAsync(x =>
-                x.WithdrawRequestId == withdrawRequestId
-                && x.Type == WalletTransactionType.Withdrawal);
-
         public IQueryable<WalletTransaction> GetByWalletIdQuery(int walletId)
             => _context.WalletTransactions
                 .Where(x => x.WalletId == walletId)
                 .OrderByDescending(x => x.CreatedAt)
                 .AsNoTracking();
+
+        public IQueryable<WalletTransaction> GetCompletedDepositsWithoutPayoutQuery(DateTime periodStartUtc, DateTime periodEndUtc)
+            => _context.WalletTransactions
+                .Include(x => x.Wallet)
+                .Where(x =>
+                    x.Type == WalletTransactionType.Deposit
+                    && x.Status == WalletTransactionStatus.Completed
+                    && x.MonthlyPayoutId == null
+                    && x.CreatedAt >= periodStartUtc
+                    && x.CreatedAt < periodEndUtc);
     }
 }

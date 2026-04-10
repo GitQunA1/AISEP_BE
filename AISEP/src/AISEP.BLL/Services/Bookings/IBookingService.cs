@@ -12,7 +12,7 @@ namespace AISEP.BLL.Services.Bookings
         Task<BookingResponse?> GetBookingByIdAsync(int id);
         Task<PagedResult<BookingResponse>> GetAllBookingsAsync(SieveModel model);
         Task<List<BookingProjectOptionResponse>> GetBookingProjectOptionsAsync();
-        Task<List<BookingAdvisorOptionResponse>> GetBookingAdvisorOptionsAsync(int projectId);
+        Task<List<BookingAdvisorOptionResponse>> GetBookingAdvisorOptionsAsync(int projectId, int? oldBookingId = null);
         Task<List<BookingAdvisorOptionResponse>> GetReplacementAdvisorOptionsAsync(int bookingId);
         Task<PagedResult<BookingResponse>> GetMyCustomerBookingsAsync(SieveModel model);
         Task<PagedResult<BookingResponse>> GetMyAdvisorBookingsAsync(SieveModel model);

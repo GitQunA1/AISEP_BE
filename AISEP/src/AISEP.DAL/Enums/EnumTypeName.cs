@@ -13,6 +13,7 @@ namespace AISEP.DAL.Enums
         NotificationStatus,
         PreferredStage,
         WalletTransactionStatus,
+        MonthlyPayoutStatus,
         ProjectStatus,
         ReferenceType,
         RiskTolerance,
@@ -24,8 +25,7 @@ namespace AISEP.DAL.Enums
         WalletTransactionType,
         UserRole,
         UserReportCategory,
-        UserReportStatus,
-        WithdrawRequestStatus
+        UserReportStatus
 
     }
 }

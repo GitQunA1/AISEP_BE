@@ -3,17 +3,20 @@ using System;
 using AISEP.DAL.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace AISEP.Migrations
+namespace AISEP.DAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260409175553_AddMonthlyPayoutFlow")]
+    partial class AddMonthlyPayoutFlow
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -210,27 +213,9 @@ namespace AISEP.Migrations
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsFreeRebookFromComplaint")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
-                    b.Property<bool>("IsPaymentWaived")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
                     b.Property<string>("Note")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
-
-                    b.Property<int?>("OldBookingId")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("PremiumFreeQuotaRefunded")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
@@ -259,18 +244,11 @@ namespace AISEP.Migrations
                         .HasColumnType("decimal(5,2)")
                         .HasDefaultValue(0m);
 
-                    b.Property<bool>("UsedPremiumFreeQuota")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
                     b.HasKey("BookingId");
 
                     b.HasIndex("AdvisorId");
 
                     b.HasIndex("CustomerId");
-
-                    b.HasIndex("OldBookingId");
 
                     b.HasIndex("ProjectId");
 
@@ -962,50 +940,6 @@ namespace AISEP.Migrations
                     b.ToTable("postprs", (string)null);
                 });
 
-            modelBuilder.Entity("AISEP.DAL.Entities.PremiumFreeBookingUsageLog", b =>
-                {
-                    b.Property<int>("PremiumFreeBookingUsageLogId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PremiumFreeBookingUsageLogId"));
-
-                    b.Property<decimal>("BookingDurationHours")
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<int>("BookingId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Note")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<int>("SubscriptionId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("UsedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("PremiumFreeBookingUsageLogId");
-
-                    b.HasIndex("BookingId")
-                        .IsUnique();
-
-                    b.HasIndex("SubscriptionId");
-
-                    b.HasIndex("UserId", "UsedAt");
-
-                    b.ToTable("premium_free_booking_usage_logs", null, t =>
-                        {
-                            t.HasCheckConstraint("CK_premium_free_booking_usage_logs_duration_positive", "\"BookingDurationHours\" > 0");
-                        });
-                });
-
             modelBuilder.Entity("AISEP.DAL.Entities.Project", b =>
                 {
                     b.Property<int>("ProjectId")
@@ -1119,11 +1053,9 @@ namespace AISEP.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.HasKey("ProjectId", "AdvisorId");
+                    b.HasKey("ProjectId");
 
                     b.HasIndex("AdvisorId");
-
-                    b.HasIndex("ProjectId");
 
                     b.ToTable("project_advisor_assignments", (string)null);
                 });
@@ -2016,11 +1948,6 @@ namespace AISEP.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("AISEP.DAL.Entities.Booking", "OldBooking")
-                        .WithMany("Rebookings")
-                        .HasForeignKey("OldBookingId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("AISEP.DAL.Entities.Project", "Project")
                         .WithMany("Bookings")
                         .HasForeignKey("ProjectId")
@@ -2034,8 +1961,6 @@ namespace AISEP.Migrations
                     b.Navigation("Advisor");
 
                     b.Navigation("Customer");
-
-                    b.Navigation("OldBooking");
 
                     b.Navigation("Project");
 
@@ -2256,33 +2181,6 @@ namespace AISEP.Migrations
                     b.Navigation("Deal");
                 });
 
-            modelBuilder.Entity("AISEP.DAL.Entities.PremiumFreeBookingUsageLog", b =>
-                {
-                    b.HasOne("AISEP.DAL.Entities.Booking", "Booking")
-                        .WithMany()
-                        .HasForeignKey("BookingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AISEP.DAL.Entities.Subscription", "Subscription")
-                        .WithMany()
-                        .HasForeignKey("SubscriptionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("AISEP.DAL.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Booking");
-
-                    b.Navigation("Subscription");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("AISEP.DAL.Entities.Project", b =>
                 {
                     b.HasOne("AISEP.DAL.Entities.Startup", "Startup")
@@ -2303,8 +2201,8 @@ namespace AISEP.Migrations
                         .IsRequired();
 
                     b.HasOne("AISEP.DAL.Entities.Project", "Project")
-                        .WithMany("ProjectAdvisorAssignments")
-                        .HasForeignKey("ProjectId")
+                        .WithOne("ProjectAdvisorAssignment")
+                        .HasForeignKey("AISEP.DAL.Entities.ProjectAdvisorAssignment", "ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -2607,8 +2505,6 @@ namespace AISEP.Migrations
 
                     b.Navigation("ConsultingReport");
 
-                    b.Navigation("Rebookings");
-
                     b.Navigation("Review");
                 });
 
@@ -2660,7 +2556,7 @@ namespace AISEP.Migrations
 
                     b.Navigation("InvestorAIAnalyses");
 
-                    b.Navigation("ProjectAdvisorAssignments");
+                    b.Navigation("ProjectAdvisorAssignment");
 
                     b.Navigation("StartupAIAnalysis");
 

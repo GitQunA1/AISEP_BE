@@ -15,10 +15,10 @@ namespace AISEP.BLL.Validators.Booking
                 .NotEmpty().WithMessage("ProjectId is required.")
                 .GreaterThan(0).WithMessage("ProjectId must be a positive number.");
 
-            RuleFor(x => x.SourceBookingId)
+            RuleFor(x => x.OldBookingId)
                 .GreaterThan(0)
-                .When(x => x.SourceBookingId.HasValue)
-                .WithMessage("SourceBookingId must be a positive number.");
+                .When(x => x.OldBookingId.HasValue)
+                .WithMessage("OldBookingId must be a positive number.");
 
             RuleFor(x => x.AdvisorAvailabilitySlotIds)
                 .NotEmpty().WithMessage("At least one slot must be selected.");

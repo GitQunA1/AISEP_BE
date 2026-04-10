@@ -33,6 +33,7 @@ namespace AISEP.DAL.Data
         public DbSet<Wallet> Wallets { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
+        public DbSet<PremiumFreeBookingUsageLog> PremiumFreeBookingUsageLogs { get; set; }
         public DbSet<ActionLog> ActionLogs { get; set; }
         public DbSet<PostPr> PostPrs { get; set; }
         public DbSet<ChatSession> ChatSessions { get; set; }
@@ -42,7 +43,7 @@ namespace AISEP.DAL.Data
         public DbSet<Package> Packages { get; set; }
         public DbSet<UnlockedProject> UnlockedProjects { get; set; }
         public DbSet<WalletTransaction> WalletTransactions { get; set; }
-        public DbSet<WithdrawRequest> WithdrawRequests { get; set; }
+        public DbSet<MonthlyPayout> MonthlyPayouts { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<UserReport> UserReports { get; set; }
@@ -202,13 +203,14 @@ namespace AISEP.DAL.Data
             modelBuilder.Entity<ProjectAdvisorAssignment>(entity =>
             {
                 entity.ToTable("project_advisor_assignments");
-                entity.HasKey(x => x.ProjectId);
+                entity.HasKey(x => new { x.ProjectId, x.AdvisorId });
                 entity.Property(x => x.AssignedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 entity.HasIndex(x => x.AdvisorId);
+                entity.HasIndex(x => x.ProjectId);
 
                 entity.HasOne(x => x.Project)
-                    .WithOne(p => p.ProjectAdvisorAssignment)
-                    .HasForeignKey<ProjectAdvisorAssignment>(x => x.ProjectId)
+                    .WithMany(p => p.ProjectAdvisorAssignments)
+                    .HasForeignKey(x => x.ProjectId)
                     .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasOne(x => x.Advisor)
@@ -346,6 +348,10 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.Price).HasColumnType("decimal(18,2)").IsRequired();
                 entity.Property(e => e.SystemCommissionPercent).HasColumnType("decimal(5,2)").HasDefaultValue(0m);
                 entity.Property(e => e.SystemCommissionAmount).HasColumnType("decimal(18,2)").HasDefaultValue(0m);
+                entity.Property(e => e.IsFreeRebookFromComplaint).HasDefaultValue(false);
+                entity.Property(e => e.IsPaymentWaived).HasDefaultValue(false);
+                entity.Property(e => e.UsedPremiumFreeQuota).HasDefaultValue(false);
+                entity.Property(e => e.PremiumFreeQuotaRefunded).HasDefaultValue(false);
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.Note).HasMaxLength(1000);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
@@ -369,6 +375,11 @@ namespace AISEP.DAL.Data
                     .WithMany(c => c.Bookings)
                     .HasForeignKey(b => b.SystemCommissionConfigId)
                     .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(b => b.OldBooking)
+                    .WithMany(b => b.Rebookings)
+                    .HasForeignKey(b => b.OldBookingId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<SystemCommissionConfig>(entity =>
@@ -557,6 +568,33 @@ namespace AISEP.DAL.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
+            modelBuilder.Entity<PremiumFreeBookingUsageLog>(entity =>
+            {
+                entity.ToTable("premium_free_booking_usage_logs");
+                entity.HasKey(e => e.PremiumFreeBookingUsageLogId);
+                entity.Property(e => e.UsedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.BookingDurationHours).HasColumnType("decimal(5,2)").IsRequired();
+                entity.Property(e => e.Note).HasMaxLength(500);
+                entity.ToTable(tb => tb.HasCheckConstraint("CK_premium_free_booking_usage_logs_duration_positive", "\"BookingDurationHours\" > 0"));
+                entity.HasIndex(e => new { e.UserId, e.UsedAt });
+                entity.HasIndex(e => e.BookingId).IsUnique();
+
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Subscription)
+                    .WithMany()
+                    .HasForeignKey(e => e.SubscriptionId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Booking)
+                    .WithMany()
+                    .HasForeignKey(e => e.BookingId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
             modelBuilder.Entity<UnlockedProject>(entity =>
             {
                 entity.ToTable("unlocked_projects");
@@ -598,48 +636,46 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 entity.ToTable(tb => tb.HasCheckConstraint("CK_wallet_transactions_amount_positive", "\"Amount\" > 0"));
-                entity.HasIndex(e => e.WithdrawRequestId)
-                    .IsUnique()
-                    .HasFilter("\"WithdrawRequestId\" IS NOT NULL AND \"Type\" = 'Withdrawal'");
+                entity.HasIndex(e => e.MonthlyPayoutId);
 
                 entity.HasOne(wt => wt.Wallet)
                     .WithMany(w => w.WalletTransactions)
                     .HasForeignKey(wt => wt.WalletId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasOne(wt => wt.WithdrawRequest)
-                    .WithMany()
-                    .HasForeignKey(wt => wt.WithdrawRequestId)
+                entity.HasOne(wt => wt.MonthlyPayout)
+                    .WithMany(mp => mp.WalletTransactions)
+                    .HasForeignKey(wt => wt.MonthlyPayoutId)
                     .OnDelete(DeleteBehavior.SetNull);
             });
 
-            modelBuilder.Entity<WithdrawRequest>(entity =>
+            modelBuilder.Entity<MonthlyPayout>(entity =>
             {
-                entity.ToTable("withdraw_requests");
-                entity.HasKey(e => e.WithdrawRequestId);
+                entity.ToTable("monthly_payouts");
+                entity.HasKey(e => e.MonthlyPayoutId);
                 entity.Property(e => e.Amount).HasColumnType("decimal(18,2)").IsRequired();
-                entity.Property(e => e.BankName).HasMaxLength(255);
-                entity.Property(e => e.BankAccount).HasMaxLength(255);
-                entity.Property(e => e.ProofImageUrl).HasMaxLength(255);
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
-                entity.Property(e => e.RequestedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
-                entity.Property(e => e.RejectionReason).HasMaxLength(1000);
-                entity.ToTable(tb => tb.HasCheckConstraint("CK_withdraw_requests_amount_positive", "\"Amount\" > 0"));
+                entity.Property(e => e.Note).HasMaxLength(1000);
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.ToTable(tb => tb.HasCheckConstraint("CK_monthly_payouts_amount_positive", "\"Amount\" > 0"));
+                entity.ToTable(tb => tb.HasCheckConstraint("CK_monthly_payouts_month_range", "\"Month\" >= 1 AND \"Month\" <= 12"));
+                entity.HasIndex(e => new { e.AdvisorId, e.Year, e.Month }).IsUnique();
+                entity.HasIndex(e => new { e.Year, e.Month, e.Status });
 
-                entity.HasOne(wr => wr.Wallet)
-                    .WithMany(w => w.WithdrawRequests)
-                    .HasForeignKey(wr => wr.WalletId)
+                entity.HasOne(e => e.Wallet)
+                    .WithMany(w => w.MonthlyPayouts)
+                    .HasForeignKey(e => e.WalletId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasOne(wr => wr.ApprovedBy)
+                entity.HasOne(e => e.Advisor)
                     .WithMany()
-                    .HasForeignKey(wr => wr.ApprovedById)
-                    .OnDelete(DeleteBehavior.SetNull);
+                    .HasForeignKey(e => e.AdvisorId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                entity.HasOne(wr => wr.RejectedBy)
+                entity.HasOne(e => e.PaidBy)
                     .WithMany()
-                    .HasForeignKey(wr => wr.RejectedById)
-                    .OnDelete(DeleteBehavior.SetNull);
+                    .HasForeignKey(e => e.PaidById)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<Transaction>(entity =>

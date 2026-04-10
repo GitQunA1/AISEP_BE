@@ -9,7 +9,6 @@ namespace AISEP.DAL.Entities
         public int WalletTransactionId { get; set; }
 
         public int WalletId { get; set; }
-        public int? WithdrawRequestId { get; set; }
 
         public decimal Amount { get; set; }
 
@@ -18,9 +17,10 @@ namespace AISEP.DAL.Entities
         public WalletTransactionStatus Status { get; set; }
 
         public DateTime CreatedAt { get; set; }
+        public int? MonthlyPayoutId { get; set; }
 
         // Navigation properties
         public Wallet Wallet { get; set; } = null!;
-        public WithdrawRequest? WithdrawRequest { get; set; }
+        public MonthlyPayout? MonthlyPayout { get; set; }
     }
 }

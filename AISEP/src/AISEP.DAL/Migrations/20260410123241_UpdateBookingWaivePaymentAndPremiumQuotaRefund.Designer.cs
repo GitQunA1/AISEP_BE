@@ -3,17 +3,20 @@ using System;
 using AISEP.DAL.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace AISEP.Migrations
+namespace AISEP.DAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260410123241_UpdateBookingWaivePaymentAndPremiumQuotaRefund")]
+    partial class UpdateBookingWaivePaymentAndPremiumQuotaRefund
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -224,9 +227,6 @@ namespace AISEP.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
-                    b.Property<int?>("OldBookingId")
-                        .HasColumnType("integer");
-
                     b.Property<bool>("PremiumFreeQuotaRefunded")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -236,6 +236,9 @@ namespace AISEP.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int?>("ProjectId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SourceBookingId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("StartTime")
@@ -270,9 +273,9 @@ namespace AISEP.Migrations
 
                     b.HasIndex("CustomerId");
 
-                    b.HasIndex("OldBookingId");
-
                     b.HasIndex("ProjectId");
+
+                    b.HasIndex("SourceBookingId");
 
                     b.HasIndex("SystemCommissionConfigId");
 
@@ -2016,14 +2019,14 @@ namespace AISEP.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("AISEP.DAL.Entities.Booking", "OldBooking")
-                        .WithMany("Rebookings")
-                        .HasForeignKey("OldBookingId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("AISEP.DAL.Entities.Project", "Project")
                         .WithMany("Bookings")
                         .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AISEP.DAL.Entities.Booking", "SourceBooking")
+                        .WithMany("RebookedBookings")
+                        .HasForeignKey("SourceBookingId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("AISEP.DAL.Entities.SystemCommissionConfig", "SystemCommissionConfig")
@@ -2035,9 +2038,9 @@ namespace AISEP.Migrations
 
                     b.Navigation("Customer");
 
-                    b.Navigation("OldBooking");
-
                     b.Navigation("Project");
+
+                    b.Navigation("SourceBooking");
 
                     b.Navigation("SystemCommissionConfig");
                 });
@@ -2607,7 +2610,7 @@ namespace AISEP.Migrations
 
                     b.Navigation("ConsultingReport");
 
-                    b.Navigation("Rebookings");
+                    b.Navigation("RebookedBookings");
 
                     b.Navigation("Review");
                 });
