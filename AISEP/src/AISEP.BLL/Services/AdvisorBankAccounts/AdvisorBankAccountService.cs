@@ -1,0 +1,132 @@
+using AISEP.BLL.DTOs.Requests;
+using AISEP.BLL.DTOs.Responses;
+using AISEP.BLL.Exceptions;
+using AISEP.BLL.Helpers;
+using AISEP.BLL.Services.Users;
+using AISEP.DAL.Common;
+using AISEP.DAL.Entities;
+using AutoMapper;
+using Sieve.Models;
+using Sieve.Services;
+
+namespace AISEP.BLL.Services.AdvisorBankAccounts
+{
+    public class AdvisorBankAccountService : IAdvisorBankAccountService
+    {
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IUserService _userService;
+        private readonly ISieveProcessor _sieveProcessor;
+        private readonly IMapper _mapper;
+
+        public AdvisorBankAccountService(
+            IUnitOfWork unitOfWork,
+            IUserService userService,
+            ISieveProcessor sieveProcessor,
+            IMapper mapper)
+        {
+            _unitOfWork = unitOfWork;
+            _userService = userService;
+            _sieveProcessor = sieveProcessor;
+            _mapper = mapper;
+        }
+
+        public async Task<PagedResult<AdvisorBankAccountResponse>> GetAllAsync(SieveModel model)
+        {
+            return await PaginationHelper.PaginateAsync(
+                _unitOfWork.AdvisorBankAccounts.GetAllQuery(),
+                model,
+                _sieveProcessor,
+                x => _mapper.Map<AdvisorBankAccountResponse>(x));
+        }
+
+        public async Task<AdvisorBankAccountResponse?> GetByIdAsync(int id)
+        {
+            var account = await _unitOfWork.AdvisorBankAccounts.GetByIdAsync(id)
+                ?? throw new KeyNotFoundException("Advisor bank account not found.");
+
+            var role = _userService.GetUserRole();
+            if (string.Equals(role, "Advisor", StringComparison.OrdinalIgnoreCase))
+            {
+                var currentUserId = _userService.GetUserId();
+                if (account.Advisor.UserId != currentUserId)
+                    throw new ForbiddenAccessException("You do not have permission to view this bank account.");
+            }
+
+            return _mapper.Map<AdvisorBankAccountResponse>(account);
+        }
+
+        public async Task<AdvisorBankAccountResponse?> GetMyAsync()
+        {
+            var currentUserId = _userService.GetUserId();
+            var advisor = await _unitOfWork.Advisors.GetByUserIdAsync(currentUserId)
+                ?? throw new KeyNotFoundException("Advisor profile not found.");
+
+            var account = await _unitOfWork.AdvisorBankAccounts.GetActiveByAdvisorIdAsync(advisor.AdvisorId)
+                ?? throw new KeyNotFoundException("Active advisor bank account not found.");
+
+            return _mapper.Map<AdvisorBankAccountResponse>(account);
+        }
+
+        public async Task<AdvisorBankAccountResponse> CreateAsync(CreateAdvisorBankAccountRequest request)
+        {
+            var currentUserId = _userService.GetUserId();
+            var advisor = await _unitOfWork.Advisors.GetByUserIdAsync(currentUserId)
+                ?? throw new KeyNotFoundException("Advisor profile not found.");
+
+            var existingActive = await _unitOfWork.AdvisorBankAccounts.GetActiveByAdvisorIdAsync(advisor.AdvisorId);
+            if (existingActive is not null)
+                throw new InvalidOperationException("Active bank account already exists. Please use update.");
+
+            var bankName = NormalizeRequired(request.BankName, "Bank name");
+            var accountNumber = NormalizeRequired(request.AccountNumber, "Account number");
+            var accountHolderName = NormalizeRequired(request.AccountHolderName, "Account holder name");
+
+            var account = new AdvisorBankAccount
+            {
+                AdvisorId = advisor.AdvisorId,
+                BankName = bankName,
+                AccountNumber = accountNumber,
+                AccountHolderName = accountHolderName,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            await _unitOfWork.AdvisorBankAccounts.AddAsync(account);
+            await _unitOfWork.SaveChangesAsync();
+
+            var created = await _unitOfWork.AdvisorBankAccounts.GetByIdAsync(account.AdvisorBankAccountId)
+                ?? throw new KeyNotFoundException("Advisor bank account not found.");
+
+            return _mapper.Map<AdvisorBankAccountResponse>(created);
+        }
+
+        public async Task<AdvisorBankAccountResponse> UpdateAsync(int id, UpdateAdvisorBankAccountRequest request)
+        {
+            var account = await _unitOfWork.AdvisorBankAccounts.GetByIdAsync(id)
+                ?? throw new KeyNotFoundException("Advisor bank account not found.");
+
+            var currentUserId = _userService.GetUserId();
+            if (account.Advisor.UserId != currentUserId)
+                throw new ForbiddenAccessException("You do not have permission to update this bank account.");
+
+            account.BankName = NormalizeRequired(request.BankName, "Bank name");
+            account.AccountNumber = NormalizeRequired(request.AccountNumber, "Account number");
+            account.AccountHolderName = NormalizeRequired(request.AccountHolderName, "Account holder name");
+            account.UpdatedAt = DateTime.UtcNow;
+
+            _unitOfWork.AdvisorBankAccounts.Update(account);
+            await _unitOfWork.SaveChangesAsync();
+
+            return _mapper.Map<AdvisorBankAccountResponse>(account);
+        }
+
+        private static string NormalizeRequired(string? value, string field)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                throw new InvalidOperationException($"{field} is required.");
+
+            return value.Trim();
+        }
+    }
+}

@@ -1,6 +1,7 @@
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.BLL.Helpers;
+using AISEP.BLL.Services.Notifications;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
@@ -16,12 +17,18 @@ namespace AISEP.BLL.Services.Wallets
         private readonly IUnitOfWork _unitOfWork;
         private readonly ISieveProcessor _sieveProcessor;
         private readonly IMapper _mapper;
+        private readonly INotificationService _notificationService;
 
-        public MonthlyPayoutService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper)
+        public MonthlyPayoutService(
+            IUnitOfWork unitOfWork,
+            ISieveProcessor sieveProcessor,
+            IMapper mapper,
+            INotificationService notificationService)
         {
             _unitOfWork = unitOfWork;
             _sieveProcessor = sieveProcessor;
             _mapper = mapper;
+            _notificationService = notificationService;
         }
 
         public async Task<List<MonthlyPayoutResponse>> GenerateAsync(GenerateMonthlyPayoutRequest request)
@@ -54,6 +61,8 @@ namespace AISEP.BLL.Services.Wallets
 
             var groupedByWallet = eligibleTransactions.GroupBy(x => x.WalletId);
             var generated = new List<MonthlyPayout>();
+            var missingBankAdvisors = new List<(int UserId, string Name)>();
+            var missingBankAdvisorIds = new HashSet<int>();
 
             foreach (var walletGroup in groupedByWallet)
             {
@@ -62,6 +71,27 @@ namespace AISEP.BLL.Services.Wallets
                 var totalAmount = Math.Round(walletGroup.Sum(x => x.Amount), 2, MidpointRounding.AwayFromZero);
                 if (totalAmount <= 0)
                 {
+                    continue;
+                }
+
+                var activeBankAccount = await _unitOfWork.AdvisorBankAccounts.GetActiveByAdvisorIdAsync(advisorId);
+                if (activeBankAccount is null)
+                {
+                    if (missingBankAdvisorIds.Add(advisorId))
+                    {
+                        var advisorProfile = await _unitOfWork.Advisors.GetByIdAsync(advisorId);
+                        if (advisorProfile is not null)
+                        {
+                            var advisorName = advisorProfile.User?.UserName ?? "Advisor";
+                            missingBankAdvisors.Add((advisorProfile.UserId, advisorName));
+                        }
+                    }
+
+                    if (request.AdvisorId.HasValue)
+                    {
+                        await NotifyMissingBankAccountsAsync(missingBankAdvisors);
+                        throw new InvalidOperationException("Advisor has no active bank account. Please update bank information first.");
+                    }
                     continue;
                 }
 
@@ -75,7 +105,10 @@ namespace AISEP.BLL.Services.Wallets
                         Year = request.Year,
                         Month = request.Month,
                         Amount = totalAmount,
-                        Status = MonthlyPayoutStatus.Pending
+                        Status = MonthlyPayoutStatus.Pending,
+                        BankName = activeBankAccount.BankName,
+                        AccountNumber = activeBankAccount.AccountNumber,
+                        AccountHolderName = activeBankAccount.AccountHolderName
                     };
                     await _unitOfWork.MonthlyPayouts.AddAsync(existing);
                     generated.Add(existing);
@@ -89,6 +122,9 @@ namespace AISEP.BLL.Services.Wallets
                     }
 
                     existing.Amount = Math.Round(existing.Amount + totalAmount, 2, MidpointRounding.AwayFromZero);
+                    existing.BankName = activeBankAccount.BankName;
+                    existing.AccountNumber = activeBankAccount.AccountNumber;
+                    existing.AccountHolderName = activeBankAccount.AccountHolderName;
                     _unitOfWork.MonthlyPayouts.Update(existing);
                     if (generated.All(x => x.MonthlyPayoutId != existing.MonthlyPayoutId))
                     {
@@ -103,6 +139,8 @@ namespace AISEP.BLL.Services.Wallets
             }
 
             await _unitOfWork.SaveChangesAsync();
+
+            await NotifyMissingBankAccountsAsync(missingBankAdvisors);
 
             var ids = generated.Select(x => x.MonthlyPayoutId).ToList();
             var created = await _unitOfWork.MonthlyPayouts.GetQuery()
@@ -186,6 +224,44 @@ namespace AISEP.BLL.Services.Wallets
             if (month < 1 || month > 12)
             {
                 throw new InvalidOperationException("Month must be in range 1-12.");
+            }
+        }
+
+        private async Task NotifyMissingBankAccountsAsync(List<(int UserId, string Name)> missingBankAdvisors)
+        {
+            if (missingBankAdvisors.Count == 0)
+            {
+                return;
+            }
+
+            var advisorNoticeTitle = "Thieu thong tin ngan hang nhan payout";
+            var advisorNoticeMessage = "He thong khong the tao payout vi ban chua cap nhat thong tin ngan hang. Vui long cap nhat de nhan thanh toan.";
+
+            foreach (var advisor in missingBankAdvisors)
+            {
+                await _notificationService.SendNotificationAsync(
+                    advisor.UserId,
+                    advisorNoticeTitle,
+                    advisorNoticeMessage,
+                    NotificationType.System);
+            }
+
+            var names = string.Join(", ", missingBankAdvisors.Select(x => x.Name).Distinct());
+            var reviewerNoticeTitle = "Co advisor chua co thong tin ngan hang payout";
+            var reviewerNoticeMessage = $"Khong the tao payout cho cac advisor sau do chua cap nhat thong tin ngan hang: {names}.";
+
+            var reviewerIds = await _unitOfWork.Users.GetAllQuery()
+                .Where(u => u.Role == UserRole.Staff || u.Role == UserRole.Admin)
+                .Select(u => u.Id)
+                .ToListAsync();
+
+            foreach (var reviewerId in reviewerIds)
+            {
+                await _notificationService.SendNotificationAsync(
+                    reviewerId,
+                    reviewerNoticeTitle,
+                    reviewerNoticeMessage,
+                    NotificationType.System);
             }
         }
     }

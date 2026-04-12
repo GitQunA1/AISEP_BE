@@ -17,6 +17,7 @@ namespace AISEP.DAL.Data
         public DbSet<Startup> Startups { get; set; }
         public DbSet<Investor> Investors { get; set; }
         public DbSet<Advisor> Advisors { get; set; }
+        public DbSet<AdvisorBankAccount> AdvisorBankAccounts { get; set; }
         public DbSet<AdvisorIndustry> AdvisorIndustries { get; set; }
         public DbSet<Project> Projects { get; set; }
         public DbSet<ProjectAdvisorAssignment> ProjectAdvisorAssignments { get; set; }
@@ -165,6 +166,27 @@ namespace AISEP.DAL.Data
                     .WithMany()
                     .HasForeignKey(a => a.RejectedById)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<AdvisorBankAccount>(entity =>
+            {
+                entity.ToTable("advisor_bank_accounts");
+                entity.HasKey(e => e.AdvisorBankAccountId);
+                entity.Property(e => e.BankName).HasMaxLength(255).IsRequired();
+                entity.Property(e => e.AccountNumber).HasMaxLength(100).IsRequired();
+                entity.Property(e => e.AccountHolderName).HasMaxLength(255).IsRequired();
+                entity.Property(e => e.IsActive).HasDefaultValue(true);
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.HasIndex(e => e.AdvisorId);
+                entity.HasIndex(e => new { e.AdvisorId, e.IsActive })
+                    .HasFilter("\"IsActive\" = TRUE")
+                    .IsUnique();
+
+                entity.HasOne(e => e.Advisor)
+                    .WithMany(a => a.BankAccounts)
+                    .HasForeignKey(e => e.AdvisorId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<AdvisorIndustry>(entity =>
@@ -638,6 +660,9 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.Amount).HasColumnType("decimal(18,2)").IsRequired();
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.Note).HasMaxLength(1000);
+                entity.Property(e => e.BankName).HasMaxLength(255).IsRequired();
+                entity.Property(e => e.AccountNumber).HasMaxLength(100).IsRequired();
+                entity.Property(e => e.AccountHolderName).HasMaxLength(255).IsRequired();
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 entity.ToTable(tb => tb.HasCheckConstraint("CK_monthly_payouts_amount_positive", "\"Amount\" > 0"));
                 entity.ToTable(tb => tb.HasCheckConstraint("CK_monthly_payouts_month_range", "\"Month\" >= 1 AND \"Month\" <= 12"));

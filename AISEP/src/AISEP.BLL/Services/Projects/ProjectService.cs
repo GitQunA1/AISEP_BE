@@ -211,6 +211,7 @@ namespace AISEP.BLL.Services.Projects
         private static bool RequiresViewQuota(string? role)
         {
             return string.Equals(role, "Investor", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(role, "Startup", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(role, "User", StringComparison.OrdinalIgnoreCase);
         }
 
