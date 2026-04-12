@@ -53,11 +53,25 @@ namespace AISEP.BLL.Services.Projects
             var currentUserId = GetCurrentUserIdOrNull();
             var currentInvestorId = await GetCurrentInvestorIdOrNullAsync(currentUserId);
 
-            return await PaginationHelper.PaginateAsync(
+            var pagedResult = await PaginationHelper.PaginateAsync(
                 _unitOfWork.Projects.GetAllQuery(),
                 model,
                 _sieveProcessor,
                 p => MapNonPremiumProjectResponseWithCurrentUser(p, currentUserId, currentInvestorId));
+
+            if (!currentUserId.HasValue)
+            {
+                return pagedResult;
+            }
+
+            var items = pagedResult.Items.ToList();
+            foreach (var item in items)
+            {
+                item.IsUnlockedByCurrentUser = await _unitOfWork.UnlockedProjects.ExistsAsync(currentUserId.Value, item.ProjectId);
+            }
+
+            pagedResult.Items = items;
+            return pagedResult;
         }
 
         public async Task<NonPremiumProjectResponse?> GetProjectForNonPremiumByIdAsync(int id)
@@ -68,7 +82,12 @@ namespace AISEP.BLL.Services.Projects
 
             var currentUserId = GetCurrentUserIdOrNull();
             var currentInvestorId = await GetCurrentInvestorIdOrNullAsync(currentUserId);
-            return MapNonPremiumProjectResponseWithCurrentUser(project, currentUserId, currentInvestorId);
+
+            var response = MapNonPremiumProjectResponseWithCurrentUser(project, currentUserId, currentInvestorId);
+            response.IsUnlockedByCurrentUser = currentUserId.HasValue
+                && await _unitOfWork.UnlockedProjects.ExistsAsync(currentUserId.Value, project.ProjectId);
+
+            return response;
         }
 
         public async Task<ProjectResponse?> GetProjectByIdAsync(int id)
