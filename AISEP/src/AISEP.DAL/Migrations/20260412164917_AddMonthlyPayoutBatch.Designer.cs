@@ -3,17 +3,20 @@ using System;
 using AISEP.DAL.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace AISEP.Migrations
+namespace AISEP.DAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260412164917_AddMonthlyPayoutBatch")]
+    partial class AddMonthlyPayoutBatch
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -799,12 +802,6 @@ namespace AISEP.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime?>("ApprovedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("ApprovedById")
-                        .HasColumnType("integer");
-
                     b.Property<string>("BankName")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -831,16 +828,6 @@ namespace AISEP.Migrations
                     b.Property<int?>("PaidById")
                         .HasColumnType("integer");
 
-                    b.Property<string>("RejectReason")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<DateTime?>("RejectedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("RejectedById")
-                        .HasColumnType("integer");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -854,13 +841,9 @@ namespace AISEP.Migrations
 
                     b.HasKey("MonthlyPayoutId");
 
-                    b.HasIndex("ApprovedById");
-
                     b.HasIndex("MonthlyPayoutBatchId");
 
                     b.HasIndex("PaidById");
-
-                    b.HasIndex("RejectedById");
 
                     b.HasIndex("WalletId");
 
@@ -885,11 +868,6 @@ namespace AISEP.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MonthlyPayoutBatchId"));
 
-                    b.Property<decimal>("ActualPayableAmount")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("decimal(18,2)")
-                        .HasDefaultValue(0m);
-
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -898,23 +876,18 @@ namespace AISEP.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<decimal>("EstimatedTotalAmount")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("decimal(18,2)")
-                        .HasDefaultValue(0m);
-
                     b.Property<int>("Month")
                         .HasColumnType("integer");
-
-                    b.Property<decimal>("RejectedAmount")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("decimal(18,2)")
-                        .HasDefaultValue(0m);
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<decimal>("TotalAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m);
 
                     b.Property<int>("Year")
                         .HasColumnType("integer");
@@ -2312,11 +2285,6 @@ namespace AISEP.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("AISEP.DAL.Entities.User", "ApprovedBy")
-                        .WithMany()
-                        .HasForeignKey("ApprovedById")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("AISEP.DAL.Entities.MonthlyPayoutBatch", "MonthlyPayoutBatch")
                         .WithMany("MonthlyPayouts")
                         .HasForeignKey("MonthlyPayoutBatchId")
@@ -2327,11 +2295,6 @@ namespace AISEP.Migrations
                         .HasForeignKey("PaidById")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("AISEP.DAL.Entities.User", "RejectedBy")
-                        .WithMany()
-                        .HasForeignKey("RejectedById")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("AISEP.DAL.Entities.Wallet", "Wallet")
                         .WithMany("MonthlyPayouts")
                         .HasForeignKey("WalletId")
@@ -2340,13 +2303,9 @@ namespace AISEP.Migrations
 
                     b.Navigation("Advisor");
 
-                    b.Navigation("ApprovedBy");
-
                     b.Navigation("MonthlyPayoutBatch");
 
                     b.Navigation("PaidBy");
-
-                    b.Navigation("RejectedBy");
 
                     b.Navigation("Wallet");
                 });

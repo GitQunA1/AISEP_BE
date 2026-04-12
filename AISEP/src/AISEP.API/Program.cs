@@ -28,6 +28,7 @@ using AISEP.BLL.Services.Notifications;
 using AISEP.BLL.Services.Connections;
 using AISEP.BLL.Services.Deals;
 using AISEP.BLL.Services.Wallets;
+using AISEP.BLL.Services.MonthlyPayouts;
 using AISEP.BLL.Services.SystemCommissions;
 using AISEP.BLL.Services.PostPrs;
 using AISEP.BLL.Services.Subscriptions;
@@ -253,6 +254,7 @@ builder.Services.AddScoped<IAdvisorService, AdvisorService>();
 builder.Services.AddScoped<IWalletService, WalletService>();
 builder.Services.AddScoped<IWalletQueryService, WalletQueryService>();
 builder.Services.AddScoped<IMonthlyPayoutService, MonthlyPayoutService>();
+builder.Services.AddScoped<IMonthlyPayoutBatchService, MonthlyPayoutBatchService>();
 builder.Services.AddScoped<ISystemCommissionService, SystemCommissionService>();
 builder.Services.AddScoped<IAdvisorAvailabilityService, AdvisorAvailabilityService>();
 builder.Services.AddScoped<IAdvisorBankAccountService, AdvisorBankAccountService>();
@@ -272,6 +274,7 @@ builder.Services.AddHostedService<BookingResponseExpiryBackgroundService>();
 builder.Services.AddHostedService<ConsultingReportDeadlineBackgroundService>();
 builder.Services.AddHostedService<ProjectAdvisorAutoAssignBackgroundService>();
 builder.Services.AddHostedService<BlockchainOwnershipAssignmentBackgroundService>();
+builder.Services.AddHostedService<AutoMonthlyPayoutGenerationBackgroundService>();
 
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>

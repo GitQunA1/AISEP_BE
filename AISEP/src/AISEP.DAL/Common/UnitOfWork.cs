@@ -19,6 +19,7 @@ using AISEP.DAL.Repositories.StartupAIAnalyses;
 using AISEP.DAL.Repositories.ProjectFollowers;
 using AISEP.DAL.Repositories.Investors;
 using AISEP.DAL.Repositories.MonthlyPayouts;
+using AISEP.DAL.Repositories.MonthlyPayoutBatches;
 using AISEP.DAL.Repositories.Subscriptions;
 using AISEP.DAL.Repositories.Transactions;
 using AISEP.DAL.Repositories.Users;
@@ -70,6 +71,7 @@ namespace AISEP.DAL.Common
         private IWalletTransactionRepository? _walletTransactions;
         private IWalletRepository?            _wallets;
         private IMonthlyPayoutRepository?     _monthlyPayouts;
+        private IMonthlyPayoutBatchRepository? _monthlyPayoutBatches;
         private ISystemCommissionConfigRepository? _systemCommissionConfigs;
         private ISystemCommissionChangeLogRepository? _systemCommissionChangeLogs;
         private IConnectionRequestRepository? _connectionRequests;
@@ -109,6 +111,7 @@ namespace AISEP.DAL.Common
         public IWalletTransactionRepository WalletTransactions => _walletTransactions ??= new WalletTransactionRepository(_context);
         public IWalletRepository            Wallets            => _wallets            ??= new WalletRepository(_context);
         public IMonthlyPayoutRepository     MonthlyPayouts     => _monthlyPayouts     ??= new MonthlyPayoutRepository(_context);
+        public IMonthlyPayoutBatchRepository MonthlyPayoutBatches => _monthlyPayoutBatches ??= new MonthlyPayoutBatchRepository(_context);
         public ISystemCommissionConfigRepository SystemCommissionConfigs => _systemCommissionConfigs ??= new SystemCommissionConfigRepository(_context);
         public ISystemCommissionChangeLogRepository SystemCommissionChangeLogs => _systemCommissionChangeLogs ??= new SystemCommissionChangeLogRepository(_context);
         public IConnectionRequestRepository ConnectionRequests => _connectionRequests ??= new ConnectionRequestRepository(_context);

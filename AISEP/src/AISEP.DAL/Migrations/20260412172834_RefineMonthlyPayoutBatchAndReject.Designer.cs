@@ -3,17 +3,20 @@ using System;
 using AISEP.DAL.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace AISEP.Migrations
+namespace AISEP.DAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260412172834_RefineMonthlyPayoutBatchAndReject")]
+    partial class RefineMonthlyPayoutBatchAndReject
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -799,12 +802,6 @@ namespace AISEP.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime?>("ApprovedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("ApprovedById")
-                        .HasColumnType("integer");
-
                     b.Property<string>("BankName")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -853,8 +850,6 @@ namespace AISEP.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("MonthlyPayoutId");
-
-                    b.HasIndex("ApprovedById");
 
                     b.HasIndex("MonthlyPayoutBatchId");
 
@@ -2312,11 +2307,6 @@ namespace AISEP.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("AISEP.DAL.Entities.User", "ApprovedBy")
-                        .WithMany()
-                        .HasForeignKey("ApprovedById")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("AISEP.DAL.Entities.MonthlyPayoutBatch", "MonthlyPayoutBatch")
                         .WithMany("MonthlyPayouts")
                         .HasForeignKey("MonthlyPayoutBatchId")
@@ -2339,8 +2329,6 @@ namespace AISEP.Migrations
                         .IsRequired();
 
                     b.Navigation("Advisor");
-
-                    b.Navigation("ApprovedBy");
 
                     b.Navigation("MonthlyPayoutBatch");
 

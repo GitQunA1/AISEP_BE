@@ -121,6 +121,33 @@ namespace AISEP.BLL.Services.AdvisorBankAccounts
             return _mapper.Map<AdvisorBankAccountResponse>(account);
         }
 
+        public async Task<AdvisorBankAccountResponse> DeactivateAsync(int id)
+        {
+            var account = await _unitOfWork.AdvisorBankAccounts.GetByIdAsync(id)
+                ?? throw new KeyNotFoundException("Advisor bank account not found.");
+
+            var role = _userService.GetUserRole();
+            if (string.Equals(role, "Advisor", StringComparison.OrdinalIgnoreCase))
+            {
+                var currentUserId = _userService.GetUserId();
+                if (account.Advisor.UserId != currentUserId)
+                    throw new ForbiddenAccessException("You do not have permission to deactivate this bank account.");
+            }
+
+            if (!account.IsActive)
+            {
+                return _mapper.Map<AdvisorBankAccountResponse>(account);
+            }
+
+            account.IsActive = false;
+            account.UpdatedAt = DateTime.UtcNow;
+
+            _unitOfWork.AdvisorBankAccounts.Update(account);
+            await _unitOfWork.SaveChangesAsync();
+
+            return _mapper.Map<AdvisorBankAccountResponse>(account);
+        }
+
         private static string NormalizeRequired(string? value, string field)
         {
             if (string.IsNullOrWhiteSpace(value))

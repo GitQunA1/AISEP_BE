@@ -2,12 +2,12 @@ using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using Sieve.Models;
 
-namespace AISEP.BLL.Services.Wallets
+namespace AISEP.BLL.Services.MonthlyPayouts
 {
     public interface IMonthlyPayoutService
     {
-        Task<List<MonthlyPayoutResponse>> GenerateAsync(GenerateMonthlyPayoutRequest request);
         Task<MonthlyPayoutResponse> MarkPaidAsync(int monthlyPayoutId, int staffUserId, MarkMonthlyPayoutPaidRequest request);
+        Task<MonthlyPayoutResponse> RejectAsync(int monthlyPayoutId, int staffUserId, RejectMonthlyPayoutRequest request);
         Task<PagedResult<MonthlyPayoutResponse>> GetAllAsync(SieveModel model);
         Task<PagedResult<MonthlyPayoutResponse>> GetMineAsync(int advisorUserId, SieveModel model);
     }
