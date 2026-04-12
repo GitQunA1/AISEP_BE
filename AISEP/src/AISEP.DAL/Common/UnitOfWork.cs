@@ -1,6 +1,7 @@
 using AISEP.DAL.Data;
 using AISEP.DAL.Repositories.Advisors;
 using AISEP.DAL.Repositories.AdvisorAvailabilities;
+using AISEP.DAL.Repositories.AdvisorBankAccounts;
 using AISEP.DAL.Repositories.Bookings;
 using AISEP.DAL.Repositories.BookingSlots;
 using AISEP.DAL.Repositories.Chats;
@@ -45,6 +46,7 @@ namespace AISEP.DAL.Common
         private IRefreshTokenRepository?      _refreshTokens;
         private IAdvisorsRepository?          _advisors;
         private IAdvisorAvailabilityRepository? _advisorAvailabilities;
+        private IAdvisorBankAccountRepository? _advisorBankAccounts;
         private IChatSessionRepository?       _chatSessions;
         private IChatMessageRepository?       _chatMessages;
         private IConsultingReportRepository?  _consultingReports;
@@ -94,6 +96,7 @@ namespace AISEP.DAL.Common
         public IStartupAIAnalysisRepository StartupAIAnalyses  => _startupAIAnalyses ??= new StartupAIAnalysisRepository(_context);
         public IAdvisorsRepository          Advisors           => _advisors           ??= new AdvisorRepository(_context);
         public IAdvisorAvailabilityRepository AdvisorAvailabilities => _advisorAvailabilities ??= new AdvisorAvailabilityRepository(_context);
+        public IAdvisorBankAccountRepository AdvisorBankAccounts => _advisorBankAccounts ??= new AdvisorBankAccountRepository(_context);
         public IChatSessionRepository       ChatSessions       => _chatSessions       ??= new ChatSessionRepository(_context);
         public IChatMessageRepository       ChatMessages       => _chatMessages       ??= new ChatMessageRepository(_context);
         public IConsultingReportRepository  ConsultingReports  => _consultingReports  ??= new ConsultingReportRepository(_context);

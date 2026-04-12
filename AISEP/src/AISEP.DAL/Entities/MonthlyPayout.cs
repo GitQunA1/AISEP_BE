@@ -15,6 +15,9 @@ namespace AISEP.DAL.Entities
         public DateTime? PaidAt { get; set; }
         public int? PaidById { get; set; }
         public string? Note { get; set; }
+        public string BankName { get; set; } = string.Empty;
+        public string AccountNumber { get; set; } = string.Empty;
+        public string AccountHolderName { get; set; } = string.Empty;
 
         public Wallet Wallet { get; set; } = null!;
         public Advisor Advisor { get; set; } = null!;

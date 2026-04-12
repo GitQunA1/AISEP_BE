@@ -29,6 +29,7 @@ namespace AISEP.DAL.Entities
         public ICollection<AdvisorIndustry> AdvisorIndustries { get; set; } = new List<AdvisorIndustry>();
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
         public ICollection<ProjectAdvisorAssignment> ProjectAdvisorAssignments { get; set; } = new List<ProjectAdvisorAssignment>();
+        public ICollection<AdvisorBankAccount> BankAccounts { get; set; } = new List<AdvisorBankAccount>();
         public Wallet? Wallet { get; set; }
     }
 }

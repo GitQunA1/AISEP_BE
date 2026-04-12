@@ -1,5 +1,6 @@
 using AISEP.DAL.Repositories.Advisors;
 using AISEP.DAL.Repositories.AdvisorAvailabilities;
+using AISEP.DAL.Repositories.AdvisorBankAccounts;
 using AISEP.DAL.Repositories.Bookings;
 using AISEP.DAL.Repositories.BookingSlots;
 using AISEP.DAL.Repositories.Chats;
@@ -50,6 +51,7 @@ namespace AISEP.DAL.Common
         IStartupAIAnalysisRepository StartupAIAnalyses  { get; }
         IAdvisorsRepository          Advisors           { get; }
         IAdvisorAvailabilityRepository AdvisorAvailabilities { get; }
+        IAdvisorBankAccountRepository AdvisorBankAccounts { get; }
         IChatSessionRepository       ChatSessions       { get; }
         IChatMessageRepository       ChatMessages       { get; }
         IConsultingReportRepository  ConsultingReports  { get; }

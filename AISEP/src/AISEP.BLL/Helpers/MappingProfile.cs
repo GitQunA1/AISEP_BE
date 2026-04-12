@@ -168,7 +168,9 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.UserName,
                     opt => opt.MapFrom(src => src.User != null ? src.User.UserName : null))
                 .ForMember(dest => dest.Email,
-                    opt => opt.MapFrom(src => src.User != null ? src.User.Email : null));
+                    opt => opt.MapFrom(src => src.User != null ? src.User.Email : null))
+                .ForMember(dest => dest.Status,
+                    opt => opt.MapFrom(src => src.ApprovalStatus.ToString()));
 
             // Package Entity -> PackageResponse
             CreateMap<Package, PackageResponse>();
@@ -616,6 +618,12 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.PaidBy != null
                         ? (src.PaidBy.UserName ?? string.Empty)
                         : null));
+
+            CreateMap<AdvisorBankAccount, AdvisorBankAccountResponse>()
+                .ForMember(dest => dest.AdvisorName,
+                    opt => opt.MapFrom(src => src.Advisor.User != null
+                        ? (src.Advisor.User.UserName ?? $"Advisor {src.AdvisorId}")
+                        : $"Advisor {src.AdvisorId}"));
 
         }
 
