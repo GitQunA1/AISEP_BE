@@ -124,28 +124,14 @@ namespace AISEP.BLL.Services.Documents
             if (document is null)
                 return null;
 
-            if (role == "Startup")
-            {
-                var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
-                if (startup is null || document.Project.StartupId != startup.StartupId)
-                    throw new UnauthorizedAccessException("You do not have permission to access this document.");
-            }
+            await EnsureCanViewProjectDocumentsAsync(document.ProjectId, userId, role);
 
             return _mapper.Map<DocumentResponse>(document);
         }
 
         public async Task<PagedResult<DocumentResponse>> GetByProjectIdAsync(int projectId, int userId, string role, SieveModel model)
         {
-            if (role == "Startup")
-            {
-                var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
-                if (project is null)
-                    throw new KeyNotFoundException("Project not found.");
-
-                var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
-                if (startup is null || project.StartupId != startup.StartupId)
-                    throw new UnauthorizedAccessException("You do not have permission to access documents of this project.");
-            }
+            await EnsureCanViewProjectDocumentsAsync(projectId, userId, role);
 
             var query = _unitOfWork.Documents.GetQueryable()
                 .Where(d => d.ProjectId == projectId);
@@ -261,6 +247,49 @@ namespace AISEP.BLL.Services.Documents
             await _unitOfWork.SaveChangesAsync();
 
             return _mapper.Map<DocumentResponse>(document);
+        }
+
+        private async Task EnsureCanViewProjectDocumentsAsync(int projectId, int userId, string role)
+        {
+            var project = await _unitOfWork.Projects.GetByIdAsync(projectId)
+                ?? throw new KeyNotFoundException("Project not found.");
+
+            if (string.Equals(role, "Staff", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            if (string.Equals(role, "Startup", StringComparison.OrdinalIgnoreCase))
+            {
+                var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
+                var isOwnProject = startup is not null && project.StartupId == startup.StartupId;
+                if (isOwnProject)
+                {
+                    return;
+                }
+
+                var isUnlocked = await _unitOfWork.UnlockedProjects.ExistsAsync(userId, projectId);
+                if (!isUnlocked)
+                {
+                    throw new UnauthorizedAccessException("Bạn cần mở khóa dự án trước khi xem tài liệu của startup khác.");
+                }
+
+                return;
+            }
+
+            if (string.Equals(role, "Investor", StringComparison.OrdinalIgnoreCase))
+            {
+                var isUnlocked = await _unitOfWork.UnlockedProjects.ExistsAsync(userId, projectId);
+                if (!isUnlocked)
+                {
+                    throw new UnauthorizedAccessException("Bạn cần mở khóa dự án trước khi xem tài liệu.");
+                }
+
+                return;
+            }
+
+            throw new UnauthorizedAccessException("You do not have permission to access documents of this project.");
         }
     }
 }
