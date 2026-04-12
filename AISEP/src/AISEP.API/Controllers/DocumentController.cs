@@ -51,7 +51,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("api/projects/{projectId}/documents")]
-        [Authorize(Roles = "Startup, Staff, Admin")]
+        [Authorize(Roles = "Startup, Investor, Staff, Admin")]
         public async Task<IActionResult> GetByProjectId([FromRoute] int projectId, [FromQuery] SieveModel model)
         {
             try
@@ -72,7 +72,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("api/documents/{documentId}")]
-        [Authorize(Roles = "Startup, Staff, Admin")]
+        [Authorize(Roles = "Startup, Investor, Staff, Admin")]
         public async Task<IActionResult> GetById([FromRoute] int documentId)
         {
             try
