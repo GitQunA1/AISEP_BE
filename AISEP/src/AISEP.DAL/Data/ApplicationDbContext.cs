@@ -44,6 +44,7 @@ namespace AISEP.DAL.Data
         public DbSet<UnlockedProject> UnlockedProjects { get; set; }
         public DbSet<WalletTransaction> WalletTransactions { get; set; }
         public DbSet<MonthlyPayout> MonthlyPayouts { get; set; }
+        public DbSet<MonthlyPayoutBatch> MonthlyPayoutBatches { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<UserReport> UserReports { get; set; }
@@ -660,6 +661,7 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.Amount).HasColumnType("decimal(18,2)").IsRequired();
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.Note).HasMaxLength(1000);
+                entity.Property(e => e.RejectReason).HasMaxLength(1000);
                 entity.Property(e => e.BankName).HasMaxLength(255).IsRequired();
                 entity.Property(e => e.AccountNumber).HasMaxLength(100).IsRequired();
                 entity.Property(e => e.AccountHolderName).HasMaxLength(255).IsRequired();
@@ -668,6 +670,8 @@ namespace AISEP.DAL.Data
                 entity.ToTable(tb => tb.HasCheckConstraint("CK_monthly_payouts_month_range", "\"Month\" >= 1 AND \"Month\" <= 12"));
                 entity.HasIndex(e => new { e.AdvisorId, e.Year, e.Month }).IsUnique();
                 entity.HasIndex(e => new { e.Year, e.Month, e.Status });
+                entity.HasIndex(e => e.MonthlyPayoutBatchId);
+                entity.HasIndex(e => e.ApprovedById);
 
                 entity.HasOne(e => e.Wallet)
                     .WithMany(w => w.MonthlyPayouts)
@@ -683,6 +687,35 @@ namespace AISEP.DAL.Data
                     .WithMany()
                     .HasForeignKey(e => e.PaidById)
                     .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.ApprovedBy)
+                    .WithMany()
+                    .HasForeignKey(e => e.ApprovedById)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.RejectedBy)
+                    .WithMany()
+                    .HasForeignKey(e => e.RejectedById)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.MonthlyPayoutBatch)
+                    .WithMany(b => b.MonthlyPayouts)
+                    .HasForeignKey(e => e.MonthlyPayoutBatchId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<MonthlyPayoutBatch>(entity =>
+            {
+                entity.ToTable("monthly_payout_batches");
+                entity.HasKey(e => e.MonthlyPayoutBatchId);
+                entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
+                entity.Property(e => e.EstimatedTotalAmount).HasColumnType("decimal(18,2)").HasDefaultValue(0m);
+                entity.Property(e => e.RejectedAmount).HasColumnType("decimal(18,2)").HasDefaultValue(0m);
+                entity.Property(e => e.ActualPayableAmount).HasColumnType("decimal(18,2)").HasDefaultValue(0m);
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.ToTable(tb => tb.HasCheckConstraint("CK_monthly_payout_batches_month_range", "\"Month\" >= 1 AND \"Month\" <= 12"));
+                entity.HasIndex(e => new { e.Year, e.Month }).IsUnique();
+                entity.HasIndex(e => new { e.Year, e.Month, e.Status });
             });
 
             modelBuilder.Entity<Transaction>(entity =>

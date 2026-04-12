@@ -18,6 +18,7 @@ using AISEP.DAL.Repositories.StartupAIAnalyses;
 using AISEP.DAL.Repositories.ProjectFollowers;
 using AISEP.DAL.Repositories.Investors;
 using AISEP.DAL.Repositories.MonthlyPayouts;
+using AISEP.DAL.Repositories.MonthlyPayoutBatches;
 using AISEP.DAL.Repositories.Subscriptions;
 using AISEP.DAL.Repositories.Transactions;
 using AISEP.DAL.Repositories.Users;
@@ -64,6 +65,7 @@ namespace AISEP.DAL.Common
         IWalletTransactionRepository WalletTransactions { get; }
         IWalletRepository            Wallets            { get; }
         IMonthlyPayoutRepository     MonthlyPayouts     { get; }
+        IMonthlyPayoutBatchRepository MonthlyPayoutBatches { get; }
         ISystemCommissionConfigRepository SystemCommissionConfigs { get; }
         ISystemCommissionChangeLogRepository SystemCommissionChangeLogs { get; }
         IConnectionRequestRepository ConnectionRequests { get; }

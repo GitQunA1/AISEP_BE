@@ -12,5 +12,6 @@ namespace AISEP.BLL.Services.AdvisorBankAccounts
         Task<AdvisorBankAccountResponse?> GetMyAsync();
         Task<AdvisorBankAccountResponse> CreateAsync(CreateAdvisorBankAccountRequest request);
         Task<AdvisorBankAccountResponse> UpdateAsync(int id, UpdateAdvisorBankAccountRequest request);
+        Task<AdvisorBankAccountResponse> DeactivateAsync(int id);
     }
 }

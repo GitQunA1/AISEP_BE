@@ -10,16 +10,16 @@ using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
 using Sieve.Services;
 
-namespace AISEP.BLL.Services.Wallets
+namespace AISEP.BLL.Services.MonthlyPayouts
 {
-    public class MonthlyPayoutService : IMonthlyPayoutService
+    public class MonthlyPayoutBatchService : IMonthlyPayoutBatchService
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ISieveProcessor _sieveProcessor;
         private readonly IMapper _mapper;
         private readonly INotificationService _notificationService;
 
-        public MonthlyPayoutService(
+        public MonthlyPayoutBatchService(
             IUnitOfWork unitOfWork,
             ISieveProcessor sieveProcessor,
             IMapper mapper,
@@ -35,8 +35,22 @@ namespace AISEP.BLL.Services.Wallets
         {
             ValidatePeriod(request.Year, request.Month);
 
-            var periodStartUtc = new DateTime(request.Year, request.Month, 1, 0, 0, 0, DateTimeKind.Utc);
-            var periodEndUtc = periodStartUtc.AddMonths(1);
+            var nowLocal = GetVietnamNow();
+            var (latestClosedYear, latestClosedMonth) = GetLatestClosedCycle(nowLocal);
+            if (request.Year != latestClosedYear || request.Month != latestClosedMonth)
+            {
+                throw new InvalidOperationException(
+                    $"Monthly payout can only be generated for the latest closed cycle {latestClosedMonth:D2}/{latestClosedYear}.");
+            }
+
+            var (periodStartUtc, periodEndUtc) = GetCycleWindowUtc(request.Year, request.Month);
+
+            var existingBatch = await _unitOfWork.MonthlyPayoutBatches.GetByPeriodAsync(request.Year, request.Month);
+            if (existingBatch is not null)
+            {
+                throw new InvalidOperationException(
+                    $"Monthly payout batch for {request.Month:D2}/{request.Year} already exists. Generation is allowed only once per month.");
+            }
 
             var depositQuery = _unitOfWork.WalletTransactions
                 .GetCompletedDepositsWithoutPayoutQuery(periodStartUtc, periodEndUtc);
@@ -49,16 +63,10 @@ namespace AISEP.BLL.Services.Wallets
             var eligibleTransactions = await depositQuery.ToListAsync();
             if (eligibleTransactions.Count == 0)
             {
-                var hasExistingPayout = await _unitOfWork.MonthlyPayouts.ExistsByPeriodAsync(request.Year, request.Month);
-                if (hasExistingPayout)
-                {
-                    throw new InvalidOperationException(
-                        $"Payout tháng {request.Month:D2}/{request.Year} đã được đồng bộ trước đó. Không có giao dịch mới để tạo thêm.");
-                }
-
                 return [];
             }
 
+            var batch = await GetOrCreateBatchAsync(request.Year, request.Month);
             var groupedByWallet = eligibleTransactions.GroupBy(x => x.WalletId);
             var generated = new List<MonthlyPayout>();
             var missingBankAdvisors = new List<(int UserId, string Name)>();
@@ -100,6 +108,7 @@ namespace AISEP.BLL.Services.Wallets
                 {
                     existing = new MonthlyPayout
                     {
+                        MonthlyPayoutBatchId = batch.MonthlyPayoutBatchId,
                         WalletId = walletGroup.Key,
                         AdvisorId = advisorId,
                         Year = request.Year,
@@ -115,18 +124,19 @@ namespace AISEP.BLL.Services.Wallets
                 }
                 else
                 {
-                    if (existing.Status == MonthlyPayoutStatus.Paid)
+                    if (existing.Status != MonthlyPayoutStatus.Pending)
                     {
                         throw new InvalidOperationException(
-                            $"Monthly payout {request.Month}/{request.Year} for advisor #{advisorId} is already paid.");
+                            "Monthly payout is already finalized and cannot be regenerated.");
                     }
 
                     existing.Amount = Math.Round(existing.Amount + totalAmount, 2, MidpointRounding.AwayFromZero);
+                    existing.MonthlyPayoutBatchId = batch.MonthlyPayoutBatchId;
                     existing.BankName = activeBankAccount.BankName;
                     existing.AccountNumber = activeBankAccount.AccountNumber;
                     existing.AccountHolderName = activeBankAccount.AccountHolderName;
                     _unitOfWork.MonthlyPayouts.Update(existing);
-                    if (generated.All(x => x.MonthlyPayoutId != existing.MonthlyPayoutId))
+                    if (existing.MonthlyPayoutId == 0 || generated.All(x => x.MonthlyPayoutId != existing.MonthlyPayoutId))
                     {
                         generated.Add(existing);
                     }
@@ -139,6 +149,7 @@ namespace AISEP.BLL.Services.Wallets
             }
 
             await _unitOfWork.SaveChangesAsync();
+            await RecalculateAsync(batch.MonthlyPayoutBatchId);
 
             await NotifyMissingBankAccountsAsync(missingBankAdvisors);
 
@@ -150,68 +161,71 @@ namespace AISEP.BLL.Services.Wallets
             return created.Select(x => _mapper.Map<MonthlyPayoutResponse>(x)).ToList();
         }
 
-        public async Task<MonthlyPayoutResponse> MarkPaidAsync(int monthlyPayoutId, int staffUserId, MarkMonthlyPayoutPaidRequest request)
+        public async Task<PagedResult<MonthlyPayoutBatchResponse>> GetBatchesAsync(SieveModel model)
         {
-            var payout = await _unitOfWork.MonthlyPayouts.GetByIdAsync(monthlyPayoutId)
-                ?? throw new KeyNotFoundException("Monthly payout not found.");
-
-            if (payout.Status == MonthlyPayoutStatus.Paid)
-            {
-                return _mapper.Map<MonthlyPayoutResponse>(payout);
-            }
-
-            if (payout.Wallet.Balance < payout.Amount)
-            {
-                throw new InvalidOperationException("Wallet balance is not enough to mark this payout as paid.");
-            }
-
-            payout.Wallet.Balance = Math.Round(payout.Wallet.Balance - payout.Amount, 2, MidpointRounding.AwayFromZero);
-            _unitOfWork.Wallets.Update(payout.Wallet);
-
-            await _unitOfWork.WalletTransactions.AddAsync(new WalletTransaction
-            {
-                WalletId = payout.WalletId,
-                Amount = payout.Amount,
-                Type = WalletTransactionType.Payout,
-                Status = WalletTransactionStatus.Completed,
-                CreatedAt = DateTime.UtcNow,
-                MonthlyPayoutId = payout.MonthlyPayoutId
-            });
-
-            payout.Status = MonthlyPayoutStatus.Paid;
-            payout.PaidAt = DateTime.UtcNow;
-            payout.PaidById = staffUserId;
-            payout.Note = string.IsNullOrWhiteSpace(request.Note) ? payout.Note : request.Note.Trim();
-
-            _unitOfWork.MonthlyPayouts.Update(payout);
-            await _unitOfWork.SaveChangesAsync();
-
-            return _mapper.Map<MonthlyPayoutResponse>(payout);
-        }
-
-        public async Task<PagedResult<MonthlyPayoutResponse>> GetAllAsync(SieveModel model)
-        {
-            var query = _unitOfWork.MonthlyPayouts.GetQuery();
+            var query = _unitOfWork.MonthlyPayoutBatches.GetQuery();
             return await PaginationHelper.PaginateAsync(
                 query,
                 model,
                 _sieveProcessor,
-                x => _mapper.Map<MonthlyPayoutResponse>(x));
+                x => _mapper.Map<MonthlyPayoutBatchResponse>(x));
         }
 
-        public async Task<PagedResult<MonthlyPayoutResponse>> GetMineAsync(int advisorUserId, SieveModel model)
+        public async Task<MonthlyPayoutBatchResponse?> GetBatchByIdAsync(int batchId)
         {
-            var advisor = await _unitOfWork.Advisors.GetByUserIdAsync(advisorUserId)
-                ?? throw new KeyNotFoundException("Advisor profile not found.");
+            var batch = await _unitOfWork.MonthlyPayoutBatches.GetByIdAsync(batchId);
+            return batch is null ? null : _mapper.Map<MonthlyPayoutBatchResponse>(batch);
+        }
+
+        public async Task<PagedResult<MonthlyPayoutResponse>> GetItemsByBatchIdAsync(int batchId, SieveModel model)
+        {
+            var batch = await _unitOfWork.MonthlyPayoutBatches.GetByIdAsync(batchId);
+            if (batch is null)
+            {
+                throw new KeyNotFoundException("Monthly payout batch not found.");
+            }
 
             var query = _unitOfWork.MonthlyPayouts.GetQuery()
-                .Where(x => x.AdvisorId == advisor.AdvisorId);
+                .Where(x => x.MonthlyPayoutBatchId == batchId);
 
             return await PaginationHelper.PaginateAsync(
                 query,
                 model,
                 _sieveProcessor,
                 x => _mapper.Map<MonthlyPayoutResponse>(x));
+        }
+
+        public async Task RecalculateAsync(int batchId)
+        {
+            var batch = await _unitOfWork.MonthlyPayoutBatches.GetByIdAsync(batchId);
+            if (batch is null)
+            {
+                return;
+            }
+
+            batch.EstimatedTotalAmount = Math.Round(batch.MonthlyPayouts.Sum(x => x.Amount), 2, MidpointRounding.AwayFromZero);
+            batch.RejectedAmount = Math.Round(
+                batch.MonthlyPayouts
+                    .Where(x => x.Status == MonthlyPayoutStatus.Rejected)
+                    .Sum(x => x.Amount),
+                2,
+                MidpointRounding.AwayFromZero);
+            batch.ActualPayableAmount = Math.Round(batch.EstimatedTotalAmount - batch.RejectedAmount, 2, MidpointRounding.AwayFromZero);
+
+            var hasPending = batch.MonthlyPayouts.Any(x => x.Status == MonthlyPayoutStatus.Pending);
+            if (hasPending)
+            {
+                batch.Status = MonthlyPayoutBatchStatus.InProgress;
+                batch.CompletedAt = null;
+            }
+            else
+            {
+                batch.Status = MonthlyPayoutBatchStatus.Completed;
+                batch.CompletedAt ??= DateTime.UtcNow;
+            }
+
+            _unitOfWork.MonthlyPayoutBatches.Update(batch);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         private static void ValidatePeriod(int year, int month)
@@ -263,6 +277,64 @@ namespace AISEP.BLL.Services.Wallets
                     reviewerNoticeMessage,
                     NotificationType.System);
             }
+        }
+
+        private async Task<MonthlyPayoutBatch> GetOrCreateBatchAsync(int year, int month)
+        {
+            var batch = await _unitOfWork.MonthlyPayoutBatches.GetByPeriodAsync(year, month);
+            if (batch is not null)
+            {
+                return batch;
+            }
+
+            batch = new MonthlyPayoutBatch
+            {
+                Year = year,
+                Month = month,
+                EstimatedTotalAmount = 0m,
+                RejectedAmount = 0m,
+                ActualPayableAmount = 0m,
+                Status = MonthlyPayoutBatchStatus.InProgress,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _unitOfWork.MonthlyPayoutBatches.AddAsync(batch);
+            await _unitOfWork.SaveChangesAsync();
+            return batch;
+        }
+
+        private static (int Year, int Month) GetLatestClosedCycle(DateTime nowLocal)
+        {
+            var previousMonth = new DateTime(nowLocal.Year, nowLocal.Month, 1).AddMonths(-1);
+            return (previousMonth.Year, previousMonth.Month);
+        }
+
+        private static (DateTime PeriodStartUtc, DateTime PeriodEndUtc) GetCycleWindowUtc(int cycleYear, int cycleMonth)
+        {
+            var startLocal = new DateTime(cycleYear, cycleMonth, 1, 0, 0, 0, DateTimeKind.Unspecified);
+            var endLocal = startLocal.AddMonths(1);
+
+            var vietnamTz = GetVietnamTimeZone();
+            var startUtc = TimeZoneInfo.ConvertTimeToUtc(startLocal, vietnamTz);
+            var endUtc = TimeZoneInfo.ConvertTimeToUtc(endLocal, vietnamTz);
+            return (startUtc, endUtc);
+        }
+
+        private static TimeZoneInfo GetVietnamTimeZone()
+        {
+            try
+            {
+                return TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            }
+            catch
+            {
+                return TimeZoneInfo.CreateCustomTimeZone("UTC+7", TimeSpan.FromHours(7), "UTC+7", "UTC+7");
+            }
+        }
+
+        private static DateTime GetVietnamNow()
+        {
+            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, GetVietnamTimeZone());
         }
     }
 }

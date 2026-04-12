@@ -105,5 +105,24 @@ namespace AISEP.API.Controllers
                 return StatusCode(403, ApiResponse<object>.ErrorResponse(ex.Message, "Forbidden", 403));
             }
         }
+
+        [HttpPatch("{id:int}/deactivate")]
+        [Authorize(Roles = "Advisor,Staff,Admin")]
+        public async Task<IActionResult> Deactivate(int id)
+        {
+            try
+            {
+                var result = await _advisorBankAccountService.DeactivateAsync(id);
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Advisor bank account deactivated successfully."));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not Found", 404));
+            }
+            catch (ForbiddenAccessException ex)
+            {
+                return StatusCode(403, ApiResponse<object>.ErrorResponse(ex.Message, "Forbidden", 403));
+            }
+        }
     }
 }

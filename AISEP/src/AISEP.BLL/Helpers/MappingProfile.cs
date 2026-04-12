@@ -3,6 +3,7 @@ using AutoMapper;
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.DAL.Entities;
+using AISEP.DAL.Enums;
 using System.Text.Json;
 
 namespace AISEP.BLL.Helpers
@@ -614,10 +615,21 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.Advisor.User != null
                         ? (src.Advisor.User.UserName ?? $"Advisor {src.AdvisorId}")
                         : $"Advisor {src.AdvisorId}"))
+                .ForMember(dest => dest.ApprovedByName,
+                    opt => opt.MapFrom(src => src.ApprovedBy != null
+                        ? (src.ApprovedBy.UserName ?? string.Empty)
+                        : null))
                 .ForMember(dest => dest.PaidByName,
                     opt => opt.MapFrom(src => src.PaidBy != null
                         ? (src.PaidBy.UserName ?? string.Empty)
                         : null));
+
+            CreateMap<MonthlyPayoutBatch, MonthlyPayoutBatchResponse>()
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.TotalBillCount, opt => opt.MapFrom(src => src.MonthlyPayouts.Count))
+                .ForMember(dest => dest.PendingBillCount, opt => opt.MapFrom(src => src.MonthlyPayouts.Count(x => x.Status == MonthlyPayoutStatus.Pending)))
+                .ForMember(dest => dest.ApprovedBillCount, opt => opt.MapFrom(src => src.MonthlyPayouts.Count(x => x.Status == MonthlyPayoutStatus.Paid)))
+                .ForMember(dest => dest.RejectedBillCount, opt => opt.MapFrom(src => src.MonthlyPayouts.Count(x => x.Status == MonthlyPayoutStatus.Rejected)));
 
             CreateMap<AdvisorBankAccount, AdvisorBankAccountResponse>()
                 .ForMember(dest => dest.AdvisorName,
