@@ -18,7 +18,8 @@ namespace AISEP.BLL.Services.ProjectAdvisorAssignments
         public async Task<int> AutoAssignUnassignedApprovedProjectsAsync(CancellationToken cancellationToken = default)
         {
             var projects = await _unitOfWork.Projects
-                .GetByStatusQuery(ProjectStatus.Approved)
+                .GetAllQuery()
+                .Where(p => p.Status == ProjectStatus.Draft)
                 .Where(p => !p.ProjectAdvisorAssignments.Any())
                 .ToListAsync(cancellationToken);
 
@@ -47,7 +48,7 @@ namespace AISEP.BLL.Services.ProjectAdvisorAssignments
 
         public async Task<bool> TryAssignAdvisorAsync(Project project, CancellationToken cancellationToken = default)
         {
-            if (project.Status != ProjectStatus.Approved)
+            if (project.Status != ProjectStatus.Draft)
             {
                 return false;
             }

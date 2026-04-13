@@ -41,13 +41,13 @@ namespace AISEP.BLL.Services.BackgroundServices
                 if (assignedCount > 0)
                 {
                     _logger.LogInformation(
-                        "Auto-assigned advisor for {Count} approved project(s) that previously had no assignment.",
+                        "Auto-assigned advisor for {Count} draft project(s) that previously had no assignment.",
                         assignedCount);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while auto-assigning advisors for approved projects.");
+                _logger.LogError(ex, "Error while auto-assigning advisors for draft projects.");
             }
         }
     }
