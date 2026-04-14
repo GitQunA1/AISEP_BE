@@ -304,9 +304,98 @@ namespace AISEP.BLL.Services.Auth
 
         public async Task<(bool Success, string Message)> LogoutAsync(int userId)
         {
-            
-            var refreshTokens = await _unitOfWork.RefreshTokens.GetActiveTokensByUserIdAsync(userId);
+            await RevokeAllActiveRefreshTokensAsync(userId);
+            await _unitOfWork.SaveChangesAsync();
+            await _signInManager.SignOutAsync();
 
+            return (true, "Logout successful");
+        }
+
+        public async Task<(bool Success, string Message)> ForgotPasswordAsync(ForgotPasswordRequest model)
+        {
+            var email = model.Email?.Trim();
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return (true, "If the account exists, a password reset link has been sent.");
+            }
+
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user is null || string.IsNullOrWhiteSpace(user.Email))
+            {
+                return (true, "If the account exists, a password reset link has been sent.");
+            }
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+            var appUrl = _configuration["FrontendUrl"] ?? _configuration["AppUrl"] ?? string.Empty;
+            var resetLink = $"{appUrl.TrimEnd('/')}/reset-password?userId={user.Id}&token={encodedToken}";
+
+            try
+            {
+                await _emailService.SendPasswordResetAsync(user.Email, user.UserName ?? user.Email, resetLink);
+            }
+            catch
+            {
+                return (false, "Failed to send reset email. Please try again later.");
+            }
+
+            return (true, "If the account exists, a password reset link has been sent.");
+        }
+
+        public async Task<(bool Success, string Message)> ResetPasswordAsync(ResetPasswordRequest model)
+        {
+            var user = await _userManager.FindByIdAsync(model.UserId);
+            if (user is null)
+            {
+                return (false, "Invalid reset request.");
+            }
+
+            string decodedToken;
+            try
+            {
+                decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(model.Token));
+            }
+            catch
+            {
+                decodedToken = model.Token;
+            }
+
+            var result = await _userManager.ResetPasswordAsync(user, decodedToken, model.NewPassword);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                return (false, errors);
+            }
+
+            await RevokeAllActiveRefreshTokensAsync(user.Id);
+            await _unitOfWork.SaveChangesAsync();
+            return (true, "Password has been reset successfully. Please login again.");
+        }
+
+        public async Task<(bool Success, string Message)> ChangePasswordAsync(int userId, ChangePasswordRequest model)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user is null)
+            {
+                return (false, "User not found.");
+            }
+
+            var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                return (false, errors);
+            }
+
+            await RevokeAllActiveRefreshTokensAsync(user.Id);
+            await _unitOfWork.SaveChangesAsync();
+            return (true, "Password changed successfully. Please login again.");
+        }
+
+        private async Task RevokeAllActiveRefreshTokensAsync(int userId)
+        {
+            var refreshTokens = await _unitOfWork.RefreshTokens.GetActiveTokensByUserIdAsync(userId);
             foreach (var token in refreshTokens)
             {
                 token.IsRevoked = true;
@@ -314,10 +403,6 @@ namespace AISEP.BLL.Services.Auth
             }
 
             await _unitOfWork.RefreshTokens.UpdateRangeAsync(refreshTokens);
-            await _unitOfWork.SaveChangesAsync();
-            await _signInManager.SignOutAsync();
-
-            return (true, "Logout successful");
         }
     }
 }
