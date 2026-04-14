@@ -176,8 +176,7 @@ namespace AISEP.BLL.Services.Email
                             <div style='text-align: center;'>
                                 <a href='{resetLink}' class='button'>🔑 Đặt lại mật khẩu</a>
                             </div>
-                            <p>Hoặc copy và paste link sau vào trình duyệt:</p>
-                            <div class='code-box'>{resetLink}</div>
+                          
                             <div class='warning'>
                                 <strong>⚠️ Lưu ý bảo mật:</strong>
                                 <ul style='margin: 10px 0; padding-left: 20px;'>

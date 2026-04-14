@@ -80,6 +80,40 @@ namespace AISEP.API.Controllers
             return Ok(ApiResponse<object>.SuccessResponse(null!, message));
         }
 
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var (success, message) = await _authService.ForgotPasswordAsync(model);
+            if (!success)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse(message, message));
+            }
+
+            return Ok(ApiResponse<object>.SuccessResponse(null!, message));
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var (success, message) = await _authService.ResetPasswordAsync(model);
+            if (!success)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse(message, message));
+            }
+
+            return Ok(ApiResponse<object>.SuccessResponse(null!, message));
+        }
+
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest model)
         {
@@ -128,6 +162,30 @@ namespace AISEP.API.Controllers
 
             var (success, message) = await _authService.RevokeTokenAsync(model.RefreshToken);
 
+            if (!success)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse(message, message));
+            }
+
+            return Ok(ApiResponse<object>.SuccessResponse(null!, message));
+        }
+
+        [HttpPost("change-password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(ApiResponse<object>.ErrorResponse("Unauthorized access.", "Unauthorized", 401));
+            }
+
+            var (success, message) = await _authService.ChangePasswordAsync(int.Parse(userId), model);
             if (!success)
             {
                 return BadRequest(ApiResponse<object>.ErrorResponse(message, message));
