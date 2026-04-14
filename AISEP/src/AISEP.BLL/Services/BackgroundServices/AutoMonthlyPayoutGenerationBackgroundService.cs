@@ -1,6 +1,5 @@
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.Services.MonthlyPayouts;
-using AISEP.DAL.Common;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -37,25 +36,23 @@ namespace AISEP.BLL.Services.BackgroundServices
             try
             {
                 using var scope = _scopeFactory.CreateScope();
-                var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                 var monthlyPayoutBatchService = scope.ServiceProvider.GetRequiredService<IMonthlyPayoutBatchService>();
 
                 var nowLocal = GetVietnamNow();
-                var (year, month) = GetLatestClosedCycle(nowLocal);
-
-                var existingBatch = await unitOfWork.MonthlyPayoutBatches.GetByPeriodAsync(year, month);
-                if (existingBatch is not null)
-                {
-                    return;
-                }
+                var previousMonth = new DateTime(nowLocal.Year, nowLocal.Month, 1).AddMonths(-1);
+                var fromDate = new DateTime(previousMonth.Year, previousMonth.Month, 1);
+                var toDate = fromDate.AddMonths(1).AddDays(-1);
 
                 await monthlyPayoutBatchService.GenerateAsync(new GenerateMonthlyPayoutRequest
                 {
-                    Year = year,
-                    Month = month
+                    FromDate = fromDate,
+                    ToDate = toDate
                 });
 
-                _logger.LogInformation("Auto-generated monthly payout batch for {Month}/{Year}.", month, year);
+                _logger.LogInformation(
+                    "Auto payout sweep executed for closed-month range {FromDate:yyyy-MM-dd} - {ToDate:yyyy-MM-dd}.",
+                    fromDate,
+                    toDate);
             }
             catch (Exception ex)
             {
@@ -74,12 +71,6 @@ namespace AISEP.BLL.Services.BackgroundServices
             {
                 return DateTime.UtcNow.AddHours(7);
             }
-        }
-
-        private static (int Year, int Month) GetLatestClosedCycle(DateTime nowLocal)
-        {
-            var previousMonth = new DateTime(nowLocal.Year, nowLocal.Month, 1).AddMonths(-1);
-            return (previousMonth.Year, previousMonth.Month);
         }
     }
 }

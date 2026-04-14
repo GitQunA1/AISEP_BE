@@ -33,24 +33,9 @@ namespace AISEP.BLL.Services.MonthlyPayouts
 
         public async Task<List<MonthlyPayoutResponse>> GenerateAsync(GenerateMonthlyPayoutRequest request)
         {
-            ValidatePeriod(request.Year, request.Month);
-
-            var nowLocal = GetVietnamNow();
-            var (latestClosedYear, latestClosedMonth) = GetLatestClosedCycle(nowLocal);
-            if (request.Year != latestClosedYear || request.Month != latestClosedMonth)
-            {
-                throw new InvalidOperationException(
-                    $"Monthly payout can only be generated for the latest closed cycle {latestClosedMonth:D2}/{latestClosedYear}.");
-            }
-
-            var (periodStartUtc, periodEndUtc) = GetCycleWindowUtc(request.Year, request.Month);
-
-            var existingBatch = await _unitOfWork.MonthlyPayoutBatches.GetByPeriodAsync(request.Year, request.Month);
-            if (existingBatch is not null)
-            {
-                throw new InvalidOperationException(
-                    $"Monthly payout batch for {request.Month:D2}/{request.Year} already exists. Generation is allowed only once per month.");
-            }
+            var (periodStartUtc, periodEndUtc, fromDateLocal, toDateLocal) = NormalizeDateRangeOrThrow(request.FromDate, request.ToDate);
+            var displayYear = toDateLocal.Year;
+            var displayMonth = toDateLocal.Month;
 
             var depositQuery = _unitOfWork.WalletTransactions
                 .GetCompletedDepositsWithoutPayoutQuery(periodStartUtc, periodEndUtc);
@@ -66,7 +51,7 @@ namespace AISEP.BLL.Services.MonthlyPayouts
                 return [];
             }
 
-            var batch = await GetOrCreateBatchAsync(request.Year, request.Month);
+            var batch = await CreateBatchAsync(displayYear, displayMonth, fromDateLocal, toDateLocal);
             var groupedByWallet = eligibleTransactions.GroupBy(x => x.WalletId);
             var generated = new List<MonthlyPayout>();
             var missingBankAdvisors = new List<(int UserId, string Name)>();
@@ -103,48 +88,25 @@ namespace AISEP.BLL.Services.MonthlyPayouts
                     continue;
                 }
 
-                var existing = await _unitOfWork.MonthlyPayouts.GetByAdvisorAndPeriodAsync(advisorId, request.Year, request.Month);
-                if (existing is null)
+                var payout = new MonthlyPayout
                 {
-                    existing = new MonthlyPayout
-                    {
-                        MonthlyPayoutBatchId = batch.MonthlyPayoutBatchId,
-                        WalletId = walletGroup.Key,
-                        AdvisorId = advisorId,
-                        Year = request.Year,
-                        Month = request.Month,
-                        Amount = totalAmount,
-                        Status = MonthlyPayoutStatus.Pending,
-                        BankName = activeBankAccount.BankName,
-                        AccountNumber = activeBankAccount.AccountNumber,
-                        AccountHolderName = activeBankAccount.AccountHolderName
-                    };
-                    await _unitOfWork.MonthlyPayouts.AddAsync(existing);
-                    generated.Add(existing);
-                }
-                else
-                {
-                    if (existing.Status != MonthlyPayoutStatus.Pending)
-                    {
-                        throw new InvalidOperationException(
-                            "Monthly payout is already finalized and cannot be regenerated.");
-                    }
-
-                    existing.Amount = Math.Round(existing.Amount + totalAmount, 2, MidpointRounding.AwayFromZero);
-                    existing.MonthlyPayoutBatchId = batch.MonthlyPayoutBatchId;
-                    existing.BankName = activeBankAccount.BankName;
-                    existing.AccountNumber = activeBankAccount.AccountNumber;
-                    existing.AccountHolderName = activeBankAccount.AccountHolderName;
-                    _unitOfWork.MonthlyPayouts.Update(existing);
-                    if (existing.MonthlyPayoutId == 0 || generated.All(x => x.MonthlyPayoutId != existing.MonthlyPayoutId))
-                    {
-                        generated.Add(existing);
-                    }
-                }
+                    MonthlyPayoutBatchId = batch.MonthlyPayoutBatchId,
+                    WalletId = walletGroup.Key,
+                    AdvisorId = advisorId,
+                    Year = displayYear,
+                    Month = displayMonth,
+                    Amount = totalAmount,
+                    Status = MonthlyPayoutStatus.Pending,
+                    BankName = activeBankAccount.BankName,
+                    AccountNumber = activeBankAccount.AccountNumber,
+                    AccountHolderName = activeBankAccount.AccountHolderName
+                };
+                await _unitOfWork.MonthlyPayouts.AddAsync(payout);
+                generated.Add(payout);
 
                 foreach (var transaction in walletGroup)
                 {
-                    transaction.MonthlyPayout = existing;
+                    transaction.MonthlyPayout = payout;
                 }
             }
 
@@ -228,19 +190,6 @@ namespace AISEP.BLL.Services.MonthlyPayouts
             await _unitOfWork.SaveChangesAsync();
         }
 
-        private static void ValidatePeriod(int year, int month)
-        {
-            if (year < 2000 || year > 2100)
-            {
-                throw new InvalidOperationException("Year must be in range 2000-2100.");
-            }
-
-            if (month < 1 || month > 12)
-            {
-                throw new InvalidOperationException("Month must be in range 1-12.");
-            }
-        }
-
         private async Task NotifyMissingBankAccountsAsync(List<(int UserId, string Name)> missingBankAdvisors)
         {
             if (missingBankAdvisors.Count == 0)
@@ -279,16 +228,12 @@ namespace AISEP.BLL.Services.MonthlyPayouts
             }
         }
 
-        private async Task<MonthlyPayoutBatch> GetOrCreateBatchAsync(int year, int month)
+        private async Task<MonthlyPayoutBatch> CreateBatchAsync(int year, int month, DateTime fromDateLocal, DateTime toDateLocal)
         {
-            var batch = await _unitOfWork.MonthlyPayoutBatches.GetByPeriodAsync(year, month);
-            if (batch is not null)
+            var batch = new MonthlyPayoutBatch
             {
-                return batch;
-            }
-
-            batch = new MonthlyPayoutBatch
-            {
+                FromDate = fromDateLocal,
+                ToDate = toDateLocal,
                 Year = year,
                 Month = month,
                 EstimatedTotalAmount = 0m,
@@ -303,21 +248,30 @@ namespace AISEP.BLL.Services.MonthlyPayouts
             return batch;
         }
 
-        private static (int Year, int Month) GetLatestClosedCycle(DateTime nowLocal)
+        private static (DateTime PeriodStartUtc, DateTime PeriodEndUtc, DateTime FromDateLocal, DateTime ToDateLocal) NormalizeDateRangeOrThrow(
+            DateTime fromDate,
+            DateTime toDate)
         {
-            var previousMonth = new DateTime(nowLocal.Year, nowLocal.Month, 1).AddMonths(-1);
-            return (previousMonth.Year, previousMonth.Month);
-        }
+            var from = fromDate.Date;
+            var to = toDate.Date;
 
-        private static (DateTime PeriodStartUtc, DateTime PeriodEndUtc) GetCycleWindowUtc(int cycleYear, int cycleMonth)
-        {
-            var startLocal = new DateTime(cycleYear, cycleMonth, 1, 0, 0, 0, DateTimeKind.Unspecified);
-            var endLocal = startLocal.AddMonths(1);
+            if (from > to)
+            {
+                throw new InvalidOperationException("FromDate must be less than or equal to ToDate.");
+            }
+
+            if ((to - from).TotalDays > 62)
+            {
+                throw new InvalidOperationException("Date range is too large. Please select a range of 62 days or less.");
+            }
+
+            var startLocal = new DateTime(from.Year, from.Month, from.Day, 0, 0, 0, DateTimeKind.Unspecified);
+            var endLocalExclusive = new DateTime(to.Year, to.Month, to.Day, 0, 0, 0, DateTimeKind.Unspecified).AddDays(1);
 
             var vietnamTz = GetVietnamTimeZone();
             var startUtc = TimeZoneInfo.ConvertTimeToUtc(startLocal, vietnamTz);
-            var endUtc = TimeZoneInfo.ConvertTimeToUtc(endLocal, vietnamTz);
-            return (startUtc, endUtc);
+            var endUtc = TimeZoneInfo.ConvertTimeToUtc(endLocalExclusive, vietnamTz);
+            return (startUtc, endUtc, from, to);
         }
 
         private static TimeZoneInfo GetVietnamTimeZone()
@@ -332,9 +286,5 @@ namespace AISEP.BLL.Services.MonthlyPayouts
             }
         }
 
-        private static DateTime GetVietnamNow()
-        {
-            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, GetVietnamTimeZone());
-        }
     }
 }

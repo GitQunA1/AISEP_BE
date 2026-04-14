@@ -668,7 +668,6 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 entity.ToTable(tb => tb.HasCheckConstraint("CK_monthly_payouts_amount_positive", "\"Amount\" > 0"));
                 entity.ToTable(tb => tb.HasCheckConstraint("CK_monthly_payouts_month_range", "\"Month\" >= 1 AND \"Month\" <= 12"));
-                entity.HasIndex(e => new { e.AdvisorId, e.Year, e.Month }).IsUnique();
                 entity.HasIndex(e => new { e.Year, e.Month, e.Status });
                 entity.HasIndex(e => e.MonthlyPayoutBatchId);
                 entity.HasIndex(e => e.ApprovedById);
@@ -708,13 +707,16 @@ namespace AISEP.DAL.Data
             {
                 entity.ToTable("monthly_payout_batches");
                 entity.HasKey(e => e.MonthlyPayoutBatchId);
+                entity.Property(e => e.FromDate).HasColumnType("date").IsRequired();
+                entity.Property(e => e.ToDate).HasColumnType("date").IsRequired();
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.EstimatedTotalAmount).HasColumnType("decimal(18,2)").HasDefaultValue(0m);
                 entity.Property(e => e.RejectedAmount).HasColumnType("decimal(18,2)").HasDefaultValue(0m);
                 entity.Property(e => e.ActualPayableAmount).HasColumnType("decimal(18,2)").HasDefaultValue(0m);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 entity.ToTable(tb => tb.HasCheckConstraint("CK_monthly_payout_batches_month_range", "\"Month\" >= 1 AND \"Month\" <= 12"));
-                entity.HasIndex(e => new { e.Year, e.Month }).IsUnique();
+                entity.ToTable(tb => tb.HasCheckConstraint("CK_monthly_payout_batches_date_range", "\"FromDate\" <= \"ToDate\""));
+                entity.HasIndex(e => new { e.FromDate, e.ToDate });
                 entity.HasIndex(e => new { e.Year, e.Month, e.Status });
             });
 

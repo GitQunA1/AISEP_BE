@@ -5,6 +5,8 @@ namespace AISEP.DAL.Entities
     public class MonthlyPayoutBatch
     {
         public int MonthlyPayoutBatchId { get; set; }
+        public DateTime FromDate { get; set; }
+        public DateTime ToDate { get; set; }
         public int Year { get; set; }
         public int Month { get; set; }
         public decimal EstimatedTotalAmount { get; set; }
