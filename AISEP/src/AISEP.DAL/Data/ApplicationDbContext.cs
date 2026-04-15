@@ -677,11 +677,6 @@ namespace AISEP.DAL.Data
                     .HasForeignKey(e => e.WalletId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasOne(e => e.Advisor)
-                    .WithMany()
-                    .HasForeignKey(e => e.AdvisorId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
                 entity.HasOne(e => e.PaidBy)
                     .WithMany()
                     .HasForeignKey(e => e.PaidById)

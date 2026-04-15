@@ -15,8 +15,7 @@ namespace AISEP.DAL.Repositories.MonthlyPayouts
 
         public async Task<MonthlyPayout?> GetByIdAsync(int monthlyPayoutId)
             => await _context.MonthlyPayouts
-                .Include(x => x.Wallet)
-                .Include(x => x.Advisor).ThenInclude(a => a.User)
+                .Include(x => x.Wallet).ThenInclude(w => w.Advisor).ThenInclude(a => a.User)
                 .Include(x => x.ApprovedBy)
                 .Include(x => x.PaidBy)
                 .Include(x => x.RejectedBy)
@@ -25,7 +24,7 @@ namespace AISEP.DAL.Repositories.MonthlyPayouts
 
         public async Task<MonthlyPayout?> GetByAdvisorAndPeriodAsync(int advisorId, int year, int month)
             => await _context.MonthlyPayouts
-                .FirstOrDefaultAsync(x => x.AdvisorId == advisorId && x.Year == year && x.Month == month);
+                .FirstOrDefaultAsync(x => x.Wallet.AdvisorId == advisorId && x.Year == year && x.Month == month);
 
         public async Task<bool> ExistsByPeriodAsync(int year, int month)
             => await _context.MonthlyPayouts
@@ -33,11 +32,10 @@ namespace AISEP.DAL.Repositories.MonthlyPayouts
 
         public IQueryable<MonthlyPayout> GetQuery()
             => _context.MonthlyPayouts
-                .Include(x => x.Advisor).ThenInclude(a => a.User)
+                .Include(x => x.Wallet).ThenInclude(w => w.Advisor).ThenInclude(a => a.User)
                 .Include(x => x.ApprovedBy)
                 .Include(x => x.PaidBy)
                 .Include(x => x.RejectedBy)
-                .Include(x => x.Wallet)
                 .Include(x => x.MonthlyPayoutBatch)
                 .OrderByDescending(x => x.Year)
                 .ThenByDescending(x => x.Month)
