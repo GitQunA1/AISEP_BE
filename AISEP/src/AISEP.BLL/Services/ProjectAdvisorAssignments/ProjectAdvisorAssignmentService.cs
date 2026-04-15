@@ -27,6 +27,22 @@ namespace AISEP.BLL.Services.ProjectAdvisorAssignments
             _userService = userService;
         }
 
+        public async Task<List<ProjectAssignedAdvisorResponse>> GetAssignedAdvisorsByProjectAsync(int projectId)
+        {
+            var project = await _unitOfWork.Projects.GetByIdAsync(projectId)
+                ?? throw new KeyNotFoundException("Project not found.");
+
+            var assignments = await _unitOfWork.ProjectAdvisorAssignments.GetByProjectIdAsync(project.ProjectId);
+            if (assignments.Count == 0)
+            {
+                return [];
+            }
+
+            return assignments
+                .Select(x => _mapper.Map<ProjectAssignedAdvisorResponse>(x))
+                .ToList();
+        }
+
         public async Task<PagedResult<ProjectAssignedAdvisorResponse>> GetAssignedProjectsForCurrentAdvisorAsync(SieveModel model)
         {
             var userId = _userService.GetUserId();

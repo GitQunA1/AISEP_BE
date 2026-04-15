@@ -374,7 +374,7 @@ namespace AISEP.BLL.Services.Bookings
                 AdvisorName = a.User is null
                     ? $"Advisor {a.AdvisorId}"
                     : (a.User.UserName ?? $"Advisor {a.AdvisorId}")
-            }).ToList();
+                }).ToList();
         }
 
         public async Task<List<BookingAdvisorOptionResponse>> GetReplacementAdvisorOptionsAsync(int bookingId)
