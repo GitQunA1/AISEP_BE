@@ -1,10 +1,14 @@
 using System.Text.Json;
+using AISEP.BLL.Exceptions;
 using AISEP.BLL.DTOs.Responses;
+using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.Users;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using AutoMapper;
+using Sieve.Models;
+using Sieve.Services;
 
 namespace AISEP.BLL.Services.AI
 {
@@ -14,17 +18,20 @@ namespace AISEP.BLL.Services.AI
         private readonly IUserService _userService;
         private readonly IGeminiAiService _geminiAiService;
         private readonly IMapper _mapper;
+        private readonly ISieveProcessor _sieveProcessor;
 
         public InvestorAIAnalysisService(
             IUnitOfWork unitOfWork,
             IUserService userService,
             IGeminiAiService geminiAiService,
-            IMapper mapper)
+            IMapper mapper,
+            ISieveProcessor sieveProcessor)
         {
             _unitOfWork = unitOfWork;
             _userService = userService;
             _geminiAiService = geminiAiService;
             _mapper = mapper;
+            _sieveProcessor = sieveProcessor;
         }
 
         public async Task<InvestorAIAnalysisResponse> AnalyzeProjectForInvestorAsync(int projectId)
@@ -76,16 +83,61 @@ namespace AISEP.BLL.Services.AI
 
         public async Task<InvestorAIAnalysisResponse?> GetAnalysisAsync(int projectId)
         {
-            var userId = _userService.GetUserId();
-            var investor = await _unitOfWork.Investors.GetByUserIdAsync(userId)
-                ?? throw new KeyNotFoundException("Investor profile not found.");
+            var role = _userService.GetUserRole();
             var project = await _unitOfWork.Projects.GetByIdAsync(projectId)
                 ?? throw new KeyNotFoundException($"Project {projectId} not found.");
 
-            var analysis = await _unitOfWork.InvestorAIAnalyses
-                .GetByInvestorAndProjectAsync(investor.InvestorId, projectId);
+            InvestorAIAnalysis? analysis;
+
+            if (IsStaffOrAdmin(role))
+            {
+                analysis = await _unitOfWork.InvestorAIAnalyses.GetLatestByProjectAsync(projectId);
+            }
+            else if (string.Equals(role, "Investor", StringComparison.OrdinalIgnoreCase))
+            {
+                var userId = _userService.GetUserId();
+                var investor = await _unitOfWork.Investors.GetByUserIdAsync(userId)
+                    ?? throw new KeyNotFoundException("Investor profile not found.");
+
+                analysis = await _unitOfWork.InvestorAIAnalyses
+                    .GetByInvestorAndProjectAsync(investor.InvestorId, projectId);
+            }
+            else
+            {
+                throw new ForbiddenAccessException("You do not have permission to access investor AI analysis.");
+            }
 
             return analysis is null ? null : MapToResponse(analysis, _mapper, project.DevelopmentStage);
+        }
+
+        public async Task<PagedResult<InvestorAIAnalysisResponse>> GetAllAnalysesAsync(SieveModel model)
+        {
+            var role = _userService.GetUserRole();
+            IQueryable<InvestorAIAnalysis> query;
+
+            if (IsStaffOrAdmin(role))
+            {
+                query = _unitOfWork.InvestorAIAnalyses.GetQuery();
+            }
+            else if (string.Equals(role, "Investor", StringComparison.OrdinalIgnoreCase))
+            {
+                var userId = _userService.GetUserId();
+                var investor = await _unitOfWork.Investors.GetByUserIdAsync(userId)
+                    ?? throw new KeyNotFoundException("Investor profile not found.");
+
+                query = _unitOfWork.InvestorAIAnalyses.GetQuery()
+                    .Where(x => x.InvestorId == investor.InvestorId);
+            }
+            else
+            {
+                throw new ForbiddenAccessException("You do not have permission to access investor AI analysis list.");
+            }
+
+            return await PaginationHelper.PaginateAsync(
+                query,
+                model,
+                _sieveProcessor,
+                x => MapToResponse(x, _mapper, x.Project?.DevelopmentStage));
         }
 
         private async Task ConsumeAiQuotaAsync(int userId)
@@ -120,6 +172,12 @@ namespace AISEP.BLL.Services.AI
             response.DueDiligenceQuestions = parsed?.DueDiligenceQuestions ?? [];
             response.InvestorNextStep = parsed?.InvestorNextStep ?? string.Empty;
             return response;
+        }
+
+        private static bool IsStaffOrAdmin(string? role)
+        {
+            return string.Equals(role, "Staff", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase);
         }
     }
 }

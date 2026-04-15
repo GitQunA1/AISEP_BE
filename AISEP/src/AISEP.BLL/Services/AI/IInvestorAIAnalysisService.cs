@@ -1,4 +1,6 @@
 using AISEP.BLL.DTOs.Responses;
+using AISEP.BLL.Helpers;
+using Sieve.Models;
 
 namespace AISEP.BLL.Services.AI
 {
@@ -6,5 +8,6 @@ namespace AISEP.BLL.Services.AI
     {
         Task<InvestorAIAnalysisResponse> AnalyzeProjectForInvestorAsync(int projectId);
         Task<InvestorAIAnalysisResponse?> GetAnalysisAsync(int projectId);
+        Task<PagedResult<InvestorAIAnalysisResponse>> GetAllAnalysesAsync(SieveModel model);
     }
 }

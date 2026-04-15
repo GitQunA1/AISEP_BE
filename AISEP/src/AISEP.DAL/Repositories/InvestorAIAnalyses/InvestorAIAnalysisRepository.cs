@@ -13,10 +13,27 @@ namespace AISEP.DAL.Repositories.InvestorAIAnalyses
             _context = context;
         }
 
+        public IQueryable<InvestorAIAnalysis> GetQuery()
+        {
+            return _context.InvestorAIAnalyses
+                .Include(x => x.Project)
+                .OrderByDescending(x => x.CreatedAt)
+                .AsQueryable();
+        }
+
         public async Task<InvestorAIAnalysis?> GetByInvestorAndProjectAsync(int investorId, int projectId)
         {
             return await _context.InvestorAIAnalyses
                 .FirstOrDefaultAsync(x => x.InvestorId == investorId && x.ProjectId == projectId);
+        }
+
+        public async Task<InvestorAIAnalysis?> GetLatestByProjectAsync(int projectId)
+        {
+            return await _context.InvestorAIAnalyses
+                .Include(x => x.Project)
+                .Where(x => x.ProjectId == projectId)
+                .OrderByDescending(x => x.CreatedAt)
+                .FirstOrDefaultAsync();
         }
 
         public async Task AddAsync(InvestorAIAnalysis analysis)

@@ -81,7 +81,11 @@ namespace AISEP.BLL.Services.AI
 
         public async Task<StartupAIAnalysisResponse?> GetAnalysisAsync(int projectId)
         {
-            var project = await EnsureProjectBelongsToCurrentStartupAsync(projectId);
+            var role = _userService.GetUserRole();
+            var project = IsStaffOrAdmin(role)
+                ? await _unitOfWork.Projects.GetByIdAsync(projectId)
+                    ?? throw new KeyNotFoundException($"Project {projectId} not found.")
+                : await EnsureProjectBelongsToCurrentStartupAsync(projectId);
 
             var analysis = await _unitOfWork.StartupAIAnalyses.GetByProjectIdAsync(projectId);
             return analysis is null ? null : MapToResponse(analysis, _mapper, project.DevelopmentStage);
@@ -217,6 +221,12 @@ namespace AISEP.BLL.Services.AI
             }
 
             return string.Join(" ", sentences);
+        }
+
+        private static bool IsStaffOrAdmin(string? role)
+        {
+            return string.Equals(role, "Staff", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase);
         }
     }
 }
