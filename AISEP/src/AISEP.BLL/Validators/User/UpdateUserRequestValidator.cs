@@ -20,6 +20,11 @@ namespace AISEP.BLL.Validators.User
             RuleFor(x => x.FullName)
                 .Matches(NamePattern).WithMessage("Full name must only contain letters and spaces.")
                 .When(x => !string.IsNullOrWhiteSpace(x.FullName));
+
+            RuleFor(x => x.DateOfBirth)
+                .LessThanOrEqualTo(_ => DateTime.UtcNow.Date)
+                .WithMessage("Date of birth cannot be in the future.")
+                .When(x => x.DateOfBirth.HasValue);
         }
     }
 }

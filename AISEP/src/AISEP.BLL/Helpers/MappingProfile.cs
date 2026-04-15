@@ -609,12 +609,14 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.Status.ToString()));
 
             CreateMap<MonthlyPayout, MonthlyPayoutResponse>()
+                .ForMember(dest => dest.AdvisorId,
+                    opt => opt.MapFrom(src => src.Wallet.AdvisorId))
                 .ForMember(dest => dest.Status,
                     opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.AdvisorName,
-                    opt => opt.MapFrom(src => src.Advisor.User != null
-                        ? (src.Advisor.User.UserName ?? $"Advisor {src.AdvisorId}")
-                        : $"Advisor {src.AdvisorId}"))
+                    opt => opt.MapFrom(src => src.Wallet.Advisor != null && src.Wallet.Advisor.User != null
+                        ? (src.Wallet.Advisor.User.UserName ?? $"Advisor {src.Wallet.AdvisorId}")
+                        : $"Advisor {src.Wallet.AdvisorId}"))
                 .ForMember(dest => dest.ApprovedByName,
                     opt => opt.MapFrom(src => src.ApprovedBy != null
                         ? (src.ApprovedBy.UserName ?? string.Empty)

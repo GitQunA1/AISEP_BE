@@ -92,7 +92,6 @@ namespace AISEP.BLL.Services.MonthlyPayouts
                 {
                     MonthlyPayoutBatchId = batch.MonthlyPayoutBatchId,
                     WalletId = walletGroup.Key,
-                    AdvisorId = advisorId,
                     Year = displayYear,
                     Month = displayMonth,
                     Amount = totalAmount,

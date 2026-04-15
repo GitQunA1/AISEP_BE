@@ -135,7 +135,7 @@ namespace AISEP.BLL.Services.MonthlyPayouts
                 ?? throw new KeyNotFoundException("Advisor profile not found.");
 
             var query = _unitOfWork.MonthlyPayouts.GetQuery()
-                .Where(x => x.AdvisorId == advisor.AdvisorId);
+                .Where(x => x.Wallet.AdvisorId == advisor.AdvisorId);
 
             return await PaginationHelper.PaginateAsync(
                 query,

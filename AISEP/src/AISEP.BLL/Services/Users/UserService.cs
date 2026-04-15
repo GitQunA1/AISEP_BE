@@ -89,7 +89,10 @@ namespace AISEP.BLL.Services.Users
                 ? user.FullName
                 : request.FullName;
 
-            user.DateOfBirth = request.DateOfBirth ?? user.DateOfBirth;
+            if (request.DateOfBirth.HasValue)
+            {
+                user.DateOfBirth = NormalizeDateOfBirthToUtc(request.DateOfBirth.Value);
+            }
 
             var result = await _userManager.UpdateAsync(user);
             if (!result.Succeeded)
@@ -125,6 +128,12 @@ namespace AISEP.BLL.Services.Users
                 throw new KeyNotFoundException("User not found");
 
             return _mapper.Map<UserResponse>(user);
+        }
+
+        private static DateTime NormalizeDateOfBirthToUtc(DateTime dateOfBirth)
+        {
+            var dateOnly = dateOfBirth.Date;
+            return DateTime.SpecifyKind(dateOnly, DateTimeKind.Utc);
         }
     }
 }

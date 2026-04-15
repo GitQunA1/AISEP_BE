@@ -7,7 +7,6 @@ namespace AISEP.DAL.Entities
         public int MonthlyPayoutId { get; set; }
         public int? MonthlyPayoutBatchId { get; set; }
         public int WalletId { get; set; }
-        public int AdvisorId { get; set; }
         public int Year { get; set; }
         public int Month { get; set; }
         public decimal Amount { get; set; }
@@ -27,7 +26,6 @@ namespace AISEP.DAL.Entities
 
         public Wallet Wallet { get; set; } = null!;
         public MonthlyPayoutBatch? MonthlyPayoutBatch { get; set; }
-        public Advisor Advisor { get; set; } = null!;
         public User? ApprovedBy { get; set; }
         public User? PaidBy { get; set; }
         public User? RejectedBy { get; set; }
