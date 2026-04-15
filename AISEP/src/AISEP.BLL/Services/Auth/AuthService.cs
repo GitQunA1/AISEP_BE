@@ -147,7 +147,7 @@ namespace AISEP.BLL.Services.Auth
             // Generate new token
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
-            var confirmationLink = $"{_configuration["AppUrl"]}/api/auth/confirm-email?userId={user.Id}&token={encodedToken}";
+            var confirmationLink = $"{_configuration["AppUrl"]}/auth/confirm-email?userId={user.Id}&token={encodedToken}";
 
             // Send email
             try
