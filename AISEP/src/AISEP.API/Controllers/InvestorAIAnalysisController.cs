@@ -2,6 +2,7 @@ using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.AI;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Sieve.Models;
 
 namespace AISEP.API.Controllers
 {
@@ -15,6 +16,21 @@ namespace AISEP.API.Controllers
         public InvestorAIAnalysisController(IInvestorAIAnalysisService analysisService)
         {
             _analysisService = analysisService;
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Investor,Staff,Admin")]
+        public async Task<IActionResult> GetAll([FromQuery] SieveModel model)
+        {
+            try
+            {
+                var result = await _analysisService.GetAllAnalysesAsync(model);
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not found", 404));
+            }
         }
 
         [HttpPost("{projectId:int}/analyze")]
