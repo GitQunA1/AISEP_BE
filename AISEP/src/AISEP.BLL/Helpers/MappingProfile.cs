@@ -624,12 +624,25 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.PaidByName,
                     opt => opt.MapFrom(src => src.PaidBy != null
                         ? (src.PaidBy.UserName ?? string.Empty)
+                        : null))
+                .ForMember(dest => dest.RejectedByName,
+                    opt => opt.MapFrom(src => src.RejectedBy != null
+                        ? (src.RejectedBy.UserName ?? string.Empty)
+                        : null))
+                .ForMember(dest => dest.RetryRequestedByName,
+                    opt => opt.MapFrom(src => src.RetryRequestedBy != null
+                        ? (src.RetryRequestedBy.UserName ?? string.Empty)
+                        : null))
+                .ForMember(dest => dest.RetryReviewedByName,
+                    opt => opt.MapFrom(src => src.RetryReviewedBy != null
+                        ? (src.RetryReviewedBy.UserName ?? string.Empty)
                         : null));
 
             CreateMap<MonthlyPayoutBatch, MonthlyPayoutBatchResponse>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.TotalBillCount, opt => opt.MapFrom(src => src.MonthlyPayouts.Count))
-                .ForMember(dest => dest.PendingBillCount, opt => opt.MapFrom(src => src.MonthlyPayouts.Count(x => x.Status == MonthlyPayoutStatus.Pending)))
+                .ForMember(dest => dest.PendingBillCount, opt => opt.MapFrom(src => src.MonthlyPayouts.Count(x =>
+                    x.Status == MonthlyPayoutStatus.Pending || x.Status == MonthlyPayoutStatus.PendingRecheck)))
                 .ForMember(dest => dest.ApprovedBillCount, opt => opt.MapFrom(src => src.MonthlyPayouts.Count(x => x.Status == MonthlyPayoutStatus.Paid)))
                 .ForMember(dest => dest.RejectedBillCount, opt => opt.MapFrom(src => src.MonthlyPayouts.Count(x => x.Status == MonthlyPayoutStatus.Rejected)));
 

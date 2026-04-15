@@ -1,10 +1,12 @@
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.BLL.Helpers;
+using AISEP.BLL.Services.Notifications;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
 using Sieve.Services;
 
@@ -16,17 +18,20 @@ namespace AISEP.BLL.Services.MonthlyPayouts
         private readonly ISieveProcessor _sieveProcessor;
         private readonly IMapper _mapper;
         private readonly IMonthlyPayoutBatchService _monthlyPayoutBatchService;
+        private readonly INotificationService _notificationService;
 
         public MonthlyPayoutService(
             IUnitOfWork unitOfWork,
             ISieveProcessor sieveProcessor,
             IMapper mapper,
-            IMonthlyPayoutBatchService monthlyPayoutBatchService)
+            IMonthlyPayoutBatchService monthlyPayoutBatchService,
+            INotificationService notificationService)
         {
             _unitOfWork = unitOfWork;
             _sieveProcessor = sieveProcessor;
             _mapper = mapper;
             _monthlyPayoutBatchService = monthlyPayoutBatchService;
+            _notificationService = notificationService;
         }
 
         public async Task<MonthlyPayoutResponse> MarkPaidAsync(int monthlyPayoutId, int staffUserId, MarkMonthlyPayoutPaidRequest request)
@@ -43,7 +48,6 @@ namespace AISEP.BLL.Services.MonthlyPayouts
             {
                 throw new InvalidOperationException("Rejected payout cannot be approved as paid.");
             }
-
             if (payout.Wallet.Balance < payout.Amount)
             {
                 throw new InvalidOperationException("Wallet balance is not enough to mark this payout as paid.");
@@ -75,6 +79,48 @@ namespace AISEP.BLL.Services.MonthlyPayouts
 
             _unitOfWork.MonthlyPayouts.Update(payout);
             await _unitOfWork.SaveChangesAsync();
+
+            if (payout.MonthlyPayoutBatchId.HasValue)
+            {
+                await _monthlyPayoutBatchService.RecalculateAsync(payout.MonthlyPayoutBatchId.Value);
+            }
+
+            return _mapper.Map<MonthlyPayoutResponse>(payout);
+        }
+
+        public async Task<MonthlyPayoutResponse> RequestRetryAsync(int monthlyPayoutId, int advisorUserId, RequestMonthlyPayoutRetryRequest request)
+        {
+            var payout = await _unitOfWork.MonthlyPayouts.GetByIdAsync(monthlyPayoutId)
+                ?? throw new KeyNotFoundException("Monthly payout not found.");
+
+            if (payout.Wallet.Advisor.UserId != advisorUserId)
+            {
+                throw new UnauthorizedAccessException("You do not have permission to request retry for this payout.");
+            }
+
+            if (payout.Status != MonthlyPayoutStatus.Rejected)
+            {
+                throw new InvalidOperationException("Only rejected payouts can request retry.");
+            }
+
+            var resolutionNote = string.IsNullOrWhiteSpace(request.ResolutionNote) ? null : request.ResolutionNote.Trim();
+            if (string.IsNullOrWhiteSpace(resolutionNote))
+            {
+                throw new InvalidOperationException("Resolution note is required.");
+            }
+
+            payout.Status = MonthlyPayoutStatus.PendingRecheck;
+            payout.RetryRequestedAt = DateTime.UtcNow;
+            payout.RetryRequestedById = advisorUserId;
+            payout.RetryRequestNote = resolutionNote;
+            payout.RetryReviewedAt = null;
+            payout.RetryReviewedById = null;
+            payout.RetryReviewNote = null;
+
+            _unitOfWork.MonthlyPayouts.Update(payout);
+            await _unitOfWork.SaveChangesAsync();
+
+            await NotifyStaffRetryRequestedAsync(payout);
 
             if (payout.MonthlyPayoutBatchId.HasValue)
             {
@@ -142,6 +188,34 @@ namespace AISEP.BLL.Services.MonthlyPayouts
                 model,
                 _sieveProcessor,
                 x => _mapper.Map<MonthlyPayoutResponse>(x));
+        }
+
+        private async Task NotifyStaffRetryRequestedAsync(MonthlyPayout payout)
+        {
+            var staffIds = await _unitOfWork.Users.GetAllQuery()
+                .Where(u => u.Role == UserRole.Staff || u.Role == UserRole.Admin)
+                .Select(u => u.Id)
+                .ToListAsync();
+
+            if (staffIds.Count == 0)
+            {
+                return;
+            }
+
+            var advisorName = payout.Wallet.Advisor.User?.UserName ?? $"Advisor {payout.Wallet.AdvisorId}";
+            var title = "Yeu cau chuyen khoan lai";
+            var message = $"{advisorName} da gui yeu cau chuyen khoan lai cho payout #{payout.MonthlyPayoutId}. Vui long kiem tra.";
+
+            foreach (var staffId in staffIds)
+            {
+                await _notificationService.SendNotificationAsync(
+                    staffId,
+                    title,
+                    message,
+                    NotificationType.System,
+                    payout.MonthlyPayoutId,
+                    "MonthlyPayout");
+            }
         }
     }
 }
