@@ -6,6 +6,7 @@ namespace AISEP.BLL.Services.ProjectAdvisorAssignments
 {
     public interface IProjectAdvisorAssignmentService
     {
+        Task<List<ProjectAssignedAdvisorResponse>> GetAssignedAdvisorsByProjectAsync(int projectId);
         Task<PagedResult<ProjectAssignedAdvisorResponse>> GetAssignedProjectsForCurrentAdvisorAsync(SieveModel model);
     }
 }

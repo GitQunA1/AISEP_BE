@@ -18,28 +18,28 @@ namespace AISEP.API.Controllers
             _assignmentService = assignmentService;
         }
 
-        //[HttpGet("project/{projectId:int}")]
-        //public async Task<IActionResult> GetAssignedAdvisorByProject(int projectId)
-        //{
-        //    try
-        //    {
-        //        var assignment = await _assignmentService.GetAssignedAdvisorAsync(projectId);
-        //        if (assignment is null)
-        //        {
-        //            return Ok(ApiResponse<object>.SuccessResponse(null, "Project has not been assigned to any advisor yet."));
-        //        }
+        [HttpGet("project/{projectId:int}")]
+        public async Task<IActionResult> GetAssignedAdvisorsByProject(int projectId)
+        {
+            try
+            {
+                var advisors = await _assignmentService.GetAssignedAdvisorsByProjectAsync(projectId);
+                if (advisors.Count == 0)
+                {
+                    return Ok(ApiResponse<object>.SuccessResponse(advisors, "Project has not been assigned to any advisor yet."));
+                }
 
-        //        return Ok(ApiResponse<object>.SuccessResponse(assignment, "Success"));
-        //    }
-        //    catch (KeyNotFoundException ex)
-        //    {
-        //        return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not found", 404));
-        //    }
-        //    catch (InvalidOperationException ex)
-        //    {
-        //        return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message, "Bad request", 400));
-        //    }
-        //}
+                return Ok(ApiResponse<object>.SuccessResponse(advisors, "Success"));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not found", 404));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message, "Bad request", 400));
+            }
+        }
 
         [HttpGet("me/projects")]
         [Authorize(Roles = "Advisor,Staff,Admin")]
