@@ -39,6 +39,15 @@ namespace AISEP.API.Controllers
             return Ok(ApiResponse<object>.SuccessResponse(result, "Monthly payout rejected successfully."));
         }
 
+        [HttpPatch("{id:int}/request-retry")]
+        [Authorize(Roles = "Advisor")]
+        public async Task<IActionResult> RequestRetry(int id, [FromBody] RequestMonthlyPayoutRetryRequest request)
+        {
+            var advisorUserId = _userService.GetUserId();
+            var result = await _monthlyPayoutService.RequestRetryAsync(id, advisorUserId, request);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Retry request submitted successfully."));
+        }
+
         [HttpGet]
         [Authorize(Roles = "Staff,Admin")]
         public async Task<IActionResult> GetAll([FromQuery] SieveModel model)

@@ -19,7 +19,16 @@ namespace AISEP.BLL.DTOs.Responses
         public string? PaidByName { get; set; }
         public DateTime? RejectedAt { get; set; }
         public int? RejectedById { get; set; }
+        public string? RejectedByName { get; set; }
         public string? RejectReason { get; set; }
+        public DateTime? RetryRequestedAt { get; set; }
+        public int? RetryRequestedById { get; set; }
+        public string? RetryRequestedByName { get; set; }
+        public string? RetryRequestNote { get; set; }
+        public DateTime? RetryReviewedAt { get; set; }
+        public int? RetryReviewedById { get; set; }
+        public string? RetryReviewedByName { get; set; }
+        public string? RetryReviewNote { get; set; }
         public string? Note { get; set; }
         public string BankName { get; set; } = string.Empty;
         public string AccountNumber { get; set; } = string.Empty;

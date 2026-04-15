@@ -173,7 +173,8 @@ namespace AISEP.BLL.Services.MonthlyPayouts
                 MidpointRounding.AwayFromZero);
             batch.ActualPayableAmount = Math.Round(batch.EstimatedTotalAmount - batch.RejectedAmount, 2, MidpointRounding.AwayFromZero);
 
-            var hasPending = batch.MonthlyPayouts.Any(x => x.Status == MonthlyPayoutStatus.Pending);
+            var hasPending = batch.MonthlyPayouts.Any(x =>
+                x.Status == MonthlyPayoutStatus.Pending || x.Status == MonthlyPayoutStatus.PendingRecheck);
             if (hasPending)
             {
                 batch.Status = MonthlyPayoutBatchStatus.InProgress;

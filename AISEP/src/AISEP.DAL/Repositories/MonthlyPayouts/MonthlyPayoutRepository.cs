@@ -19,6 +19,8 @@ namespace AISEP.DAL.Repositories.MonthlyPayouts
                 .Include(x => x.ApprovedBy)
                 .Include(x => x.PaidBy)
                 .Include(x => x.RejectedBy)
+                .Include(x => x.RetryRequestedBy)
+                .Include(x => x.RetryReviewedBy)
                 .Include(x => x.MonthlyPayoutBatch)
                 .FirstOrDefaultAsync(x => x.MonthlyPayoutId == monthlyPayoutId);
 
@@ -36,6 +38,8 @@ namespace AISEP.DAL.Repositories.MonthlyPayouts
                 .Include(x => x.ApprovedBy)
                 .Include(x => x.PaidBy)
                 .Include(x => x.RejectedBy)
+                .Include(x => x.RetryRequestedBy)
+                .Include(x => x.RetryReviewedBy)
                 .Include(x => x.MonthlyPayoutBatch)
                 .OrderByDescending(x => x.Year)
                 .ThenByDescending(x => x.Month)

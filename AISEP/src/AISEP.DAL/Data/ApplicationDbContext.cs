@@ -662,6 +662,8 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.Note).HasMaxLength(1000);
                 entity.Property(e => e.RejectReason).HasMaxLength(1000);
+                entity.Property(e => e.RetryRequestNote).HasMaxLength(1000);
+                entity.Property(e => e.RetryReviewNote).HasMaxLength(1000);
                 entity.Property(e => e.BankName).HasMaxLength(255).IsRequired();
                 entity.Property(e => e.AccountNumber).HasMaxLength(100).IsRequired();
                 entity.Property(e => e.AccountHolderName).HasMaxLength(255).IsRequired();
@@ -671,6 +673,8 @@ namespace AISEP.DAL.Data
                 entity.HasIndex(e => new { e.Year, e.Month, e.Status });
                 entity.HasIndex(e => e.MonthlyPayoutBatchId);
                 entity.HasIndex(e => e.ApprovedById);
+                entity.HasIndex(e => e.RetryRequestedById);
+                entity.HasIndex(e => e.RetryReviewedById);
 
                 entity.HasOne(e => e.Wallet)
                     .WithMany(w => w.MonthlyPayouts)
@@ -690,6 +694,16 @@ namespace AISEP.DAL.Data
                 entity.HasOne(e => e.RejectedBy)
                     .WithMany()
                     .HasForeignKey(e => e.RejectedById)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.RetryRequestedBy)
+                    .WithMany()
+                    .HasForeignKey(e => e.RetryRequestedById)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.RetryReviewedBy)
+                    .WithMany()
+                    .HasForeignKey(e => e.RetryReviewedById)
                     .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(e => e.MonthlyPayoutBatch)

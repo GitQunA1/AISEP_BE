@@ -274,7 +274,6 @@ builder.Services.AddHostedService<BookingResponseExpiryBackgroundService>();
 builder.Services.AddHostedService<ConsultingReportDeadlineBackgroundService>();
 builder.Services.AddHostedService<ProjectAdvisorAutoAssignBackgroundService>();
 builder.Services.AddHostedService<BlockchainOwnershipAssignmentBackgroundService>();
-builder.Services.AddHostedService<AutoMonthlyPayoutGenerationBackgroundService>();
 
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>
