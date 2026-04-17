@@ -786,8 +786,6 @@ namespace AISEP.DAL.Data
                 entity.HasKey(e => e.RefreshTokenId);
                 entity.Property(e => e.Token).HasMaxLength(500).IsRequired();
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
-                entity.Property(e => e.CreatedByIp).HasMaxLength(50);
-                entity.Property(e => e.RevokedByIp).HasMaxLength(50);
                 entity.Property(e => e.ReplacedByToken).HasMaxLength(500);
 
                 entity.HasOne(rt => rt.User)
@@ -819,6 +817,7 @@ namespace AISEP.DAL.Data
         }
     }
 }
+
 
 
 
