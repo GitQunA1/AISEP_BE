@@ -155,7 +155,7 @@ namespace AISEP.BLL.Services.Auth
                 await _emailService.SendEmailConfirmationAsync(user.Email!, user.UserName!, confirmationLink);
                 return (true, "Confirmation email has been resent. Please check your inbox.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return (false, "Failed to send email. Please try again later.");
             }
@@ -270,6 +270,7 @@ namespace AISEP.BLL.Services.Auth
 
             var tokenResponse = new TokenResponse
             {
+                UserId = user.Id,
                 AccessToken = newAccessToken,
                 RefreshToken = newRefreshToken,
                 AccessTokenExpiration = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes),

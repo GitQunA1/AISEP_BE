@@ -51,7 +51,7 @@ namespace AISEP.API.Controllers
                 var investor = await _investorService.GetMyProfileAsync();
                 return Ok(ApiResponse<object>.SuccessResponse(investor, "Success"));
             }
-            catch (KeyNotFoundException ex)
+            catch (KeyNotFoundException)
             {
                 return NotFound(ApiResponse<object>.ErrorResponse("Investor profile not found.", "Not found", 404));
             }
@@ -66,6 +66,10 @@ namespace AISEP.API.Controllers
             try
             {
                 var data = await _investorService.CreateAsync(dto);
+                if (data is null)
+                {
+                    return StatusCode(500, ApiResponse<object>.ErrorResponse("Failed to create investor profile.", "Internal Server Error", 500));
+                }
                 return CreatedAtAction(nameof(GetById), new { id = data.InvestorId },
                     ApiResponse<object>.SuccessResponse(data, "Investor created successfully", 201));
             }
@@ -85,7 +89,7 @@ namespace AISEP.API.Controllers
                 var data = await _investorService.UpdateAsync(id, dto);
                 return Ok(ApiResponse<object>.SuccessResponse(data, "Investor updated successfully"));
             }
-            catch (KeyNotFoundException ex)
+            catch (KeyNotFoundException)
             {
                 return NotFound(ApiResponse<object>.ErrorResponse("Investor profile not found.", "Not found", 404));
             }
