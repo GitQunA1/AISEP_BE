@@ -7,7 +7,6 @@ namespace AISEP.BLL.DTOs.Responses
         public int EvaluationId { get; set; }
         public int ProjectId { get; set; }
         public int? PotentialScore { get; set; }
-        public int? ChaosScore { get; set; }
         public string? AnalysisJson { get; set; }
         public GeminiAnalysisResult? Analysis { get; set; }
         public List<ScoreBreakdownItem> ScoreBreakdown { get; set; } = [];
