@@ -1,4 +1,4 @@
-﻿using AISEP.DAL.Common;
+using AISEP.DAL.Common;
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.DAL.Entities;
@@ -202,8 +202,7 @@ namespace AISEP.BLL.Services.Auth
                 UserId = user.Id,
                 Token = refreshToken,
                 ExpiryDate = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays),
-                CreatedAt = DateTime.UtcNow,
-                CreatedByIp = null 
+                CreatedAt = DateTime.UtcNow
             };
 
             await _unitOfWork.RefreshTokens.AddAsync(refreshTokenEntity);
@@ -260,8 +259,7 @@ namespace AISEP.BLL.Services.Auth
                 UserId = refreshTokenEntity.UserId,
                 Token = newRefreshToken,
                 ExpiryDate = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays),
-                CreatedAt = DateTime.UtcNow,
-                CreatedByIp = null 
+                CreatedAt = DateTime.UtcNow
             };
 
             await _unitOfWork.RefreshTokens.UpdateAsync(refreshTokenEntity);
@@ -407,3 +405,4 @@ namespace AISEP.BLL.Services.Auth
         }
     }
 }
+
