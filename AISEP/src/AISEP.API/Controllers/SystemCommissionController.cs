@@ -48,5 +48,6 @@ namespace AISEP.API.Controllers
             var result = await _systemCommissionService.GetHistoryAsync(model);
             return Ok(ApiResponse<object>.SuccessResponse(result, "System commission history retrieved successfully."));
         }
+
     }
 }

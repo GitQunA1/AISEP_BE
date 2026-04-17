@@ -14,6 +14,9 @@ namespace AISEP.DAL.Repositories.Transactions
             _context = context;
         }
 
+        public IQueryable<Transaction> GetQuery()
+            => _context.Transactions.AsQueryable();
+
         public async Task<Transaction?> GetByIdAsync(int transactionId, int userId)
             => await _context.Transactions
                 .FirstOrDefaultAsync(t => t.TransactionId == transactionId && t.UserId == userId);

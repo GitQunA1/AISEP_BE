@@ -4,6 +4,7 @@ namespace AISEP.DAL.Repositories.Transactions
 {
     public interface ITransactionRepository
     {
+        IQueryable<Transaction> GetQuery();
         Task<Transaction?> GetByIdAsync(int transactionId, int userId);
         Task<Transaction?> GetLatestByUserAndReferenceAsync(int userId, string referenceType, int referenceId);
         Task<Transaction?> GetPendingByUserAndReferenceAsync(int userId, string referenceType, int referenceId);
