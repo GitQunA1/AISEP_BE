@@ -71,7 +71,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("{id:int}/verify-blockchain")]
-        [Authorize(Roles = "Investor, Admin")]
+        [Authorize(Roles = "Startup, Investor, Advisor, Staff, Admin")]
         public async Task<IActionResult> VerifyBlockchain(int id)
         {
             try
