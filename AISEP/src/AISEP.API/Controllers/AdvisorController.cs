@@ -68,6 +68,10 @@ namespace AISEP.API.Controllers
             try
             {
                 var data = await _advisorService.CreateAsync(dto);
+                if (data is null)
+                {
+                    return StatusCode(500, ApiResponse<object>.ErrorResponse("Failed to create advisor profile.", "Internal Server Error", 500));
+                }
                 return CreatedAtAction(nameof(GetById), new { id = data.AdvisorId },
                     ApiResponse<object>.SuccessResponse(data, "Advisor created successfully.", 201));
             }
@@ -87,7 +91,7 @@ namespace AISEP.API.Controllers
                 var data = await _advisorService.UpdateAsync(id, dto);
                 return Ok(ApiResponse<object>.SuccessResponse(data, "Advisor updated successfully."));
             }
-            catch (KeyNotFoundException ex)
+            catch (KeyNotFoundException)
             {
                 return NotFound(ApiResponse<object>.ErrorResponse("Advisor profile not found.", "Not found", 404));
             }

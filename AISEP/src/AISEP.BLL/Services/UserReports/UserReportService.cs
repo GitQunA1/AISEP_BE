@@ -3,10 +3,12 @@ using AISEP.BLL.DTOs.Responses;
 using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.Storage;
 using AISEP.BLL.Services.Users;
+using AISEP.BLL.Services.Notifications;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
 using Sieve.Services;
 using System.Text.Json;
@@ -20,19 +22,22 @@ namespace AISEP.BLL.Services.UserReports
         private readonly IStorageService _storageService;
         private readonly ISieveProcessor _sieveProcessor;
         private readonly IMapper _mapper;
+        private readonly INotificationService _notificationService;
 
         public UserReportService(
             IUnitOfWork unitOfWork,
             IUserService userService,
             IStorageService storageService,
             ISieveProcessor sieveProcessor,
-            IMapper mapper)
+            IMapper mapper,
+            INotificationService notificationService)
         {
             _unitOfWork = unitOfWork;
             _userService = userService;
             _storageService = storageService;
             _sieveProcessor = sieveProcessor;
             _mapper = mapper;
+            _notificationService = notificationService;
         }
 
         public async Task<UserReportResponse> CreateAsync(CreateUserReportRequest request)
@@ -71,6 +76,7 @@ namespace AISEP.BLL.Services.UserReports
 
             await _unitOfWork.UserReports.AddAsync(report);
             await _unitOfWork.SaveChangesAsync();
+            await NotifyReviewersReportCreatedAsync(report);
 
             return _mapper.Map<UserReportResponse>(report);
         }
@@ -101,6 +107,7 @@ namespace AISEP.BLL.Services.UserReports
             report.Status = newStatus;
             _unitOfWork.UserReports.Update(report);
             await _unitOfWork.SaveChangesAsync();
+            await NotifyReportStatusChangedAsync(report);
 
             return _mapper.Map<UserReportResponse>(report);
         }
@@ -137,6 +144,53 @@ namespace AISEP.BLL.Services.UserReports
                 sieveModel,
                 _sieveProcessor,
                 x => _mapper.Map<UserReportResponse>(x));
+        }
+
+        private async Task NotifyReviewersReportCreatedAsync(UserReport report)
+        {
+            var reviewerIds = await _unitOfWork.Users.GetAllQuery()
+                .Where(u => u.Role == UserRole.Staff || u.Role == UserRole.Admin)
+                .Select(u => u.Id)
+                .ToListAsync();
+
+            if (reviewerIds.Count == 0)
+            {
+                return;
+            }
+
+            var title = "New user report pending review";
+            var message = $"User report #{report.UserReportId} is pending review.";
+
+            foreach (var reviewerId in reviewerIds)
+            {
+                await _notificationService.SendNotificationAsync(
+                    reviewerId,
+                    title,
+                    message,
+                    NotificationType.System,
+                    report.UserReportId,
+                    "UserReport");
+            }
+        }
+
+        private async Task NotifyReportStatusChangedAsync(UserReport report)
+        {
+            var statusText = report.Status.ToString();
+            await _notificationService.SendNotificationAsync(
+                report.ReporterId,
+                "Your user report has been updated",
+                $"Your report #{report.UserReportId} status is now {statusText}.",
+                NotificationType.General,
+                report.UserReportId,
+                "UserReport");
+
+            await _notificationService.SendNotificationAsync(
+                report.ReportedUserId,
+                "A user report status has been updated",
+                $"A report involving your account (#{report.UserReportId}) is now {statusText}.",
+                NotificationType.General,
+                report.UserReportId,
+                "UserReport");
         }
     }
 }

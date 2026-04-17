@@ -220,6 +220,16 @@ namespace AISEP.DAL.Data
                     .WithMany(s => s.Projects)
                     .HasForeignKey(p => p.StartupId)
                     .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(p => p.ApprovedById)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(p => p.RejectedById)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<ProjectAdvisorAssignment>(entity =>
