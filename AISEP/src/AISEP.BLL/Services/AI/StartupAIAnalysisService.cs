@@ -52,7 +52,6 @@ namespace AISEP.BLL.Services.AI
             if (existing is not null)
             {
                 existing.PotentialScore    = result.PotentialScore;
-                existing.ChaosScore        = result.ChaosScore;
                 existing.AnalysisJson      = analysisJson;
                 existing.IsEligibleStartup = null;
                 existing.EligibilityReason = null;
@@ -65,7 +64,6 @@ namespace AISEP.BLL.Services.AI
                 {
                     ProjectId         = projectId,
                     PotentialScore    = result.PotentialScore,
-                    ChaosScore        = result.ChaosScore,
                     AnalysisJson      = analysisJson,
                     IsEligibleStartup = null,
                     EligibilityReason = null,
