@@ -278,6 +278,26 @@ namespace AISEP.BLL.Services.Documents
                 return;
             }
 
+            if (string.Equals(role, "Advisor", StringComparison.OrdinalIgnoreCase))
+            {
+                var advisor = await _unitOfWork.Advisors.GetByUserIdAsync(userId);
+                if (advisor is null)
+                {
+                    throw new UnauthorizedAccessException("Advisor profile not found.");
+                }
+
+                var isAssigned = await _unitOfWork.ProjectAdvisorAssignments
+                    .GetByAdvisorIdQuery(advisor.AdvisorId)
+                    .AnyAsync(x => x.ProjectId == projectId);
+
+                if (!isAssigned)
+                {
+                    throw new UnauthorizedAccessException("Bạn chỉ được xem tài liệu của dự án đã được phân công cố vấn.");
+                }
+
+                return;
+            }
+
             if (string.Equals(role, "Investor", StringComparison.OrdinalIgnoreCase))
             {
                 var isUnlocked = await _unitOfWork.UnlockedProjects.ExistsAsync(userId, projectId);
