@@ -1,7 +1,9 @@
+using AISEP.BLL.DTOs.Responses;
+
 namespace AISEP.BLL.Services.Transactions
 {
     public interface ITransactionService
     {
-        Task<List<int>> GetCollectedBookingCommissionIdsAsync();
+        Task<CollectedBookingCommissionSummaryResponse> GetCollectedBookingCommissionSummaryAsync();
     }
 }

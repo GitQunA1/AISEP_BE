@@ -20,8 +20,8 @@ namespace AISEP.API.Controllers
         [Authorize(Roles = "Staff,Admin")]
         public async Task<IActionResult> GetCollectedBookingCommissionIds()
         {
-            var result = await _transactionService.GetCollectedBookingCommissionIdsAsync();
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Collected booking commission retrieved"));
+            var result = await _transactionService.GetCollectedBookingCommissionSummaryAsync();
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Collected booking commissions retrieved"));
         }
     }
 }
