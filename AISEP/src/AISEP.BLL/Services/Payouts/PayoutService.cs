@@ -1,0 +1,220 @@
+using AISEP.BLL.DTOs.Requests;
+using AISEP.BLL.DTOs.Responses;
+using AISEP.BLL.Helpers;
+using AISEP.BLL.Services.Notifications;
+using AISEP.DAL.Common;
+using AISEP.DAL.Entities;
+using AISEP.DAL.Enums;
+using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using Sieve.Models;
+using Sieve.Services;
+
+namespace AISEP.BLL.Services.Payouts
+{
+    public class PayoutService : IPayoutService
+    {
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly ISieveProcessor _sieveProcessor;
+        private readonly IMapper _mapper;
+        private readonly IPayoutGroupService _payoutGroupService;
+        private readonly INotificationService _notificationService;
+
+        public PayoutService(
+            IUnitOfWork unitOfWork,
+            ISieveProcessor sieveProcessor,
+            IMapper mapper,
+            IPayoutGroupService payoutGroupService,
+            INotificationService notificationService)
+        {
+            _unitOfWork = unitOfWork;
+            _sieveProcessor = sieveProcessor;
+            _mapper = mapper;
+            _payoutGroupService = payoutGroupService;
+            _notificationService = notificationService;
+        }
+
+        public async Task<PayoutResponse> MarkPaidAsync(int payoutId, int staffUserId, MarkPayoutPaidRequest request)
+        {
+            var payout = await _unitOfWork.Payouts.GetByIdAsync(payoutId)
+                ?? throw new KeyNotFoundException("Monthly payout not found.");
+
+            if (payout.Status == MonthlyPayoutStatus.Paid)
+            {
+                return _mapper.Map<PayoutResponse>(payout);
+            }
+
+            if (payout.Status == MonthlyPayoutStatus.Rejected)
+            {
+                throw new InvalidOperationException("Rejected payout cannot be approved as paid.");
+            }
+            if (payout.Wallet.Balance < payout.Amount)
+            {
+                throw new InvalidOperationException("Wallet balance is not enough to mark this payout as paid.");
+            }
+
+            payout.Wallet.Balance = Math.Round(payout.Wallet.Balance - payout.Amount, 2, MidpointRounding.AwayFromZero);
+            _unitOfWork.Wallets.Update(payout.Wallet);
+
+            await _unitOfWork.WalletTransactions.AddAsync(new WalletTransaction
+            {
+                WalletId = payout.WalletId,
+                Amount = payout.Amount,
+                Type = WalletTransactionType.Payout,
+                Status = WalletTransactionStatus.Completed,
+                CreatedAt = DateTime.UtcNow,
+                PayoutId = payout.PayoutId
+            });
+
+            var now = DateTime.UtcNow;
+            payout.Status = MonthlyPayoutStatus.Paid;
+            payout.PaidAt = now;
+            payout.PaidById = staffUserId;
+            payout.RejectedAt = null;
+            payout.RejectedById = null;
+            payout.RejectReason = null;
+            payout.Note = string.IsNullOrWhiteSpace(request.Note) ? payout.Note : request.Note.Trim();
+
+            _unitOfWork.Payouts.Update(payout);
+            await _unitOfWork.SaveChangesAsync();
+
+            if (payout.PayoutGroupId.HasValue)
+            {
+                await _payoutGroupService.RecalculateAsync(payout.PayoutGroupId.Value);
+            }
+
+            return _mapper.Map<PayoutResponse>(payout);
+        }
+
+        public async Task<PayoutResponse> RequestRetryAsync(int payoutId, int advisorUserId, RequestPayoutRetryRequest request)
+        {
+            var payout = await _unitOfWork.Payouts.GetByIdAsync(payoutId)
+                ?? throw new KeyNotFoundException("Monthly payout not found.");
+
+            if (payout.Wallet.Advisor.UserId != advisorUserId)
+            {
+                throw new UnauthorizedAccessException("You do not have permission to request retry for this payout.");
+            }
+
+            if (payout.Status != MonthlyPayoutStatus.Rejected)
+            {
+                throw new InvalidOperationException("Only rejected payouts can request retry.");
+            }
+
+            var resolutionNote = string.IsNullOrWhiteSpace(request.ResolutionNote) ? null : request.ResolutionNote.Trim();
+            if (string.IsNullOrWhiteSpace(resolutionNote))
+            {
+                throw new InvalidOperationException("Resolution note is required.");
+            }
+
+            payout.Status = MonthlyPayoutStatus.PendingRecheck;
+            payout.RetryRequestedAt = DateTime.UtcNow;
+            payout.RetryRequestNote = resolutionNote;
+
+            _unitOfWork.Payouts.Update(payout);
+            await _unitOfWork.SaveChangesAsync();
+
+            await NotifyStaffRetryRequestedAsync(payout);
+
+            if (payout.PayoutGroupId.HasValue)
+            {
+                await _payoutGroupService.RecalculateAsync(payout.PayoutGroupId.Value);
+            }
+
+            return _mapper.Map<PayoutResponse>(payout);
+        }
+
+        public async Task<PayoutResponse> RejectAsync(int payoutId, int staffUserId, RejectPayoutRequest request)
+        {
+            var payout = await _unitOfWork.Payouts.GetByIdAsync(payoutId)
+                ?? throw new KeyNotFoundException("Monthly payout not found.");
+
+            if (payout.Status == MonthlyPayoutStatus.Paid)
+            {
+                throw new InvalidOperationException("Paid payout cannot be rejected.");
+            }
+
+            var reason = string.IsNullOrWhiteSpace(request.Reason) ? null : request.Reason.Trim();
+            if (string.IsNullOrWhiteSpace(reason))
+            {
+                throw new InvalidOperationException("Reject reason is required.");
+            }
+
+            payout.Status = MonthlyPayoutStatus.Rejected;
+            payout.RejectedAt = DateTime.UtcNow;
+            payout.RejectedById = staffUserId;
+            payout.RejectReason = reason;
+            payout.Note = string.IsNullOrWhiteSpace(request.Note) ? payout.Note : request.Note.Trim();
+
+            _unitOfWork.Payouts.Update(payout);
+            await _unitOfWork.SaveChangesAsync();
+
+            if (payout.PayoutGroupId.HasValue)
+            {
+                await _payoutGroupService.RecalculateAsync(payout.PayoutGroupId.Value);
+            }
+
+            return _mapper.Map<PayoutResponse>(payout);
+        }
+
+        public async Task<PagedResult<PayoutResponse>> GetAllAsync(SieveModel model)
+        {
+            var query = _unitOfWork.Payouts.GetQuery();
+            return await PaginationHelper.PaginateAsync(
+                query,
+                model,
+                _sieveProcessor,
+                x => _mapper.Map<PayoutResponse>(x));
+        }
+
+        public async Task<PagedResult<PayoutResponse>> GetMineAsync(int advisorUserId, SieveModel model)
+        {
+            var advisor = await _unitOfWork.Advisors.GetByUserIdAsync(advisorUserId)
+                ?? throw new KeyNotFoundException("Advisor profile not found.");
+
+            var query = _unitOfWork.Payouts.GetQuery()
+                .Where(x => x.Wallet.AdvisorId == advisor.AdvisorId);
+
+            return await PaginationHelper.PaginateAsync(
+                query,
+                model,
+                _sieveProcessor,
+                x => _mapper.Map<PayoutResponse>(x));
+        }
+
+        private async Task NotifyStaffRetryRequestedAsync(Payout payout)
+        {
+            var staffIds = await _unitOfWork.Users.GetAllQuery()
+                .Where(u => u.Role == UserRole.Staff || u.Role == UserRole.Admin)
+                .Select(u => u.Id)
+                .ToListAsync();
+
+            if (staffIds.Count == 0)
+            {
+                return;
+            }
+
+            var advisorName = payout.Wallet.Advisor.User?.UserName ?? $"Advisor {payout.Wallet.AdvisorId}";
+            var title = "Yeu cau chuyen khoan lai";
+            var message = $"{advisorName} da gui yeu cau chuyen khoan lai cho payout #{payout.PayoutId}. Vui long kiem tra.";
+
+            foreach (var staffId in staffIds)
+            {
+                await _notificationService.SendNotificationAsync(
+                    staffId,
+                    title,
+                    message,
+                    NotificationType.System,
+                    payout.PayoutId,
+                    "Payout");
+            }
+        }
+    }
+}
+
+
+
+
+
+
+

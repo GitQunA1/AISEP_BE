@@ -1,14 +1,13 @@
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
-using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.Notifications;
 using AISEP.BLL.Services.Users;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
+using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
 using Sieve.Services;
-using Microsoft.EntityFrameworkCore;
 
 namespace AISEP.BLL.Services.SystemCommissions
 {
@@ -58,9 +57,6 @@ namespace AISEP.BLL.Services.SystemCommissions
             var now = DateTime.UtcNow;
             var actorId = _userService.GetUserId();
             var active = await _unitOfWork.SystemCommissionConfigs.GetActiveAsync();
-            var oldPercent = active?.Percent;
-            var oldEffectiveFrom = active?.EffectiveFrom;
-            var oldEffectiveTo = active?.EffectiveTo;
 
             if (active is not null && active.Percent == request.Percent)
                 throw new InvalidOperationException("System commission percent is already set to this value.");
@@ -75,32 +71,20 @@ namespace AISEP.BLL.Services.SystemCommissions
             var config = new SystemCommissionConfig
             {
                 Percent = request.Percent,
+                Reason = string.IsNullOrWhiteSpace(request.Reason) ? null : request.Reason.Trim(),
                 EffectiveFrom = now,
                 EffectiveTo = null,
                 IsActive = true,
                 CreatedById = actorId,
                 CreatedAt = now
             };
+
             await _unitOfWork.SystemCommissionConfigs.AddAsync(config);
             await _unitOfWork.SaveChangesAsync();
 
-            await _unitOfWork.SystemCommissionChangeLogs.AddAsync(new SystemCommissionChangeLog
-            {
-                SystemCommissionConfigId = config.SystemCommissionConfigId,
-                OldPercent = oldPercent,
-                NewPercent = config.Percent,
-                OldEffectiveFrom = oldEffectiveFrom,
-                OldEffectiveTo = oldEffectiveTo,
-                NewEffectiveFrom = config.EffectiveFrom,
-                NewEffectiveTo = config.EffectiveTo,
-                Reason = string.IsNullOrWhiteSpace(request.Reason) ? null : request.Reason.Trim(),
-                ChangedById = actorId,
-                ChangedAt = now
-            });
-            await _unitOfWork.SaveChangesAsync();
             await NotifyStaffAndAdminsAsync(
-                "Cập nhật hoa hồng hệ thống",
-                $"Mức hoa hồng hệ thống đã được cập nhật thành {config.Percent:0.##}%.");
+                "System commission updated",
+                $"System commission has been updated to {config.Percent:0.##}%.");
 
             return new SystemCommissionCurrentResponse
             {
@@ -114,22 +98,65 @@ namespace AISEP.BLL.Services.SystemCommissions
 
         public async Task<PagedResult<SystemCommissionChangeLogResponse>> GetHistoryAsync(SieveModel model)
         {
-            var query = _unitOfWork.SystemCommissionChangeLogs.GetQuery();
-            return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, x => new SystemCommissionChangeLogResponse
+            var query = _unitOfWork.SystemCommissionConfigs.GetQuery();
+            model ??= new SieveModel();
+            if (!model.Page.HasValue || model.Page.Value <= 0)
             {
-                LogId = x.SystemCommissionChangeLogId,
-                ConfigId = x.SystemCommissionConfigId,
-                OldPercent = x.OldPercent,
-                NewPercent = x.NewPercent,
-                OldEffectiveFrom = x.OldEffectiveFrom,
-                OldEffectiveTo = x.OldEffectiveTo,
-                NewEffectiveFrom = x.NewEffectiveFrom,
-                NewEffectiveTo = x.NewEffectiveTo,
-                Reason = x.Reason,
-                ChangedById = x.ChangedById,
-                ChangedByName = x.ChangedBy.UserName ?? $"User {x.ChangedById}",
-                ChangedAt = x.ChangedAt
-            });
+                model.Page = 1;
+            }
+
+            if (!model.PageSize.HasValue || model.PageSize.Value <= 0)
+            {
+                model.PageSize = 10;
+            }
+
+            var totalCount = await _sieveProcessor
+                .Apply(model, query, applyPagination: false, applySorting: false)
+                .CountAsync();
+
+            var items = await _sieveProcessor
+                .Apply(model, query)
+                .ToListAsync();
+
+            var responses = new List<SystemCommissionChangeLogResponse>(items.Count);
+            foreach (var x in items)
+            {
+                var previous = await _unitOfWork.SystemCommissionConfigs.GetQuery()
+                    .Where(c => c.EffectiveFrom < x.EffectiveFrom)
+                    .OrderByDescending(c => c.EffectiveFrom)
+                    .Select(c => new
+                    {
+                        c.Percent,
+                        c.EffectiveFrom,
+                        c.EffectiveTo
+                    })
+                    .FirstOrDefaultAsync();
+
+                responses.Add(new SystemCommissionChangeLogResponse
+                {
+                    LogId = x.SystemCommissionConfigId,
+                    ConfigId = x.SystemCommissionConfigId,
+                    OldPercent = previous?.Percent,
+                    NewPercent = x.Percent,
+                    OldEffectiveFrom = previous?.EffectiveFrom,
+                    OldEffectiveTo = previous?.EffectiveTo,
+                    NewEffectiveFrom = x.EffectiveFrom,
+                    NewEffectiveTo = x.EffectiveTo,
+                    Reason = x.Reason,
+                    ChangedById = x.CreatedById,
+                    ChangedByName = x.CreatedBy.UserName ?? $"User {x.CreatedById}",
+                    ChangedAt = x.CreatedAt
+                });
+            }
+
+            return new PagedResult<SystemCommissionChangeLogResponse>
+            {
+                Page = model.Page.Value,
+                PageSize = model.PageSize.Value,
+                TotalCount = totalCount,
+                TotalPages = (int)Math.Ceiling(totalCount / (double)model.PageSize.Value),
+                Items = responses
+            };
         }
 
         private async Task NotifyStaffAndAdminsAsync(string title, string message)

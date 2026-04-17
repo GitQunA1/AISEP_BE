@@ -1,3 +1,4 @@
+using AISEP.BLL.DTOs.Responses;
 using AISEP.DAL.Common;
 using AISEP.DAL.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +14,7 @@ namespace AISEP.BLL.Services.Transactions
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<List<int>> GetCollectedBookingCommissionIdsAsync()
+        public async Task<CollectedBookingCommissionSummaryResponse> GetCollectedBookingCommissionSummaryAsync()
         {
             var paidBookingIds = _unitOfWork.Transactions.GetQuery()
                 .Where(t => t.Status == TransactionStatus.Completed
@@ -22,13 +23,24 @@ namespace AISEP.BLL.Services.Transactions
                 .Select(t => t.ReferenceId!.Value)
                 .Distinct();
 
-            return await _unitOfWork.Bookings.GetBookingQuery()
+            var items = await _unitOfWork.Bookings.GetBookingQuery()
                 .Where(b => paidBookingIds.Contains(b.BookingId)
                             && b.SystemCommissionAmount > 0m)
-                .Select(b => b.BookingId)
-                .Distinct()
-                .OrderByDescending(id => id)
+                .Select(b => new CollectedBookingCommissionItemResponse
+                {
+                    BookingId = b.BookingId,
+                    CommissionPercent = b.SystemCommissionConfig != null ? b.SystemCommissionConfig.Percent : 0m,
+                    CommissionAmount = b.SystemCommissionAmount
+                })
+                .OrderByDescending(x => x.BookingId)
                 .ToListAsync();
+
+            return new CollectedBookingCommissionSummaryResponse
+            {
+                TotalCommissionAmount = items.Sum(x => x.CommissionAmount),
+                BookingCount = items.Count,
+                Items = items
+            };
         }
     }
 }

@@ -29,8 +29,9 @@ namespace AISEP.DAL.Repositories.WalletTransactions
                 .Where(x =>
                     x.Type == WalletTransactionType.Deposit
                     && x.Status == WalletTransactionStatus.Completed
-                    && x.MonthlyPayoutId == null
+                    && x.PayoutId == null
                     && x.CreatedAt >= periodStartUtc
                     && x.CreatedAt < periodEndUtc);
     }
 }
+

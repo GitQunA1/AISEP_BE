@@ -8,6 +8,7 @@ namespace AISEP.BLL.DTOs.Responses
         public string Type { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
-        public int? MonthlyPayoutId { get; set; }
+        public int? PayoutId { get; set; }
     }
 }
+

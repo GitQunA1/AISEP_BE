@@ -341,7 +341,7 @@ namespace AISEP.BLL.Services.ConsultingReports
             if (bookingWithWallet.Advisor?.Wallet is null)
                 throw new InvalidOperationException("Advisor wallet not found.");
 
-            var payoutAmount = bookingWithWallet.SystemCommissionPercent > 0m || bookingWithWallet.SystemCommissionConfigId.HasValue
+            var payoutAmount = bookingWithWallet.SystemCommissionConfigId.HasValue
                 ? Math.Round(bookingWithWallet.Price - bookingWithWallet.SystemCommissionAmount, 2, MidpointRounding.AwayFromZero)
                 : Math.Round(bookingWithWallet.Price * LegacyAdvisorPayoutRate, 2, MidpointRounding.AwayFromZero);
             if (payoutAmount > 0)

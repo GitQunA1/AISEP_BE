@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using AISEP.DAL.Entities;
@@ -29,7 +29,6 @@ namespace AISEP.DAL.Data
         public DbSet<Deal> Deals { get; set; }
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<SystemCommissionConfig> SystemCommissionConfigs { get; set; }
-        public DbSet<SystemCommissionChangeLog> SystemCommissionChangeLogs { get; set; }
         public DbSet<Wallet> Wallets { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
@@ -43,8 +42,8 @@ namespace AISEP.DAL.Data
         public DbSet<Package> Packages { get; set; }
         public DbSet<UnlockedProject> UnlockedProjects { get; set; }
         public DbSet<WalletTransaction> WalletTransactions { get; set; }
-        public DbSet<MonthlyPayout> MonthlyPayouts { get; set; }
-        public DbSet<MonthlyPayoutBatch> MonthlyPayoutBatches { get; set; }
+        public DbSet<Payout> Payouts { get; set; }
+        public DbSet<PayoutGroup> PayoutGroups { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<UserReport> UserReports { get; set; }
@@ -55,7 +54,7 @@ namespace AISEP.DAL.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // ── Identity tables ────────────────────────────────────────────
+            // ?? Identity tables ????????????????????????????????????????????
             modelBuilder.Entity<User>(entity =>
             {
                 entity.ToTable("users");
@@ -72,7 +71,7 @@ namespace AISEP.DAL.Data
             modelBuilder.Entity<IdentityUserToken<int>>().ToTable("user_tokens");
             modelBuilder.Entity<IdentityRoleClaim<int>>().ToTable("role_claims");
 
-            // ── MODULE 1: PROFILES ─────────────────────────────────────────
+            // ?? MODULE 1: PROFILES ?????????????????????????????????????????
             modelBuilder.Entity<Startup>(entity =>
             {
                 entity.ToTable("startups");
@@ -202,7 +201,7 @@ namespace AISEP.DAL.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // ── MODULE 2: PROJECTS & DOCUMENTS ────────────────────────────
+            // ?? MODULE 2: PROJECTS & DOCUMENTS ????????????????????????????
             modelBuilder.Entity<Project>(entity =>
             {
                 entity.ToTable("projects");
@@ -267,7 +266,7 @@ namespace AISEP.DAL.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // ── MODULE 3: AI ANALYSES ──────────────────────────────────────
+            // ?? MODULE 3: AI ANALYSES ??????????????????????????????????????
             modelBuilder.Entity<StartupAIAnalysis>(entity =>
             {
                 entity.ToTable("project_ai_evaluations");
@@ -297,7 +296,7 @@ namespace AISEP.DAL.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // ── MODULE 4: CONNECTIONS & DEALS ─────────────────────────────
+            // ?? MODULE 4: CONNECTIONS & DEALS ?????????????????????????????
             modelBuilder.Entity<ConnectionRequest>(entity =>
             {
                 entity.ToTable("connection_requests");
@@ -355,13 +354,12 @@ namespace AISEP.DAL.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // ── MODULE 5: ADVISORY, BOOKING & REVIEWS ─────────────────────
+            // ?? MODULE 5: ADVISORY, BOOKING & REVIEWS ?????????????????????
             modelBuilder.Entity<Booking>(entity =>
             {
                 entity.ToTable("bookings");
                 entity.HasKey(e => e.BookingId);
                 entity.Property(e => e.Price).HasColumnType("decimal(18,2)").IsRequired();
-                entity.Property(e => e.SystemCommissionPercent).HasColumnType("decimal(5,2)").HasDefaultValue(0m);
                 entity.Property(e => e.SystemCommissionAmount).HasColumnType("decimal(18,2)").HasDefaultValue(0m);
                 entity.Property(e => e.IsFreeRebookFromComplaint).HasDefaultValue(false);
                 entity.Property(e => e.IsPaymentWaived).HasDefaultValue(false);
@@ -402,6 +400,7 @@ namespace AISEP.DAL.Data
                 entity.ToTable("system_commission_configs");
                 entity.HasKey(e => e.SystemCommissionConfigId);
                 entity.Property(e => e.Percent).HasColumnType("decimal(5,2)").IsRequired();
+                entity.Property(e => e.Reason).HasMaxLength(1000);
                 entity.Property(e => e.EffectiveFrom).IsRequired();
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 entity.Property(e => e.IsActive).IsRequired();
@@ -416,28 +415,6 @@ namespace AISEP.DAL.Data
                 entity.HasIndex(e => e.IsActive)
                     .HasFilter("\"IsActive\" = TRUE")
                     .IsUnique();
-            });
-
-            modelBuilder.Entity<SystemCommissionChangeLog>(entity =>
-            {
-                entity.ToTable("system_commission_change_logs");
-                entity.HasKey(e => e.SystemCommissionChangeLogId);
-                entity.Property(e => e.OldPercent).HasColumnType("decimal(5,2)");
-                entity.Property(e => e.NewPercent).HasColumnType("decimal(5,2)").IsRequired();
-                entity.Property(e => e.Reason).HasMaxLength(1000);
-                entity.Property(e => e.ChangedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                entity.HasOne(e => e.SystemCommissionConfig)
-                    .WithMany(c => c.ChangeLogs)
-                    .HasForeignKey(e => e.SystemCommissionConfigId)
-                    .OnDelete(DeleteBehavior.SetNull);
-
-                entity.HasOne(e => e.ChangedBy)
-                    .WithMany()
-                    .HasForeignKey(e => e.ChangedById)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                entity.HasIndex(e => e.ChangedAt);
             });
 
             modelBuilder.Entity<AdvisorAvailability>(entity =>
@@ -556,7 +533,7 @@ namespace AISEP.DAL.Data
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // ── MODULE 6: FINANCE & SUBSCRIPTIONS ─────────────────────────
+            // ?? MODULE 6: FINANCE & SUBSCRIPTIONS ?????????????????????????
             modelBuilder.Entity<Package>(entity =>
             {
                 entity.ToTable("packages");
@@ -651,43 +628,41 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 entity.ToTable(tb => tb.HasCheckConstraint("CK_wallet_transactions_amount_positive", "\"Amount\" > 0"));
-                entity.HasIndex(e => e.MonthlyPayoutId);
+                entity.HasIndex(e => e.PayoutId);
 
                 entity.HasOne(wt => wt.Wallet)
                     .WithMany(w => w.WalletTransactions)
                     .HasForeignKey(wt => wt.WalletId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasOne(wt => wt.MonthlyPayout)
+                entity.HasOne(wt => wt.Payout)
                     .WithMany(mp => mp.WalletTransactions)
-                    .HasForeignKey(wt => wt.MonthlyPayoutId)
+                    .HasForeignKey(wt => wt.PayoutId)
                     .OnDelete(DeleteBehavior.SetNull);
             });
 
-            modelBuilder.Entity<MonthlyPayout>(entity =>
+            modelBuilder.Entity<Payout>(entity =>
             {
-                entity.ToTable("monthly_payouts");
-                entity.HasKey(e => e.MonthlyPayoutId);
+                entity.ToTable("payouts");
+                entity.HasKey(e => e.PayoutId);
+                entity.Property(e => e.PeriodFromDate).HasColumnType("date").IsRequired();
+                entity.Property(e => e.PeriodToDate).HasColumnType("date").IsRequired();
                 entity.Property(e => e.Amount).HasColumnType("decimal(18,2)").IsRequired();
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.Note).HasMaxLength(1000);
                 entity.Property(e => e.RejectReason).HasMaxLength(1000);
                 entity.Property(e => e.RetryRequestNote).HasMaxLength(1000);
-                entity.Property(e => e.RetryReviewNote).HasMaxLength(1000);
                 entity.Property(e => e.BankName).HasMaxLength(255).IsRequired();
                 entity.Property(e => e.AccountNumber).HasMaxLength(100).IsRequired();
                 entity.Property(e => e.AccountHolderName).HasMaxLength(255).IsRequired();
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
-                entity.ToTable(tb => tb.HasCheckConstraint("CK_monthly_payouts_amount_positive", "\"Amount\" > 0"));
-                entity.ToTable(tb => tb.HasCheckConstraint("CK_monthly_payouts_month_range", "\"Month\" >= 1 AND \"Month\" <= 12"));
-                entity.HasIndex(e => new { e.Year, e.Month, e.Status });
-                entity.HasIndex(e => e.MonthlyPayoutBatchId);
-                entity.HasIndex(e => e.ApprovedById);
-                entity.HasIndex(e => e.RetryRequestedById);
-                entity.HasIndex(e => e.RetryReviewedById);
+                entity.ToTable(tb => tb.HasCheckConstraint("CK_payouts_amount_positive", "\"Amount\" > 0"));
+                entity.ToTable(tb => tb.HasCheckConstraint("CK_payouts_period_range", "\"PeriodFromDate\" <= \"PeriodToDate\""));
+                entity.HasIndex(e => new { e.PeriodFromDate, e.PeriodToDate, e.Status });
+                entity.HasIndex(e => e.PayoutGroupId);
 
                 entity.HasOne(e => e.Wallet)
-                    .WithMany(w => w.MonthlyPayouts)
+                    .WithMany(w => w.Payouts)
                     .HasForeignKey(e => e.WalletId)
                     .OnDelete(DeleteBehavior.Cascade);
 
@@ -696,36 +671,21 @@ namespace AISEP.DAL.Data
                     .HasForeignKey(e => e.PaidById)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                entity.HasOne(e => e.ApprovedBy)
-                    .WithMany()
-                    .HasForeignKey(e => e.ApprovedById)
-                    .OnDelete(DeleteBehavior.Restrict);
-
                 entity.HasOne(e => e.RejectedBy)
                     .WithMany()
                     .HasForeignKey(e => e.RejectedById)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                entity.HasOne(e => e.RetryRequestedBy)
-                    .WithMany()
-                    .HasForeignKey(e => e.RetryRequestedById)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                entity.HasOne(e => e.RetryReviewedBy)
-                    .WithMany()
-                    .HasForeignKey(e => e.RetryReviewedById)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                entity.HasOne(e => e.MonthlyPayoutBatch)
-                    .WithMany(b => b.MonthlyPayouts)
-                    .HasForeignKey(e => e.MonthlyPayoutBatchId)
+                entity.HasOne(e => e.PayoutGroup)
+                    .WithMany(b => b.Payouts)
+                    .HasForeignKey(e => e.PayoutGroupId)
                     .OnDelete(DeleteBehavior.SetNull);
             });
 
-            modelBuilder.Entity<MonthlyPayoutBatch>(entity =>
+            modelBuilder.Entity<PayoutGroup>(entity =>
             {
-                entity.ToTable("monthly_payout_batches");
-                entity.HasKey(e => e.MonthlyPayoutBatchId);
+                entity.ToTable("payout_groups");
+                entity.HasKey(e => e.PayoutGroupId);
                 entity.Property(e => e.FromDate).HasColumnType("date").IsRequired();
                 entity.Property(e => e.ToDate).HasColumnType("date").IsRequired();
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
@@ -733,10 +693,9 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.RejectedAmount).HasColumnType("decimal(18,2)").HasDefaultValue(0m);
                 entity.Property(e => e.ActualPayableAmount).HasColumnType("decimal(18,2)").HasDefaultValue(0m);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
-                entity.ToTable(tb => tb.HasCheckConstraint("CK_monthly_payout_batches_month_range", "\"Month\" >= 1 AND \"Month\" <= 12"));
-                entity.ToTable(tb => tb.HasCheckConstraint("CK_monthly_payout_batches_date_range", "\"FromDate\" <= \"ToDate\""));
+                entity.ToTable(tb => tb.HasCheckConstraint("CK_payout_groups_date_range", "\"FromDate\" <= \"ToDate\""));
                 entity.HasIndex(e => new { e.FromDate, e.ToDate });
-                entity.HasIndex(e => new { e.Year, e.Month, e.Status });
+                entity.HasIndex(e => e.Status);
             });
 
             modelBuilder.Entity<Transaction>(entity =>
@@ -765,7 +724,7 @@ namespace AISEP.DAL.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // ── MODULE 7: SYSTEM, LOGS & UTILS ────────────────────────────
+            // ?? MODULE 7: SYSTEM, LOGS & UTILS ????????????????????????????
             modelBuilder.Entity<Notification>(entity =>
             {
                 entity.ToTable("notifications");
@@ -860,3 +819,7 @@ namespace AISEP.DAL.Data
         }
     }
 }
+
+
+
+

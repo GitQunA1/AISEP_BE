@@ -12,7 +12,6 @@ namespace AISEP.DAL.Entities
         public DateTime EndTime { get; set; }
         public decimal Price { get; set; }
         public int? SystemCommissionConfigId { get; set; }
-        public decimal SystemCommissionPercent { get; set; }
         public decimal SystemCommissionAmount { get; set; }
         public int? OldBookingId { get; set; }
         public bool IsFreeRebookFromComplaint { get; set; }

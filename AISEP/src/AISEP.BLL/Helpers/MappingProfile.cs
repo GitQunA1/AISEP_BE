@@ -1,4 +1,4 @@
-﻿using AISEP.BLL.Helpers;
+using AISEP.BLL.Helpers;
 using AutoMapper;
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
@@ -12,7 +12,7 @@ namespace AISEP.BLL.Helpers
     {
         public MappingProfile()
         {
-            // Advisor Entity → AdvisorResponse
+            // Advisor Entity ? AdvisorResponse
             CreateMap<Advisor, AdvisorResponse>()
                 .ForMember(dest => dest.UserName,
                     opt => opt.MapFrom(src => src.User != null ? src.User.UserName : null))
@@ -29,7 +29,7 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.ApprovalStatus,
                     opt => opt.MapFrom(src => src.ApprovalStatus.ToString()));
 
-            // CreateAdvisorRequest → Advisor Entity
+            // CreateAdvisorRequest ? Advisor Entity
             CreateMap<CreateAdvisorRequest, Advisor>()
                 .ForMember(dest => dest.AdvisorId,       opt => opt.Ignore())
                 .ForMember(dest => dest.UserId,          opt => opt.Ignore())
@@ -44,7 +44,7 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.HourlyRate,
                     opt => opt.MapFrom(src => src.HourlyRate > 0 ? src.HourlyRate : null));
 
-            // UpdateAdvisorRequest → Advisor Entity
+            // UpdateAdvisorRequest ? Advisor Entity
             CreateMap<UpdateAdvisorRequest, Advisor>()
                 .ForMember(dest => dest.AdvisorId,       opt => opt.Ignore())
                 .ForMember(dest => dest.UserId,          opt => opt.Ignore())
@@ -57,12 +57,12 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.ProfileImage,    opt => opt.Ignore())
                 .ForMember(dest => dest.Certifications,  opt => opt.Ignore());
 
-            // Document Entity → DocumentResponse
+            // Document Entity ? DocumentResponse
             CreateMap<Document, DocumentResponse>()
                 .ForMember(dest => dest.DocumentType,
                     opt => opt.MapFrom(src => src.DocumentType.ToString()));
 
-            // Booking Entity → BookingResponse
+            // Booking Entity ? BookingResponse
             CreateMap<Booking, BookingResponse>()
                 .ForMember(dest => dest.Id,
                     opt => opt.MapFrom(src => src.BookingId))
@@ -80,7 +80,9 @@ namespace AISEP.BLL.Helpers
                         : "Unknown"))
                 .ForMember(dest => dest.SystemCommissionMessage,
                     opt => opt.MapFrom(src =>
-                        $"Số phần trăm hoa hồng hệ thống AISEP sẽ nhận được cho đơn hàng này sẽ là {src.SystemCommissionPercent:0.##}% ({src.SystemCommissionAmount:0}₫). Đây là mức hoa hồng duy nhất được áp dụng cho đơn hàng này trong suốt quá trình Booking."))
+                        $"S? ti?n hoa h?ng h? th?ng AISEP nh?n đư?c cho đơn hàng này là {src.SystemCommissionAmount:0}₫. Đây là m?c hoa h?ng đư?c ch?t t?i th?i đi?m t?o booking."))
+                .ForMember(dest => dest.SystemCommissionPercent,
+                    opt => opt.MapFrom(src => src.SystemCommissionConfig != null ? src.SystemCommissionConfig.Percent : 0m))
                 .ForMember(dest => dest.AdvisorAvailabilitySlotIds,
                     opt => opt.MapFrom(src => src.BookingSlots.Select(bs => bs.AdvisorAvailabilityId)))
                 .ForMember(dest => dest.SlotCount,
@@ -126,7 +128,7 @@ namespace AISEP.BLL.Helpers
                         ? src.Booking.Customer.FullName ?? string.Empty
                         : string.Empty));
 
-            // User Entity → UserResponse
+            // User Entity ? UserResponse
             CreateMap<User, UserResponse>()
                 .ForMember(dest => dest.UserId,
                     opt => opt.MapFrom(src => src.Id))
@@ -135,7 +137,7 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.FullName,
                     opt => opt.MapFrom(src => src.FullName));
 
-            // Startup Entity → StartupResponse
+            // Startup Entity ? StartupResponse
             CreateMap<Startup, StartupResponse>()
                 .ForMember(dest => dest.Id,
                     opt => opt.MapFrom(src => src.StartupId))
@@ -164,7 +166,7 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.RejectedAt,      opt => opt.MapFrom(src => src.RejectedAt))
                 .ForMember(dest => dest.RejectionReason, opt => opt.MapFrom(src => src.RejectionReason));
 
-            // Investor Entity → InvestorResponse
+            // Investor Entity ? InvestorResponse
             CreateMap<Investor, InvestorResponse>()
                 .ForMember(dest => dest.UserName,
                     opt => opt.MapFrom(src => src.User != null ? src.User.UserName : null))
@@ -212,7 +214,7 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.PaymentCode,
                     opt => opt.MapFrom(src => src.PaymentCode ?? string.Empty));
 
-            // CreateInvestorRequest → Investor Entity
+            // CreateInvestorRequest ? Investor Entity
             CreateMap<CreateInvestorRequest, Investor>()
                 .ForMember(dest => dest.InvestorId,         opt => opt.Ignore())
                 .ForMember(dest => dest.UserId,             opt => opt.Ignore())
@@ -223,7 +225,7 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.InvestmentAmount,
                     opt => opt.MapFrom(src => src.InvestmentAmount > 0 ? src.InvestmentAmount : null));
 
-            // UpdateInvestorRequest → Investor Entity
+            // UpdateInvestorRequest ? Investor Entity
             CreateMap<UpdateInvestorRequest, Investor>()
                 .ForMember(dest => dest.InvestorId,         opt => opt.Ignore())
                 .ForMember(dest => dest.UserId,             opt => opt.Ignore())
@@ -232,7 +234,7 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.Deals,              opt => opt.Ignore())
                 .ForMember(dest => dest.InvestorAIAnalyses, opt => opt.Ignore());
 
-            // ProjectFollower Entity → FollowedProjectResponse
+            // ProjectFollower Entity ? FollowedProjectResponse
             CreateMap<ProjectFollower, FollowedProjectResponse>()
                 .ForMember(dest => dest.ProjectName,
                     opt => opt.MapFrom(src => src.Project != null ? src.Project.ProjectName : "Unknown"))
@@ -258,7 +260,7 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.AssignedAt,
                     opt => opt.MapFrom(src => src.AssignedAt));
 
-            // Project Entity → ProjectResponse
+            // Project Entity ? ProjectResponse
             CreateMap<Project, ProjectResponse>()
                 .ForMember(dest => dest.DevelopmentStage,
                     opt => opt.MapFrom(src => src.DevelopmentStage != null ? src.DevelopmentStage.ToString() : null))
@@ -315,7 +317,7 @@ namespace AISEP.BLL.Helpers
                             : new List<string>())
                         .FirstOrDefault() ?? new List<string>()));
 
-            // Project Entity → NonPremiumProjectResponse
+            // Project Entity ? NonPremiumProjectResponse
             CreateMap<Project, NonPremiumProjectResponse>()
                 .ForMember(dest => dest.StartupId,
                     opt => opt.MapFrom(src => src.StartupId))
@@ -411,12 +413,12 @@ namespace AISEP.BLL.Helpers
 
             updateProjectMap.ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
-            // StartupAIAnalysis Entity → StartupAIAnalysisResponse
+            // StartupAIAnalysis Entity ? StartupAIAnalysisResponse
             CreateMap<StartupAIAnalysis, StartupAIAnalysisResponse>()
                 .ForMember(dest => dest.Analysis, opt => opt.Ignore())
                 .ForMember(dest => dest.ScoreBreakdown, opt => opt.Ignore());
 
-            // InvestorAIAnalysis Entity → InvestorAIAnalysisResponse
+            // InvestorAIAnalysis Entity ? InvestorAIAnalysisResponse
             CreateMap<InvestorAIAnalysis, InvestorAIAnalysisResponse>()
                 .ForMember(dest => dest.Analysis, opt => opt.Ignore())
                 .ForMember(dest => dest.PotentialScore, opt => opt.Ignore())
@@ -608,7 +610,7 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.Status,
                     opt => opt.MapFrom(src => src.Status.ToString()));
 
-            CreateMap<MonthlyPayout, MonthlyPayoutResponse>()
+            CreateMap<Payout, PayoutResponse>()
                 .ForMember(dest => dest.AdvisorId,
                     opt => opt.MapFrom(src => src.Wallet.AdvisorId))
                 .ForMember(dest => dest.Status,
@@ -617,10 +619,6 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.Wallet.Advisor != null && src.Wallet.Advisor.User != null
                         ? (src.Wallet.Advisor.User.UserName ?? $"Advisor {src.Wallet.AdvisorId}")
                         : $"Advisor {src.Wallet.AdvisorId}"))
-                .ForMember(dest => dest.ApprovedByName,
-                    opt => opt.MapFrom(src => src.ApprovedBy != null
-                        ? (src.ApprovedBy.UserName ?? string.Empty)
-                        : null))
                 .ForMember(dest => dest.PaidByName,
                     opt => opt.MapFrom(src => src.PaidBy != null
                         ? (src.PaidBy.UserName ?? string.Empty)
@@ -628,23 +626,15 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.RejectedByName,
                     opt => opt.MapFrom(src => src.RejectedBy != null
                         ? (src.RejectedBy.UserName ?? string.Empty)
-                        : null))
-                .ForMember(dest => dest.RetryRequestedByName,
-                    opt => opt.MapFrom(src => src.RetryRequestedBy != null
-                        ? (src.RetryRequestedBy.UserName ?? string.Empty)
-                        : null))
-                .ForMember(dest => dest.RetryReviewedByName,
-                    opt => opt.MapFrom(src => src.RetryReviewedBy != null
-                        ? (src.RetryReviewedBy.UserName ?? string.Empty)
                         : null));
 
-            CreateMap<MonthlyPayoutBatch, MonthlyPayoutBatchResponse>()
+            CreateMap<PayoutGroup, PayoutGroupResponse>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-                .ForMember(dest => dest.TotalBillCount, opt => opt.MapFrom(src => src.MonthlyPayouts.Count))
-                .ForMember(dest => dest.PendingBillCount, opt => opt.MapFrom(src => src.MonthlyPayouts.Count(x =>
+                .ForMember(dest => dest.TotalBillCount, opt => opt.MapFrom(src => src.Payouts.Count))
+                .ForMember(dest => dest.PendingBillCount, opt => opt.MapFrom(src => src.Payouts.Count(x =>
                     x.Status == MonthlyPayoutStatus.Pending || x.Status == MonthlyPayoutStatus.PendingRecheck)))
-                .ForMember(dest => dest.ApprovedBillCount, opt => opt.MapFrom(src => src.MonthlyPayouts.Count(x => x.Status == MonthlyPayoutStatus.Paid)))
-                .ForMember(dest => dest.RejectedBillCount, opt => opt.MapFrom(src => src.MonthlyPayouts.Count(x => x.Status == MonthlyPayoutStatus.Rejected)));
+                .ForMember(dest => dest.ApprovedBillCount, opt => opt.MapFrom(src => src.Payouts.Count(x => x.Status == MonthlyPayoutStatus.Paid)))
+                .ForMember(dest => dest.RejectedBillCount, opt => opt.MapFrom(src => src.Payouts.Count(x => x.Status == MonthlyPayoutStatus.Rejected)));
 
             CreateMap<AdvisorBankAccount, AdvisorBankAccountResponse>()
                 .ForMember(dest => dest.AdvisorName,
@@ -678,4 +668,8 @@ namespace AISEP.BLL.Helpers
         }
     }
 }
+
+
+
+
 
