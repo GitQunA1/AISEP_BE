@@ -207,9 +207,9 @@ namespace AISEP.BLL.Services.Bookings
 
             var commissionConfig = await _unitOfWork.SystemCommissionConfigs.GetCurrentAsync(DateTime.UtcNow);
             booking.SystemCommissionConfigId = commissionConfig?.SystemCommissionConfigId;
-            booking.SystemCommissionPercent = commissionConfig?.Percent ?? 0m;
+            var commissionPercent = commissionConfig?.Percent ?? 0m;
             booking.SystemCommissionAmount = Math.Round(
-                booking.Price * (booking.SystemCommissionPercent / 100m),
+                booking.Price * (commissionPercent / 100m),
                 2,
                 MidpointRounding.AwayFromZero);
 

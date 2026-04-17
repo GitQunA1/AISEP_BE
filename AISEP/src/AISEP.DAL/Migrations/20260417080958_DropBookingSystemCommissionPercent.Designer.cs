@@ -3,17 +3,20 @@ using System;
 using AISEP.DAL.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace AISEP.Migrations
+namespace AISEP.DAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260417080958_DropBookingSystemCommissionPercent")]
+    partial class DropBookingSystemCommissionPercent
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -770,6 +773,188 @@ namespace AISEP.Migrations
                     b.ToTable("investor_ai_analyses", (string)null);
                 });
 
+            modelBuilder.Entity("AISEP.DAL.Entities.MonthlyPayout", b =>
+                {
+                    b.Property<int>("MonthlyPayoutId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MonthlyPayoutId"));
+
+                    b.Property<string>("AccountHolderName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("AccountNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ApprovedById")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("BankName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("MonthlyPayoutBatchId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("PaidById")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RejectReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime?>("RejectedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("RejectedById")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RetryRequestNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime?>("RetryRequestedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("RetryRequestedById")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RetryReviewNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime?>("RetryReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("RetryReviewedById")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("WalletId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("MonthlyPayoutId");
+
+                    b.HasIndex("ApprovedById");
+
+                    b.HasIndex("MonthlyPayoutBatchId");
+
+                    b.HasIndex("PaidById");
+
+                    b.HasIndex("RejectedById");
+
+                    b.HasIndex("RetryRequestedById");
+
+                    b.HasIndex("RetryReviewedById");
+
+                    b.HasIndex("WalletId");
+
+                    b.HasIndex("Year", "Month", "Status");
+
+                    b.ToTable("monthly_payouts", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_monthly_payouts_amount_positive", "\"Amount\" > 0");
+
+                            t.HasCheckConstraint("CK_monthly_payouts_month_range", "\"Month\" >= 1 AND \"Month\" <= 12");
+                        });
+                });
+
+            modelBuilder.Entity("AISEP.DAL.Entities.MonthlyPayoutBatch", b =>
+                {
+                    b.Property<int>("MonthlyPayoutBatchId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MonthlyPayoutBatchId"));
+
+                    b.Property<decimal>("ActualPayableAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<decimal>("EstimatedTotalAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<DateTime>("FromDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("RejectedAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("ToDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("MonthlyPayoutBatchId");
+
+                    b.HasIndex("FromDate", "ToDate");
+
+                    b.HasIndex("Year", "Month", "Status");
+
+                    b.ToTable("monthly_payout_batches", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_monthly_payout_batches_date_range", "\"FromDate\" <= \"ToDate\"");
+
+                            t.HasCheckConstraint("CK_monthly_payout_batches_month_range", "\"Month\" >= 1 AND \"Month\" <= 12");
+                        });
+                });
+
             modelBuilder.Entity("AISEP.DAL.Entities.Notification", b =>
                 {
                     b.Property<int>("NotificationId")
@@ -854,155 +1039,6 @@ namespace AISEP.Migrations
                     b.HasKey("PackageId");
 
                     b.ToTable("packages", (string)null);
-                });
-
-            modelBuilder.Entity("AISEP.DAL.Entities.Payout", b =>
-                {
-                    b.Property<int>("PayoutId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PayoutId"));
-
-                    b.Property<string>("AccountHolderName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("AccountNumber")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("BankName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<string>("Note")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<DateTime?>("PaidAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("PaidById")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("PayoutGroupId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("PeriodFromDate")
-                        .HasColumnType("date");
-
-                    b.Property<DateTime>("PeriodToDate")
-                        .HasColumnType("date");
-
-                    b.Property<string>("RejectReason")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<DateTime?>("RejectedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("RejectedById")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("RetryRequestNote")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<DateTime?>("RetryRequestedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<int>("WalletId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("PayoutId");
-
-                    b.HasIndex("PaidById");
-
-                    b.HasIndex("PayoutGroupId");
-
-                    b.HasIndex("RejectedById");
-
-                    b.HasIndex("WalletId");
-
-                    b.HasIndex("PeriodFromDate", "PeriodToDate", "Status");
-
-                    b.ToTable("payouts", null, t =>
-                        {
-                            t.HasCheckConstraint("CK_payouts_amount_positive", "\"Amount\" > 0");
-
-                            t.HasCheckConstraint("CK_payouts_period_range", "\"PeriodFromDate\" <= \"PeriodToDate\"");
-                        });
-                });
-
-            modelBuilder.Entity("AISEP.DAL.Entities.PayoutGroup", b =>
-                {
-                    b.Property<int>("PayoutGroupId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PayoutGroupId"));
-
-                    b.Property<decimal>("ActualPayableAmount")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("decimal(18,2)")
-                        .HasDefaultValue(0m);
-
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<decimal>("EstimatedTotalAmount")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("decimal(18,2)")
-                        .HasDefaultValue(0m);
-
-                    b.Property<DateTime>("FromDate")
-                        .HasColumnType("date");
-
-                    b.Property<decimal>("RejectedAmount")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("decimal(18,2)")
-                        .HasDefaultValue(0m);
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<DateTime>("ToDate")
-                        .HasColumnType("date");
-
-                    b.HasKey("PayoutGroupId");
-
-                    b.HasIndex("Status");
-
-                    b.HasIndex("FromDate", "ToDate");
-
-                    b.ToTable("payout_groups", null, t =>
-                        {
-                            t.HasCheckConstraint("CK_payout_groups_date_range", "\"FromDate\" <= \"ToDate\"");
-                        });
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.PostPr", b =>
@@ -1500,6 +1536,58 @@ namespace AISEP.Migrations
                     b.ToTable("subscriptions", (string)null);
                 });
 
+            modelBuilder.Entity("AISEP.DAL.Entities.SystemCommissionChangeLog", b =>
+                {
+                    b.Property<int>("SystemCommissionChangeLogId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SystemCommissionChangeLogId"));
+
+                    b.Property<DateTime>("ChangedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("ChangedById")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("NewEffectiveFrom")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("NewEffectiveTo")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("NewPercent")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<DateTime?>("OldEffectiveFrom")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("OldEffectiveTo")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal?>("OldPercent")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int?>("SystemCommissionConfigId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("SystemCommissionChangeLogId");
+
+                    b.HasIndex("ChangedAt");
+
+                    b.HasIndex("ChangedById");
+
+                    b.HasIndex("SystemCommissionConfigId");
+
+                    b.ToTable("system_commission_change_logs", (string)null);
+                });
+
             modelBuilder.Entity("AISEP.DAL.Entities.SystemCommissionConfig", b =>
                 {
                     b.Property<int>("SystemCommissionConfigId")
@@ -1527,10 +1615,6 @@ namespace AISEP.Migrations
 
                     b.Property<decimal>("Percent")
                         .HasColumnType("decimal(5,2)");
-
-                    b.Property<string>("Reason")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
 
                     b.HasKey("SystemCommissionConfigId");
 
@@ -1827,7 +1911,7 @@ namespace AISEP.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int?>("PayoutId")
+                    b.Property<int?>("MonthlyPayoutId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Status")
@@ -1845,7 +1929,7 @@ namespace AISEP.Migrations
 
                     b.HasKey("WalletTransactionId");
 
-                    b.HasIndex("PayoutId");
+                    b.HasIndex("MonthlyPayoutId");
 
                     b.HasIndex("WalletId");
 
@@ -2247,6 +2331,59 @@ namespace AISEP.Migrations
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("AISEP.DAL.Entities.MonthlyPayout", b =>
+                {
+                    b.HasOne("AISEP.DAL.Entities.User", "ApprovedBy")
+                        .WithMany()
+                        .HasForeignKey("ApprovedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AISEP.DAL.Entities.MonthlyPayoutBatch", "MonthlyPayoutBatch")
+                        .WithMany("MonthlyPayouts")
+                        .HasForeignKey("MonthlyPayoutBatchId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("AISEP.DAL.Entities.User", "PaidBy")
+                        .WithMany()
+                        .HasForeignKey("PaidById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AISEP.DAL.Entities.User", "RejectedBy")
+                        .WithMany()
+                        .HasForeignKey("RejectedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AISEP.DAL.Entities.User", "RetryRequestedBy")
+                        .WithMany()
+                        .HasForeignKey("RetryRequestedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AISEP.DAL.Entities.User", "RetryReviewedBy")
+                        .WithMany()
+                        .HasForeignKey("RetryReviewedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AISEP.DAL.Entities.Wallet", "Wallet")
+                        .WithMany("MonthlyPayouts")
+                        .HasForeignKey("WalletId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApprovedBy");
+
+                    b.Navigation("MonthlyPayoutBatch");
+
+                    b.Navigation("PaidBy");
+
+                    b.Navigation("RejectedBy");
+
+                    b.Navigation("RetryRequestedBy");
+
+                    b.Navigation("RetryReviewedBy");
+
+                    b.Navigation("Wallet");
+                });
+
             modelBuilder.Entity("AISEP.DAL.Entities.Notification", b =>
                 {
                     b.HasOne("AISEP.DAL.Entities.User", "User")
@@ -2256,38 +2393,6 @@ namespace AISEP.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("AISEP.DAL.Entities.Payout", b =>
-                {
-                    b.HasOne("AISEP.DAL.Entities.User", "PaidBy")
-                        .WithMany()
-                        .HasForeignKey("PaidById")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("AISEP.DAL.Entities.PayoutGroup", "PayoutGroup")
-                        .WithMany("Payouts")
-                        .HasForeignKey("PayoutGroupId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("AISEP.DAL.Entities.User", "RejectedBy")
-                        .WithMany()
-                        .HasForeignKey("RejectedById")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("AISEP.DAL.Entities.Wallet", "Wallet")
-                        .WithMany("Payouts")
-                        .HasForeignKey("WalletId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("PaidBy");
-
-                    b.Navigation("PayoutGroup");
-
-                    b.Navigation("RejectedBy");
-
-                    b.Navigation("Wallet");
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.PostPr", b =>
@@ -2476,6 +2581,24 @@ namespace AISEP.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("AISEP.DAL.Entities.SystemCommissionChangeLog", b =>
+                {
+                    b.HasOne("AISEP.DAL.Entities.User", "ChangedBy")
+                        .WithMany()
+                        .HasForeignKey("ChangedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AISEP.DAL.Entities.SystemCommissionConfig", "SystemCommissionConfig")
+                        .WithMany("ChangeLogs")
+                        .HasForeignKey("SystemCommissionConfigId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("ChangedBy");
+
+                    b.Navigation("SystemCommissionConfig");
+                });
+
             modelBuilder.Entity("AISEP.DAL.Entities.SystemCommissionConfig", b =>
                 {
                     b.HasOne("AISEP.DAL.Entities.User", "CreatedBy")
@@ -2549,9 +2672,9 @@ namespace AISEP.Migrations
 
             modelBuilder.Entity("AISEP.DAL.Entities.WalletTransaction", b =>
                 {
-                    b.HasOne("AISEP.DAL.Entities.Payout", "Payout")
+                    b.HasOne("AISEP.DAL.Entities.MonthlyPayout", "MonthlyPayout")
                         .WithMany("WalletTransactions")
-                        .HasForeignKey("PayoutId")
+                        .HasForeignKey("MonthlyPayoutId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("AISEP.DAL.Entities.Wallet", "Wallet")
@@ -2560,7 +2683,7 @@ namespace AISEP.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Payout");
+                    b.Navigation("MonthlyPayout");
 
                     b.Navigation("Wallet");
                 });
@@ -2670,19 +2793,19 @@ namespace AISEP.Migrations
                     b.Navigation("InvestorAIAnalyses");
                 });
 
-            modelBuilder.Entity("AISEP.DAL.Entities.Package", b =>
-                {
-                    b.Navigation("Subscriptions");
-                });
-
-            modelBuilder.Entity("AISEP.DAL.Entities.Payout", b =>
+            modelBuilder.Entity("AISEP.DAL.Entities.MonthlyPayout", b =>
                 {
                     b.Navigation("WalletTransactions");
                 });
 
-            modelBuilder.Entity("AISEP.DAL.Entities.PayoutGroup", b =>
+            modelBuilder.Entity("AISEP.DAL.Entities.MonthlyPayoutBatch", b =>
                 {
-                    b.Navigation("Payouts");
+                    b.Navigation("MonthlyPayouts");
+                });
+
+            modelBuilder.Entity("AISEP.DAL.Entities.Package", b =>
+                {
+                    b.Navigation("Subscriptions");
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.Project", b =>
@@ -2714,6 +2837,8 @@ namespace AISEP.Migrations
             modelBuilder.Entity("AISEP.DAL.Entities.SystemCommissionConfig", b =>
                 {
                     b.Navigation("Bookings");
+
+                    b.Navigation("ChangeLogs");
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.User", b =>
@@ -2751,7 +2876,7 @@ namespace AISEP.Migrations
 
             modelBuilder.Entity("AISEP.DAL.Entities.Wallet", b =>
                 {
-                    b.Navigation("Payouts");
+                    b.Navigation("MonthlyPayouts");
 
                     b.Navigation("WalletTransactions");
                 });

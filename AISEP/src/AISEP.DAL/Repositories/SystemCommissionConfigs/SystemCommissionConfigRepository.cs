@@ -28,6 +28,7 @@ namespace AISEP.DAL.Repositories.SystemCommissionConfigs
 
         public IQueryable<SystemCommissionConfig> GetQuery()
             => _context.SystemCommissionConfigs
+                .Include(x => x.CreatedBy)
                 .OrderByDescending(x => x.EffectiveFrom)
                 .AsNoTracking();
 

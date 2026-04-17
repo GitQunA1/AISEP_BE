@@ -3,17 +3,20 @@ using System;
 using AISEP.DAL.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace AISEP.Migrations
+namespace AISEP.DAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260417105723_RemovePayoutRetryRequestedBy")]
+    partial class RemovePayoutRetryRequestedBy
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -923,6 +926,16 @@ namespace AISEP.Migrations
                     b.Property<DateTime?>("RetryRequestedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("RetryReviewNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime?>("RetryReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("RetryReviewedById")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -938,6 +951,8 @@ namespace AISEP.Migrations
                     b.HasIndex("PayoutGroupId");
 
                     b.HasIndex("RejectedById");
+
+                    b.HasIndex("RetryReviewedById");
 
                     b.HasIndex("WalletId");
 
@@ -2275,6 +2290,11 @@ namespace AISEP.Migrations
                         .HasForeignKey("RejectedById")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("AISEP.DAL.Entities.User", "RetryReviewedBy")
+                        .WithMany()
+                        .HasForeignKey("RetryReviewedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("AISEP.DAL.Entities.Wallet", "Wallet")
                         .WithMany("Payouts")
                         .HasForeignKey("WalletId")
@@ -2286,6 +2306,8 @@ namespace AISEP.Migrations
                     b.Navigation("PayoutGroup");
 
                     b.Navigation("RejectedBy");
+
+                    b.Navigation("RetryReviewedBy");
 
                     b.Navigation("Wallet");
                 });

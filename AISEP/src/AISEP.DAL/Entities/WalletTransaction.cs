@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using AISEP.DAL.Enums;
 
@@ -17,10 +17,11 @@ namespace AISEP.DAL.Entities
         public WalletTransactionStatus Status { get; set; }
 
         public DateTime CreatedAt { get; set; }
-        public int? MonthlyPayoutId { get; set; }
+        public int? PayoutId { get; set; }
 
         // Navigation properties
         public Wallet Wallet { get; set; } = null!;
-        public MonthlyPayout? MonthlyPayout { get; set; }
+        public Payout? Payout { get; set; }
     }
 }
+

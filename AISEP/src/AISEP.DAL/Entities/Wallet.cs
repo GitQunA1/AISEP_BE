@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AISEP.DAL.Entities
@@ -19,6 +19,7 @@ namespace AISEP.DAL.Entities
         public Advisor Advisor { get; set; } = null!;
 
         public ICollection<WalletTransaction> WalletTransactions { get; set; } = new List<WalletTransaction>();
-        public ICollection<MonthlyPayout> MonthlyPayouts { get; set; } = new List<MonthlyPayout>();
+        public ICollection<Payout> Payouts { get; set; } = new List<Payout>();
     }
 }
+

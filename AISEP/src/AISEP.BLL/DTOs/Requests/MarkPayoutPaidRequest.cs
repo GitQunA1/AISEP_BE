@@ -1,7 +1,8 @@
 namespace AISEP.BLL.DTOs.Requests
 {
-    public class MarkMonthlyPayoutPaidRequest
+    public class MarkPayoutPaidRequest
     {
         public string? Note { get; set; }
     }
 }
+

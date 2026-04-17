@@ -4,6 +4,7 @@ namespace AISEP.DAL.Entities
     {
         public int SystemCommissionConfigId { get; set; }
         public decimal Percent { get; set; }
+        public string? Reason { get; set; }
         public DateTime EffectiveFrom { get; set; }
         public DateTime? EffectiveTo { get; set; }
         public bool IsActive { get; set; }
@@ -11,7 +12,6 @@ namespace AISEP.DAL.Entities
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public User CreatedBy { get; set; } = null!;
-        public ICollection<SystemCommissionChangeLog> ChangeLogs { get; set; } = new List<SystemCommissionChangeLog>();
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
     }
 }

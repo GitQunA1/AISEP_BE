@@ -18,8 +18,8 @@ using AISEP.DAL.Repositories.Startups;
 using AISEP.DAL.Repositories.StartupAIAnalyses;
 using AISEP.DAL.Repositories.ProjectFollowers;
 using AISEP.DAL.Repositories.Investors;
-using AISEP.DAL.Repositories.MonthlyPayouts;
-using AISEP.DAL.Repositories.MonthlyPayoutBatches;
+using AISEP.DAL.Repositories.Payouts;
+using AISEP.DAL.Repositories.PayoutGroups;
 using AISEP.DAL.Repositories.Subscriptions;
 using AISEP.DAL.Repositories.Transactions;
 using AISEP.DAL.Repositories.Users;
@@ -33,7 +33,6 @@ using AISEP.DAL.Repositories.Deals;
 //using AISEP.DAL.Repositories.NFTRecords;
 //using AISEP.DAL.Repositories.WithdrawRequests;
 using AISEP.DAL.Repositories.SystemCommissionConfigs;
-using AISEP.DAL.Repositories.SystemCommissionChangeLogs;
 using AISEP.DAL.Repositories.PostPrs;
 
 namespace AISEP.DAL.Common
@@ -70,10 +69,9 @@ namespace AISEP.DAL.Common
         private INotificationRepository?      _notifications;
         private IWalletTransactionRepository? _walletTransactions;
         private IWalletRepository?            _wallets;
-        private IMonthlyPayoutRepository?     _monthlyPayouts;
-        private IMonthlyPayoutBatchRepository? _monthlyPayoutBatches;
+        private IPayoutRepository?     _payouts;
+        private IPayoutGroupRepository? _payoutGroups;
         private ISystemCommissionConfigRepository? _systemCommissionConfigs;
-        private ISystemCommissionChangeLogRepository? _systemCommissionChangeLogs;
         private IConnectionRequestRepository? _connectionRequests;
         private IDealRepository?              _deals;
         private IPostPrRepository?            _postPrs;
@@ -110,10 +108,9 @@ namespace AISEP.DAL.Common
         public INotificationRepository      Notifications      => _notifications      ??= new NotificationRepository(_context);
         public IWalletTransactionRepository WalletTransactions => _walletTransactions ??= new WalletTransactionRepository(_context);
         public IWalletRepository            Wallets            => _wallets            ??= new WalletRepository(_context);
-        public IMonthlyPayoutRepository     MonthlyPayouts     => _monthlyPayouts     ??= new MonthlyPayoutRepository(_context);
-        public IMonthlyPayoutBatchRepository MonthlyPayoutBatches => _monthlyPayoutBatches ??= new MonthlyPayoutBatchRepository(_context);
+        public IPayoutRepository     Payouts     => _payouts     ??= new PayoutRepository(_context);
+        public IPayoutGroupRepository PayoutGroups => _payoutGroups ??= new PayoutGroupRepository(_context);
         public ISystemCommissionConfigRepository SystemCommissionConfigs => _systemCommissionConfigs ??= new SystemCommissionConfigRepository(_context);
-        public ISystemCommissionChangeLogRepository SystemCommissionChangeLogs => _systemCommissionChangeLogs ??= new SystemCommissionChangeLogRepository(_context);
         public IConnectionRequestRepository ConnectionRequests => _connectionRequests ??= new ConnectionRequestRepository(_context);
         public IDealRepository              Deals              => _deals              ??= new DealRepository(_context);
         public IPostPrRepository            PostPrs            => _postPrs            ??= new PostPrRepository(_context);
@@ -129,3 +126,5 @@ namespace AISEP.DAL.Common
         }
     }
 }
+
+

@@ -17,8 +17,8 @@ using AISEP.DAL.Repositories.Startups;
 using AISEP.DAL.Repositories.StartupAIAnalyses;
 using AISEP.DAL.Repositories.ProjectFollowers;
 using AISEP.DAL.Repositories.Investors;
-using AISEP.DAL.Repositories.MonthlyPayouts;
-using AISEP.DAL.Repositories.MonthlyPayoutBatches;
+using AISEP.DAL.Repositories.Payouts;
+using AISEP.DAL.Repositories.PayoutGroups;
 using AISEP.DAL.Repositories.Subscriptions;
 using AISEP.DAL.Repositories.Transactions;
 using AISEP.DAL.Repositories.Users;
@@ -31,7 +31,6 @@ using AISEP.DAL.Repositories.ConnectionRequests;
 using AISEP.DAL.Repositories.Deals;
 using AISEP.DAL.Repositories.PostPrs;
 using AISEP.DAL.Repositories.SystemCommissionConfigs;
-using AISEP.DAL.Repositories.SystemCommissionChangeLogs;
 namespace AISEP.DAL.Common
 {
     public interface IUnitOfWork : IDisposable
@@ -64,10 +63,9 @@ namespace AISEP.DAL.Common
         INotificationRepository      Notifications      { get; }
         IWalletTransactionRepository WalletTransactions { get; }
         IWalletRepository            Wallets            { get; }
-        IMonthlyPayoutRepository     MonthlyPayouts     { get; }
-        IMonthlyPayoutBatchRepository MonthlyPayoutBatches { get; }
+        IPayoutRepository     Payouts     { get; }
+        IPayoutGroupRepository PayoutGroups { get; }
         ISystemCommissionConfigRepository SystemCommissionConfigs { get; }
-        ISystemCommissionChangeLogRepository SystemCommissionChangeLogs { get; }
         IConnectionRequestRepository ConnectionRequests { get; }
         IDealRepository              Deals              { get; }
         IPostPrRepository            PostPrs            { get; }
@@ -75,3 +73,5 @@ namespace AISEP.DAL.Common
         Task<int> SaveChangesAsync();
     }
 }
+
+

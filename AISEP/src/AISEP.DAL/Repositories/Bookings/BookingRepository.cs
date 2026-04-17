@@ -21,6 +21,7 @@ namespace AISEP.DAL.Repositories.Bookings
                     .ThenInclude(a => a.User)
                 .Include(b => b.Project)
                 .Include(b => b.Customer)
+                .Include(b => b.SystemCommissionConfig)
                 .Include(b => b.BookingSlots)
                     .ThenInclude(bs => bs.AdvisorAvailability)
                 .Include(b => b.ChatSession)
@@ -88,6 +89,7 @@ namespace AISEP.DAL.Repositories.Bookings
                     .ThenInclude(a => a.User)
                 .Include(b => b.Project)
                 .Include(b => b.Customer)
+                .Include(b => b.SystemCommissionConfig)
                 .Include(b => b.BookingSlots)
                     .ThenInclude(bs => bs.AdvisorAvailability)
                 .AsNoTracking();

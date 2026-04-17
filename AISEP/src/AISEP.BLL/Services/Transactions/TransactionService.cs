@@ -29,7 +29,7 @@ namespace AISEP.BLL.Services.Transactions
                 .Select(b => new CollectedBookingCommissionItemResponse
                 {
                     BookingId = b.BookingId,
-                    CommissionPercent = b.SystemCommissionPercent,
+                    CommissionPercent = b.SystemCommissionConfig != null ? b.SystemCommissionConfig.Percent : 0m,
                     CommissionAmount = b.SystemCommissionAmount
                 })
                 .OrderByDescending(x => x.BookingId)

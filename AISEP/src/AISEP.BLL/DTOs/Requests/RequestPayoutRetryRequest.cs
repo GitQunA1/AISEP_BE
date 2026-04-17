@@ -1,7 +1,8 @@
 namespace AISEP.BLL.DTOs.Requests
 {
-    public class RequestMonthlyPayoutRetryRequest
+    public class RequestPayoutRetryRequest
     {
         public string ResolutionNote { get; set; } = string.Empty;
     }
 }
+

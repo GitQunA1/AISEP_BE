@@ -10,16 +10,16 @@ using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
 using Sieve.Services;
 
-namespace AISEP.BLL.Services.MonthlyPayouts
+namespace AISEP.BLL.Services.Payouts
 {
-    public class MonthlyPayoutBatchService : IMonthlyPayoutBatchService
+    public class PayoutGroupService : IPayoutGroupService
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ISieveProcessor _sieveProcessor;
         private readonly IMapper _mapper;
         private readonly INotificationService _notificationService;
 
-        public MonthlyPayoutBatchService(
+        public PayoutGroupService(
             IUnitOfWork unitOfWork,
             ISieveProcessor sieveProcessor,
             IMapper mapper,
@@ -31,11 +31,9 @@ namespace AISEP.BLL.Services.MonthlyPayouts
             _notificationService = notificationService;
         }
 
-        public async Task<List<MonthlyPayoutResponse>> GenerateAsync(GenerateMonthlyPayoutRequest request)
+        public async Task<List<PayoutResponse>> GenerateAsync(GeneratePayoutGroupRequest request)
         {
             var (periodStartUtc, periodEndUtc, fromDateLocal, toDateLocal) = NormalizeDateRangeOrThrow(request.FromDate, request.ToDate);
-            var displayYear = toDateLocal.Year;
-            var displayMonth = toDateLocal.Month;
 
             var depositQuery = _unitOfWork.WalletTransactions
                 .GetCompletedDepositsWithoutPayoutQuery(periodStartUtc, periodEndUtc);
@@ -51,9 +49,9 @@ namespace AISEP.BLL.Services.MonthlyPayouts
                 return [];
             }
 
-            var batch = await CreateBatchAsync(displayYear, displayMonth, fromDateLocal, toDateLocal);
+            var batch = await CreateBatchAsync(fromDateLocal, toDateLocal);
             var groupedByWallet = eligibleTransactions.GroupBy(x => x.WalletId);
-            var generated = new List<MonthlyPayout>();
+            var generated = new List<Payout>();
             var missingBankAdvisors = new List<(int UserId, string Name)>();
             var missingBankAdvisorIds = new HashSet<int>();
 
@@ -88,92 +86,92 @@ namespace AISEP.BLL.Services.MonthlyPayouts
                     continue;
                 }
 
-                var payout = new MonthlyPayout
+                var payout = new Payout
                 {
-                    MonthlyPayoutBatchId = batch.MonthlyPayoutBatchId,
+                    PayoutGroupId = batch.PayoutGroupId,
                     WalletId = walletGroup.Key,
-                    Year = displayYear,
-                    Month = displayMonth,
+                    PeriodFromDate = fromDateLocal,
+                    PeriodToDate = toDateLocal,
                     Amount = totalAmount,
                     Status = MonthlyPayoutStatus.Pending,
                     BankName = activeBankAccount.BankName,
                     AccountNumber = activeBankAccount.AccountNumber,
                     AccountHolderName = activeBankAccount.AccountHolderName
                 };
-                await _unitOfWork.MonthlyPayouts.AddAsync(payout);
+                await _unitOfWork.Payouts.AddAsync(payout);
                 generated.Add(payout);
 
                 foreach (var transaction in walletGroup)
                 {
-                    transaction.MonthlyPayout = payout;
+                    transaction.Payout = payout;
                 }
             }
 
             await _unitOfWork.SaveChangesAsync();
-            await RecalculateAsync(batch.MonthlyPayoutBatchId);
+            await RecalculateAsync(batch.PayoutGroupId);
 
             await NotifyMissingBankAccountsAsync(missingBankAdvisors);
 
-            var ids = generated.Select(x => x.MonthlyPayoutId).ToList();
-            var created = await _unitOfWork.MonthlyPayouts.GetQuery()
-                .Where(x => ids.Contains(x.MonthlyPayoutId))
+            var ids = generated.Select(x => x.PayoutId).ToList();
+            var created = await _unitOfWork.Payouts.GetQuery()
+                .Where(x => ids.Contains(x.PayoutId))
                 .ToListAsync();
 
-            return created.Select(x => _mapper.Map<MonthlyPayoutResponse>(x)).ToList();
+            return created.Select(x => _mapper.Map<PayoutResponse>(x)).ToList();
         }
 
-        public async Task<PagedResult<MonthlyPayoutBatchResponse>> GetBatchesAsync(SieveModel model)
+        public async Task<PagedResult<PayoutGroupResponse>> GetBatchesAsync(SieveModel model)
         {
-            var query = _unitOfWork.MonthlyPayoutBatches.GetQuery();
+            var query = _unitOfWork.PayoutGroups.GetQuery();
             return await PaginationHelper.PaginateAsync(
                 query,
                 model,
                 _sieveProcessor,
-                x => _mapper.Map<MonthlyPayoutBatchResponse>(x));
+                x => _mapper.Map<PayoutGroupResponse>(x));
         }
 
-        public async Task<MonthlyPayoutBatchResponse?> GetBatchByIdAsync(int batchId)
+        public async Task<PayoutGroupResponse?> GetBatchByIdAsync(int batchId)
         {
-            var batch = await _unitOfWork.MonthlyPayoutBatches.GetByIdAsync(batchId);
-            return batch is null ? null : _mapper.Map<MonthlyPayoutBatchResponse>(batch);
+            var batch = await _unitOfWork.PayoutGroups.GetByIdAsync(batchId);
+            return batch is null ? null : _mapper.Map<PayoutGroupResponse>(batch);
         }
 
-        public async Task<PagedResult<MonthlyPayoutResponse>> GetItemsByBatchIdAsync(int batchId, SieveModel model)
+        public async Task<PagedResult<PayoutResponse>> GetItemsByBatchIdAsync(int batchId, SieveModel model)
         {
-            var batch = await _unitOfWork.MonthlyPayoutBatches.GetByIdAsync(batchId);
+            var batch = await _unitOfWork.PayoutGroups.GetByIdAsync(batchId);
             if (batch is null)
             {
                 throw new KeyNotFoundException("Monthly payout batch not found.");
             }
 
-            var query = _unitOfWork.MonthlyPayouts.GetQuery()
-                .Where(x => x.MonthlyPayoutBatchId == batchId);
+            var query = _unitOfWork.Payouts.GetQuery()
+                .Where(x => x.PayoutGroupId == batchId);
 
             return await PaginationHelper.PaginateAsync(
                 query,
                 model,
                 _sieveProcessor,
-                x => _mapper.Map<MonthlyPayoutResponse>(x));
+                x => _mapper.Map<PayoutResponse>(x));
         }
 
         public async Task RecalculateAsync(int batchId)
         {
-            var batch = await _unitOfWork.MonthlyPayoutBatches.GetByIdAsync(batchId);
+            var batch = await _unitOfWork.PayoutGroups.GetByIdAsync(batchId);
             if (batch is null)
             {
                 return;
             }
 
-            batch.EstimatedTotalAmount = Math.Round(batch.MonthlyPayouts.Sum(x => x.Amount), 2, MidpointRounding.AwayFromZero);
+            batch.EstimatedTotalAmount = Math.Round(batch.Payouts.Sum(x => x.Amount), 2, MidpointRounding.AwayFromZero);
             batch.RejectedAmount = Math.Round(
-                batch.MonthlyPayouts
+                batch.Payouts
                     .Where(x => x.Status == MonthlyPayoutStatus.Rejected)
                     .Sum(x => x.Amount),
                 2,
                 MidpointRounding.AwayFromZero);
             batch.ActualPayableAmount = Math.Round(batch.EstimatedTotalAmount - batch.RejectedAmount, 2, MidpointRounding.AwayFromZero);
 
-            var hasPending = batch.MonthlyPayouts.Any(x =>
+            var hasPending = batch.Payouts.Any(x =>
                 x.Status == MonthlyPayoutStatus.Pending || x.Status == MonthlyPayoutStatus.PendingRecheck);
             if (hasPending)
             {
@@ -186,7 +184,7 @@ namespace AISEP.BLL.Services.MonthlyPayouts
                 batch.CompletedAt ??= DateTime.UtcNow;
             }
 
-            _unitOfWork.MonthlyPayoutBatches.Update(batch);
+            _unitOfWork.PayoutGroups.Update(batch);
             await _unitOfWork.SaveChangesAsync();
         }
 
@@ -228,14 +226,12 @@ namespace AISEP.BLL.Services.MonthlyPayouts
             }
         }
 
-        private async Task<MonthlyPayoutBatch> CreateBatchAsync(int year, int month, DateTime fromDateLocal, DateTime toDateLocal)
+        private async Task<PayoutGroup> CreateBatchAsync(DateTime fromDateLocal, DateTime toDateLocal)
         {
-            var batch = new MonthlyPayoutBatch
+            var batch = new PayoutGroup
             {
                 FromDate = fromDateLocal,
                 ToDate = toDateLocal,
-                Year = year,
-                Month = month,
                 EstimatedTotalAmount = 0m,
                 RejectedAmount = 0m,
                 ActualPayableAmount = 0m,
@@ -243,7 +239,7 @@ namespace AISEP.BLL.Services.MonthlyPayouts
                 CreatedAt = DateTime.UtcNow
             };
 
-            await _unitOfWork.MonthlyPayoutBatches.AddAsync(batch);
+            await _unitOfWork.PayoutGroups.AddAsync(batch);
             await _unitOfWork.SaveChangesAsync();
             return batch;
         }
@@ -288,3 +284,9 @@ namespace AISEP.BLL.Services.MonthlyPayouts
 
     }
 }
+
+
+
+
+
+

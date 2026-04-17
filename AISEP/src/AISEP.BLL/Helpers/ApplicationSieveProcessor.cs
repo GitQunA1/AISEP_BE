@@ -1,4 +1,4 @@
-﻿using AISEP.DAL.Entities;
+using AISEP.DAL.Entities;
 using Microsoft.Extensions.Options;
 using Sieve.Models;
 using Sieve.Services;
@@ -225,7 +225,165 @@ namespace AISEP.BLL.Helpers
                 .CanFilter()
                 .CanSort();
 
+            // ConsultingReport
+            mapper.Property<ConsultingReport>(r => r.ConsultingReportId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<ConsultingReport>(r => r.BookingId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<ConsultingReport>(r => r.MeetingTime)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<ConsultingReport>(r => r.Status)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<ConsultingReport>(r => r.RevisionCount)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<ConsultingReport>(r => r.IsPayoutProcessed)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<ConsultingReport>(r => r.CreatedAt)
+                .CanFilter()
+                .CanSort();
+
+            // UserReport
+            mapper.Property<UserReport>(r => r.UserReportId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<UserReport>(r => r.ReporterId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<UserReport>(r => r.ReportedUserId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<UserReport>(r => r.Category)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<UserReport>(r => r.Status)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<UserReport>(r => r.CreatedAt)
+                .CanFilter()
+                .CanSort();
+
+            // Notification
+            mapper.Property<Notification>(n => n.NotificationId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Notification>(n => n.UserId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Notification>(n => n.ReferenceId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Notification>(n => n.ReferenceType)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Notification>(n => n.Type)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Notification>(n => n.IsRead)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Notification>(n => n.CreatedAt)
+                .CanFilter()
+                .CanSort();
+
+            // Payout
+            mapper.Property<Payout>(p => p.PayoutId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Payout>(p => p.PayoutGroupId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Payout>(p => p.WalletId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Payout>(p => p.PeriodFromDate)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Payout>(p => p.PeriodToDate)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Payout>(p => p.Amount)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Payout>(p => p.Status)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Payout>(p => p.CreatedAt)
+                .CanFilter()
+                .CanSort();
+
+            // PayoutGroup
+            mapper.Property<PayoutGroup>(b => b.PayoutGroupId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<PayoutGroup>(b => b.FromDate)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<PayoutGroup>(b => b.ToDate)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<PayoutGroup>(b => b.Status)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<PayoutGroup>(b => b.CreatedAt)
+                .CanFilter()
+                .CanSort();
+
+            // WalletTransaction
+            mapper.Property<WalletTransaction>(t => t.WalletTransactionId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<WalletTransaction>(t => t.WalletId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<WalletTransaction>(t => t.PayoutId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<WalletTransaction>(t => t.Amount)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<WalletTransaction>(t => t.Type)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<WalletTransaction>(t => t.Status)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<WalletTransaction>(t => t.CreatedAt)
+                .CanFilter()
+                .CanSort();
+
+            // SystemCommissionConfig
+            mapper.Property<SystemCommissionConfig>(c => c.SystemCommissionConfigId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<SystemCommissionConfig>(c => c.Percent)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<SystemCommissionConfig>(c => c.EffectiveFrom)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<SystemCommissionConfig>(c => c.EffectiveTo)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<SystemCommissionConfig>(c => c.IsActive)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<SystemCommissionConfig>(c => c.CreatedById)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<SystemCommissionConfig>(c => c.CreatedAt)
+                .CanFilter()
+                .CanSort();
+
             return mapper;
         }
     }
 }
+
+
+
