@@ -30,20 +30,6 @@ namespace AISEP.BLL.Services.AI
             var capped = potentialScore;
             var weakCoreFields = CountWeakCoreFields(project);
 
-            // Hard cap for extremely risky outputs.
-            if (result.ChaosScore >= 95)
-            {
-                capped = Math.Min(capped, 30);
-            }
-            else if (result.ChaosScore >= 90)
-            {
-                capped = Math.Min(capped, 40);
-            }
-            else if (result.ChaosScore >= 80)
-            {
-                capped = Math.Min(capped, 55);
-            }
-
             // Additional cap when core project fields are placeholder-like.
             if (weakCoreFields >= 4)
             {
@@ -80,8 +66,8 @@ namespace AISEP.BLL.Services.AI
                 {
                     component.Score = 4.5;
                     component.Reason = string.IsNullOrWhiteSpace(component.Reason)
-                        ? "Score adjusted due to missing concrete evidence."
-                        : component.Reason + " | Adjusted: missing concrete evidence.";
+                        ? "Điểm đã được điều chỉnh do thiếu bằng chứng cụ thể."
+                        : component.Reason + " | Đã điều chỉnh do thiếu bằng chứng cụ thể.";
                 }
 
                 setLegacyScore(component.Score);
@@ -102,7 +88,6 @@ namespace AISEP.BLL.Services.AI
             result.MarketingScore = ClampScore(result.MarketingScore);
             result.InvestmentScore = ClampScore(result.InvestmentScore);
             result.OtherScore = ClampScore(result.OtherScore);
-            result.ChaosScore = Math.Clamp(result.ChaosScore, 0, 100);
 
             result.Strengths ??= [];
             result.Weaknesses ??= [];
@@ -161,47 +146,69 @@ namespace AISEP.BLL.Services.AI
             [
                 new ScoreBreakdownItem
                 {
-                    Component = "Team",
+                    ComponentKey = "Team",
+                    Component = ToVietnameseComponentName("Team"),
                     MaxPoints = maxPoints.Team,
                     Score = Math.Round((team / 10.0) * maxPoints.Team, 2)
                 },
                 new ScoreBreakdownItem
                 {
-                    Component = "Opportunity",
+                    ComponentKey = "Opportunity",
+                    Component = ToVietnameseComponentName("Opportunity"),
                     MaxPoints = maxPoints.Opportunity,
                     Score = Math.Round((opportunity / 10.0) * maxPoints.Opportunity, 2)
                 },
                 new ScoreBreakdownItem
                 {
-                    Component = "Product",
+                    ComponentKey = "Product",
+                    Component = ToVietnameseComponentName("Product"),
                     MaxPoints = maxPoints.Product,
                     Score = Math.Round((product / 10.0) * maxPoints.Product, 2)
                 },
                 new ScoreBreakdownItem
                 {
-                    Component = "Competition",
+                    ComponentKey = "Competition",
+                    Component = ToVietnameseComponentName("Competition"),
                     MaxPoints = maxPoints.Competition,
                     Score = Math.Round((competition / 10.0) * maxPoints.Competition, 2)
                 },
                 new ScoreBreakdownItem
                 {
-                    Component = "Marketing",
+                    ComponentKey = "Marketing",
+                    Component = ToVietnameseComponentName("Marketing"),
                     MaxPoints = maxPoints.Marketing,
                     Score = Math.Round((marketing / 10.0) * maxPoints.Marketing, 2)
                 },
                 new ScoreBreakdownItem
                 {
-                    Component = "Investment",
+                    ComponentKey = "Investment",
+                    Component = ToVietnameseComponentName("Investment"),
                     MaxPoints = maxPoints.Investment,
                     Score = Math.Round((investment / 10.0) * maxPoints.Investment, 2)
                 },
                 new ScoreBreakdownItem
                 {
-                    Component = "Other",
+                    ComponentKey = "Other",
+                    Component = ToVietnameseComponentName("Other"),
                     MaxPoints = maxPoints.Other,
                     Score = Math.Round((other / 10.0) * maxPoints.Other, 2)
                 }
             ];
+        }
+
+        private static string ToVietnameseComponentName(string componentKey)
+        {
+            return componentKey switch
+            {
+                "Team" => "Đội ngũ",
+                "Opportunity" => "Cơ hội thị trường",
+                "Product" => "Sản phẩm",
+                "Competition" => "Cạnh tranh",
+                "Marketing" => "Marketing & bán hàng",
+                "Investment" => "Nhu cầu đầu tư",
+                "Other" => "Khác",
+                _ => componentKey
+            };
         }
 
         private static (double Team, double Opportunity, double Product, double Competition, double Marketing, double Investment, double Other)
