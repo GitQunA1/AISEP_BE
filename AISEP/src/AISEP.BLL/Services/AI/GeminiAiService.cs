@@ -96,256 +96,130 @@ namespace AISEP.BLL.Services.AI
 
             var docSummary = docCount > 0
                 ? string.Join(", ", readable.Select(d => $"{d.DocumentType} ({d.FileName})"))
-                : "None";
+                : "Không có tài liệu đọc được.";
             var skippedSummary = skipped.Count > 0
-                ? $" | Skipped (unsupported format): {string.Join(", ", skipped.Select(d => d.FileName))}"
+                ? $" | Bỏ qua (định dạng không hỗ trợ): {string.Join(", ", skipped.Select(d => d.FileName))}"
                 : string.Empty;
 
             return $$"""
-                You are an expert startup evaluator using the Bill Payne Scorecard Valuation Method.
-                Analyze the startup project below and score each component.
-                All attached files are documents belonging to this project. Read them to improve scoring evidence.
-                Return ONLY a valid JSON object — no markdown, no extra text.
+                Bạn là chuyên gia thẩm định startup theo phương pháp Bill Payne Scorecard.
+                Nhiệm vụ: phân tích dự án và tài liệu đính kèm, chấm điểm 7 thành phần.
+                BẮT BUỘC:
+                - Chỉ trả về 1 JSON hợp lệ, không markdown, không text thừa.
+                - TẤT CẢ nội dung chữ trong JSON phải là tiếng Việt (reason, evidence, missingData, Summary, Strengths, Weaknesses, Recommendations).
 
-                --- PROJECT DATA ---
-                Name: {{project.ProjectName}}
-                Short Description: {{project.ShortDescription ?? "N/A"}}
-                Development Stage: {{project.DevelopmentStage?.ToString() ?? "N/A"}}
-                Problem Statement: {{project.ProblemStatement ?? "N/A"}}
-                Solution: {{project.SolutionDescription ?? "N/A"}}
-                Target Customers: {{project.TargetCustomers ?? "N/A"}}
-                Unique Value Proposition: {{project.UniqueValueProposition ?? "N/A"}}
-                Market Size: {{(project.MarketSize.HasValue ? project.MarketSize.Value.ToString("N0") + " USD" : "N/A")}}
-                Business Model: {{project.BusinessModel ?? "N/A"}}
-                Revenue: {{(project.Revenue.HasValue ? project.Revenue.Value.ToString("N0") + " USD" : "N/A")}}
-                Competitors: {{project.Competitors ?? "N/A"}}
-                Team Members: {{project.TeamMembers ?? "N/A"}}
-                Key Skills: {{project.KeySkills ?? "N/A"}}
-                Team Experience: {{project.TeamExperience ?? "N/A"}}
-                Uploaded Documents ({{docCount}} attached for reading){{skippedSummary}}:
+                --- DỮ LIỆU DỰ ÁN ---
+                Tên dự án: {{project.ProjectName}}
+                Mô tả ngắn: {{project.ShortDescription ?? "N/A"}}
+                Giai đoạn phát triển: {{project.DevelopmentStage?.ToString() ?? "N/A"}}
+                Bài toán: {{project.ProblemStatement ?? "N/A"}}
+                Giải pháp: {{project.SolutionDescription ?? "N/A"}}
+                Khách hàng mục tiêu: {{project.TargetCustomers ?? "N/A"}}
+                Giá trị khác biệt: {{project.UniqueValueProposition ?? "N/A"}}
+                Quy mô thị trường: {{(project.MarketSize.HasValue ? project.MarketSize.Value.ToString("N0") + " USD" : "N/A")}}
+                Mô hình kinh doanh: {{project.BusinessModel ?? "N/A"}}
+                Doanh thu: {{(project.Revenue.HasValue ? project.Revenue.Value.ToString("N0") + " USD" : "N/A")}}
+                Đối thủ cạnh tranh: {{project.Competitors ?? "N/A"}}
+                Thành viên đội ngũ: {{project.TeamMembers ?? "N/A"}}
+                Kỹ năng chính: {{project.KeySkills ?? "N/A"}}
+                Kinh nghiệm đội ngũ: {{project.TeamExperience ?? "N/A"}}
+                Tài liệu tải lên ({{docCount}} tài liệu đọc được){{skippedSummary}}:
                 {{docSummary}}
 
-                --- SCORING INSTRUCTIONS ---
-                Score each component on an absolute 0-10 scale:
-                  5 = market average | 7.5 = strong | 9+ = excellent | below 4 = weak
+                --- CÁCH CHẤM ĐIỂM ---
+                Chấm tuyệt đối từng thành phần theo thang 0.0-10.0:
+                - 5.0 = mức trung bình thị trường
+                - 7.5 = mạnh
+                - 9.0+ = xuất sắc
+                - dưới 4.0 = yếu
 
-                Components (Bill Payne framework):
-                  1. Team: TeamMembers, KeySkills, TeamExperience
-                  2. Opportunity: TargetCustomers, MarketSize
-                  3. Product/Tech: SolutionDescription, DevelopmentStage
-                  4. Competition: Competitors, UniqueValueProposition
-                  5. Marketing/Sales: BusinessModel, Revenue
-                  6. Investment Need: clarity of funding requirements
-                  7. Other: document quality and overall coherence
+                7 thành phần:
+                1) Team: TeamMembers, KeySkills, TeamExperience
+                2) Opportunity: TargetCustomers, MarketSize
+                3) Product: SolutionDescription, DevelopmentStage
+                4) Competition: Competitors, UniqueValueProposition
+                5) Marketing: BusinessModel, Revenue
+                6) Investment: độ rõ ràng nhu cầu vốn và sử dụng vốn
+                7) Other: chất lượng tài liệu, tính nhất quán tổng thể
 
-                --- STAGE FOCUS (very important) ---
+                --- ƯU TIÊN THEO GIAI ĐOẠN ---
                 {{stageFocus}}
 
-                --- SCORING RUBRIC (strict) ---
-                For each component, choose score range based on evidence quality:
-                - 0.0 - 2.0: Missing or irrelevant information (e.g. placeholder text like "string", no usable document proof).
-                - 2.1 - 4.0: Basic information exists but weak evidence / unclear execution.
-                - 4.1 - 6.5: Market-average quality with reasonable evidence.
-                - 6.6 - 8.5: Strong quality with clear, specific, verifiable evidence.
-                - 8.6 - 10.0: Exceptional quality with outstanding evidence and traction.
-                If confidence is low, prefer conservative score.
+                --- RUBRIC (NGHIÊM NGẶT) ---
+                - 0.0-2.0: Thiếu dữ liệu hoặc dữ liệu không liên quan.
+                - 2.1-4.0: Có thông tin cơ bản nhưng bằng chứng yếu.
+                - 4.1-6.5: Mức trung bình thị trường, bằng chứng chấp nhận được.
+                - 6.6-8.5: Mạnh, có bằng chứng cụ thể và kiểm chứng được.
+                - 8.6-10.0: Xuất sắc, bằng chứng nổi trội và có traction rõ.
+                Nếu độ tin cậy thấp, phải chấm bảo thủ.
 
-                --- FEW-SHOT EXAMPLES (style reference) ---
-                Golden Sample A (Weak / Low-quality submission):
-                Input signals:
-                - TeamMembers = "string", KeySkills = "string", TeamExperience = "string"
-                - MarketSize = 0, BusinessModel = "string", Competitors = "string"
-                - Attached "PitchDeck" is unrelated image (signature/photo, not startup content)
-                Target output style:
-                {
-                  "Team": {
-                    "score": 1.0,
-                    "evidence": [],
-                    "missingData": ["Founder background", "Role split", "Domain experience"],
-                    "confidence": 0.9,
-                    "reason": "Team information is placeholder-only and not verifiable."
-                  },
-                  "Opportunity": {
-                    "score": 1.0,
-                    "evidence": [],
-                    "missingData": ["TAM/SAM/SOM", "ICP detail", "Growth assumptions"],
-                    "confidence": 0.9,
-                    "reason": "No usable market evidence provided."
-                  },
-                  "Product": {
-                    "score": 1.5,
-                    "evidence": ["Development Stage = Idea"],
-                    "missingData": ["Product architecture", "MVP proof", "Technical differentiation"],
-                    "confidence": 0.8,
-                    "reason": "Only early idea signal exists, no supporting product evidence."
-                  },
-                  "Competition": {
-                    "score": 1.0,
-                    "evidence": [],
-                    "missingData": ["Direct competitors", "Positioning map", "UVP proof"],
-                    "confidence": 0.9,
-                    "reason": "Competitive analysis is missing."
-                  },
-                  "Marketing": {
-                    "score": 1.0,
-                    "evidence": [],
-                    "missingData": ["Go-to-market plan", "Traction", "Conversion metrics"],
-                    "confidence": 0.9,
-                    "reason": "No real business model or traction data."
-                  },
-                  "Investment": {
-                    "score": 1.0,
-                    "evidence": [],
-                    "missingData": ["Fundraising ask", "Use-of-funds", "Milestones"],
-                    "confidence": 0.9,
-                    "reason": "Investment ask section is missing."
-                  },
-                  "Other": {
-                    "score": 0.5,
-                    "evidence": ["Attached document is irrelevant to project evaluation."],
-                    "missingData": ["Valid pitch deck", "Supporting legal/financial documents"],
-                    "confidence": 0.95,
-                    "reason": "Attached file does not support evaluation."
-                  },
-                  "ChaosScore": 95,
-                  "Summary": "Thiếu dữ liệu nghiêm trọng và tài liệu không liên quan.",
-                  "Strengths": ["Có tên ý tưởng rõ ràng."],
-                  "Weaknesses": ["Thiếu dữ liệu đội ngũ", "Thiếu dữ liệu thị trường", "Tài liệu đính kèm không hợp lệ"],
-                  "Recommendations": ["Bổ sung team profile", "Nộp pitch deck thực tế", "Mô tả GTM và traction"]
-                }
+                Không tự tính điểm tổng có trọng số. Backend sẽ tính PotentialScore theo thang 0-100.
+                Yêu cầu đầu ra:
+                - Summary: 2-4 câu tiếng Việt, nêu tài liệu/bằng chứng nào ảnh hưởng điểm.
+                - Strengths: 3-5 ý tiếng Việt.
+                - Weaknesses: 3-5 ý tiếng Việt.
+                - Recommendations: 5-8 hành động tiếng Việt, theo thứ tự ưu tiên, tập trung trực tiếp vào việc cải thiện dự án (đội ngũ, sản phẩm, thị trường, vận hành), không chỉ để tăng điểm.
 
-                Golden Sample B (Good MVP / Investment-ready soon):
-                Input signals:
-                - Team has clear founder roles and 5+ years relevant experience
-                - Market slide includes TAM/SAM/SOM and growth trend
-                - Product demo exists + MVP users + measurable traction
-                - Business model + early paid users + clear competitor differentiation
-                Target output style:
-                {
-                  "Team": {
-                    "score": 7.2,
-                    "evidence": ["Founder CEO: agritech operations 7 years", "CTO built similar IoT stack"],
-                    "missingData": [],
-                    "confidence": 0.85,
-                    "reason": "Team is complete, experienced, and aligned with domain."
-                  },
-                  "Opportunity": {
-                    "score": 6.8,
-                    "evidence": ["TAM/SAM/SOM provided", "Market growth rate stated"],
-                    "missingData": ["Independent benchmark source link"],
-                    "confidence": 0.8,
-                    "reason": "Opportunity is large with reasonable quantification."
-                  },
-                  "Product": {
-                    "score": 7.0,
-                    "evidence": ["MVP demo video", "Pilot customer feedback"],
-                    "missingData": [],
-                    "confidence": 0.82,
-                    "reason": "Product has concrete validation signals."
-                  },
-                  "Competition": {
-                    "score": 6.2,
-                    "evidence": ["Competitor table", "UVP statement with pricing edge"],
-                    "missingData": ["Win/loss data"],
-                    "confidence": 0.76,
-                    "reason": "Positioning is fairly clear but more proof is needed."
-                  },
-                  "Marketing": {
-                    "score": 6.9,
-                    "evidence": ["Go-to-market plan", "Early paid customers"],
-                    "missingData": ["Channel CAC breakdown"],
-                    "confidence": 0.78,
-                    "reason": "Commercial logic is sound with initial traction."
-                  },
-                  "Investment": {
-                    "score": 5.8,
-                    "evidence": ["Ask and use-of-funds table"],
-                    "missingData": ["Quarterly milestone sensitivity analysis"],
-                    "confidence": 0.72,
-                    "reason": "Funding ask is clear at baseline quality."
-                  },
-                  "Other": {
-                    "score": 5.9,
-                    "evidence": ["Pitch deck quality is coherent", "Customer testimonial screenshot"],
-                    "missingData": [],
-                    "confidence": 0.75,
-                    "reason": "Supporting materials are coherent and useful."
-                  },
-                  "ChaosScore": 42,
-                  "Summary": "Dự án MVP khá tốt, còn thiếu một số bằng chứng tài chính sâu.",
-                  "Strengths": ["Đội ngũ phù hợp", "MVP có validation", "GTM rõ"],
-                  "Weaknesses": ["Thiếu benchmark độc lập", "Thiếu CAC chi tiết"],
-                  "Recommendations": ["Bổ sung unit economics", "Tăng bằng chứng cạnh tranh", "Chuẩn hóa roadmap vốn"]
-                }
+                Tự kiểm tra trước khi trả kết quả:
+                1) Mỗi component phải có ít nhất 1 phần tử trong evidence hoặc missingData.
+                2) Điểm > 6.5 phải có bằng chứng cụ thể.
+                3) Trả về JSON hợp lệ duy nhất.
 
-                Do NOT compute weighted total score. Backend computes PotentialScore on a 0-100 scale
-                using stage-specific maximum points for each component.
-                ChaosScore (0-100): risk/uncertainty level (0 = stable, 100 = very risky)
-                Summary: brief analysis written in Vietnamese, mention which documents/slides influenced the scoring.
-                Strengths: 3-5 key strengths (Vietnamese).
-                Weaknesses: 3-5 key weaknesses/gaps (Vietnamese).
-                Recommendations: 5-8 actionable recommendations in priority order (Vietnamese), focused on improving score.
-                Final self-check before output:
-                1) Every component must include at least one meaningful evidence or missingData item.
-                2) High score (>6.5) requires specific evidence.
-                3) Return valid JSON only.
-
-                --- REQUIRED OUTPUT FORMAT (return ONLY this JSON) ---
+                --- MẪU OUTPUT BẮT BUỘC (CHỈ JSON) ---
                 {
                   "Team": {
                     "score": <decimal 0.0-10.0>,
-                    "evidence": ["<short evidence 1>", "<short evidence 2>"],
-                    "missingData": ["<missing data 1>"],
+                    "evidence": ["<bằng chứng ngắn 1>", "<bằng chứng ngắn 2>"],
+                    "missingData": ["<dữ liệu còn thiếu 1>"],
                     "confidence": <decimal 0.0-1.0>,
-                    "reason": "<why this score>"
+                    "reason": "<giải thích lý do chấm điểm bằng tiếng Việt>"
                   },
                   "Opportunity": {
                     "score": <decimal 0.0-10.0>,
                     "evidence": [],
                     "missingData": [],
                     "confidence": <decimal 0.0-1.0>,
-                    "reason": "<why this score>"
+                    "reason": "<giải thích lý do chấm điểm bằng tiếng Việt>"
                   },
                   "Product": {
                     "score": <decimal 0.0-10.0>,
                     "evidence": [],
                     "missingData": [],
                     "confidence": <decimal 0.0-1.0>,
-                    "reason": "<why this score>"
+                    "reason": "<giải thích lý do chấm điểm bằng tiếng Việt>"
                   },
                   "Competition": {
                     "score": <decimal 0.0-10.0>,
                     "evidence": [],
                     "missingData": [],
                     "confidence": <decimal 0.0-1.0>,
-                    "reason": "<why this score>"
+                    "reason": "<giải thích lý do chấm điểm bằng tiếng Việt>"
                   },
                   "Marketing": {
                     "score": <decimal 0.0-10.0>,
                     "evidence": [],
                     "missingData": [],
                     "confidence": <decimal 0.0-1.0>,
-                    "reason": "<why this score>"
+                    "reason": "<giải thích lý do chấm điểm bằng tiếng Việt>"
                   },
                   "Investment": {
                     "score": <decimal 0.0-10.0>,
                     "evidence": [],
                     "missingData": [],
                     "confidence": <decimal 0.0-1.0>,
-                    "reason": "<why this score>"
+                    "reason": "<giải thích lý do chấm điểm bằng tiếng Việt>"
                   },
                   "Other": {
                     "score": <decimal 0.0-10.0>,
                     "evidence": [],
                     "missingData": [],
                     "confidence": <decimal 0.0-1.0>,
-                    "reason": "<why this score>"
+                    "reason": "<giải thích lý do chấm điểm bằng tiếng Việt>"
                   },
-                  "ChaosScore":        <integer 0-100>,
-                  "Summary":           "<string in Vietnamese>",
-                  "Strengths":         ["<strength 1>", "<strength 2>"],
-                  "Weaknesses":        ["<weakness 1>", "<weakness 2>"],
-                  "Recommendations":   ["<action 1>", "<action 2>"]
+                  "Summary": "<tóm tắt tiếng Việt>",
+                  "Strengths": ["<điểm mạnh 1>", "<điểm mạnh 2>"],
+                  "Weaknesses": ["<điểm yếu 1>", "<điểm yếu 2>"],
+                  "Recommendations": ["<hành động 1>", "<hành động 2>"]
                 }
                 """;
         }
@@ -359,94 +233,70 @@ namespace AISEP.BLL.Services.AI
 
             var docSummary = docCount > 0
                 ? string.Join(", ", readable.Select(d => $"{d.DocumentType} ({d.FileName})"))
-                : "None";
+                : "Không có tài liệu đọc được.";
             var skippedSummary = skipped.Count > 0
-                ? $" | Skipped (unsupported format): {string.Join(", ", skipped.Select(d => d.FileName))}"
+                ? $" | Bỏ qua (định dạng không hỗ trợ): {string.Join(", ", skipped.Select(d => d.FileName))}"
                 : string.Empty;
 
             return $$"""
-                You are an investor-side startup evaluator using the Bill Payne Scorecard Valuation Method.
-                Analyze the project and attached project documents from an INVESTOR DECISION perspective.
-                Return ONLY a valid JSON object — no markdown, no extra text.
+                Bạn là chuyên gia thẩm định dự án ở góc nhìn nhà đầu tư theo Bill Payne Scorecard.
+                Nhiệm vụ: phân tích dự án và tài liệu đính kèm để hỗ trợ quyết định đầu tư.
+                BẮT BUỘC:
+                - Chỉ trả về 1 JSON hợp lệ, không markdown, không text thừa.
+                - TẤT CẢ nội dung chữ trong JSON phải là tiếng Việt.
 
-                --- PROJECT DATA ---
-                Name: {{project.ProjectName}}
-                Short Description: {{project.ShortDescription ?? "N/A"}}
-                Development Stage: {{project.DevelopmentStage?.ToString() ?? "N/A"}}
-                Problem Statement: {{project.ProblemStatement ?? "N/A"}}
-                Solution: {{project.SolutionDescription ?? "N/A"}}
-                Target Customers: {{project.TargetCustomers ?? "N/A"}}
-                Unique Value Proposition: {{project.UniqueValueProposition ?? "N/A"}}
-                Market Size: {{(project.MarketSize.HasValue ? project.MarketSize.Value.ToString("N0") + " USD" : "N/A")}}
-                Business Model: {{project.BusinessModel ?? "N/A"}}
-                Revenue: {{(project.Revenue.HasValue ? project.Revenue.Value.ToString("N0") + " USD" : "N/A")}}
-                Competitors: {{project.Competitors ?? "N/A"}}
-                Team Members: {{project.TeamMembers ?? "N/A"}}
-                Key Skills: {{project.KeySkills ?? "N/A"}}
-                Team Experience: {{project.TeamExperience ?? "N/A"}}
-                Uploaded Documents ({{docCount}} attached for reading){{skippedSummary}}:
+                --- DỮ LIỆU DỰ ÁN ---
+                Tên dự án: {{project.ProjectName}}
+                Mô tả ngắn: {{project.ShortDescription ?? "N/A"}}
+                Giai đoạn phát triển: {{project.DevelopmentStage?.ToString() ?? "N/A"}}
+                Bài toán: {{project.ProblemStatement ?? "N/A"}}
+                Giải pháp: {{project.SolutionDescription ?? "N/A"}}
+                Khách hàng mục tiêu: {{project.TargetCustomers ?? "N/A"}}
+                Giá trị khác biệt: {{project.UniqueValueProposition ?? "N/A"}}
+                Quy mô thị trường: {{(project.MarketSize.HasValue ? project.MarketSize.Value.ToString("N0") + " USD" : "N/A")}}
+                Mô hình kinh doanh: {{project.BusinessModel ?? "N/A"}}
+                Doanh thu: {{(project.Revenue.HasValue ? project.Revenue.Value.ToString("N0") + " USD" : "N/A")}}
+                Đối thủ cạnh tranh: {{project.Competitors ?? "N/A"}}
+                Thành viên đội ngũ: {{project.TeamMembers ?? "N/A"}}
+                Kỹ năng chính: {{project.KeySkills ?? "N/A"}}
+                Kinh nghiệm đội ngũ: {{project.TeamExperience ?? "N/A"}}
+                Tài liệu tải lên ({{docCount}} tài liệu đọc được){{skippedSummary}}:
                 {{docSummary}}
 
-                --- SCORING INSTRUCTIONS ---
-                Use absolute 0-10 scoring for all 7 components.
-                Do not assume one fixed weight profile across all projects;
-                stage-specific weighting is provided in STAGE FOCUS and finalized by backend.
+                --- HƯỚNG DẪN CHẤM ĐIỂM ---
+                Chấm tuyệt đối 0.0-10.0 cho 7 thành phần.
+                Không tự gán trọng số cố định, backend sẽ tổng hợp điểm theo trọng số từng giai đoạn.
 
-                --- STAGE FOCUS (very important) ---
+                --- ƯU TIÊN THEO GIAI ĐOẠN ---
                 {{stageFocus}}
 
-                Score guide:
-                - 5.0 = market average
-                - 7.5 = strong
-                - 9.0+ = exceptional
-                - Range must be 0.0 to 10.0
+                Mốc tham chiếu:
+                - 5.0 = trung bình thị trường
+                - 7.5 = mạnh
+                - 9.0+ = xuất sắc
 
-                --- SCORING RUBRIC (strict) ---
-                For each component, choose score range based on evidence quality:
-                - 0.0 - 2.0: Missing or irrelevant information (placeholder text, no usable document proof).
-                - 2.1 - 4.0: Basic info exists but weak evidence / unclear execution.
-                - 4.1 - 6.5: Market-average quality with reasonable evidence.
-                - 6.6 - 8.5: Strong quality with clear, specific, verifiable evidence.
-                - 8.6 - 10.0: Exceptional quality with outstanding evidence and traction.
-                If confidence is low, prefer conservative scoring.
+                --- RUBRIC (NGHIÊM NGẶT) ---
+                - 0.0-2.0: Thiếu dữ liệu hoặc dữ liệu không liên quan.
+                - 2.1-4.0: Có dữ liệu cơ bản nhưng bằng chứng yếu.
+                - 4.1-6.5: Mức trung bình thị trường, có bằng chứng chấp nhận được.
+                - 6.6-8.5: Mạnh, bằng chứng rõ ràng và kiểm chứng được.
+                - 8.6-10.0: Xuất sắc, bằng chứng nổi trội và traction tốt.
+                Nếu độ tin cậy thấp, bắt buộc chấm bảo thủ.
 
-                --- GOLDEN SAMPLES (style reference) ---
-                Golden Sample A (Pass / high risk):
-                Input signals:
-                - Team data is placeholder, market size = 0, business model unclear.
-                - Uploaded pitch deck is irrelevant image/document.
-                Expected style:
-                - Team/Opportunity/Competition/Marketing/Investment near 1.0~2.5.
-                - Other near 0.0 if docs are irrelevant.
-                - ChaosScore very high (85-100).
-                - InvestmentVerdict = "Pass".
-                - RiskFlags and DealBreakers must be explicit.
+                Trọng tâm nhà đầu tư:
+                - Nhấn mạnh khả năng đầu tư được, rủi ro giảm giá trị, rủi ro thực thi, độ tin cậy dữ liệu.
+                - Điểm > 6.5 phải có bằng chứng cụ thể từ dự án/tài liệu.
+                - Nếu bằng chứng yếu, giảm điểm và bổ sung cảnh báo rủi ro.
+                - KHONG tra ve ChaosScore.
 
-                Golden Sample B (Watchlist / promising MVP):
-                Input signals:
-                - Founder team clear, MVP demo exists, early paid users, TAM/SAM/SOM provided.
-                - Competitive positioning present but still lacks deep financial proof.
-                Expected style:
-                - Team/Product/Marketing around 5.5~7.5.
-                - Opportunity around 5.0~7.0 with evidence.
-                - ChaosScore medium (35-60).
-                - InvestmentVerdict = "Watchlist".
-                - DueDiligenceQuestions focus on unit economics and validation depth.
+                Không tự tính điểm tổng có trọng số. Backend sẽ tính PotentialScore theo thang 0-100.
+                Tự kiểm tra trước khi trả kết quả:
+                1) Mỗi component phải có ít nhất 1 phần tử trong evidence hoặc missingData.
+                2) Điểm > 6.5 phải có bằng chứng cụ thể.
+                3) InvestmentVerdict phải nhất quán với RiskFlags và DealBreakers.
+                4) Trả về JSON hợp lệ duy nhất.
 
-                Investor focus:
-                - Emphasize investability, downside risk, execution risk, and data credibility.
-                - High score (>6.5) MUST include concrete evidence from project/docs.
-                - If evidence is weak, score conservatively and add risk flags.
-
-                Do NOT compute weighted total score. Backend computes PotentialScore on a 0-100 scale
-                using stage-specific maximum points for each component.
-                Final self-check before output:
-                1) Every component must include at least one meaningful evidence or missingData item.
-                2) High score (>6.5) requires specific evidence.
-                3) InvestmentVerdict must align with RiskFlags and DealBreakers.
-                4) Return valid JSON only.
-
-                --- REQUIRED OUTPUT FORMAT (JSON only) ---
+                --- MẪU OUTPUT BẮT BUỘC (CHỈ JSON) ---
                 {
                   "Team": {"score": 0.0, "evidence": [], "missingData": [], "confidence": 0.0, "reason": ""},
                   "Opportunity": {"score": 0.0, "evidence": [], "missingData": [], "confidence": 0.0, "reason": ""},
@@ -455,12 +305,11 @@ namespace AISEP.BLL.Services.AI
                   "Marketing": {"score": 0.0, "evidence": [], "missingData": [], "confidence": 0.0, "reason": ""},
                   "Investment": {"score": 0.0, "evidence": [], "missingData": [], "confidence": 0.0, "reason": ""},
                   "Other": {"score": 0.0, "evidence": [], "missingData": [], "confidence": 0.0, "reason": ""},
-                  "ChaosScore": 0,
                   "Summary": "",
                   "Strengths": [],
                   "Weaknesses": [],
                   "Recommendations": [],
-                  "InvestmentVerdict": "Strong|Watchlist|Pass",
+                  "InvestmentVerdict": "Nên đầu tư|Theo dõi|Từ chối",
                   "RiskFlags": [],
                   "DealBreakers": [],
                   "DueDiligenceQuestions": [],
@@ -542,19 +391,19 @@ namespace AISEP.BLL.Services.AI
             return stage switch
             {
                 DevelopmentStage.Idea =>
-                    "IDEA stage: prioritize ProblemStatement, SolutionDescription, TargetCustomers, and TeamMembers. " +
-                    "Do not heavily penalize missing Revenue or detailed TeamExperience at this stage, but still be strict on evidence quality for the available data. " +
-                    "Max points by component: Team=20, Opportunity=30, Product=35, Competition=5, Marketing=5, Investment=3, Other=2.",
+                    "Giai đoạn IDEA: ưu tiên đánh giá ProblemStatement, SolutionDescription, TargetCustomers và TeamMembers. " +
+                    "Không phạt quá nặng khi thiếu Revenue hoặc TeamExperience chi tiết ở giai đoạn sớm, nhưng vẫn phải nghiêm về chất lượng bằng chứng hiện có. " +
+                    "Điểm tối đa theo thành phần: Team=20, Opportunity=30, Product=35, Competition=5, Marketing=5, Investment=3, Other=2.",
                 DevelopmentStage.MVP =>
-                    "MVP stage: include all IDEA expectations, and emphasize execution readiness via " +
-                    "UniqueValueProposition, BusinessModel, KeySkills, Competitors, and relevance of attached demo/pitch evidence. Be stricter than IDEA. " +
-                    "Max points by component: Team=25, Opportunity=20, Product=25, Competition=10, Marketing=10, Investment=5, Other=5.",
+                    "Giai đoạn MVP: bao gồm toàn bộ kỳ vọng của IDEA và nhấn mạnh mức độ sẵn sàng triển khai qua " +
+                    "UniqueValueProposition, BusinessModel, KeySkills, Competitors và mức độ liên quan của tài liệu demo/pitch. Nghiêm ngặt hơn IDEA. " +
+                    "Điểm tối đa theo thành phần: Team=25, Opportunity=20, Product=25, Competition=10, Marketing=10, Investment=5, Other=5.",
                 DevelopmentStage.Growth =>
-                    "GROWTH stage: include IDEA + MVP expectations, and strongly emphasize Revenue performance, " +
-                    "MarketSize rationale, TeamExperience for scaling, and professional evidence documents. This stage must be evaluated most strictly. " +
-                    "Max points by component: Team=25, Opportunity=20, Product=5, Competition=10, Marketing=20, Investment=15, Other=5.",
+                    "Giai đoạn GROWTH: bao gồm kỳ vọng của IDEA + MVP và nhấn mạnh mạnh vào hiệu quả Revenue, " +
+                    "cơ sở MarketSize, TeamExperience phục vụ mở rộng quy mô, và tài liệu bằng chứng chuyên nghiệp. Đây là giai đoạn cần đánh giá nghiêm nhất. " +
+                    "Điểm tối đa theo thành phần: Team=25, Opportunity=20, Product=5, Competition=10, Marketing=20, Investment=15, Other=5.",
                 _ =>
-                    "Unknown stage: balance scoring conservatively, prioritize evidence quality, and list missing critical data explicitly."
+                    "Không xác định giai đoạn: chấm điểm theo hướng bảo thủ, ưu tiên chất lượng bằng chứng và liệt kê rõ dữ liệu trọng yếu còn thiếu."
             };
         }
 
