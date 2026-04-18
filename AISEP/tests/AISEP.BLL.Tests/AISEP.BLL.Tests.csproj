@@ -20,5 +20,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\AISEP.BLL\AISEP.BLL.csproj" />
+    <ProjectReference Include="..\..\src\AISEP.API\AISEP.API.csproj" />
   </ItemGroup>
 </Project>
