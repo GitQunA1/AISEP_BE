@@ -356,6 +356,407 @@ public class AuthServiceGroupedTests
         jwtService.Verify(x => x.GenerateRefreshToken(), Times.Once);
     }
 
+    [Fact]
+    public async Task UT006_RefreshTokenAsync_ShouldHandleGroupedScenarios()
+    {
+        // Scenario 1: token not found
+        var (service1, _, _, _, _, refreshTokenRepo1, _) = CreateSut();
+        refreshTokenRepo1.Setup(x => x.GetByTokenAsync("missing-token")).ReturnsAsync((RefreshToken?)null);
+
+        var notFoundResult = await service1.RefreshTokenAsync("missing-token");
+        Assert.False(notFoundResult.Success);
+        Assert.Null(notFoundResult.TokenResponse);
+        Assert.Equal("Invalid refresh token", notFoundResult.Message);
+
+        // Scenario 2: user not found
+        var (service2, userManager2, _, _, _, refreshTokenRepo2, _) = CreateSut();
+        var tokenWithMissingUser = new RefreshToken
+        {
+            UserId = 900,
+            Token = "token-user-missing",
+            ExpiryDate = DateTime.UtcNow.AddDays(1),
+            CreatedAt = DateTime.UtcNow
+        };
+        refreshTokenRepo2.Setup(x => x.GetByTokenAsync("token-user-missing")).ReturnsAsync(tokenWithMissingUser);
+        userManager2.Setup(x => x.FindByIdAsync("900")).ReturnsAsync((User?)null);
+
+        var userMissingResult = await service2.RefreshTokenAsync("token-user-missing");
+        Assert.False(userMissingResult.Success);
+        Assert.Null(userMissingResult.TokenResponse);
+        Assert.Equal("User not found", userMissingResult.Message);
+
+        // Scenario 3: inactive token
+        var (service3, userManager3, _, _, _, refreshTokenRepo3, _) = CreateSut();
+        var inactiveToken = new RefreshToken
+        {
+            UserId = 901,
+            Token = "token-inactive",
+            ExpiryDate = DateTime.UtcNow.AddDays(1),
+            CreatedAt = DateTime.UtcNow,
+            IsRevoked = true
+        };
+        refreshTokenRepo3.Setup(x => x.GetByTokenAsync("token-inactive")).ReturnsAsync(inactiveToken);
+        userManager3.Setup(x => x.FindByIdAsync("901")).ReturnsAsync(new User { Id = 901, Email = "u901@test.local" });
+
+        var inactiveResult = await service3.RefreshTokenAsync("token-inactive");
+        Assert.False(inactiveResult.Success);
+        Assert.Null(inactiveResult.TokenResponse);
+        Assert.Equal("Refresh token is no longer active", inactiveResult.Message);
+
+        // Scenario 4: success revokes old token and creates new token
+        var (service4, userManager4, _, jwtService4, unitOfWork4, refreshTokenRepo4, _) = CreateSut();
+        var validToken = new RefreshToken
+        {
+            UserId = 902,
+            Token = "token-valid",
+            ExpiryDate = DateTime.UtcNow.AddDays(1),
+            CreatedAt = DateTime.UtcNow,
+            IsRevoked = false
+        };
+        var user = new User
+        {
+            Id = 902,
+            Email = "refresh@test.local",
+            UserName = "refresh-user",
+            Status = UserStatus.Active,
+            EmailConfirmed = true
+        };
+
+        refreshTokenRepo4.Setup(x => x.GetByTokenAsync("token-valid")).ReturnsAsync(validToken);
+        userManager4.Setup(x => x.FindByIdAsync("902")).ReturnsAsync(user);
+        jwtService4.Setup(x => x.GenerateAccessToken(user)).Returns("new-access-token");
+        jwtService4.Setup(x => x.GenerateRefreshToken()).Returns("new-refresh-token");
+
+        RefreshToken? addedToken = null;
+        refreshTokenRepo4.Setup(x => x.UpdateAsync(validToken)).Returns(Task.CompletedTask);
+        refreshTokenRepo4
+            .Setup(x => x.AddAsync(It.IsAny<RefreshToken>()))
+            .Callback<RefreshToken>(rt => addedToken = rt)
+            .Returns(Task.CompletedTask);
+        unitOfWork4.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
+
+        var successResult = await service4.RefreshTokenAsync("token-valid");
+
+        Assert.True(successResult.Success);
+        Assert.NotNull(successResult.TokenResponse);
+        Assert.Equal(902, successResult.TokenResponse!.UserId);
+        Assert.Equal("new-access-token", successResult.TokenResponse.AccessToken);
+        Assert.Equal("new-refresh-token", successResult.TokenResponse.RefreshToken);
+
+        Assert.True(validToken.IsRevoked);
+        Assert.NotNull(validToken.RevokedAt);
+        Assert.Equal("new-refresh-token", validToken.ReplacedByToken);
+
+        Assert.NotNull(addedToken);
+        Assert.Equal(902, addedToken!.UserId);
+        Assert.Equal("new-refresh-token", addedToken.Token);
+
+        refreshTokenRepo4.Verify(x => x.UpdateAsync(validToken), Times.Once);
+        refreshTokenRepo4.Verify(x => x.AddAsync(It.IsAny<RefreshToken>()), Times.Once);
+        unitOfWork4.Verify(x => x.SaveChangesAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task UT007_RevokeTokenAsync_ShouldHandleGroupedScenarios()
+    {
+        // Scenario 1: token not found
+        var (service1, _, _, _, _, refreshTokenRepo1, _) = CreateSut();
+        refreshTokenRepo1.Setup(x => x.GetByTokenAsync("missing")).ReturnsAsync((RefreshToken?)null);
+
+        var notFoundResult = await service1.RevokeTokenAsync("missing");
+        Assert.False(notFoundResult.Success);
+        Assert.Equal("Refresh token not found", notFoundResult.Message);
+
+        // Scenario 2: token already inactive
+        var (service2, _, _, _, _, refreshTokenRepo2, _) = CreateSut();
+        var inactiveToken = new RefreshToken
+        {
+            UserId = 1001,
+            Token = "inactive",
+            ExpiryDate = DateTime.UtcNow.AddDays(1),
+            CreatedAt = DateTime.UtcNow,
+            IsRevoked = true
+        };
+        refreshTokenRepo2.Setup(x => x.GetByTokenAsync("inactive")).ReturnsAsync(inactiveToken);
+
+        var inactiveResult = await service2.RevokeTokenAsync("inactive");
+        Assert.False(inactiveResult.Success);
+        Assert.Equal("Token is already inactive", inactiveResult.Message);
+
+        // Scenario 3: active token is revoked successfully
+        var (service3, _, _, _, unitOfWork3, refreshTokenRepo3, _) = CreateSut();
+        var activeToken = new RefreshToken
+        {
+            UserId = 1002,
+            Token = "active",
+            ExpiryDate = DateTime.UtcNow.AddDays(1),
+            CreatedAt = DateTime.UtcNow,
+            IsRevoked = false
+        };
+        refreshTokenRepo3.Setup(x => x.GetByTokenAsync("active")).ReturnsAsync(activeToken);
+        refreshTokenRepo3.Setup(x => x.UpdateAsync(activeToken)).Returns(Task.CompletedTask);
+        unitOfWork3.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
+
+        var successResult = await service3.RevokeTokenAsync("active");
+        Assert.True(successResult.Success);
+        Assert.Equal("Token revoked successfully", successResult.Message);
+        Assert.True(activeToken.IsRevoked);
+        Assert.NotNull(activeToken.RevokedAt);
+
+        refreshTokenRepo3.Verify(x => x.UpdateAsync(activeToken), Times.Once);
+        unitOfWork3.Verify(x => x.SaveChangesAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task UT008_LogoutAsync_ShouldRevokeAllActiveTokensAndSignOut()
+    {
+        var (service, _, signInManager, _, unitOfWork, refreshTokenRepo, _) = CreateSut();
+        var activeTokens = new List<RefreshToken>
+        {
+            new()
+            {
+                UserId = 2001,
+                Token = "a1",
+                ExpiryDate = DateTime.UtcNow.AddDays(1),
+                CreatedAt = DateTime.UtcNow,
+                IsRevoked = false
+            },
+            new()
+            {
+                UserId = 2001,
+                Token = "a2",
+                ExpiryDate = DateTime.UtcNow.AddDays(2),
+                CreatedAt = DateTime.UtcNow,
+                IsRevoked = false
+            }
+        };
+
+        refreshTokenRepo.Setup(x => x.GetActiveTokensByUserIdAsync(2001)).ReturnsAsync(activeTokens);
+        refreshTokenRepo.Setup(x => x.UpdateRangeAsync(It.IsAny<IEnumerable<RefreshToken>>())).Returns(Task.CompletedTask);
+        signInManager.Setup(x => x.SignOutAsync()).Returns(Task.CompletedTask);
+        unitOfWork.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
+
+        var result = await service.LogoutAsync(2001);
+
+        Assert.True(result.Success);
+        Assert.Equal("Logout successful", result.Message);
+        Assert.All(activeTokens, token =>
+        {
+            Assert.True(token.IsRevoked);
+            Assert.NotNull(token.RevokedAt);
+        });
+
+        refreshTokenRepo.Verify(
+            x => x.UpdateRangeAsync(It.Is<IEnumerable<RefreshToken>>(tokens => tokens.Count() == 2)),
+            Times.Once);
+        unitOfWork.Verify(x => x.SaveChangesAsync(), Times.Once);
+        signInManager.Verify(x => x.SignOutAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task UT009_ForgotPasswordAsync_ShouldHandleGroupedScenarios()
+    {
+        // Scenario 1: empty email returns generic success
+        var (service1, _, _, _, _, _, _) = CreateSut();
+        var emptyEmailResult = await service1.ForgotPasswordAsync(new ForgotPasswordRequest { Email = "  " });
+        Assert.True(emptyEmailResult.Success);
+        Assert.Contains("If the account exists", emptyEmailResult.Message);
+
+        // Scenario 2: user not found also returns generic success
+        var (service2, userManager2, _, _, _, _, _) = CreateSut();
+        userManager2.Setup(x => x.FindByEmailAsync("nouser@test.local")).ReturnsAsync((User?)null);
+
+        var notFoundResult = await service2.ForgotPasswordAsync(new ForgotPasswordRequest { Email = "nouser@test.local" });
+        Assert.True(notFoundResult.Success);
+        Assert.Contains("If the account exists", notFoundResult.Message);
+
+        // Scenario 3: email sending throws
+        var (service3, userManager3, _, _, _, _, emailService3) = CreateSut();
+        var forgotUser1 = new User { Id = 3001, Email = "forgot1@test.local", UserName = "forgot1" };
+        userManager3.Setup(x => x.FindByEmailAsync("forgot1@test.local")).ReturnsAsync(forgotUser1);
+        userManager3.Setup(x => x.GeneratePasswordResetTokenAsync(forgotUser1)).ReturnsAsync("reset-token-1");
+        emailService3
+            .Setup(x => x.SendPasswordResetAsync(forgotUser1.Email!, forgotUser1.UserName!, It.IsAny<string>()))
+            .ThrowsAsync(new InvalidOperationException("SMTP fail"));
+
+        var sendFailedResult = await service3.ForgotPasswordAsync(new ForgotPasswordRequest { Email = "forgot1@test.local" });
+        Assert.False(sendFailedResult.Success);
+        Assert.Equal("Failed to send reset email. Please try again later.", sendFailedResult.Message);
+
+        // Scenario 4: user exists and reset email is sent
+        var (service4, userManager4, _, _, _, _, emailService4) = CreateSut();
+        var forgotUser2 = new User { Id = 3002, Email = "forgot2@test.local", UserName = "forgot2" };
+        userManager4.Setup(x => x.FindByEmailAsync("forgot2@test.local")).ReturnsAsync(forgotUser2);
+        userManager4.Setup(x => x.GeneratePasswordResetTokenAsync(forgotUser2)).ReturnsAsync("reset-token-2");
+        emailService4
+            .Setup(x => x.SendPasswordResetAsync(forgotUser2.Email!, forgotUser2.UserName!, It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+
+        var successResult = await service4.ForgotPasswordAsync(new ForgotPasswordRequest { Email = "forgot2@test.local" });
+        Assert.True(successResult.Success);
+        Assert.Contains("If the account exists", successResult.Message);
+
+        emailService4.Verify(
+            x => x.SendPasswordResetAsync(
+                forgotUser2.Email!,
+                forgotUser2.UserName!,
+                It.Is<string>(link => link.Contains("https://frontend.test.local/reset-password?userId=3002&token="))),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task UT010_ResetPasswordAsync_ShouldHandleGroupedScenarios()
+    {
+        // Scenario 1: user not found
+        var (service1, userManager1, _, _, _, _, _) = CreateSut();
+        userManager1.Setup(x => x.FindByIdAsync("4001")).ReturnsAsync((User?)null);
+
+        var userMissingResult = await service1.ResetPasswordAsync(new ResetPasswordRequest
+        {
+            UserId = "4001",
+            Token = "token",
+            NewPassword = "NewP@ssw0rd!",
+            ConfirmPassword = "NewP@ssw0rd!"
+        });
+        Assert.False(userMissingResult.Success);
+        Assert.Equal("Invalid reset request.", userMissingResult.Message);
+
+        // Scenario 2: base64 decode fails and service falls back to raw token
+        var (service2, userManager2, _, _, _, _, _) = CreateSut();
+        var user2 = new User { Id = 4002, Email = "reset2@test.local" };
+        var invalidBase64Token = "***invalid-base64***";
+        userManager2.Setup(x => x.FindByIdAsync("4002")).ReturnsAsync(user2);
+        userManager2
+            .Setup(x => x.ResetPasswordAsync(user2, invalidBase64Token, "NewP@ssw0rd!"))
+            .ReturnsAsync(IdentityResult.Failed(new IdentityError { Description = "Invalid token" }));
+
+        var fallbackResult = await service2.ResetPasswordAsync(new ResetPasswordRequest
+        {
+            UserId = "4002",
+            Token = invalidBase64Token,
+            NewPassword = "NewP@ssw0rd!",
+            ConfirmPassword = "NewP@ssw0rd!"
+        });
+        Assert.False(fallbackResult.Success);
+        Assert.Contains("Invalid token", fallbackResult.Message);
+        userManager2.Verify(
+            x => x.ResetPasswordAsync(user2, invalidBase64Token, "NewP@ssw0rd!"),
+            Times.Once);
+
+        // Scenario 3: successful reset revokes active refresh tokens
+        var (service3, userManager3, _, _, unitOfWork3, refreshTokenRepo3, _) = CreateSut();
+        var user3 = new User { Id = 4003, Email = "reset3@test.local" };
+        var activeTokens = new List<RefreshToken>
+        {
+            new()
+            {
+                UserId = 4003,
+                Token = "r1",
+                ExpiryDate = DateTime.UtcNow.AddDays(1),
+                CreatedAt = DateTime.UtcNow
+            }
+        };
+        userManager3.Setup(x => x.FindByIdAsync("4003")).ReturnsAsync(user3);
+        userManager3
+            .Setup(x => x.ResetPasswordAsync(user3, "decoded-token", "NewP@ssw0rd!"))
+            .ReturnsAsync(IdentityResult.Success);
+        refreshTokenRepo3.Setup(x => x.GetActiveTokensByUserIdAsync(4003)).ReturnsAsync(activeTokens);
+        refreshTokenRepo3.Setup(x => x.UpdateRangeAsync(It.IsAny<IEnumerable<RefreshToken>>())).Returns(Task.CompletedTask);
+        unitOfWork3.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
+
+        var successResult = await service3.ResetPasswordAsync(new ResetPasswordRequest
+        {
+            UserId = "4003",
+            Token = EncodeToken("decoded-token"),
+            NewPassword = "NewP@ssw0rd!",
+            ConfirmPassword = "NewP@ssw0rd!"
+        });
+
+        Assert.True(successResult.Success);
+        Assert.Equal("Password has been reset successfully. Please login again.", successResult.Message);
+        Assert.All(activeTokens, token =>
+        {
+            Assert.True(token.IsRevoked);
+            Assert.NotNull(token.RevokedAt);
+        });
+
+        refreshTokenRepo3.Verify(x => x.UpdateRangeAsync(It.IsAny<IEnumerable<RefreshToken>>()), Times.Once);
+        unitOfWork3.Verify(x => x.SaveChangesAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task UT011_ChangePasswordAsync_ShouldHandleGroupedScenarios()
+    {
+        // Scenario 1: user not found
+        var (service1, userManager1, _, _, _, _, _) = CreateSut();
+        userManager1.Setup(x => x.FindByIdAsync("5001")).ReturnsAsync((User?)null);
+
+        var userMissingResult = await service1.ChangePasswordAsync(5001, new ChangePasswordRequest
+        {
+            CurrentPassword = "OldP@ssw0rd!",
+            NewPassword = "NewP@ssw0rd!",
+            ConfirmPassword = "NewP@ssw0rd!"
+        });
+        Assert.False(userMissingResult.Success);
+        Assert.Equal("User not found.", userMissingResult.Message);
+
+        // Scenario 2: identity change password fails
+        var (service2, userManager2, _, _, _, _, _) = CreateSut();
+        var user2 = new User { Id = 5002, Email = "change2@test.local" };
+        userManager2.Setup(x => x.FindByIdAsync("5002")).ReturnsAsync(user2);
+        userManager2
+            .Setup(x => x.ChangePasswordAsync(user2, "OldP@ssw0rd!", "NewP@ssw0rd!"))
+            .ReturnsAsync(IdentityResult.Failed(new IdentityError { Description = "Current password is incorrect" }));
+
+        var failedResult = await service2.ChangePasswordAsync(5002, new ChangePasswordRequest
+        {
+            CurrentPassword = "OldP@ssw0rd!",
+            NewPassword = "NewP@ssw0rd!",
+            ConfirmPassword = "NewP@ssw0rd!"
+        });
+        Assert.False(failedResult.Success);
+        Assert.Contains("Current password is incorrect", failedResult.Message);
+
+        // Scenario 3: successful change revokes active refresh tokens
+        var (service3, userManager3, _, _, unitOfWork3, refreshTokenRepo3, _) = CreateSut();
+        var user3 = new User { Id = 5003, Email = "change3@test.local" };
+        var activeTokens = new List<RefreshToken>
+        {
+            new()
+            {
+                UserId = 5003,
+                Token = "cp1",
+                ExpiryDate = DateTime.UtcNow.AddDays(1),
+                CreatedAt = DateTime.UtcNow
+            }
+        };
+        userManager3.Setup(x => x.FindByIdAsync("5003")).ReturnsAsync(user3);
+        userManager3
+            .Setup(x => x.ChangePasswordAsync(user3, "OldP@ssw0rd!", "NewP@ssw0rd!"))
+            .ReturnsAsync(IdentityResult.Success);
+        refreshTokenRepo3.Setup(x => x.GetActiveTokensByUserIdAsync(5003)).ReturnsAsync(activeTokens);
+        refreshTokenRepo3.Setup(x => x.UpdateRangeAsync(It.IsAny<IEnumerable<RefreshToken>>())).Returns(Task.CompletedTask);
+        unitOfWork3.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
+
+        var successResult = await service3.ChangePasswordAsync(5003, new ChangePasswordRequest
+        {
+            CurrentPassword = "OldP@ssw0rd!",
+            NewPassword = "NewP@ssw0rd!",
+            ConfirmPassword = "NewP@ssw0rd!"
+        });
+
+        Assert.True(successResult.Success);
+        Assert.Equal("Password changed successfully. Please login again.", successResult.Message);
+        Assert.All(activeTokens, token =>
+        {
+            Assert.True(token.IsRevoked);
+            Assert.NotNull(token.RevokedAt);
+        });
+
+        refreshTokenRepo3.Verify(x => x.UpdateRangeAsync(It.IsAny<IEnumerable<RefreshToken>>()), Times.Once);
+        unitOfWork3.Verify(x => x.SaveChangesAsync(), Times.Once);
+    }
+
     private static string EncodeToken(string token)
     {
         return WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
@@ -383,7 +784,8 @@ public class AuthServiceGroupedTests
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["AppUrl"] = "https://app.test.local"
+                ["AppUrl"] = "https://app.test.local",
+                ["FrontendUrl"] = "https://frontend.test.local"
             })
             .Build();
 
