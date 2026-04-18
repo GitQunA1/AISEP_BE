@@ -10,7 +10,6 @@ namespace AISEP.BLL.DTOs.Responses
         public string? AnalysisJson { get; set; }
         public GeminiAnalysisResult? Analysis { get; set; }
         public int? PotentialScore { get; set; }
-        public int? ChaosScore { get; set; }
         public List<ScoreBreakdownItem> ScoreBreakdown { get; set; } = [];
         public string InvestmentVerdict { get; set; } = string.Empty;
         public List<string> RiskFlags { get; set; } = [];

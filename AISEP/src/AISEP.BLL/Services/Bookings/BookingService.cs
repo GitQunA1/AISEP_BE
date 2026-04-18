@@ -471,9 +471,11 @@ namespace AISEP.BLL.Services.Bookings
 
             await EnsureAdvisorCanRespondAsync(booking);
 
-            if (booking.Status == BookingStatus.ApprovedAwaitingPayment
-                || booking.Status == BookingStatus.Confirmed)
-                return _mapper.Map<BookingResponse>(booking);
+            if (booking.Status == BookingStatus.ApprovedAwaitingPayment)
+                throw new InvalidOperationException("Booking đã được chấp nhận trước đó và đang chờ thanh toán.");
+
+            if (booking.Status == BookingStatus.Confirmed)
+                throw new InvalidOperationException("Booking đã được xác nhận trước đó.");
 
             if (booking.Status != BookingStatus.Pending)
                 throw new InvalidOperationException("Only pending bookings can be approved.");
@@ -482,10 +484,19 @@ namespace AISEP.BLL.Services.Bookings
                 ? BookingStatus.Confirmed
                 : BookingStatus.ApprovedAwaitingPayment;
             await _unitOfWork.SaveChangesAsync();
+
+            var requiresPayment = booking.Status == BookingStatus.ApprovedAwaitingPayment;
+            var notificationTitle = requiresPayment
+                ? "Booking đã được chấp nhận"
+                : "Booking đã được xác nhận";
+            var notificationMessage = requiresPayment
+                ? "Booking của bạn đã được chấp nhận. Vui lòng tiến hành thanh toán."
+                : "Booking của bạn đã được xác nhận. Bạn có thể bắt đầu trao đổi với advisor.";
+
             await _notificationService.SendNotificationAsync(
                 booking.CustomerId,
-                "Booking đã được chấp nhận",
-                "Booking của bạn đã được chấp nhận. Vui lòng tiến hành thanh toán.",
+                notificationTitle,
+                notificationMessage,
                 NotificationType.General,
                 booking.BookingId,
                 "Booking");

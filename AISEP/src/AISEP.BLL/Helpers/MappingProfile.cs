@@ -422,7 +422,6 @@ namespace AISEP.BLL.Helpers
             CreateMap<InvestorAIAnalysis, InvestorAIAnalysisResponse>()
                 .ForMember(dest => dest.Analysis, opt => opt.Ignore())
                 .ForMember(dest => dest.PotentialScore, opt => opt.Ignore())
-                .ForMember(dest => dest.ChaosScore, opt => opt.Ignore())
                 .ForMember(dest => dest.ScoreBreakdown, opt => opt.Ignore());
 
             // StartupAIAnalysis Entity -> StartupEligibilityResponse

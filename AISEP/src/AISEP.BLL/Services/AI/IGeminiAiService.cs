@@ -30,7 +30,6 @@ namespace AISEP.BLL.Services.AI
         public double InvestmentScore  { get; set; }
         public double OtherScore       { get; set; }
         public int    PotentialScore   { get; set; }
-        public int    ChaosScore       { get; set; }
         public bool   IsEligibleStartup  { get; set; }
         public string EligibilityReason  { get; set; } = string.Empty;
         public string Summary            { get; set; } = string.Empty;
