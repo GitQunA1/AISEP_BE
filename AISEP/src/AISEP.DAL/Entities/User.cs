@@ -39,6 +39,6 @@ namespace AISEP.DAL.Entities
 
         // Reports
         public ICollection<UserReport> ReportsMade { get; set; } = new List<UserReport>();
-        public ICollection<UserReport> ReportsReceived { get; set; } = new List<UserReport>();
+        public ICollection<UserReport> ReportsResolved { get; set; } = new List<UserReport>();
     }
 }

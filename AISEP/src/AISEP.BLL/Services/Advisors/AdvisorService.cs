@@ -87,7 +87,7 @@ namespace AISEP.BLL.Services.Advisors
             await _unitOfWork.SaveChangesAsync();
             await NotifyStaffAndAdminsAsync(
                 "Hồ sơ advisor chờ duyệt",
-                $"Hồ sơ advisor #{advisor.AdvisorId} đã được gửi và đang chờ phê duyệt.");
+                $"Hồ sơ advisor m?i đã được gửi và đang chờ phê duyệt.");
 
             var created = await _unitOfWork.Advisors.GetByIdAsync(advisor.AdvisorId);
             return _mapper.Map<AdvisorResponse>(created!);
@@ -102,12 +102,23 @@ namespace AISEP.BLL.Services.Advisors
             if (advisor.UserId != userId)
                 throw new ForbiddenAccessException("You do not have permission to update this advisor.");
 
-            advisor.Bio                = string.IsNullOrWhiteSpace(dto.Bio)                ? advisor.Bio                : dto.Bio;
-            advisor.Expertise          = string.IsNullOrWhiteSpace(dto.Expertise)          ? advisor.Expertise          : dto.Expertise;
-            advisor.PreviousExperience = string.IsNullOrWhiteSpace(dto.PreviousExperience) ? advisor.PreviousExperience : dto.PreviousExperience;
-            advisor.LanguagesSpoken    = string.IsNullOrWhiteSpace(dto.LanguagesSpoken)    ? advisor.LanguagesSpoken    : dto.LanguagesSpoken;
-            advisor.Location           = string.IsNullOrWhiteSpace(dto.Location)           ? advisor.Location           : dto.Location;
-            advisor.HourlyRate         = (dto.HourlyRate > 0) ? dto.HourlyRate : advisor.HourlyRate;
+            if (dto.Bio is not null)
+                advisor.Bio = dto.Bio.Trim();
+
+            if (dto.Expertise is not null)
+                advisor.Expertise = dto.Expertise.Trim();
+
+            if (dto.PreviousExperience is not null)
+                advisor.PreviousExperience = dto.PreviousExperience.Trim();
+
+            if (dto.LanguagesSpoken is not null)
+                advisor.LanguagesSpoken = dto.LanguagesSpoken.Trim();
+
+            if (dto.Location is not null)
+                advisor.Location = dto.Location.Trim();
+
+            if (dto.HourlyRate.HasValue)
+                advisor.HourlyRate = dto.HourlyRate.Value;
 
             var hasIndustryUpdate = dto.Industries is not null;
             if (hasIndustryUpdate)
@@ -262,3 +273,4 @@ namespace AISEP.BLL.Services.Advisors
         }
     }
 }
+

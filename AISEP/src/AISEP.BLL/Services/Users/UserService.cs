@@ -81,13 +81,15 @@ namespace AISEP.BLL.Services.Users
             if (user is null)
                 return null;
 
-            user.UserName = string.IsNullOrWhiteSpace(request.UserName)
-                ? user.UserName
-                : request.UserName;
+            if (request.UserName is not null)
+            {
+                user.UserName = request.UserName.Trim();
+            }
 
-            user.FullName = string.IsNullOrWhiteSpace(request.FullName)
-                ? user.FullName
-                : request.FullName;
+            if (request.FullName is not null)
+            {
+                user.FullName = request.FullName.Trim();
+            }
 
             if (request.DateOfBirth.HasValue)
             {

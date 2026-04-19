@@ -43,16 +43,25 @@ namespace AISEP.BLL.Services.UserReports
         public async Task<UserReportResponse> CreateAsync(CreateUserReportRequest request)
         {
             var reporterId = _userService.GetUserId();
+            var booking = await _unitOfWork.Bookings.GetByIdAsync(request.BookingId)
+                ?? throw new KeyNotFoundException("Booking not found.");
+            var advisorUserId = booking.Advisor?.UserId
+                ?? throw new InvalidOperationException("Booking advisor account is missing.");
+            var customerUserId = booking.CustomerId;
+            var isReporterParticipant = reporterId == customerUserId || reporterId == advisorUserId;
 
-            if (request.ReportedUserId == reporterId)
+            if (!isReporterParticipant)
             {
-                throw new InvalidOperationException("You cannot report yourself.");
+                throw new InvalidOperationException("You are not a participant of this booking.");
             }
 
-            var reportedUser = await _unitOfWork.Users.GetByIdAsync(request.ReportedUserId);
-            if (reportedUser is null)
+            var hasPendingReport = await _unitOfWork.UserReports.GetAll()
+                .AnyAsync(x => x.BookingId == request.BookingId
+                    && x.ReporterId == reporterId
+                    && x.Status == UserReportStatus.Pending);
+            if (hasPendingReport)
             {
-                throw new KeyNotFoundException("Reported user not found.");
+                throw new InvalidOperationException("You already have a pending report for this booking.");
             }
 
             var uploadedImageUrls = new List<string>();
@@ -73,6 +82,9 @@ namespace AISEP.BLL.Services.UserReports
             report.EvidenceUrl = uploadedImageUrls.FirstOrDefault(); // legacy field for compatibility
             report.Status = UserReportStatus.Pending;
             report.CreatedAt = DateTime.UtcNow;
+            report.ResolutionNote = null;
+            report.ResolvedAt = null;
+            report.ResolvedById = null;
 
             await _unitOfWork.UserReports.AddAsync(report);
             await _unitOfWork.SaveChangesAsync();
@@ -81,17 +93,17 @@ namespace AISEP.BLL.Services.UserReports
             return _mapper.Map<UserReportResponse>(report);
         }
 
-        public async Task<UserReportResponse> ResolveAsValidAsync(int reportId)
+        public async Task<UserReportResponse> ResolveAsValidAsync(int reportId, string? resolutionNote)
         {
-            return await UpdateStatusAsync(reportId, UserReportStatus.Resolved);
+            return await UpdateStatusAsync(reportId, UserReportStatus.Resolved, resolutionNote);
         }
 
-        public async Task<UserReportResponse> ResolveAsFalseAsync(int reportId)
+        public async Task<UserReportResponse> ResolveAsFalseAsync(int reportId, string? resolutionNote)
         {
-            return await UpdateStatusAsync(reportId, UserReportStatus.Dismissed);
+            return await UpdateStatusAsync(reportId, UserReportStatus.Dismissed, resolutionNote);
         }
 
-        private async Task<UserReportResponse> UpdateStatusAsync(int reportId, UserReportStatus newStatus)
+        private async Task<UserReportResponse> UpdateStatusAsync(int reportId, UserReportStatus newStatus, string? resolutionNote)
         {
             var report = await _unitOfWork.UserReports.GetByIdAsync(reportId);
             if (report is null)
@@ -104,7 +116,14 @@ namespace AISEP.BLL.Services.UserReports
                 throw new InvalidOperationException($"Only Pending report can be updated. Current status: {report.Status}.");
             }
 
+            var normalizedNote = string.IsNullOrWhiteSpace(resolutionNote)
+                ? null
+                : resolutionNote.Trim();
+
             report.Status = newStatus;
+            report.ResolvedById = _userService.GetUserId();
+            report.ResolvedAt = DateTime.UtcNow;
+            report.ResolutionNote = normalizedNote;
             _unitOfWork.UserReports.Update(report);
             await _unitOfWork.SaveChangesAsync();
             await NotifyReportStatusChangedAsync(report);
@@ -137,7 +156,11 @@ namespace AISEP.BLL.Services.UserReports
         {
             var currentUserId = _userService.GetUserId();
             var query = _unitOfWork.UserReports.GetAll()
-                .Where(x => x.ReportedUserId == currentUserId);
+                .Where(x =>
+                    x.Booking != null &&
+                    x.ReporterId != currentUserId &&
+                    (x.Booking.CustomerId == currentUserId
+                     || (x.Booking.Advisor != null && x.Booking.Advisor.UserId == currentUserId)));
 
             return await PaginationHelper.PaginateAsync(
                 query,
@@ -159,7 +182,10 @@ namespace AISEP.BLL.Services.UserReports
             }
 
             var title = "New user report pending review";
-            var message = $"User report #{report.UserReportId} is pending review.";
+            var bookingPart = report.BookingId.HasValue
+                ? " for a booking"
+                : string.Empty;
+            var message = $"A user report{bookingPart} is pending review.";
 
             foreach (var reviewerId in reviewerIds)
             {
@@ -176,21 +202,41 @@ namespace AISEP.BLL.Services.UserReports
         private async Task NotifyReportStatusChangedAsync(UserReport report)
         {
             var statusText = report.Status.ToString();
+            var suffix = string.IsNullOrWhiteSpace(report.ResolutionNote)
+                ? string.Empty
+                : $" Note: {report.ResolutionNote}";
             await _notificationService.SendNotificationAsync(
                 report.ReporterId,
                 "Your user report has been updated",
-                $"Your report #{report.UserReportId} status is now {statusText}.",
+                $"Your report status is now {statusText}.{suffix}",
                 NotificationType.General,
                 report.UserReportId,
                 "UserReport");
 
             await _notificationService.SendNotificationAsync(
-                report.ReportedUserId,
+                ResolveCounterpartyUserId(report),
                 "A user report status has been updated",
-                $"A report involving your account (#{report.UserReportId}) is now {statusText}.",
+                $"A report involving your account is now {statusText}.{suffix}",
                 NotificationType.General,
                 report.UserReportId,
                 "UserReport");
         }
+
+        private static int ResolveCounterpartyUserId(UserReport report)
+        {
+            if (report.Booking is null)
+            {
+                throw new InvalidOperationException("Report booking is missing.");
+            }
+
+            var advisorUserId = report.Booking.Advisor?.UserId
+                ?? throw new InvalidOperationException("Report booking advisor account is missing.");
+            var customerUserId = report.Booking.CustomerId;
+
+            return report.ReporterId == customerUserId
+                ? advisorUserId
+                : customerUserId;
+        }
     }
 }
+

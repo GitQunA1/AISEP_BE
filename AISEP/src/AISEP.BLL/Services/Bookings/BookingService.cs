@@ -41,9 +41,6 @@ namespace AISEP.BLL.Services.Bookings
 
         public async Task<BookingResponse?> CreateBookingAsync(CreateBookingRequest dto)
         {
-            if (dto.AdvisorAvailabilitySlotIds is null || dto.AdvisorAvailabilitySlotIds.Count == 0)
-                throw new InvalidOperationException("At least one slot must be selected.");
-
             var currentUser = _currentUserService.GetUserId();
             var currentRole = _currentUserService.GetUserRole();
             var advisor = await _unitOfWork.Advisors.GetByIdAsync(dto.AdvisorId)
@@ -230,7 +227,7 @@ namespace AISEP.BLL.Services.Bookings
                         BookingId = booking.BookingId,
                         UsedAt = DateTime.UtcNow,
                         BookingDurationHours = bookingDurationHours,
-                        Note = $"Used premium free booking quota for booking #{booking.BookingId}."
+                        Note = $"Used premium free booking quota."
                     });
                     await _unitOfWork.SaveChangesAsync();
                 }
@@ -277,7 +274,7 @@ namespace AISEP.BLL.Services.Bookings
             await _notificationService.SendNotificationAsync(
                 advisor.UserId,
                 "Có yêu cầu booking mới",
-                $"Bạn có yêu cầu booking mới #{booking.BookingId} đang chờ phản hồi.",
+                $"Bạn có yêu cầu booking mới  đang chờ phản hồi.",
                 NotificationType.General,
                 booking.BookingId,
                 "Booking");
@@ -639,7 +636,7 @@ namespace AISEP.BLL.Services.Bookings
             }
 
             var suggestedText = string.Join(", ", suggestedAdvisors.Select(x =>
-                $"{(x.User.UserName ?? $"Advisor {x.AdvisorId}")} (ID: {x.AdvisorId})"));
+                (x.User.UserName ?? "Advisor")));
 
             await _notificationService.SendNotificationAsync(
                 booking.CustomerId,
@@ -733,3 +730,6 @@ namespace AISEP.BLL.Services.Bookings
         }
     }
 }
+
+
+

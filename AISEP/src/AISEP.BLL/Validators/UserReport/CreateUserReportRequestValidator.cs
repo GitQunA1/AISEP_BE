@@ -11,8 +11,8 @@ namespace AISEP.BLL.Validators.UserReport
 
         public CreateUserReportRequestValidator()
         {
-            RuleFor(x => x.ReportedUserId)
-                .GreaterThan(0).WithMessage("ReportedUserId must be a positive number.");
+            RuleFor(x => x.BookingId)
+                .GreaterThan(0).WithMessage("BookingId must be a positive number.");
 
             RuleFor(x => x.Category)
                 .IsInEnum().WithMessage("Report category is invalid.");

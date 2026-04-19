@@ -573,9 +573,13 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.VideoEvidenceUrl, opt => opt.MapFrom(src =>
                     string.IsNullOrWhiteSpace(src.VideoEvidenceUrl) ? null : src.VideoEvidenceUrl.Trim()))
                 .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.ResolutionNote, opt => opt.Ignore())
+                .ForMember(dest => dest.ResolvedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.ResolvedById, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.Booking, opt => opt.Ignore())
                 .ForMember(dest => dest.Reporter, opt => opt.Ignore())
-                .ForMember(dest => dest.ReportedUser, opt => opt.Ignore());
+                .ForMember(dest => dest.ResolvedBy, opt => opt.Ignore());
 
             // UserReport Entity -> UserReportResponse
             CreateMap<UserReport, UserReportResponse>()

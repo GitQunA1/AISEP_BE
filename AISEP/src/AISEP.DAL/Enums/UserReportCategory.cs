@@ -2,11 +2,12 @@ namespace AISEP.DAL.Enums
 {
     public enum UserReportCategory
     {
-        UnprofessionalBehavior,
-        Scam,
-        Harassment,
-        Impersonation,
-        PaymentDispute,
+        ServiceQuality,
+        NoShow,
+        LateOrShortSession,
+        UnprofessionalConduct,
+        ScopeNotMet,
+        PaymentIssue,
         InappropriateContent,
         Other
     }

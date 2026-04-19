@@ -255,13 +255,19 @@ namespace AISEP.BLL.Helpers
             mapper.Property<UserReport>(r => r.ReporterId)
                 .CanFilter()
                 .CanSort();
-            mapper.Property<UserReport>(r => r.ReportedUserId)
+            mapper.Property<UserReport>(r => r.BookingId)
                 .CanFilter()
                 .CanSort();
             mapper.Property<UserReport>(r => r.Category)
                 .CanFilter()
                 .CanSort();
             mapper.Property<UserReport>(r => r.Status)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<UserReport>(r => r.ResolvedById)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<UserReport>(r => r.ResolvedAt)
                 .CanFilter()
                 .CanSort();
             mapper.Property<UserReport>(r => r.CreatedAt)

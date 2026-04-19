@@ -767,17 +767,25 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.EvidenceImageUrls);
                 entity.Property(e => e.VideoEvidenceUrl).HasMaxLength(1000);
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
+                entity.Property(e => e.ResolutionNote).HasMaxLength(1000);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.HasIndex(e => e.BookingId);
+                entity.HasIndex(e => new { e.ReporterId, e.BookingId, e.Status });
+
+                entity.HasOne(r => r.Booking)
+                    .WithMany(b => b.UserReports)
+                    .HasForeignKey(r => r.BookingId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(r => r.Reporter)
                     .WithMany(u => u.ReportsMade)
                     .HasForeignKey(r => r.ReporterId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                entity.HasOne(r => r.ReportedUser)
-                    .WithMany(u => u.ReportsReceived)
-                    .HasForeignKey(r => r.ReportedUserId)
-                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(r => r.ResolvedBy)
+                    .WithMany(u => u.ReportsResolved)
+                    .HasForeignKey(r => r.ResolvedById)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
             modelBuilder.Entity<RefreshToken>(entity =>

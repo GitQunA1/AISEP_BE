@@ -175,6 +175,28 @@ namespace AISEP.BLL.Services.Projects
                 project.Industry = dto.Industry.Value;
             if (dto.ProjectImageFile is not null)
                 project.ProjectImageUrl = await _storage.UploadFileAsync(dto.ProjectImageFile, "project-images");
+            if (dto.ProjectName is not null)
+                project.ProjectName = dto.ProjectName.Trim();
+            if (dto.ShortDescription is not null)
+                project.ShortDescription = dto.ShortDescription.Trim();
+            if (dto.ProblemStatement is not null)
+                project.ProblemStatement = dto.ProblemStatement.Trim();
+            if (dto.SolutionDescription is not null)
+                project.SolutionDescription = dto.SolutionDescription.Trim();
+            if (dto.TargetCustomers is not null)
+                project.TargetCustomers = dto.TargetCustomers.Trim();
+            if (dto.UniqueValueProposition is not null)
+                project.UniqueValueProposition = dto.UniqueValueProposition.Trim();
+            if (dto.BusinessModel is not null)
+                project.BusinessModel = dto.BusinessModel.Trim();
+            if (dto.Competitors is not null)
+                project.Competitors = dto.Competitors.Trim();
+            if (dto.TeamMembers is not null)
+                project.TeamMembers = dto.TeamMembers.Trim();
+            if (dto.KeySkills is not null)
+                project.KeySkills = dto.KeySkills.Trim();
+            if (dto.TeamExperience is not null)
+                project.TeamExperience = dto.TeamExperience.Trim();
 
             ValidateByStageLikeCreate(project);
 

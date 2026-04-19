@@ -67,8 +67,15 @@ namespace AISEP.BLL.Services.PostPrs
             var postPr = await BuildQuery().FirstOrDefaultAsync(p => p.PostPrId == id)
                 ?? throw new KeyNotFoundException("Post PR not found.");
 
-            postPr.Title = request.Title;
-            postPr.Content = request.Content;
+            if (request.Title is not null)
+            {
+                postPr.Title = request.Title.Trim();
+            }
+
+            if (request.Content is not null)
+            {
+                postPr.Content = request.Content.Trim();
+            }
 
             _unitOfWork.PostPrs.Update(postPr);
             await _unitOfWork.SaveChangesAsync();

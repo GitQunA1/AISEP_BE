@@ -13,18 +13,31 @@ namespace AISEP.BLL.Validators.User
         private const string NamePattern = @"^[\p{L}\p{N}\s]+$";
         public UpdateUserRequestValidator() 
         {
+            RuleFor(x => x)
+                .Must(HasAtLeastOneField)
+                .WithMessage("At least one field must be provided for update.");
+
             RuleFor(x => x.UserName)
+                .NotEmpty().WithMessage("User name must not be empty when provided.")
                 .Matches(NamePattern).WithMessage("User name must only contain letters and spaces.")
-                .When(x => !string.IsNullOrWhiteSpace(x.UserName));
+                .When(x => x.UserName is not null);
 
             RuleFor(x => x.FullName)
+                .NotEmpty().WithMessage("Full name must not be empty when provided.")
                 .Matches(NamePattern).WithMessage("Full name must only contain letters and spaces.")
-                .When(x => !string.IsNullOrWhiteSpace(x.FullName));
+                .When(x => x.FullName is not null);
 
             RuleFor(x => x.DateOfBirth)
                 .LessThanOrEqualTo(_ => DateTime.UtcNow.Date)
                 .WithMessage("Date of birth cannot be in the future.")
                 .When(x => x.DateOfBirth.HasValue);
+        }
+
+        private static bool HasAtLeastOneField(UpdateUserRequest request)
+        {
+            return request.UserName is not null
+                || request.FullName is not null
+                || request.DateOfBirth.HasValue;
         }
     }
 }

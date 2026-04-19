@@ -1,5 +1,4 @@
 using AISEP.BLL.DTOs.Requests;
-using AISEP.DAL.Enums;
 using FluentValidation;
 using Nethereum.Util;
 
@@ -7,23 +6,40 @@ namespace AISEP.BLL.Validators.Investor
 {
     public class UpdateInvestorRequestValidator : AbstractValidator<UpdateInvestorRequest>
     {
+        private const string TextPattern = @"^[\p{L}\p{N}\s.,!?'-]*$";
+
         public UpdateInvestorRequestValidator()
         {
+            RuleFor(x => x)
+                .Must(HasAtLeastOneField)
+                .WithMessage("At least one field must be provided for update.");
+
             RuleFor(x => x.OrganizationName)
+                .NotEmpty().WithMessage("Organization name must not be empty when provided.")
                 .MaximumLength(255).WithMessage("Organization name must not exceed 255 characters.")
-                .When(x => x.OrganizationName is not null)
-                .Matches("^[a-zA-Z0-9 .,!?'-àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]*$").WithMessage("Organization name contains invalid characters.")
-                .When(x => !string.IsNullOrWhiteSpace(x.OrganizationName));
+                .Matches(TextPattern).WithMessage("Organization name contains invalid characters.")
+                .When(x => x.OrganizationName is not null);
+
+            RuleFor(x => x.InvestmentTaste)
+                .NotEmpty().WithMessage("Investment taste must not be empty when provided.")
+                .MaximumLength(1000).WithMessage("Investment taste must not exceed 1000 characters.")
+                .Matches(TextPattern).WithMessage("Investment taste contains invalid characters.")
+                .When(x => x.InvestmentTaste is not null);
 
             RuleFor(x => x.InvestmentAmount)
                 .GreaterThan(0).WithMessage("Investment amount must be greater than 0.")
-                .When(x => x.InvestmentAmount is not null && x.InvestmentAmount != 0);
+                .When(x => x.InvestmentAmount.HasValue);
+
+            RuleFor(x => x.InvestmentDate)
+                .LessThanOrEqualTo(_ => DateTime.UtcNow.Date)
+                .WithMessage("Investment date cannot be in the future.")
+                .When(x => x.InvestmentDate.HasValue);
 
             RuleFor(x => x.InvestmentRegion)
+                .NotEmpty().WithMessage("Investment region must not be empty when provided.")
                 .MaximumLength(255).WithMessage("Investment region must not exceed 255 characters.")
-                .When(x => x.InvestmentRegion is not null)
-                .Matches("^[a-zA-Z0-9 .,!?'-àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]*$").WithMessage("Investment region contains invalid characters.")
-                .When(x => !string.IsNullOrWhiteSpace(x.InvestmentRegion));
+                .Matches(TextPattern).WithMessage("Investment region contains invalid characters.")
+                .When(x => x.InvestmentRegion is not null);
 
             RuleFor(x => x.WalletAddress)
                 .Cascade(CascadeMode.Stop)
@@ -33,13 +49,13 @@ namespace AISEP.BLL.Validators.Investor
                 .When(x => x.WalletAddress is not null);
 
             RuleFor(x => x.PreviousInvestments)
+                .NotEmpty().WithMessage("Previous investments must not be empty when provided.")
                 .MaximumLength(1000).WithMessage("Previous investments must not exceed 1000 characters.")
-                .When(x => x.PreviousInvestments is not null)
-                .Matches("^[a-zA-Z0-9 .,!?'-àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]*$").WithMessage("Previous investments contains invalid characters.")
-                .When(x => !string.IsNullOrWhiteSpace(x.PreviousInvestments));
+                .Matches(TextPattern).WithMessage("Previous investments contains invalid characters.")
+                .When(x => x.PreviousInvestments is not null);
 
             RuleFor(x => x.RiskTolerance)
-                .IsInEnum().WithMessage("Risk tolerance is not valid. Allowed: Low, Medium, High.")
+                .IsInEnum().WithMessage("Risk tolerance is not valid.")
                 .When(x => x.RiskTolerance.HasValue);
 
             RuleFor(x => x.FocusIndustry)
@@ -47,8 +63,22 @@ namespace AISEP.BLL.Validators.Investor
                 .When(x => x.FocusIndustry.HasValue);
 
             RuleFor(x => x.PreferredStage)
-                .IsInEnum().WithMessage("Preferred stage is not valid. Allowed: Idea, MVP, Growth, Scale.")
+                .IsInEnum().WithMessage("Preferred stage is not valid.")
                 .When(x => x.PreferredStage.HasValue);
+        }
+
+        private static bool HasAtLeastOneField(UpdateInvestorRequest request)
+        {
+            return request.OrganizationName is not null
+                || request.InvestmentTaste is not null
+                || request.WalletAddress is not null
+                || request.InvestmentAmount.HasValue
+                || request.InvestmentDate.HasValue
+                || request.RiskTolerance.HasValue
+                || request.InvestmentRegion is not null
+                || request.FocusIndustry.HasValue
+                || request.PreferredStage.HasValue
+                || request.PreviousInvestments is not null;
         }
 
         private static bool BeValidEthereumWalletAddress(string? walletAddress)

@@ -104,7 +104,7 @@ namespace AISEP.BLL.Services.Startups
             await _unitOfWork.SaveChangesAsync();
             await NotifyStaffAndAdminsAsync(
                 "Hồ sơ startup chờ duyệt",
-                $"Hồ sơ startup #{startup.StartupId} đã được gửi và đang chờ phê duyệt.");
+                "Có hồ sơ startup mới đã được gửi và đang chờ phê duyệt.");
 
             return _mapper.Map<StartupResponse>(startup);
         }
@@ -119,15 +119,26 @@ namespace AISEP.BLL.Services.Startups
             if (startup.UserId != userId)
                 throw new ForbiddenAccessException("You do not have permission to update this startup.");
 
-            startup.CompanyName = string.IsNullOrWhiteSpace(dto.CompanyName) ? startup.CompanyName : dto.CompanyName;
-            startup.Founder     = string.IsNullOrWhiteSpace(dto.Founder)     ? startup.Founder     : dto.Founder;
-            startup.Email       = string.IsNullOrWhiteSpace(dto.Email)       ? startup.Email       : dto.Email;
-            startup.PhoneNumber = string.IsNullOrWhiteSpace(dto.PhoneNumber) ? startup.PhoneNumber : dto.PhoneNumber;
-            startup.CountryCity = string.IsNullOrWhiteSpace(dto.CountryCity) ? startup.CountryCity : dto.CountryCity;
-            startup.Website     = (!string.IsNullOrWhiteSpace(dto.Website) && Uri.TryCreate(dto.Website, UriKind.Absolute, out _))
-                                   ? dto.Website
-                                   : startup.Website;
-            startup.Industry    = dto.Industry ?? startup.Industry;
+            if (dto.CompanyName is not null)
+                startup.CompanyName = dto.CompanyName.Trim();
+
+            if (dto.Founder is not null)
+                startup.Founder = dto.Founder.Trim();
+
+            if (dto.Email is not null)
+                startup.Email = dto.Email.Trim();
+
+            if (dto.PhoneNumber is not null)
+                startup.PhoneNumber = dto.PhoneNumber.Trim();
+
+            if (dto.CountryCity is not null)
+                startup.CountryCity = dto.CountryCity.Trim();
+
+            if (dto.Website is not null)
+                startup.Website = dto.Website.Trim();
+
+            if (dto.Industry.HasValue)
+                startup.Industry = dto.Industry.Value;
 
             if (dto.LogoFile is not null)
                 startup.LogoUrl = await _storage.UploadFileAsync(dto.LogoFile, "startup-logos");
