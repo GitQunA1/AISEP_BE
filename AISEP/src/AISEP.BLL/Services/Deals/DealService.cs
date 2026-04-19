@@ -58,11 +58,6 @@ namespace AISEP.BLL.Services.Deals
 
         public async Task<DealDto> CreateDealAsync(int investorId, CreateDealDto dto)
         {
-            if (dto.ProjectId <= 0)
-            {
-                throw new InvalidOperationException("ProjectId must be greater than 0.");
-            }
-
             var investor = await _unitOfWork.Investors.GetByIdAsync(investorId)
                 ?? throw new KeyNotFoundException("Investor not found.");
 
@@ -228,16 +223,6 @@ namespace AISEP.BLL.Services.Deals
             if (request is null)
             {
                 throw new ArgumentNullException(nameof(request));
-            }
-
-            if (request.FinalAmount <= 0)
-            {
-                throw new InvalidOperationException("FinalAmount must be greater than 0.");
-            }
-
-            if (request.FinalEquityPercentage < 0)
-            {
-                throw new InvalidOperationException("FinalEquityPercentage must be greater than or equal to 0.");
             }
 
             var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)

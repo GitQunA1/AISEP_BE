@@ -95,15 +95,6 @@ namespace AISEP.BLL.Services.Payments
             if (package.TargetRole != UserRole.Investor && package.TargetRole != UserRole.Startup)
                 throw new InvalidOperationException("Only Investor and Startup packages can be updated from this endpoint.");
 
-            if (request.Price <= 0)
-                throw new InvalidOperationException("Price must be greater than 0.");
-
-            if (request.DurationMonths <= 0)
-                throw new InvalidOperationException("DurationMonths must be greater than 0.");
-
-            if (string.IsNullOrWhiteSpace(request.PackageName))
-                throw new InvalidOperationException("PackageName is required.");
-
             package.PackageName = request.PackageName.Trim();
             package.Description = request.Description?.Trim();
             package.Price = request.Price;
@@ -333,14 +324,14 @@ namespace AISEP.BLL.Services.Payments
             await _notificationService.SendNotificationAsync(
                 booking.CustomerId,
                 "Thanh toán booking thành công",
-                $"Thanh toán cho booking #{booking.BookingId} đã thành công.",
+                $"Thanh toán cho l?ch t� v?n đã thành công.",
                 NotificationType.General,
                 booking.BookingId,
                 "Booking");
             await _notificationService.SendNotificationAsync(
                 booking.Advisor.UserId,
                 "Booking đã được xác nhận",
-                $"Booking #{booking.BookingId} đã được xác nhận sau khi thanh toán.",
+                $"l?ch t� v?n đã được xác nhận sau khi thanh toán.",
                 NotificationType.General,
                 booking.BookingId,
                 "Booking");
@@ -404,3 +395,4 @@ namespace AISEP.BLL.Services.Payments
         }
     }
 }
+

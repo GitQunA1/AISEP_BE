@@ -77,9 +77,9 @@ namespace AISEP.BLL.Services.AdvisorBankAccounts
             if (existingActive is not null)
                 throw new InvalidOperationException("Active bank account already exists. Please use update.");
 
-            var bankName = NormalizeRequired(request.BankName, "Bank name");
-            var accountNumber = NormalizeRequired(request.AccountNumber, "Account number");
-            var accountHolderName = NormalizeRequired(request.AccountHolderName, "Account holder name");
+            var bankName = request.BankName.Trim();
+            var accountNumber = request.AccountNumber.Trim();
+            var accountHolderName = request.AccountHolderName.Trim();
 
             var account = new AdvisorBankAccount
             {
@@ -110,9 +110,9 @@ namespace AISEP.BLL.Services.AdvisorBankAccounts
             if (account.Advisor.UserId != currentUserId)
                 throw new ForbiddenAccessException("You do not have permission to update this bank account.");
 
-            account.BankName = NormalizeRequired(request.BankName, "Bank name");
-            account.AccountNumber = NormalizeRequired(request.AccountNumber, "Account number");
-            account.AccountHolderName = NormalizeRequired(request.AccountHolderName, "Account holder name");
+            account.BankName = request.BankName.Trim();
+            account.AccountNumber = request.AccountNumber.Trim();
+            account.AccountHolderName = request.AccountHolderName.Trim();
             account.UpdatedAt = DateTime.UtcNow;
 
             _unitOfWork.AdvisorBankAccounts.Update(account);
@@ -146,14 +146,6 @@ namespace AISEP.BLL.Services.AdvisorBankAccounts
             await _unitOfWork.SaveChangesAsync();
 
             return _mapper.Map<AdvisorBankAccountResponse>(account);
-        }
-
-        private static string NormalizeRequired(string? value, string field)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-                throw new InvalidOperationException($"{field} is required.");
-
-            return value.Trim();
         }
     }
 }

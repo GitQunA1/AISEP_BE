@@ -51,17 +51,17 @@ namespace AISEP.API.Controllers
 
         [HttpPatch("{id:int}/resolve-valid")]
         [Authorize(Roles = "Staff,Admin")]
-        public async Task<IActionResult> ResolveValid(int id)
+        public async Task<IActionResult> ResolveValid(int id, [FromBody] ResolveUserReportRequest request)
         {
-            var result = await _userReportService.ResolveAsValidAsync(id);
+            var result = await _userReportService.ResolveAsValidAsync(id, request.ResolutionNote);
             return Ok(ApiResponse<object>.SuccessResponse(result, "User report marked as valid."));
         }
 
         [HttpPatch("{id:int}/resolve-false")]
         [Authorize(Roles = "Staff,Admin")]
-        public async Task<IActionResult> ResolveFalse(int id)
+        public async Task<IActionResult> ResolveFalse(int id, [FromBody] ResolveUserReportRequest request)
         {
-            var result = await _userReportService.ResolveAsFalseAsync(id);
+            var result = await _userReportService.ResolveAsFalseAsync(id, request.ResolutionNote);
             return Ok(ApiResponse<object>.SuccessResponse(result, "User report marked as false report."));
         }
     }

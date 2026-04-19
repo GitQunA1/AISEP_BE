@@ -68,8 +68,8 @@ namespace AISEP.BLL.Services.Investors
             await _unitOfWork.Investors.AddAsync(investor);
             await _unitOfWork.SaveChangesAsync();
             await NotifyStaffAndAdminsAsync(
-                "Hồ sơ investor chờ duyệt",
-                $"Hồ sơ investor #{investor.InvestorId} đã được gửi và đang chờ phê duyệt.");
+                "H? sơ investor ch? duy?t",
+                $"Có h? sơ investor m?i đ? đư?c g?i và đang ch? phê duy?t.");
 
             var created = await _unitOfWork.Investors.GetByIdAsync(investor.InvestorId);
             return _mapper.Map<InvestorResponse>(created!);
@@ -85,16 +85,35 @@ namespace AISEP.BLL.Services.Investors
             if (investor.UserId != userId)
                 throw new ForbiddenAccessException("You do not have permission to update this investor.");
 
-            investor.OrganizationName    = dto.OrganizationName    ?? investor.OrganizationName;
-            investor.InvestmentTaste     = dto.InvestmentTaste     ?? investor.InvestmentTaste;
-            investor.WalletAddress       = dto.WalletAddress       ?? investor.WalletAddress;
-            investor.InvestmentAmount    = (dto.InvestmentAmount > 0) ? dto.InvestmentAmount : investor.InvestmentAmount;
-            investor.InvestmentDate      = dto.InvestmentDate      ?? investor.InvestmentDate;
-            investor.RiskTolerance       = dto.RiskTolerance       ?? investor.RiskTolerance;
-            investor.InvestmentRegion    = dto.InvestmentRegion    ?? investor.InvestmentRegion;
-            investor.FocusIndustry       = dto.FocusIndustry       ?? investor.FocusIndustry;
-            investor.PreferredStage      = dto.PreferredStage      ?? investor.PreferredStage;
-            investor.PreviousInvestments = dto.PreviousInvestments ?? investor.PreviousInvestments;
+            if (dto.OrganizationName is not null)
+                investor.OrganizationName = dto.OrganizationName.Trim();
+
+            if (dto.InvestmentTaste is not null)
+                investor.InvestmentTaste = dto.InvestmentTaste.Trim();
+
+            if (dto.WalletAddress is not null)
+                investor.WalletAddress = dto.WalletAddress.Trim();
+
+            if (dto.InvestmentAmount.HasValue)
+                investor.InvestmentAmount = dto.InvestmentAmount.Value;
+
+            if (dto.InvestmentDate.HasValue)
+                investor.InvestmentDate = dto.InvestmentDate.Value;
+
+            if (dto.RiskTolerance.HasValue)
+                investor.RiskTolerance = dto.RiskTolerance.Value;
+
+            if (dto.InvestmentRegion is not null)
+                investor.InvestmentRegion = dto.InvestmentRegion.Trim();
+
+            if (dto.FocusIndustry.HasValue)
+                investor.FocusIndustry = dto.FocusIndustry.Value;
+
+            if (dto.PreferredStage.HasValue)
+                investor.PreferredStage = dto.PreferredStage.Value;
+
+            if (dto.PreviousInvestments is not null)
+                investor.PreviousInvestments = dto.PreviousInvestments.Trim();
 
             investor.ApprovalStatus = ApprovalStatus.Pending;
             investor.ApprovedAt = null;
@@ -128,8 +147,8 @@ namespace AISEP.BLL.Services.Investors
             await _unitOfWork.SaveChangesAsync();
             await _notificationService.SendNotificationAsync(
                 investor.UserId,
-                "Hồ sơ investor đã được duyệt",
-                "Hồ sơ investor của bạn đã được duyệt.",
+                "H? sơ investor đ? đư?c duy?t",
+                "H? sơ investor c?a b?n đ? đư?c duy?t.",
                 NotificationType.General,
                 investor.InvestorId,
                 "Investor");
@@ -155,8 +174,8 @@ namespace AISEP.BLL.Services.Investors
             await _unitOfWork.SaveChangesAsync();
             await _notificationService.SendNotificationAsync(
                 investor.UserId,
-                "Hồ sơ investor bị từ chối",
-                $"Hồ sơ investor của bạn đã bị từ chối. Lý do: {rejectionReason}",
+                "H? sơ investor b? t? ch?i",
+                $"H? sơ investor c?a b?n đ? b? t? ch?i. L? do: {rejectionReason}",
                 NotificationType.General,
                 investor.InvestorId,
                 "Investor");
@@ -180,4 +199,6 @@ namespace AISEP.BLL.Services.Investors
         }
     }
 }
+
+
 

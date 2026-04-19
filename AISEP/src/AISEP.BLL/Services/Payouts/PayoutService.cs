@@ -101,11 +101,7 @@ namespace AISEP.BLL.Services.Payouts
                 throw new InvalidOperationException("Only rejected payouts can request retry.");
             }
 
-            var resolutionNote = string.IsNullOrWhiteSpace(request.ResolutionNote) ? null : request.ResolutionNote.Trim();
-            if (string.IsNullOrWhiteSpace(resolutionNote))
-            {
-                throw new InvalidOperationException("Resolution note is required.");
-            }
+            var resolutionNote = request.ResolutionNote.Trim();
 
             payout.Status = MonthlyPayoutStatus.PendingRecheck;
             payout.RetryRequestedAt = DateTime.UtcNow;
@@ -134,11 +130,7 @@ namespace AISEP.BLL.Services.Payouts
                 throw new InvalidOperationException("Paid payout cannot be rejected.");
             }
 
-            var reason = string.IsNullOrWhiteSpace(request.Reason) ? null : request.Reason.Trim();
-            if (string.IsNullOrWhiteSpace(reason))
-            {
-                throw new InvalidOperationException("Reject reason is required.");
-            }
+            var reason = request.Reason.Trim();
 
             payout.Status = MonthlyPayoutStatus.Rejected;
             payout.RejectedAt = DateTime.UtcNow;
@@ -196,7 +188,7 @@ namespace AISEP.BLL.Services.Payouts
 
             var advisorName = payout.Wallet.Advisor.User?.UserName ?? $"Advisor {payout.Wallet.AdvisorId}";
             var title = "Yeu cau chuyen khoan lai";
-            var message = $"{advisorName} da gui yeu cau chuyen khoan lai cho payout #{payout.PayoutId}. Vui long kiem tra.";
+            var message = $"{advisorName} da gui yeu cau chuyen khoan lai cho yêu c?u payout này. Vui long kiem tra.";
 
             foreach (var staffId in staffIds)
             {
@@ -211,6 +203,7 @@ namespace AISEP.BLL.Services.Payouts
         }
     }
 }
+
 
 
 

@@ -32,6 +32,7 @@ namespace AISEP.DAL.Entities
         public ChatSession? ChatSession { get; set; }
         public ConsultingReport? ConsultingReport { get; set; }
         public Review? Review { get; set; }
+        public ICollection<UserReport> UserReports { get; set; } = new List<UserReport>();
         public ICollection<BookingSlot> BookingSlots { get; set; } = new List<BookingSlot>();
     }
 }

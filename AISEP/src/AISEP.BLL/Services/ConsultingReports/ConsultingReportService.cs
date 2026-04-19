@@ -227,7 +227,7 @@ namespace AISEP.BLL.Services.ConsultingReports
             await _notificationService.SendNotificationAsync(
                 report.Booking.CustomerId,
                 "Khiếu nại đã được chấp nhận",
-                $"Khiếu nại cho booking #{report.BookingId} đã được staff chấp nhận. Số tiền sẽ được hoàn theo quy trình xử lý ngoài hệ thống.",
+                $"Khiếu nại cho l?ch t� v?n đã được staff chấp nhận. Số tiền sẽ được hoàn theo quy trình xử lý ngoài hệ thống.",
                 NotificationType.General,
                 report.BookingId,
                 "Booking");
@@ -235,7 +235,7 @@ namespace AISEP.BLL.Services.ConsultingReports
             await _notificationService.SendNotificationAsync(
                 report.Booking.Advisor.UserId,
                 "Khiếu nại được chấp nhận",
-                $"Khiếu nại cho booking #{report.BookingId} đã được staff chấp nhận. Khoản tiền booking này sẽ không được cộng vào ví của bạn.",
+                $"Khiếu nại cho l?ch t� v?n đã được staff chấp nhận. Khoản tiền booking này sẽ không được cộng vào ví của bạn.",
                 NotificationType.General,
                 report.BookingId,
                 "Booking");
@@ -266,7 +266,7 @@ namespace AISEP.BLL.Services.ConsultingReports
             await _notificationService.SendNotificationAsync(
                 report.Booking.CustomerId,
                 "Khiếu nại bị từ chối",
-                $"Khiếu nại cho booking #{report.BookingId} đã bị từ chối. Tiền booking sẽ được chuyển cho advisor theo quy trình hiện tại.",
+                $"Khiếu nại cho l?ch t� v?n đã bị từ chối. Tiền booking sẽ được chuyển cho advisor theo quy trình hiện tại.",
                 NotificationType.General,
                 report.BookingId,
                 "Booking");
@@ -274,7 +274,7 @@ namespace AISEP.BLL.Services.ConsultingReports
             await _notificationService.SendNotificationAsync(
                 report.Booking.Advisor.UserId,
                 "Khiếu nại bị từ chối",
-                $"Khiếu nại cho booking #{report.BookingId} đã bị từ chối. Tiền booking đã được xử lý cộng vào ví theo quy định.",
+                $"Khiếu nại cho l?ch t� v?n đã bị từ chối. Tiền booking đã được xử lý cộng vào ví theo quy định.",
                 NotificationType.General,
                 report.BookingId,
                 "Booking");
@@ -431,4 +431,5 @@ namespace AISEP.BLL.Services.ConsultingReports
         }
     }
 }
+
 

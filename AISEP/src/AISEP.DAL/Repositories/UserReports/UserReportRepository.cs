@@ -15,7 +15,15 @@ namespace AISEP.DAL.Repositories.UserReports
 
         public async Task<UserReport?> GetByIdAsync(int id)
         {
-            return await _context.UserReports.FirstOrDefaultAsync(r => r.UserReportId == id);
+            return await _context.UserReports
+                .Include(r => r.Booking!)
+                    .ThenInclude(b => b.Advisor)
+                        .ThenInclude(a => a.User)
+                .Include(r => r.Booking!)
+                    .ThenInclude(b => b.Customer)
+                .Include(r => r.Reporter)
+                .Include(r => r.ResolvedBy)
+                .FirstOrDefaultAsync(r => r.UserReportId == id);
         }
 
         public async Task AddAsync(UserReport report)
@@ -30,7 +38,15 @@ namespace AISEP.DAL.Repositories.UserReports
 
         public IQueryable<UserReport> GetAll()
         {
-            return _context.UserReports.Include(r => r.ReportedUser).Include(r => r.Reporter).AsQueryable();
+            return _context.UserReports
+                .Include(r => r.Booking!)
+                    .ThenInclude(b => b.Advisor)
+                        .ThenInclude(a => a.User)
+                .Include(r => r.Booking!)
+                    .ThenInclude(b => b.Customer)
+                .Include(r => r.Reporter)
+                .Include(r => r.ResolvedBy)
+                .AsQueryable();
         }
     }
 }
