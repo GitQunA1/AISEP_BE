@@ -95,15 +95,45 @@ namespace AISEP.BLL.Services.UserReports
 
         public async Task<UserReportResponse> ResolveAsValidAsync(int reportId, string? resolutionNote)
         {
-            return await UpdateStatusAsync(reportId, UserReportStatus.Resolved, resolutionNote);
+            var report = await _unitOfWork.UserReports.GetByIdAsync(reportId);
+            if (report is null)
+            {
+                throw new KeyNotFoundException("User report not found.");
+            }
+
+            if (report.Status != UserReportStatus.Pending)
+            {
+                throw new InvalidOperationException($"Only Pending report can be updated. Current status: {report.Status}.");
+            }
+
+            var normalizedNote = string.IsNullOrWhiteSpace(resolutionNote)
+                ? null
+                : resolutionNote.Trim();
+
+            report.Status = UserReportStatus.Resolved;
+            report.ResolvedById = _userService.GetUserId();
+            report.ResolvedAt = DateTime.UtcNow;
+            report.ResolutionNote = normalizedNote;
+
+            if (report.Booking is not null)
+            {
+                report.Booking.Status = BookingStatus.ComplaintAccepted;
+
+                if (report.Booking.ChatSession is not null && report.Booking.ChatSession.IsOpen)
+                {
+                    report.Booking.ChatSession.IsOpen = false;
+                    report.Booking.ChatSession.EndTime = DateTime.UtcNow;
+                }
+            }
+
+            _unitOfWork.UserReports.Update(report);
+            await _unitOfWork.SaveChangesAsync();
+            await NotifyReportStatusChangedAsync(report);
+
+            return _mapper.Map<UserReportResponse>(report);
         }
 
         public async Task<UserReportResponse> ResolveAsFalseAsync(int reportId, string? resolutionNote)
-        {
-            return await UpdateStatusAsync(reportId, UserReportStatus.Dismissed, resolutionNote);
-        }
-
-        private async Task<UserReportResponse> UpdateStatusAsync(int reportId, UserReportStatus newStatus, string? resolutionNote)
         {
             var report = await _unitOfWork.UserReports.GetByIdAsync(reportId);
             if (report is null)
@@ -120,10 +150,22 @@ namespace AISEP.BLL.Services.UserReports
                 ? null
                 : resolutionNote.Trim();
 
-            report.Status = newStatus;
+            report.Status = UserReportStatus.Dismissed;
             report.ResolvedById = _userService.GetUserId();
             report.ResolvedAt = DateTime.UtcNow;
             report.ResolutionNote = normalizedNote;
+
+            if (report.Booking is not null)
+            {
+                report.Booking.Status = BookingStatus.Completed;
+
+                if (report.Booking.ChatSession is not null && report.Booking.ChatSession.IsOpen)
+                {
+                    report.Booking.ChatSession.IsOpen = false;
+                    report.Booking.ChatSession.EndTime = DateTime.UtcNow;
+                }
+            }
+
             _unitOfWork.UserReports.Update(report);
             await _unitOfWork.SaveChangesAsync();
             await NotifyReportStatusChangedAsync(report);

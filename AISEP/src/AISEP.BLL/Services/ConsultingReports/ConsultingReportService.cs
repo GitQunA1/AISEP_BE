@@ -1,4 +1,4 @@
-using AISEP.BLL.DTOs.Requests;
+﻿using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.BLL.Exceptions;
 using AISEP.BLL.Helpers;
@@ -175,13 +175,16 @@ namespace AISEP.BLL.Services.ConsultingReports
 
             if (report.RevisionCount >= MaxRevisionCount)
             {
-                report.Status = ConsultingReportStatus.EscalatedToStaff;
+                report.Status = ConsultingReportStatus.RevisionRequested;
                 report.RevisionRequestReason = reason.Trim();
                 report.StartupReviewedAt = DateTime.UtcNow;
                 report.StartupReviewDueAt = null;
                 report.AdvisorRevisionDueAt = null;
                 _unitOfWork.ConsultingReports.Update(report);
                 await _unitOfWork.SaveChangesAsync();
+                await NotifyCustomerToReportStaffAsync(
+                    report.Booking,
+                    "Bạn đã đạt số lần yêu cầu chỉnh sửa tối đa. Nếu vấn đề vẫn chưa được giải quyết, vui lòng gửi báo cáo tới staff để được hỗ trợ.");
                 return _mapper.Map<ConsultingReportResponse>(report);
             }
 
@@ -195,89 +198,6 @@ namespace AISEP.BLL.Services.ConsultingReports
 
             _unitOfWork.ConsultingReports.Update(report);
             await _unitOfWork.SaveChangesAsync();
-
-            return _mapper.Map<ConsultingReportResponse>(report);
-        }
-
-        public async Task<ConsultingReportResponse> AcceptComplaintByStaffAsync(int reportId)
-        {
-            var report = await _unitOfWork.ConsultingReports.GetByIdAsync(reportId)
-                ?? throw new KeyNotFoundException("Consulting report not found.");
-
-            if (report.Status != ConsultingReportStatus.EscalatedToStaff)
-                throw new InvalidOperationException("Only escalated report can be resolved by staff.");
-
-            var now = DateTime.UtcNow;
-            report.Status = ConsultingReportStatus.ComplaintAcceptedByStaff;
-            report.StartupReviewedAt = now;
-            report.StartupReviewDueAt = null;
-            report.AdvisorRevisionDueAt = null;
-
-            MarkBookingCompletedAndCloseChat(report.Booking, BookingStatus.ComplaintAccepted);
-            await RefundPremiumFreeQuotaIfNeededAsync(report.Booking);
-
-            // Complaint accepted: advisor does not receive payout.
-            report.IsPayoutProcessed = true;
-            report.AdvisorPayoutAmount = 0m;
-            report.PayoutProcessedAt = now;
-
-            _unitOfWork.ConsultingReports.Update(report);
-            await _unitOfWork.SaveChangesAsync();
-
-            await _notificationService.SendNotificationAsync(
-                report.Booking.CustomerId,
-                "Khiếu nại đã được chấp nhận",
-                $"Khiếu nại cho l?ch t� v?n đã được staff chấp nhận. Số tiền sẽ được hoàn theo quy trình xử lý ngoài hệ thống.",
-                NotificationType.General,
-                report.BookingId,
-                "Booking");
-
-            await _notificationService.SendNotificationAsync(
-                report.Booking.Advisor.UserId,
-                "Khiếu nại được chấp nhận",
-                $"Khiếu nại cho l?ch t� v?n đã được staff chấp nhận. Khoản tiền booking này sẽ không được cộng vào ví của bạn.",
-                NotificationType.General,
-                report.BookingId,
-                "Booking");
-
-            return _mapper.Map<ConsultingReportResponse>(report);
-        }
-
-        public async Task<ConsultingReportResponse> RejectComplaintByStaffAsync(int reportId)
-        {
-            var report = await _unitOfWork.ConsultingReports.GetByIdAsync(reportId)
-                ?? throw new KeyNotFoundException("Consulting report not found.");
-
-            if (report.Status != ConsultingReportStatus.EscalatedToStaff)
-                throw new InvalidOperationException("Only escalated report can be resolved by staff.");
-
-            var now = DateTime.UtcNow;
-            report.Status = ConsultingReportStatus.ComplaintRejectedByStaff;
-            report.StartupReviewedAt = now;
-            report.StartupReviewDueAt = null;
-            report.AdvisorRevisionDueAt = null;
-
-            MarkBookingCompletedAndCloseChat(report.Booking, BookingStatus.ComplaintRejected);
-            await DisburseAdvisorAsync(report);
-
-            _unitOfWork.ConsultingReports.Update(report);
-            await _unitOfWork.SaveChangesAsync();
-
-            await _notificationService.SendNotificationAsync(
-                report.Booking.CustomerId,
-                "Khiếu nại bị từ chối",
-                $"Khiếu nại cho l?ch t� v?n đã bị từ chối. Tiền booking sẽ được chuyển cho advisor theo quy trình hiện tại.",
-                NotificationType.General,
-                report.BookingId,
-                "Booking");
-
-            await _notificationService.SendNotificationAsync(
-                report.Booking.Advisor.UserId,
-                "Khiếu nại bị từ chối",
-                $"Khiếu nại cho l?ch t� v?n đã bị từ chối. Tiền booking đã được xử lý cộng vào ví theo quy định.",
-                NotificationType.General,
-                report.BookingId,
-                "Booking");
 
             return _mapper.Map<ConsultingReportResponse>(report);
         }
@@ -313,10 +233,11 @@ namespace AISEP.BLL.Services.ConsultingReports
 
             foreach (var report in advisorTimedOutReports)
             {
-                report.Status = ConsultingReportStatus.EscalatedToStaff;
                 report.AdvisorRevisionDueAt = null;
-                report.StartupReviewDueAt = null;
                 _unitOfWork.ConsultingReports.Update(report);
+                await NotifyCustomerToReportStaffAsync(
+                    report.Booking,
+                    "Advisor đã quá hạn nộp bản chỉnh sửa. Nếu vấn đề vẫn chưa được giải quyết, vui lòng gửi báo cáo tới staff để được hỗ trợ.");
                 changed += 1;
             }
 
@@ -429,7 +350,19 @@ namespace AISEP.BLL.Services.ConsultingReports
             _unitOfWork.Subscriptions.Update(latestSubscription);
             booking.PremiumFreeQuotaRefunded = true;
         }
+
+        private async Task NotifyCustomerToReportStaffAsync(Booking booking, string message)
+        {
+            await _notificationService.SendNotificationAsync(
+                booking.CustomerId,
+                "Vấn đề cần được báo cáo tới staff",
+                message,
+                NotificationType.General,
+                booking.BookingId,
+                "Booking");
+        }
     }
 }
+
 
 
