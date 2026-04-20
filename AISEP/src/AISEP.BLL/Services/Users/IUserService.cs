@@ -16,6 +16,7 @@ namespace AISEP.BLL.Services.Users
         Task<UserResponse?> GetByIdAsync(int id);
         Task<UserResponse?> UpdateAsync(int id, UpdateUserRequest request);
         Task<bool> DeleteAsync(int id);
+        Task<bool> UnbanAsync(int id);
         Task<UserResponse> GetByProjectId(int id);
     }
 }

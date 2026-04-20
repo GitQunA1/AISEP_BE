@@ -123,6 +123,24 @@ namespace AISEP.BLL.Services.Users
             return true;
         }
 
+        public async Task<bool> UnbanAsync(int id)
+        {
+            var user = await _unitOfWork.Users.GetByIdAsync(id);
+            if (user is null)
+                return false;
+
+            user.Status = DAL.Enums.UserStatus.Active;
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join("; ", result.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Failed to update user: {errors}");
+            }
+
+            return true;
+        }
+
         public async Task<UserResponse> GetByProjectId(int id)
         {
             var user = await _unitOfWork.Users.GetByProjectId(id);

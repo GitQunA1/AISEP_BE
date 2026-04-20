@@ -73,5 +73,23 @@ namespace AISEP.API.Controllers
                 return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message, "Invalid operation", 400));
             }
         }
+
+        [HttpPatch("{id:int}/unban")]
+        [Authorize(Roles = "Admin, Staff")]
+        public async Task<IActionResult> Unban(int id)
+        {
+            try
+            {
+                var updated = await _userService.UnbanAsync(id);
+                if (!updated)
+                    return NotFound(ApiResponse<object>.ErrorResponse("User not found.", "Not found", 404));
+
+                return Ok(ApiResponse<object>.SuccessResponse(null!, "User unbanned successfully."));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message, "Invalid operation", 400));
+            }
+        }
     }
 }

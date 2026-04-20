@@ -1,4 +1,4 @@
-using AISEP.BLL.DTOs.Requests;
+﻿using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.Notifications;
@@ -83,6 +83,8 @@ namespace AISEP.BLL.Services.Payouts
                 await _payoutGroupService.RecalculateAsync(payout.PayoutGroupId.Value);
             }
 
+            await NotifyAdvisorPaidAsync(payout);
+
             return _mapper.Map<PayoutResponse>(payout);
         }
 
@@ -111,6 +113,7 @@ namespace AISEP.BLL.Services.Payouts
             await _unitOfWork.SaveChangesAsync();
 
             await NotifyStaffRetryRequestedAsync(payout);
+            await NotifyAdvisorRetrySubmittedAsync(payout);
 
             if (payout.PayoutGroupId.HasValue)
             {
@@ -146,6 +149,8 @@ namespace AISEP.BLL.Services.Payouts
                 await _payoutGroupService.RecalculateAsync(payout.PayoutGroupId.Value);
             }
 
+            await NotifyAdvisorRejectedAsync(payout);
+
             return _mapper.Map<PayoutResponse>(payout);
         }
 
@@ -174,6 +179,43 @@ namespace AISEP.BLL.Services.Payouts
                 x => _mapper.Map<PayoutResponse>(x));
         }
 
+        private async Task NotifyAdvisorPaidAsync(Payout payout)
+        {
+            await _notificationService.SendNotificationAsync(
+                payout.Wallet.Advisor.UserId,
+                "Payout đã được thanh toán",
+                $"Khoản payout với số tiền {payout.Amount:0.##} đã được chuyển thành công.",
+                NotificationType.System,
+                payout.PayoutId,
+                "Payout");
+        }
+
+        private async Task NotifyAdvisorRejectedAsync(Payout payout)
+        {
+            var reason = string.IsNullOrWhiteSpace(payout.RejectReason)
+                ? "Vui lòng kiểm tra lại thông tin payout."
+                : payout.RejectReason;
+
+            await _notificationService.SendNotificationAsync(
+                payout.Wallet.Advisor.UserId,
+                "Payout bị từ chối",
+                $"Khoản payout đã bị từ chối. Lý do: {reason}",
+                NotificationType.System,
+                payout.PayoutId,
+                "Payout");
+        }
+
+        private async Task NotifyAdvisorRetrySubmittedAsync(Payout payout)
+        {
+            await _notificationService.SendNotificationAsync(
+                payout.Wallet.Advisor.UserId,
+                "Yêu cầu retry payout đã được gửi",
+                "Khoản payout đã được chuyển sang PendingRecheck và đang chờ staff xem lại.",
+                NotificationType.System,
+                payout.PayoutId,
+                "Payout");
+        }
+
         private async Task NotifyStaffRetryRequestedAsync(Payout payout)
         {
             var staffIds = await _unitOfWork.Users.GetAllQuery()
@@ -186,9 +228,9 @@ namespace AISEP.BLL.Services.Payouts
                 return;
             }
 
-            var advisorName = payout.Wallet.Advisor.User?.UserName ?? $"Advisor {payout.Wallet.AdvisorId}";
-            var title = "Yeu cau chuyen khoan lai";
-            var message = $"{advisorName} da gui yeu cau chuyen khoan lai cho y�u c?u payout n�y. Vui long kiem tra.";
+            var advisorName = payout.Wallet.Advisor.User?.UserName ?? "Advisor";
+            var title = "Có yêu cầu retry payout";
+            var message = $"{advisorName} đã gửi yêu cầu retry payout và đang chờ staff xem lại.";
 
             foreach (var staffId in staffIds)
             {
@@ -203,6 +245,7 @@ namespace AISEP.BLL.Services.Payouts
         }
     }
 }
+
 
 
 

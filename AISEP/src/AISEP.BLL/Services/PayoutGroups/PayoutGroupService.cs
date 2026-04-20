@@ -1,4 +1,4 @@
-using AISEP.BLL.DTOs.Requests;
+﻿using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.Notifications;
@@ -120,7 +120,7 @@ namespace AISEP.BLL.Services.Payouts
             return created.Select(x => _mapper.Map<PayoutResponse>(x)).ToList();
         }
 
-        public async Task<PagedResult<PayoutGroupResponse>> GetBatchesAsync(SieveModel model)
+        public async Task<PagedResult<PayoutGroupResponse>> GetGroupsAsync(SieveModel model)
         {
             var query = _unitOfWork.PayoutGroups.GetQuery();
             return await PaginationHelper.PaginateAsync(
@@ -130,22 +130,22 @@ namespace AISEP.BLL.Services.Payouts
                 x => _mapper.Map<PayoutGroupResponse>(x));
         }
 
-        public async Task<PayoutGroupResponse?> GetBatchByIdAsync(int batchId)
+        public async Task<PayoutGroupResponse?> GetGroupByIdAsync(int groupId)
         {
-            var batch = await _unitOfWork.PayoutGroups.GetByIdAsync(batchId);
-            return batch is null ? null : _mapper.Map<PayoutGroupResponse>(batch);
+            var group = await _unitOfWork.PayoutGroups.GetByIdAsync(groupId);
+            return group is null ? null : _mapper.Map<PayoutGroupResponse>(group);
         }
 
-        public async Task<PagedResult<PayoutResponse>> GetItemsByBatchIdAsync(int batchId, SieveModel model)
+        public async Task<PagedResult<PayoutResponse>> GetItemsByGroupIdAsync(int groupId, SieveModel model)
         {
-            var batch = await _unitOfWork.PayoutGroups.GetByIdAsync(batchId);
-            if (batch is null)
+            var group = await _unitOfWork.PayoutGroups.GetByIdAsync(groupId);
+            if (group is null)
             {
-                throw new KeyNotFoundException("Monthly payout batch not found.");
+                throw new KeyNotFoundException("Monthly payout group not found.");
             }
 
             var query = _unitOfWork.Payouts.GetQuery()
-                .Where(x => x.PayoutGroupId == batchId);
+                .Where(x => x.PayoutGroupId == groupId);
 
             return await PaginationHelper.PaginateAsync(
                 query,
@@ -154,37 +154,37 @@ namespace AISEP.BLL.Services.Payouts
                 x => _mapper.Map<PayoutResponse>(x));
         }
 
-        public async Task RecalculateAsync(int batchId)
+        public async Task RecalculateAsync(int groupId)
         {
-            var batch = await _unitOfWork.PayoutGroups.GetByIdAsync(batchId);
-            if (batch is null)
+            var group = await _unitOfWork.PayoutGroups.GetByIdAsync(groupId);
+            if (group is null)
             {
                 return;
             }
 
-            batch.EstimatedTotalAmount = Math.Round(batch.Payouts.Sum(x => x.Amount), 2, MidpointRounding.AwayFromZero);
-            batch.RejectedAmount = Math.Round(
-                batch.Payouts
+            group.EstimatedTotalAmount = Math.Round(group.Payouts.Sum(x => x.Amount), 2, MidpointRounding.AwayFromZero);
+            group.RejectedAmount = Math.Round(
+                group.Payouts
                     .Where(x => x.Status == MonthlyPayoutStatus.Rejected)
                     .Sum(x => x.Amount),
                 2,
                 MidpointRounding.AwayFromZero);
-            batch.ActualPayableAmount = Math.Round(batch.EstimatedTotalAmount - batch.RejectedAmount, 2, MidpointRounding.AwayFromZero);
+            group.ActualPayableAmount = Math.Round(group.EstimatedTotalAmount - group.RejectedAmount, 2, MidpointRounding.AwayFromZero);
 
-            var hasPending = batch.Payouts.Any(x =>
+            var hasPending = group.Payouts.Any(x =>
                 x.Status == MonthlyPayoutStatus.Pending || x.Status == MonthlyPayoutStatus.PendingRecheck);
             if (hasPending)
             {
-                batch.Status = MonthlyPayoutBatchStatus.InProgress;
-                batch.CompletedAt = null;
+                group.Status = MonthlyPayoutBatchStatus.InProgress;
+                group.CompletedAt = null;
             }
             else
             {
-                batch.Status = MonthlyPayoutBatchStatus.Completed;
-                batch.CompletedAt ??= DateTime.UtcNow;
+                group.Status = MonthlyPayoutBatchStatus.Completed;
+                group.CompletedAt ??= DateTime.UtcNow;
             }
 
-            _unitOfWork.PayoutGroups.Update(batch);
+            _unitOfWork.PayoutGroups.Update(group);
             await _unitOfWork.SaveChangesAsync();
         }
 
@@ -195,8 +195,8 @@ namespace AISEP.BLL.Services.Payouts
                 return;
             }
 
-            var advisorNoticeTitle = "Thieu thong tin ngan hang nhan payout";
-            var advisorNoticeMessage = "He thong khong the tao payout vi ban chua cap nhat thong tin ngan hang. Vui long cap nhat de nhan thanh toan.";
+            var advisorNoticeTitle = "Thiếu thông tin ngân hàng nhận payout";
+            var advisorNoticeMessage = "Hệ thống không thể tạo payout vì bạn chưa cập nhật thông tin ngân hàng. Vui lòng cập nhật để nhận thanh toán.";
 
             foreach (var advisor in missingBankAdvisors)
             {
@@ -208,8 +208,8 @@ namespace AISEP.BLL.Services.Payouts
             }
 
             var names = string.Join(", ", missingBankAdvisors.Select(x => x.Name).Distinct());
-            var reviewerNoticeTitle = "Co advisor chua co thong tin ngan hang payout";
-            var reviewerNoticeMessage = $"Khong the tao payout cho cac advisor sau do chua cap nhat thong tin ngan hang: {names}.";
+            var reviewerNoticeTitle = "Có advisor chưa có thông tin ngân hàng payout";
+            var reviewerNoticeMessage = $"Không thể tạo payout cho các advisor sau do chưa cập nhật thông tin ngân hàng: {names}.";
 
             var reviewerIds = await _unitOfWork.Users.GetAllQuery()
                 .Where(u => u.Role == UserRole.Staff || u.Role == UserRole.Admin)
@@ -243,6 +243,7 @@ namespace AISEP.BLL.Services.Payouts
             await _unitOfWork.SaveChangesAsync();
             return batch;
         }
+
 
         private static (DateTime PeriodStartUtc, DateTime PeriodEndUtc, DateTime FromDateLocal, DateTime ToDateLocal) NormalizeDateRangeOrThrow(
             DateTime fromDate,
@@ -284,6 +285,7 @@ namespace AISEP.BLL.Services.Payouts
 
     }
 }
+
 
 
 

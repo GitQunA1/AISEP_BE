@@ -27,7 +27,7 @@ namespace AISEP.API.Controllers
         {
             var staffId = _userService.GetUserId();
             var result = await _payoutService.MarkPaidAsync(id, staffId, request);
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Monthly payout marked as paid."));
+            return Ok(ApiResponse<object>.SuccessResponse(result, "payout marked as paid."));
         }
 
         [HttpPatch("{id:int}/reject")]
@@ -36,7 +36,7 @@ namespace AISEP.API.Controllers
         {
             var staffId = _userService.GetUserId();
             var result = await _payoutService.RejectAsync(id, staffId, request);
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Monthly payout rejected successfully."));
+            return Ok(ApiResponse<object>.SuccessResponse(result, "payout rejected successfully."));
         }
 
         [HttpPatch("{id:int}/request-retry")]
@@ -53,7 +53,7 @@ namespace AISEP.API.Controllers
         public async Task<IActionResult> GetAll([FromQuery] SieveModel model)
         {
             var result = await _payoutService.GetAllAsync(model);
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Monthly payouts retrieved successfully."));
+            return Ok(ApiResponse<object>.SuccessResponse(result, "payouts retrieved successfully."));
         }
 
         [HttpGet("me")]
@@ -62,7 +62,7 @@ namespace AISEP.API.Controllers
         {
             var userId = _userService.GetUserId();
             var result = await _payoutService.GetMineAsync(userId, model);
-            return Ok(ApiResponse<object>.SuccessResponse(result, "My monthly payouts retrieved successfully."));
+            return Ok(ApiResponse<object>.SuccessResponse(result, "My payouts retrieved successfully."));
         }
 
     }
