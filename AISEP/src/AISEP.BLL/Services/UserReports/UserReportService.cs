@@ -48,7 +48,7 @@ namespace AISEP.BLL.Services.UserReports
             var advisorUserId = booking.Advisor?.UserId
                 ?? throw new InvalidOperationException("Booking advisor account is missing.");
             var customerUserId = booking.CustomerId;
-            var isReporterParticipant = reporterId == customerUserId || reporterId == advisorUserId;
+            var isReporterParticipant = reporterId == customerUserId;
 
             if (!isReporterParticipant)
             {
