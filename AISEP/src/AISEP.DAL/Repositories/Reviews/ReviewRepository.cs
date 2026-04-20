@@ -17,8 +17,9 @@ namespace AISEP.DAL.Repositories.Reviews
         public Task<Review?> GetByIdAsync(int id)
         {
             return _context.Reviews
-                .Include(r => r.Advisor)
-                    .ThenInclude(a => a.User)   
+                .Include(r => r.Booking)
+                    .ThenInclude(b => b.Advisor)
+                        .ThenInclude(a => a.User)
                 .Include(r => r.Reviewer)       
                 .FirstOrDefaultAsync(r => r.ReviewId == id);
         }
@@ -33,8 +34,9 @@ namespace AISEP.DAL.Repositories.Reviews
         public IQueryable<Review> GetReviewQuery()
         {
             return _context.Reviews
-                .Include(r => r.Advisor)
-                    .ThenInclude(a => a.User)  
+                .Include(r => r.Booking)
+                    .ThenInclude(b => b.Advisor)
+                        .ThenInclude(a => a.User)
                 .Include(r => r.Reviewer)
                 .OrderBy(r => r.ReviewId)
                 .AsNoTracking();

@@ -42,7 +42,6 @@ namespace AISEP.BLL.Services.Reviews
             var review = new Review
             {
                 BookingId = booking.BookingId,
-                AdvisorId = booking.AdvisorId,
                 ReviewerId = userId,
                 Rating = dto.Rating,
                 ReviewContent = dto.ReviewContent?.Trim(),
@@ -71,7 +70,7 @@ namespace AISEP.BLL.Services.Reviews
         public async Task<PagedResult<ReviewResponse>> GetReviewsByAdvisorIdAsync(int advisorId, SieveModel model)
         {
             var query = _unitOfWork.Reviews.GetReviewQuery()
-                .Where(r => r.AdvisorId == advisorId);
+                .Where(r => r.Booking.AdvisorId == advisorId);
             return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, MapToResponseDto);
         }
 
@@ -111,8 +110,7 @@ namespace AISEP.BLL.Services.Reviews
             {
                 Id            = review.ReviewId,
                 BookingId     = review.BookingId,
-                AdvisorId     = review.AdvisorId,
-                AdvisorName   = review.Advisor?.User?.UserName ?? "Unknown",
+                AdvisorName   = review.Booking?.Advisor?.User?.UserName ?? "Unknown",
                 ReviewerId    = review.ReviewerId,
                 ReviewerName  = review.Reviewer?.UserName ?? "Unknown",
                 Rating        = review.Rating,

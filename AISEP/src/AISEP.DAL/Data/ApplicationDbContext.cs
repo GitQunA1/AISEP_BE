@@ -517,11 +517,6 @@ namespace AISEP.DAL.Data
                 entity.HasKey(e => e.ReviewId);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                entity.HasOne(r => r.Advisor)
-                    .WithMany(a => a.Reviews)
-                    .HasForeignKey(r => r.AdvisorId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
                 entity.HasOne(r => r.Reviewer)
                     .WithMany(u => u.Reviews)
                     .HasForeignKey(r => r.ReviewerId)

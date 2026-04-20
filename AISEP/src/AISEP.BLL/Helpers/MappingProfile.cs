@@ -37,7 +37,6 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.ApprovalStatus,  opt => opt.Ignore())
                 .ForMember(dest => dest.User,            opt => opt.Ignore())
                 .ForMember(dest => dest.Bookings,        opt => opt.Ignore())
-                .ForMember(dest => dest.Reviews,         opt => opt.Ignore())
                 .ForMember(dest => dest.Wallet,          opt => opt.Ignore())
                 .ForMember(dest => dest.ProfileImage,    opt => opt.Ignore())
                 .ForMember(dest => dest.Certifications,  opt => opt.Ignore())
@@ -52,7 +51,6 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.ApprovalStatus,  opt => opt.Ignore())
                 .ForMember(dest => dest.User,            opt => opt.Ignore())
                 .ForMember(dest => dest.Bookings,        opt => opt.Ignore())
-                .ForMember(dest => dest.Reviews,         opt => opt.Ignore())
                 .ForMember(dest => dest.Wallet,          opt => opt.Ignore())
                 .ForMember(dest => dest.ProfileImage,    opt => opt.Ignore())
                 .ForMember(dest => dest.Certifications,  opt => opt.Ignore());
