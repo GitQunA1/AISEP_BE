@@ -7,9 +7,9 @@ namespace AISEP.BLL.Validators.Review
     {
         public CreateReviewRequestValidator()
         {
-            RuleFor(x => x.AdvisorId)
-                .NotEmpty().WithMessage("AdvisorId is required.")
-                .GreaterThan(0).WithMessage("AdvisorId must be a positive number.");
+            RuleFor(x => x.BookingId)
+                .NotEmpty().WithMessage("BookingId is required.")
+                .GreaterThan(0).WithMessage("BookingId must be a positive number.");
 
             RuleFor(x => x.Rating)
                 .NotEmpty().WithMessage("Rating is required.")

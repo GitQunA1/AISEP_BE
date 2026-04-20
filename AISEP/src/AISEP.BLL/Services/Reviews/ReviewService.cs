@@ -4,6 +4,7 @@ using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.DAL.Entities;
 using AISEP.BLL.Services.Users;
+using AISEP.DAL.Enums;
 using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
 using Sieve.Services;
@@ -26,12 +27,25 @@ namespace AISEP.BLL.Services.Reviews
         public async Task<ReviewResponse?> CreateReviewAsync(CreateReviewRequest dto)
         {
             var userId = _currentUserService.GetUserId();
+            var booking = await _unitOfWork.Bookings.GetByIdAsync(dto.BookingId)
+                ?? throw new KeyNotFoundException("Booking not found.");
+
+            if (booking.CustomerId != userId)
+                throw new UnauthorizedAccessException("You can only review your own completed booking.");
+
+            if (booking.Status != BookingStatus.Completed)
+                throw new InvalidOperationException("Only completed bookings can be reviewed.");
+
+            if (booking.Review is not null)
+                throw new InvalidOperationException("This booking has already been reviewed.");
+
             var review = new Review
             {
-                AdvisorId = dto.AdvisorId,
+                BookingId = booking.BookingId,
+                AdvisorId = booking.AdvisorId,
                 ReviewerId = userId,
                 Rating = dto.Rating,
-                ReviewContent = dto.ReviewContent,
+                ReviewContent = dto.ReviewContent?.Trim(),
                 CreatedAt = DateTime.UtcNow
             };
             await _unitOfWork.Reviews.AddAsync(review);
@@ -96,7 +110,10 @@ namespace AISEP.BLL.Services.Reviews
             return new ReviewResponse
             {
                 Id            = review.ReviewId,
+                BookingId     = review.BookingId,
+                AdvisorId     = review.AdvisorId,
                 AdvisorName   = review.Advisor?.User?.UserName ?? "Unknown",
+                ReviewerId    = review.ReviewerId,
                 ReviewerName  = review.Reviewer?.UserName ?? "Unknown",
                 Rating        = review.Rating,
                 ReviewContent = review.ReviewContent,

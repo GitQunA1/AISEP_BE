@@ -26,6 +26,7 @@ namespace AISEP.DAL.Repositories.Bookings
                     .ThenInclude(bs => bs.AdvisorAvailability)
                 .Include(b => b.ChatSession)
                 .Include(b => b.ConsultingReport)
+                .Include(b => b.Review)
                 .FirstOrDefaultAsync(b => b.BookingId == id);
         }
 
