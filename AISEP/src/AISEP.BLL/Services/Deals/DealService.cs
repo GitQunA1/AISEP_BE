@@ -134,7 +134,7 @@ namespace AISEP.BLL.Services.Deals
                 d => _mapper.Map<DealDto>(d));
         }
 
-        public async Task<DealDto> RespondDealAsync(int startupId, int dealId, bool isAccepted)
+        public async Task<DealDto> RespondDealAsync(int startupId, int dealId, bool isAccepted, string? reason = null)
         {
             var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
                 ?? throw new KeyNotFoundException("Deal not found.");
@@ -149,6 +149,8 @@ namespace AISEP.BLL.Services.Deals
                 throw new InvalidOperationException("Only pending deals can be responded.");
             }
 
+            var trimmedReason = reason?.Trim();
+
             string notificationTitle;
             string notificationMessage;
 
@@ -162,11 +164,16 @@ namespace AISEP.BLL.Services.Deals
             }
             else
             {
+                if (string.IsNullOrWhiteSpace(trimmedReason))
+                {
+                    throw new InvalidOperationException("Reason is required when deal is rejected.");
+                }
+
                 deal.StartupConfirmed = false;
                 deal.Status = DealStatus.Rejected;
 
                 notificationTitle = "Deal bị từ chối";
-                notificationMessage = $"Deal của bạn đã bị startup từ chối.";
+                notificationMessage = $"Deal của bạn đã bị startup từ chối. Lý do: {trimmedReason}";
             }
 
             _unitOfWork.Deals.Update(deal);
