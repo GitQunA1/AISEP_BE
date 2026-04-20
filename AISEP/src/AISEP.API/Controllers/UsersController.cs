@@ -56,7 +56,7 @@ namespace AISEP.API.Controllers
             }
         }
 
-        [HttpPatch("{id:int}")]
+        [HttpPatch("{id:int}/ban")]
         [Authorize(Roles = "Admin, Staff")]
         public async Task<IActionResult> Ban(int id)
         {
