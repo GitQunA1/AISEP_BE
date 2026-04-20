@@ -110,7 +110,7 @@ namespace AISEP.API.Controllers
                 throw new InvalidOperationException("IsAccepted is required.");
             }
 
-            var result = await _dealService.RespondDealAsync(startup.Id, id, dto.IsAccepted.Value);
+            var result = await _dealService.RespondDealAsync(startup.Id, id, dto.IsAccepted.Value, dto.Reason);
             return Ok(ApiResponse<object>.SuccessResponse(result, "Deal response submitted successfully."));
         }
 

@@ -270,7 +270,7 @@ public class DealServiceGroupedTests
         var (service, _, dealRepo, _, _, _, _, _, _, _, _) = CreateSut(deal);
         dealRepo.Setup(x => x.GetByIdWithDetailsAsync(53)).ReturnsAsync(deal);
 
-        var result = await service.RespondDealAsync(300, 53, false);
+        var result = await service.RespondDealAsync(300, 53, false, "Startup không phù hợp điều khoản hiện tại");
 
         Assert.False(deal.StartupConfirmed);
         Assert.Equal(DealStatus.Rejected, deal.Status);
@@ -278,7 +278,7 @@ public class DealServiceGroupedTests
     }
 
     [Fact]
-    public async Task UT088_RespondDealAsync_ShouldNotifyInvestor_WhenResponded()
+    public async Task UT088_RespondDealAsync_ShouldNotifyInvestorWithoutReason_WhenAccepted()
     {
         var deal = BuildDeal(dealId: 54, investorId: 200, startupId: 300, status: DealStatus.Pending);
         var (service, _, dealRepo, _, _, _, notification, _, _, _, _) = CreateSut(deal);
@@ -290,7 +290,7 @@ public class DealServiceGroupedTests
             x => x.SendNotificationAsync(
                 deal.Investor.UserId,
                 It.IsAny<string>(),
-                It.IsAny<string>(),
+                It.Is<string>(message => !message.Contains("Lý do:")),
                 NotificationType.Deal,
                 54,
                 "Deal"),
@@ -298,7 +298,41 @@ public class DealServiceGroupedTests
     }
 
     [Fact]
-    public async Task UT089_GetContractPreviewForInvestorAsync_ShouldThrowForbidden_WhenInvestorDoesNotOwnDeal()
+    public async Task UT089_RespondDealAsync_ShouldNotifyInvestorWithReason_WhenRejected()
+    {
+        var deal = BuildDeal(dealId: 55, investorId: 200, startupId: 300, status: DealStatus.Pending);
+        var (service, _, dealRepo, _, _, _, notification, _, _, _, _) = CreateSut(deal);
+        dealRepo.Setup(x => x.GetByIdWithDetailsAsync(55)).ReturnsAsync(deal);
+
+        const string reason = "Điều khoản equity chưa phù hợp";
+        await service.RespondDealAsync(300, 55, false, reason);
+
+        notification.Verify(
+            x => x.SendNotificationAsync(
+                deal.Investor.UserId,
+                It.IsAny<string>(),
+                It.Is<string>(message => message.Contains("Lý do:") && message.Contains(reason)),
+                NotificationType.Deal,
+                55,
+                "Deal"),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task UT090_RespondDealAsync_ShouldThrow_WhenRejectedWithoutReason()
+    {
+        var deal = BuildDeal(dealId: 56, investorId: 200, startupId: 300, status: DealStatus.Pending);
+        var (service, _, dealRepo, _, _, _, _, _, _, _, _) = CreateSut(deal);
+        dealRepo.Setup(x => x.GetByIdWithDetailsAsync(56)).ReturnsAsync(deal);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.RespondDealAsync(300, 56, false));
+
+        Assert.Contains("Reason is required when deal is rejected.", ex.Message);
+    }
+
+    [Fact]
+    public async Task UT091_GetContractPreviewForInvestorAsync_ShouldThrowForbidden_WhenInvestorDoesNotOwnDeal()
     {
         var deal = BuildDeal(dealId: 60, investorId: 200, startupId: 300, status: DealStatus.Confirmed);
         var (service, _, dealRepo, _, _, _, _, _, _, _, _) = CreateSut(deal);
@@ -311,7 +345,7 @@ public class DealServiceGroupedTests
     }
 
     [Fact]
-    public async Task UT090_GetContractPreviewForInvestorAsync_ShouldThrow_WhenStatusNotInSigningFlow()
+    public async Task UT092_GetContractPreviewForInvestorAsync_ShouldThrow_WhenStatusNotInSigningFlow()
     {
         var deal = BuildDeal(dealId: 61, investorId: 200, startupId: 300, status: DealStatus.Pending);
         var (service, _, dealRepo, _, _, _, _, _, _, _, _) = CreateSut(deal);
@@ -324,7 +358,7 @@ public class DealServiceGroupedTests
     }
 
     [Fact]
-    public async Task UT091_GetContractPreviewForInvestorAsync_ShouldReturnHtml_WhenValid()
+    public async Task UT093_GetContractPreviewForInvestorAsync_ShouldReturnHtml_WhenValid()
     {
         var deal = BuildDeal(dealId: 62, investorId: 200, startupId: 300, status: DealStatus.Confirmed);
         var (service, _, dealRepo, _, _, _, _, _, _, _, _) = CreateSut(deal);

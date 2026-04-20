@@ -11,7 +11,7 @@ namespace AISEP.BLL.Services.Deals
         Task<PagedResult<DealDto>> GetDealsAsync(SieveModel sieveModel);
         Task<PagedResult<DealDto>> GetInvestorDealsAsync(int investorId, SieveModel sieveModel);
         Task<PagedResult<DealDto>> GetStartupDealsAsync(int startupId, SieveModel sieveModel);
-        Task<DealDto> RespondDealAsync(int startupId, int dealId, bool isAccepted);
+        Task<DealDto> RespondDealAsync(int startupId, int dealId, bool isAccepted, string? reason = null);
         Task<string> GetContractPreviewAsync(int dealId);
         Task<string> GetContractPreviewForInvestorAsync(int dealId, int investorId);
         Task<string> GetContractPreviewForStartupAsync(int dealId, int startupId);
