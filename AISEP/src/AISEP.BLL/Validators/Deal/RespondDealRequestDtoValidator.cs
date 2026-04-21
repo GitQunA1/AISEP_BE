@@ -8,15 +8,16 @@ namespace AISEP.BLL.Validators.Deal
         public RespondDealRequestDtoValidator()
         {
             RuleFor(x => x.IsAccepted)
-                .NotNull().WithMessage("IsAccepted is required.");
+                .NotNull().WithMessage("Trạng thái chấp nhận là bắt buộc.");
 
             RuleFor(x => x.Reason)
-                .MaximumLength(2000).WithMessage("Reason must not exceed 2000 characters.");
+                .MaximumLength(2000).WithMessage("Lý do không được vượt quá 2000 ký tự.")
+                .When(x => !string.IsNullOrWhiteSpace(x.Reason));
 
             When(x => x.IsAccepted.HasValue && !x.IsAccepted.Value, () =>
             {
                 RuleFor(x => x.Reason)
-                    .NotEmpty().WithMessage("Reason is required when deal is rejected.");
+                    .NotEmpty().WithMessage("Lý do là bắt buộc khi từ chối deal.");
             });
         }
     }

@@ -16,59 +16,59 @@ namespace AISEP.BLL.Validators.Startup
         {
             RuleFor(x => x)
                 .Must(HasAtLeastOneField)
-                .WithMessage("At least one field must be provided for update.");
+                .WithMessage("Cần cung cấp ít nhất một trường để cập nhật.");
 
             RuleFor(x => x.CompanyName)
-                .NotEmpty().WithMessage("Company name must not be empty when provided.")
-                .MaximumLength(255).WithMessage("Company name must not exceed 255 characters.")
-                .Matches(TextPattern).WithMessage("Company name contains invalid characters.")
+                .NotEmpty().WithMessage("Tên công ty không được để trống khi được cung cấp.")
+                .MaximumLength(255).WithMessage("Tên công ty không được vượt quá 255 ký tự.")
+                .Matches(TextPattern).WithMessage("Tên công ty chứa ký tự không hợp lệ.")
                 .When(x => x.CompanyName is not null);
 
             RuleFor(x => x.Founder)
-                .NotEmpty().WithMessage("Founder must not be empty when provided.")
-                .MaximumLength(255).WithMessage("Founder must not exceed 255 characters.")
-                .Matches(TextPattern).WithMessage("Founder contains invalid characters.")
+                .NotEmpty().WithMessage("Người sáng lập không được để trống khi được cung cấp.")
+                .MaximumLength(255).WithMessage("Người sáng lập không được vượt quá 255 ký tự.")
+                .Matches(TextPattern).WithMessage("Người sáng lập chứa ký tự không hợp lệ.")
                 .When(x => x.Founder is not null);
 
             RuleFor(x => x.CountryCity)
-                .NotEmpty().WithMessage("Country/City must not be empty when provided.")
-                .MaximumLength(255).WithMessage("Country/City must not exceed 255 characters.")
-                .Matches(TextPattern).WithMessage("Country/City contains invalid characters.")
+                .NotEmpty().WithMessage("Quốc gia/Thành phố không được để trống khi được cung cấp.")
+                .MaximumLength(255).WithMessage("Quốc gia/Thành phố không được vượt quá 255 ký tự.")
+                .Matches(TextPattern).WithMessage("Quốc gia/Thành phố chứa ký tự không hợp lệ.")
                 .When(x => x.CountryCity is not null);
 
             RuleFor(x => x.Email)
-                .NotEmpty().WithMessage("Email must not be empty when provided.")
-                .MaximumLength(255).WithMessage("Email must not exceed 255 characters.")
-                .EmailAddress().WithMessage("Email must be a valid email address.")
+                .NotEmpty().WithMessage("Email không được để trống khi được cung cấp.")
+                .MaximumLength(255).WithMessage("Email không được vượt quá 255 ký tự.")
+                .EmailAddress().WithMessage("Email không đúng định dạng.")
                 .When(x => x.Email is not null);
 
             RuleFor(x => x.PhoneNumber)
-                .NotEmpty().WithMessage("Phone number must not be empty when provided.")
-                .MaximumLength(50).WithMessage("Phone number must not exceed 50 characters.")
-                .Matches("^(03|05|07|08|09)\\d{8}$").WithMessage("Phone number must start with 03, 05, 07, 08, or 09 and contain 10 digits.")
+                .NotEmpty().WithMessage("Số điện thoại không được để trống khi được cung cấp.")
+                .MaximumLength(50).WithMessage("Số điện thoại không được vượt quá 50 ký tự.")
+                .Matches("^(03|05|07|08|09)\\d{8}$").WithMessage("Số điện thoại phải bắt đầu bằng 03, 05, 07, 08 hoặc 09 và gồm 10 chữ số.")
                 .When(x => x.PhoneNumber is not null);
 
             RuleFor(x => x.Website)
-                .NotEmpty().WithMessage("Website must not be empty when provided.")
-                .MaximumLength(255).WithMessage("Website must not exceed 255 characters.")
+                .NotEmpty().WithMessage("Website không được để trống khi được cung cấp.")
+                .MaximumLength(255).WithMessage("Website không được vượt quá 255 ký tự.")
                 .When(x => x.Website is not null);
 
             RuleFor(x => x.Industry)
-                .IsInEnum().WithMessage("Industry is not valid. Allowed: Fintech, Edtech, Healthtech, Agritech, E_Commerce, Logistics, Proptech, Cleantech, SaaS, AI_BigData, Web3_Crypto, Food_Beverage, Manufacturing, Media_Entertainment, Other.")
+                .IsInEnum().WithMessage("Ngành nghề không hợp lệ.")
                 .When(x => x.Industry.HasValue);
 
             RuleFor(x => x.LogoFile)
                 .Must(f => f!.Length <= MaxImageSize)
-                .WithMessage("Logo must not exceed 5MB.")
+                .WithMessage("Logo không được vượt quá 5MB.")
                 .Must(f => AllowedImageTypes.Contains(f!.ContentType))
-                .WithMessage("Logo only supports JPG, PNG, WEBP.")
+                .WithMessage("Logo chỉ hỗ trợ JPG, PNG, WEBP.")
                 .When(x => x.LogoFile is not null);
 
             RuleFor(x => x.BusinessLicenseFile)
                 .Must(f => f!.Length <= MaxDocSize)
-                .WithMessage("Business license must not exceed 10MB.")
+                .WithMessage("Giấy phép kinh doanh không được vượt quá 10MB.")
                 .Must(f => AllowedDocTypes.Contains(f!.ContentType))
-                .WithMessage("Business license only supports PDF, JPG, PNG.")
+                .WithMessage("Giấy phép kinh doanh chỉ hỗ trợ PDF, JPG, PNG.")
                 .When(x => x.BusinessLicenseFile is not null);
         }
 

@@ -15,53 +15,53 @@ namespace AISEP.BLL.Validators.Advisor
         {
             RuleFor(x => x)
                 .Must(HasAtLeastOneField)
-                .WithMessage("At least one field must be provided for update.");
+                .WithMessage("Cần cung cấp ít nhất một trường để cập nhật.");
 
             RuleFor(x => x.HourlyRate)
-                .GreaterThan(0m).WithMessage("Hourly rate must be greater than 0.")
+                .GreaterThan(0m).WithMessage("Mức phí theo giờ phải lớn hơn 0.")
                 .When(x => x.HourlyRate.HasValue);
 
             RuleFor(x => x.ProfileImageFile)
                 .Must(f => f!.Length <= MaxImageSize)
-                .WithMessage("Profile image must not exceed 5MB.")
+                .WithMessage("Ảnh đại diện không được vượt quá 5MB.")
                 .Must(f => AllowedImageTypes.Contains(f!.ContentType))
-                .WithMessage("Profile image only supports JPG, PNG, WEBP.")
+                .WithMessage("Ảnh đại diện chỉ hỗ trợ JPG, PNG, WEBP.")
                 .When(x => x.ProfileImageFile is not null);
 
             RuleFor(x => x.CertificationFile)
                 .Must(f => f!.Length <= MaxDocSize)
-                .WithMessage("Certification file must not exceed 10MB.")
+                .WithMessage("Tệp chứng chỉ không được vượt quá 10MB.")
                 .Must(f => AllowedDocTypes.Contains(f!.ContentType))
-                .WithMessage("Certification only supports PDF, JPG, PNG.")
+                .WithMessage("Chứng chỉ chỉ hỗ trợ PDF, JPG, PNG.")
                 .When(x => x.CertificationFile is not null);
 
             RuleFor(x => x.Bio)
-                .NotEmpty().WithMessage("Bio must not be empty when provided.")
-                .Matches(TextPattern).WithMessage("Bio contains invalid characters.")
+                .NotEmpty().WithMessage("Tiểu sử không được để trống khi được cung cấp.")
+                .Matches(TextPattern).WithMessage("Tiểu sử chứa ký tự không hợp lệ.")
                 .When(x => x.Bio is not null);
 
             RuleFor(x => x.Expertise)
-                .NotEmpty().WithMessage("Expertise must not be empty when provided.")
-                .Matches(TextPattern).WithMessage("Expertise contains invalid characters.")
+                .NotEmpty().WithMessage("Chuyên môn không được để trống khi được cung cấp.")
+                .Matches(TextPattern).WithMessage("Chuyên môn chứa ký tự không hợp lệ.")
                 .When(x => x.Expertise is not null);
 
             RuleFor(x => x.PreviousExperience)
-                .NotEmpty().WithMessage("Previous experience must not be empty when provided.")
-                .Matches(TextPattern).WithMessage("Previous experience contains invalid characters.")
+                .NotEmpty().WithMessage("Kinh nghiệm trước đây không được để trống khi được cung cấp.")
+                .Matches(TextPattern).WithMessage("Kinh nghiệm trước đây chứa ký tự không hợp lệ.")
                 .When(x => x.PreviousExperience is not null);
 
             RuleFor(x => x.LanguagesSpoken)
-                .NotEmpty().WithMessage("Languages spoken must not be empty when provided.")
-                .Matches(TextPattern).WithMessage("Languages spoken contains invalid characters.")
+                .NotEmpty().WithMessage("Ngôn ngữ sử dụng không được để trống khi được cung cấp.")
+                .Matches(TextPattern).WithMessage("Ngôn ngữ sử dụng chứa ký tự không hợp lệ.")
                 .When(x => x.LanguagesSpoken is not null);
 
             RuleFor(x => x.Location)
-                .NotEmpty().WithMessage("Location must not be empty when provided.")
-                .Matches(TextPattern).WithMessage("Location contains invalid characters.")
+                .NotEmpty().WithMessage("Địa điểm không được để trống khi được cung cấp.")
+                .Matches(TextPattern).WithMessage("Địa điểm chứa ký tự không hợp lệ.")
                 .When(x => x.Location is not null);
 
             RuleForEach(x => x.Industries)
-                .IsInEnum().WithMessage("One or more industries are invalid.")
+                .IsInEnum().WithMessage("Một hoặc nhiều ngành không hợp lệ.")
                 .When(x => x.Industries is not null);
         }
 

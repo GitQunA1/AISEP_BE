@@ -101,6 +101,8 @@ namespace AISEP.BLL.Services.ConsultingReports
             var created = await _unitOfWork.ConsultingReports.GetByIdAsync(report.ConsultingReportId)
                 ?? throw new InvalidOperationException("Failed to load consulting report.");
 
+            await NotifyCustomerReportSubmittedAsync(created.Booking, report is not null && report.RevisionCount > 0);
+
             return _mapper.Map<ConsultingReportResponse>(created);
         }
 
@@ -333,6 +335,24 @@ namespace AISEP.BLL.Services.ConsultingReports
             await _notificationService.SendNotificationAsync(
                 booking.CustomerId,
                 "Vấn đề cần được báo cáo tới staff",
+                message,
+                NotificationType.General,
+                booking.BookingId,
+                "Booking");
+        }
+
+        private async Task NotifyCustomerReportSubmittedAsync(Booking booking, bool isRevisionSubmission)
+        {
+            var title = isRevisionSubmission
+                ? "Advisor đã nộp lại báo cáo tư vấn"
+                : "Advisor đã nộp báo cáo tư vấn";
+            var message = isRevisionSubmission
+                ? "Advisor đã cập nhật và nộp lại báo cáo tư vấn. Bạn có 24 giờ để xem và phản hồi."
+                : "Advisor đã nộp báo cáo tư vấn. Bạn có 24 giờ để xem và phản hồi.";
+
+            await _notificationService.SendNotificationAsync(
+                booking.CustomerId,
+                title,
                 message,
                 NotificationType.General,
                 booking.BookingId,

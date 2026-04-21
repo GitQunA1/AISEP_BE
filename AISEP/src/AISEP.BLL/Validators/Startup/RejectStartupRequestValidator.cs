@@ -8,9 +8,9 @@ namespace AISEP.BLL.Validators.Startup
         public RejectStartupRequestValidator()
         {
             RuleFor(x => x.Reason)
-                .NotEmpty().WithMessage("Reason is required when rejecting a startup.")
-                .Matches("^[a-zA-Z0-9 .,!?'-àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]*$").WithMessage("Reason must not contains invalid characters.")
-                .MaximumLength(2000).WithMessage("Reason must not exceed 2000 characters.");
+                .NotEmpty().WithMessage("Lý do là bắt buộc khi từ chối startup.")
+                .Matches("^[a-zA-Z0-9 .,!?'-àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]*$").WithMessage("Lý do chứa ký tự không hợp lệ.")
+                .MaximumLength(2000).WithMessage("Lý do không được vượt quá 2000 ký tự.");
         }
     }
 }

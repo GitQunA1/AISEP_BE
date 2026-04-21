@@ -8,18 +8,18 @@ namespace AISEP.BLL.Validators.Auth
         public ChangePasswordRequestValidator()
         {
             RuleFor(x => x.CurrentPassword)
-                .NotEmpty().WithMessage("Current password is required.");
+                .NotEmpty().WithMessage("Mật khẩu hiện tại là bắt buộc.");
 
             RuleFor(x => x.NewPassword)
-                .NotEmpty().WithMessage("New password is required.")
-                .MinimumLength(8).WithMessage("Password must be at least 8 characters.")
+                .NotEmpty().WithMessage("Mật khẩu mới là bắt buộc.")
+                .MinimumLength(8).WithMessage("Mật khẩu phải có ít nhất 8 ký tự.")
                 .Matches(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$")
-                .WithMessage("Password must contain uppercase, lowercase, number and special character.")
-                .NotEqual(x => x.CurrentPassword).WithMessage("New password must be different from current password.");
+                .WithMessage("Mật khẩu phải chứa chữ hoa, chữ thường, số và ký tự đặc biệt.")
+                .NotEqual(x => x.CurrentPassword).WithMessage("Mật khẩu mới phải khác mật khẩu hiện tại.");
 
             RuleFor(x => x.ConfirmPassword)
-                .NotEmpty().WithMessage("Confirm password is required.")
-                .Equal(x => x.NewPassword).WithMessage("Passwords do not match.");
+                .NotEmpty().WithMessage("Xác nhận mật khẩu là bắt buộc.")
+                .Equal(x => x.NewPassword).WithMessage("Mật khẩu xác nhận không khớp.");
         }
     }
 }

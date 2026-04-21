@@ -14,50 +14,50 @@ namespace AISEP.BLL.Validators.Advisor
         public CreateAdvisorRequestValidator()
         {
             RuleFor(x => x.HourlyRate)
-                .NotEmpty().WithMessage("Hourly rate is required.")
-                .GreaterThan(0m).WithMessage("Hourly rate must be greater than 0.");
+                .NotEmpty().WithMessage("Mức phí theo giờ là bắt buộc.")
+                .GreaterThan(0m).WithMessage("Mức phí theo giờ phải lớn hơn 0.");
 
             RuleFor(x => x.ProfileImageFile)
-                .NotEmpty().WithMessage("Profile image file is required.")
+                .NotEmpty().WithMessage("Ảnh đại diện là bắt buộc.")
                 .Must(f => f!.Length <= MaxImageSize)
-                .WithMessage("Profile image must not exceed 5MB.")
+                .WithMessage("Ảnh đại diện không được vượt quá 5MB.")
                 .Must(f => AllowedImageTypes.Contains(f!.ContentType))
-                .WithMessage("Profile image only supports JPG, PNG, WEBP.");
+                .WithMessage("Ảnh đại diện chỉ hỗ trợ JPG, PNG, WEBP.");
 
             RuleFor(x => x.CertificationFile)
-                .NotEmpty().WithMessage("Certification file is required.")
+                .NotEmpty().WithMessage("Tệp chứng chỉ là bắt buộc.")
                 .Must(f => f!.Length <= MaxDocSize)
-                .WithMessage("Certification file must not exceed 10MB.")
+                .WithMessage("Tệp chứng chỉ không được vượt quá 10MB.")
                 .Must(f => AllowedDocTypes.Contains(f!.ContentType))
-                .WithMessage("Certification only supports PDF, JPG, PNG.");
+                .WithMessage("Chứng chỉ chỉ hỗ trợ PDF, JPG, PNG.");
 
             RuleFor(x => x.Bio)
-                .NotEmpty().WithMessage("Bio is required.")
-                .Matches(TextPattern).WithMessage("Bio contains invalid characters.");
+                .NotEmpty().WithMessage("Tiểu sử là bắt buộc.")
+                .Matches(TextPattern).WithMessage("Tiểu sử chứa ký tự không hợp lệ.");
 
             RuleFor(x => x.Expertise)
-                .NotEmpty().WithMessage("Expertise is required.")
-                .Matches(TextPattern).WithMessage("Expertise contains invalid characters.");
+                .NotEmpty().WithMessage("Chuyên môn là bắt buộc.")
+                .Matches(TextPattern).WithMessage("Chuyên môn chứa ký tự không hợp lệ.");
 
             RuleFor(x => x.PreviousExperience)
-                .NotEmpty().WithMessage("Previous experience is required.")
-                .Matches(TextPattern).WithMessage("Previous experience contains invalid characters.");
+                .NotEmpty().WithMessage("Kinh nghiệm trước đây là bắt buộc.")
+                .Matches(TextPattern).WithMessage("Kinh nghiệm trước đây chứa ký tự không hợp lệ.");
 
             RuleFor(x => x.LanguagesSpoken)
-                .NotEmpty().WithMessage("Languages spoken is required.")
-                .Matches(TextPattern).WithMessage("Languages spoken contains invalid characters.");
+                .NotEmpty().WithMessage("Ngôn ngữ sử dụng là bắt buộc.")
+                .Matches(TextPattern).WithMessage("Ngôn ngữ sử dụng chứa ký tự không hợp lệ.");
 
             RuleFor(x => x.Location)
-                .NotEmpty().WithMessage("Location is required.")
-                .Matches(TextPattern).WithMessage("Location contains invalid characters.");
+                .NotEmpty().WithMessage("Địa điểm là bắt buộc.")
+                .Matches(TextPattern).WithMessage("Địa điểm chứa ký tự không hợp lệ.");
 
             RuleForEach(x => x.Industries)
-                .IsInEnum().WithMessage("One or more industries are invalid.")
+                .IsInEnum().WithMessage("Một hoặc nhiều ngành không hợp lệ.")
                 .When(x => x.Industries is not null);
 
             RuleFor(x => x.Industries)
-                .NotNull().WithMessage("Industries is required.")
-                .Must(x => x is { Count: > 0 }).WithMessage("At least one industry is required.");
+                .NotNull().WithMessage("Danh sách ngành là bắt buộc.")
+                .Must(x => x is { Count: > 0 }).WithMessage("Cần chọn ít nhất một ngành.");
         }
     }
 }
