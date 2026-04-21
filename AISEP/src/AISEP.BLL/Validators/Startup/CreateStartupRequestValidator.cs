@@ -40,10 +40,10 @@ namespace AISEP.BLL.Validators.Startup
                 .Matches(TextPattern).WithMessage("Quốc gia/Thành phố chứa ký tự không hợp lệ.");
 
             RuleFor(x => x.Website)
-                .NotEmpty().WithMessage("Website là bắt buộc.")
                 .MaximumLength(255).WithMessage("Website không được vượt quá 255 ký tự.")
                 .Must(url => Uri.TryCreate(url, UriKind.Absolute, out _))
-                .WithMessage("Website phải là URL hợp lệ.");
+                .WithMessage("Website phải là URL hợp lệ.")
+                .When(x => !string.IsNullOrWhiteSpace(x.Website));
 
             RuleFor(x => x.Industry)
                 .NotEmpty().WithMessage("Ngành nghề là bắt buộc.")
