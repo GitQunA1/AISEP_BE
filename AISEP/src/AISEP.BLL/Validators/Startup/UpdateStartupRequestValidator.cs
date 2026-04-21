@@ -49,9 +49,10 @@ namespace AISEP.BLL.Validators.Startup
                 .When(x => x.PhoneNumber is not null);
 
             RuleFor(x => x.Website)
-                .NotEmpty().WithMessage("Website không được để trống khi được cung cấp.")
                 .MaximumLength(255).WithMessage("Website không được vượt quá 255 ký tự.")
-                .When(x => x.Website is not null);
+                .Must(url => Uri.TryCreate(url, UriKind.Absolute, out _))
+                .WithMessage("Website phải là URL hợp lệ.")
+                .When(x => !string.IsNullOrWhiteSpace(x.Website));
 
             RuleFor(x => x.Industry)
                 .IsInEnum().WithMessage("Ngành nghề không hợp lệ.")
