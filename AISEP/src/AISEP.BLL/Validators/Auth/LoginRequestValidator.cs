@@ -8,14 +8,14 @@ namespace AISEP.BLL.Validators.Auth
         public LoginRequestValidator()
         {
             RuleFor(x => x.Email)
-                .NotEmpty().WithMessage("Email is required.")
-                .EmailAddress().WithMessage("Invalid email format.");
+                .NotEmpty().WithMessage("Email là bắt buộc.")
+                .EmailAddress().WithMessage("Email không đúng định dạng.");
 
             RuleFor(x => x.Password)
-                .NotEmpty().WithMessage("Password is required.")
-                .MinimumLength(8).WithMessage("Password must be at least 8 characters.")
+                .NotEmpty().WithMessage("Mật khẩu là bắt buộc.")
+                .MinimumLength(8).WithMessage("Mật khẩu phải có ít nhất 8 ký tự.")
                 .Matches(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$")
-                .WithMessage("Password must contain uppercase, lowercase, number and special character.");
+                .WithMessage("Mật khẩu phải chứa chữ hoa, chữ thường, số và ký tự đặc biệt.");
         }
     }
 }

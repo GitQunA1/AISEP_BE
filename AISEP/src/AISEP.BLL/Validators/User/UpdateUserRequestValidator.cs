@@ -15,21 +15,21 @@ namespace AISEP.BLL.Validators.User
         {
             RuleFor(x => x)
                 .Must(HasAtLeastOneField)
-                .WithMessage("At least one field must be provided for update.");
+                .WithMessage("Cần cung cấp ít nhất một trường để cập nhật.");
 
             RuleFor(x => x.UserName)
-                .NotEmpty().WithMessage("User name must not be empty when provided.")
-                .Matches(NamePattern).WithMessage("User name must only contain letters and spaces.")
+                .NotEmpty().WithMessage("Tên người dùng không được để trống khi được cung cấp.")
+                .Matches(NamePattern).WithMessage("Tên người dùng chỉ được chứa chữ cái và khoảng trắng.")
                 .When(x => x.UserName is not null);
 
             RuleFor(x => x.FullName)
-                .NotEmpty().WithMessage("Full name must not be empty when provided.")
-                .Matches(NamePattern).WithMessage("Full name must only contain letters and spaces.")
+                .NotEmpty().WithMessage("Họ và tên không được để trống khi được cung cấp.")
+                .Matches(NamePattern).WithMessage("Họ và tên chỉ được chứa chữ cái và khoảng trắng.")
                 .When(x => x.FullName is not null);
 
             RuleFor(x => x.DateOfBirth)
                 .LessThanOrEqualTo(_ => DateTime.UtcNow.Date)
-                .WithMessage("Date of birth cannot be in the future.")
+                .WithMessage("Ngày sinh không được ở tương lai.")
                 .When(x => x.DateOfBirth.HasValue);
         }
 

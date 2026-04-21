@@ -8,9 +8,9 @@ namespace AISEP.BLL.Validators.Auth
         public ForgotPasswordRequestValidator()
         {
             RuleFor(x => x.Email)
-                .NotEmpty().WithMessage("Email is required.")
-                .EmailAddress().WithMessage("Invalid email format.")
-                .MaximumLength(256).WithMessage("Email must not exceed 256 characters.");
+                .NotEmpty().WithMessage("Email là bắt buộc.")
+                .EmailAddress().WithMessage("Email không đúng định dạng.")
+                .MaximumLength(256).WithMessage("Email không được vượt quá 256 ký tự.");
         }
     }
 }

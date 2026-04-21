@@ -12,58 +12,58 @@ namespace AISEP.BLL.Validators.Investor
         {
             RuleFor(x => x)
                 .Must(HasAtLeastOneField)
-                .WithMessage("At least one field must be provided for update.");
+                .WithMessage("Cần cung cấp ít nhất một trường để cập nhật.");
 
             RuleFor(x => x.OrganizationName)
-                .NotEmpty().WithMessage("Organization name must not be empty when provided.")
-                .MaximumLength(255).WithMessage("Organization name must not exceed 255 characters.")
-                .Matches(TextPattern).WithMessage("Organization name contains invalid characters.")
+                .NotEmpty().WithMessage("Tên tổ chức không được để trống khi được cung cấp.")
+                .MaximumLength(255).WithMessage("Tên tổ chức không được vượt quá 255 ký tự.")
+                .Matches(TextPattern).WithMessage("Tên tổ chức chứa ký tự không hợp lệ.")
                 .When(x => x.OrganizationName is not null);
 
             RuleFor(x => x.InvestmentTaste)
-                .NotEmpty().WithMessage("Investment taste must not be empty when provided.")
-                .MaximumLength(1000).WithMessage("Investment taste must not exceed 1000 characters.")
-                .Matches(TextPattern).WithMessage("Investment taste contains invalid characters.")
+                .NotEmpty().WithMessage("Khẩu vị đầu tư không được để trống khi được cung cấp.")
+                .MaximumLength(1000).WithMessage("Khẩu vị đầu tư không được vượt quá 1000 ký tự.")
+                .Matches(TextPattern).WithMessage("Khẩu vị đầu tư chứa ký tự không hợp lệ.")
                 .When(x => x.InvestmentTaste is not null);
 
             RuleFor(x => x.InvestmentAmount)
-                .GreaterThan(0).WithMessage("Investment amount must be greater than 0.")
+                .GreaterThan(0).WithMessage("Số tiền đầu tư phải lớn hơn 0.")
                 .When(x => x.InvestmentAmount.HasValue);
 
             RuleFor(x => x.InvestmentDate)
                 .LessThanOrEqualTo(_ => DateTime.UtcNow.Date)
-                .WithMessage("Investment date cannot be in the future.")
+                .WithMessage("Ngày đầu tư không được ở tương lai.")
                 .When(x => x.InvestmentDate.HasValue);
 
             RuleFor(x => x.InvestmentRegion)
-                .NotEmpty().WithMessage("Investment region must not be empty when provided.")
-                .MaximumLength(255).WithMessage("Investment region must not exceed 255 characters.")
-                .Matches(TextPattern).WithMessage("Investment region contains invalid characters.")
+                .NotEmpty().WithMessage("Khu vực đầu tư không được để trống khi được cung cấp.")
+                .MaximumLength(255).WithMessage("Khu vực đầu tư không được vượt quá 255 ký tự.")
+                .Matches(TextPattern).WithMessage("Khu vực đầu tư chứa ký tự không hợp lệ.")
                 .When(x => x.InvestmentRegion is not null);
 
             RuleFor(x => x.WalletAddress)
                 .Cascade(CascadeMode.Stop)
-                .NotEmpty().WithMessage("Wallet address must not be empty when provided.")
-                .MaximumLength(255).WithMessage("Wallet address must not exceed 255 characters.")
-                .Must(BeValidEthereumWalletAddress).WithMessage("Wallet address must be a valid Ethereum address with a correct EIP-55 checksum.")
+                .NotEmpty().WithMessage("Địa chỉ ví không được để trống khi được cung cấp.")
+                .MaximumLength(255).WithMessage("Địa chỉ ví không được vượt quá 255 ký tự.")
+                .Must(BeValidEthereumWalletAddress).WithMessage("Địa chỉ ví phải là địa chỉ Ethereum hợp lệ và đúng checksum EIP-55.")
                 .When(x => x.WalletAddress is not null);
 
             RuleFor(x => x.PreviousInvestments)
-                .NotEmpty().WithMessage("Previous investments must not be empty when provided.")
-                .MaximumLength(1000).WithMessage("Previous investments must not exceed 1000 characters.")
-                .Matches(TextPattern).WithMessage("Previous investments contains invalid characters.")
+                .NotEmpty().WithMessage("Kinh nghiệm đầu tư trước đây không được để trống khi được cung cấp.")
+                .MaximumLength(1000).WithMessage("Kinh nghiệm đầu tư trước đây không được vượt quá 1000 ký tự.")
+                .Matches(TextPattern).WithMessage("Kinh nghiệm đầu tư trước đây chứa ký tự không hợp lệ.")
                 .When(x => x.PreviousInvestments is not null);
 
             RuleFor(x => x.RiskTolerance)
-                .IsInEnum().WithMessage("Risk tolerance is not valid.")
+                .IsInEnum().WithMessage("Mức chịu rủi ro không hợp lệ.")
                 .When(x => x.RiskTolerance.HasValue);
 
             RuleFor(x => x.FocusIndustry)
-                .IsInEnum().WithMessage("Focus industry is not valid.")
+                .IsInEnum().WithMessage("Lĩnh vực tập trung không hợp lệ.")
                 .When(x => x.FocusIndustry.HasValue);
 
             RuleFor(x => x.PreferredStage)
-                .IsInEnum().WithMessage("Preferred stage is not valid.")
+                .IsInEnum().WithMessage("Giai đoạn ưu tiên không hợp lệ.")
                 .When(x => x.PreferredStage.HasValue);
         }
 

@@ -8,8 +8,8 @@ namespace AISEP.BLL.Validators.Deal
         public StartupRejectContractDtoValidator()
         {
             RuleFor(x => x.Reason)
-                .NotEmpty().WithMessage("Reason is required when startup rejects a contract.")
-                .MaximumLength(2000).WithMessage("Reason must not exceed 2000 characters.");
+                .NotEmpty().WithMessage("Lý do là bắt buộc khi startup từ chối hợp đồng.")
+                .MaximumLength(2000).WithMessage("Lý do không được vượt quá 2000 ký tự.");
         }
     }
 }

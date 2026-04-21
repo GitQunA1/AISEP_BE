@@ -8,10 +8,10 @@ namespace AISEP.BLL.Validators.Investor
         public RejectInvestorRequestValidator()
         {
             RuleFor(x => x.Reason)
-                .NotNull().WithMessage("Reason must not be null.")
+                .NotNull().WithMessage("Lý do không được để null.")
                 //.Must(reason => !string.IsNullOrWhiteSpace(reason)).WithMessage("Reason is required.")
-                .Matches("^[a-zA-Z0-9 .,!?'-àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]*$").WithMessage("Reason must not contains invalid characters.")
-                .MaximumLength(2000).WithMessage("Reason must not exceed 2000 characters.");
+                .Matches("^[a-zA-Z0-9 .,!?'-àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]*$").WithMessage("Lý do chứa ký tự không hợp lệ.")
+                .MaximumLength(2000).WithMessage("Lý do không được vượt quá 2000 ký tự.");
         }
     }
 }

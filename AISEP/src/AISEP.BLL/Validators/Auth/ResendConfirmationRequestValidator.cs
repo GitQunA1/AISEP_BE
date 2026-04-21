@@ -8,9 +8,9 @@ namespace AISEP.BLL.Validators.Auth
         public ResendConfirmationRequestValidator()
         {
             RuleFor(x => x.Email)
-                .NotEmpty().WithMessage("Email is required.")
-                .EmailAddress().WithMessage("Email format is invalid.")
-                .MaximumLength(255).WithMessage("Email must not exceed 255 characters.");
+                .NotEmpty().WithMessage("Email là bắt buộc.")
+                .EmailAddress().WithMessage("Email không đúng định dạng.")
+                .MaximumLength(255).WithMessage("Email không được vượt quá 255 ký tự.");
         }
     }
 }
