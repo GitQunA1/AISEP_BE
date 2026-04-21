@@ -6,7 +6,7 @@ namespace AISEP.BLL.Validators.Investor
 {
     public class UpdateInvestorRequestValidator : AbstractValidator<UpdateInvestorRequest>
     {
-        private const string TextPattern = @"^[\p{L}\p{N}\s.,!?'-]*$";
+        private const string TextPattern = @"^[\p{L}\p{N}\s.,;:!?&()%'""-]*$";
 
         public UpdateInvestorRequestValidator()
         {
