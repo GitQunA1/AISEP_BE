@@ -5,7 +5,7 @@ namespace AISEP.BLL.Validators.Advisor
 {
     public class UpdateAdvisorRequestValidator : AbstractValidator<UpdateAdvisorRequest>
     {
-        private const string TextPattern = @"^[\p{L}\p{N}\s.,!?'-]*$";
+        private const string TextPattern = @"^[\p{L}\p{N}\s.,;:!?&()%'""-]*$";
         private static readonly string[] AllowedImageTypes = ["image/jpeg", "image/png", "image/webp"];
         private static readonly string[] AllowedDocTypes = ["application/pdf", "image/jpeg", "image/png"];
         private const long MaxImageSize = 5 * 1024 * 1024;
