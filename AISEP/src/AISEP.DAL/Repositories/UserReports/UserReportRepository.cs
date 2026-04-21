@@ -21,6 +21,8 @@ namespace AISEP.DAL.Repositories.UserReports
                         .ThenInclude(a => a.User)
                 .Include(r => r.Booking!)
                     .ThenInclude(b => b.Customer)
+                .Include(r => r.Booking!)
+                    .ThenInclude(b => b.ConsultingReport)
                 .Include(r => r.Reporter)
                 .Include(r => r.ResolvedBy)
                 .FirstOrDefaultAsync(r => r.UserReportId == id);
@@ -44,6 +46,8 @@ namespace AISEP.DAL.Repositories.UserReports
                         .ThenInclude(a => a.User)
                 .Include(r => r.Booking!)
                     .ThenInclude(b => b.Customer)
+                .Include(r => r.Booking!)
+                    .ThenInclude(b => b.ConsultingReport)
                 .Include(r => r.Reporter)
                 .Include(r => r.ResolvedBy)
                 .AsQueryable();

@@ -53,7 +53,6 @@ namespace AISEP.BLL.Services.Bookings
                 throw new InvalidOperationException("Project has not been assigned to any advisor yet.");
             }
             var isAssignedAdvisor = assignments.Any(x => x.AdvisorId == dto.AdvisorId);
-            var isComplaintAcceptedRebook = false;
             Booking? sourceBooking = null;
 
             if (!isAssignedAdvisor)
@@ -70,25 +69,12 @@ namespace AISEP.BLL.Services.Bookings
                 if (sourceBooking.ProjectId != dto.ProjectId)
                     throw new InvalidOperationException("Source booking project does not match current booking project.");
 
-                if (sourceBooking.Status == BookingStatus.ComplaintAccepted)
-                {
-                    isComplaintAcceptedRebook = true;
-                    var isOldAdvisor = sourceBooking.AdvisorId == dto.AdvisorId;
-                    if (!isOldAdvisor)
-                    {
-                        throw new InvalidOperationException(
-                            "With complaint accepted re-book, you can choose previous advisor or advisors assigned to this project.");
-                    }
-                }
-                else
-                {
-                    if (sourceBooking.Status != BookingStatus.Cancel && sourceBooking.Status != BookingStatus.NoResponse)
-                        throw new InvalidOperationException("Only rejected/no-response booking can choose a replacement advisor.");
+                if (sourceBooking.Status != BookingStatus.Cancel && sourceBooking.Status != BookingStatus.NoResponse)
+                    throw new InvalidOperationException("Only rejected/no-response booking can choose a replacement advisor.");
 
-                    var replacementAdvisors = await FindReplacementAdvisorsAsync(project, sourceBooking.AdvisorId, 5);
-                    if (!replacementAdvisors.Any(a => a.AdvisorId == dto.AdvisorId))
-                        throw new InvalidOperationException("Selected advisor is not in replacement suggestions for this booking.");
-                }
+                var replacementAdvisors = await FindReplacementAdvisorsAsync(project, sourceBooking.AdvisorId, 5);
+                if (!replacementAdvisors.Any(a => a.AdvisorId == dto.AdvisorId))
+                    throw new InvalidOperationException("Selected advisor is not in replacement suggestions for this booking.");
             }
             else if (dto.OldBookingId.HasValue)
             {
@@ -100,11 +86,6 @@ namespace AISEP.BLL.Services.Bookings
 
                 if (sourceBooking.ProjectId != dto.ProjectId)
                     throw new InvalidOperationException("Source booking project does not match current booking project.");
-
-                if (sourceBooking.Status == BookingStatus.ComplaintAccepted)
-                {
-                    isComplaintAcceptedRebook = true;
-                }
             }
 
             await EnsureProjectSelectableForCurrentUserAsync(project, currentUser, currentRole);
@@ -157,7 +138,6 @@ namespace AISEP.BLL.Services.Bookings
                 Status = BookingStatus.Pending,
                 Note = dto.Note,
                 OldBookingId = dto.OldBookingId,
-                IsFreeRebookFromComplaint = false,
                 IsPaymentWaived = false,
                 UsedPremiumFreeQuota = false
             };
@@ -165,32 +145,21 @@ namespace AISEP.BLL.Services.Bookings
             var hourlyRate = advisor.HourlyRate ?? 0;
             booking.Price = Math.Round(hourlyRate * selectedSlots.Count, 2, MidpointRounding.AwayFromZero);
 
-            if (isComplaintAcceptedRebook)
+            if (dto.IsFreeBooking)
             {
-                if (sourceBooking is null)
-                    throw new InvalidOperationException("Invalid source booking for complaint accepted re-book.");
-
-                var isAlreadyUsed = await _unitOfWork.Bookings
-                    .ExistsFreeRebookFromComplaintByOldBookingIdAsync(sourceBooking.BookingId);
-                if (isAlreadyUsed)
+                if (bookingDurationHours > 3m)
                 {
-                    throw new InvalidOperationException("Free re-book for this complaint-accepted booking has already been used.");
+                    throw new InvalidOperationException("Free premium booking is only available for booking duration less than or equal to 3 hours.");
                 }
 
-                booking.IsFreeRebookFromComplaint = true;
-                booking.IsPaymentWaived = true;
-            }
-            else
-            {
-                if (dto.IsFreeBooking)
-                {
-                    if (bookingDurationHours > 3m)
-                    {
-                        throw new InvalidOperationException("Free premium booking is only available for booking duration less than or equal to 3 hours.");
-                    }
+                var customer = await _unitOfWork.Users.GetByIdAsync(currentUser)
+                    ?? throw new KeyNotFoundException("User not found.");
+                var subscription = await _unitOfWork.Subscriptions.GetLatestActiveAsync(currentUser);
+                var hasActivePremium = subscription is not null;
 
-                    var subscription = await _unitOfWork.Subscriptions.GetLatestActiveAsync(currentUser);
-                    if (subscription is null || subscription.RemainingFreeBookings <= 0)
+                if (hasActivePremium)
+                {
+                    if (subscription!.RemainingFreeBookings <= 0)
                     {
                         throw new InvalidOperationException("You do not have any free premium booking quota left.");
                     }
@@ -199,6 +168,16 @@ namespace AISEP.BLL.Services.Bookings
                     subscription.RemainingFreeBookings -= 1;
                     _unitOfWork.Subscriptions.Update(subscription);
                     booking.UsedPremiumFreeQuota = true;
+                }
+                else
+                {
+                    if (customer.BonusFreeBookings <= 0)
+                    {
+                        throw new InvalidOperationException("You do not have any bonus free booking quota left.");
+                    }
+
+                    booking.IsPaymentWaived = true;
+                    customer.BonusFreeBookings -= 1;
                 }
             }
 
@@ -341,28 +320,17 @@ namespace AISEP.BLL.Services.Bookings
                 return [];
             }
 
-            if (oldBookingId.HasValue)
-            {
-                var sourceBooking = await _unitOfWork.Bookings.GetByIdAsync(oldBookingId.Value)
-                    ?? throw new KeyNotFoundException("Source booking not found.");
-
-                if (sourceBooking.CustomerId != currentUserId)
-                    throw new InvalidOperationException("Source booking does not belong to current user.");
-
-                if (sourceBooking.ProjectId != projectId)
-                    throw new InvalidOperationException("Source booking project does not match.");
-
-                if (sourceBooking.Status == BookingStatus.ComplaintAccepted)
+                if (oldBookingId.HasValue)
                 {
-                    var oldAdvisor = await _unitOfWork.Advisors.GetByIdAsync(sourceBooking.AdvisorId);
-                    if (oldAdvisor is not null
-                        && oldAdvisor.ApprovalStatus == ApprovalStatus.Approved
-                        && assignedAdvisors.All(a => a.AdvisorId != oldAdvisor.AdvisorId))
-                    {
-                        assignedAdvisors.Add(oldAdvisor);
-                    }
+                    var sourceBooking = await _unitOfWork.Bookings.GetByIdAsync(oldBookingId.Value)
+                        ?? throw new KeyNotFoundException("Source booking not found.");
+
+                    if (sourceBooking.CustomerId != currentUserId)
+                        throw new InvalidOperationException("Source booking does not belong to current user.");
+
+                    if (sourceBooking.ProjectId != projectId)
+                        throw new InvalidOperationException("Source booking project does not match.");
                 }
-            }
 
             var rankedAdvisors = await RankAdvisorsByCurrentScoringAsync(assignedAdvisors);
             return rankedAdvisors.Select(a => new BookingAdvisorOptionResponse

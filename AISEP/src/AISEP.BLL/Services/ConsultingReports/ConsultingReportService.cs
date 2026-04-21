@@ -174,19 +174,8 @@ namespace AISEP.BLL.Services.ConsultingReports
                 throw new InvalidOperationException("Only submitted report can be requested for revision.");
 
             if (report.RevisionCount >= MaxRevisionCount)
-            {
-                report.Status = ConsultingReportStatus.RevisionRequested;
-                report.RevisionRequestReason = reason.Trim();
-                report.StartupReviewedAt = DateTime.UtcNow;
-                report.StartupReviewDueAt = null;
-                report.AdvisorRevisionDueAt = null;
-                _unitOfWork.ConsultingReports.Update(report);
-                await _unitOfWork.SaveChangesAsync();
-                await NotifyCustomerToReportStaffAsync(
-                    report.Booking,
-                    "Bạn đã đạt số lần yêu cầu chỉnh sửa tối đa. Nếu vấn đề vẫn chưa được giải quyết, vui lòng gửi báo cáo tới staff để được hỗ trợ.");
-                return _mapper.Map<ConsultingReportResponse>(report);
-            }
+                throw new InvalidOperationException(
+                    "Maximum revision requests reached. Please report to staff if the issue is still unresolved.");
 
             var now = DateTime.UtcNow;
             report.RevisionCount += 1;
@@ -207,8 +196,18 @@ namespace AISEP.BLL.Services.ConsultingReports
             var now = DateTime.UtcNow;
             var changed = 0;
 
+            var overdueInitialSubmissions = await _unitOfWork.Bookings
+                .GetConfirmedWithoutConsultingReportPastDueAsync(now.Subtract(AdvisorSubmitWindow));
+
+            foreach (var booking in overdueInitialSubmissions)
+            {
+                booking.Status = BookingStatus.ConsultingReportOverdue;
+                changed += 1;
+            }
+
             var startupTimedOutReports = await _unitOfWork.ConsultingReports.GetQuery()
                 .Where(r => r.Status == ConsultingReportStatus.Submitted
+                            && r.Booking.Status == BookingStatus.Confirmed
                             && r.StartupReviewDueAt.HasValue
                             && r.StartupReviewDueAt.Value <= now)
                 .ToListAsync();
@@ -326,29 +325,6 @@ namespace AISEP.BLL.Services.ConsultingReports
                 booking.ChatSession.IsOpen = false;
                 booking.ChatSession.EndTime = DateTime.UtcNow;
             }
-        }
-
-        private async Task RefundPremiumFreeQuotaIfNeededAsync(Booking booking)
-        {
-            if (!booking.UsedPremiumFreeQuota || booking.PremiumFreeQuotaRefunded)
-            {
-                return;
-            }
-
-            var latestSubscription = await _unitOfWork.Subscriptions.GetQuery()
-                .Where(s => s.UserId == booking.CustomerId)
-                .OrderByDescending(s => s.EndDate)
-                .ThenByDescending(s => s.SubscriptionId)
-                .FirstOrDefaultAsync();
-
-            if (latestSubscription is null)
-            {
-                return;
-            }
-
-            latestSubscription.RemainingFreeBookings += 1;
-            _unitOfWork.Subscriptions.Update(latestSubscription);
-            booking.PremiumFreeQuotaRefunded = true;
         }
 
         private async Task NotifyCustomerToReportStaffAsync(Booking booking, string message)

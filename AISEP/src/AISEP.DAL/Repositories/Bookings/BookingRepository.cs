@@ -61,10 +61,17 @@ namespace AISEP.DAL.Repositories.Bookings
                          && b.CreatedAt <= thresholdUtc)
                 .ToListAsync();
 
-        public async Task<bool> ExistsFreeRebookFromComplaintByOldBookingIdAsync(int oldBookingId)
-            => await _context.Bookings.AnyAsync(b =>
-                b.OldBookingId == oldBookingId
-                && b.IsFreeRebookFromComplaint);
+        public async Task<List<Booking>> GetConfirmedWithoutConsultingReportPastDueAsync(DateTime thresholdUtc)
+            => await _context.Bookings
+                .Include(b => b.Advisor)
+                    .ThenInclude(a => a.User)
+                .Include(b => b.Customer)
+                .Include(b => b.ChatSession)
+                .Include(b => b.ConsultingReport)
+                .Where(b => b.Status == BookingStatus.Confirmed
+                         && b.EndTime <= thresholdUtc
+                         && b.ConsultingReport == null)
+                .ToListAsync();
 
         public async Task AddAsync(Booking booking)
         {

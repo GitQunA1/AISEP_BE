@@ -13,6 +13,7 @@ namespace AISEP.DAL.Entities
 
         public UserStatus Status { get; set; }
         public bool IsPremium { get; set; }
+        public int BonusFreeBookings { get; set; }
 
         public DateTime? DateOfBirth { get; set; }
 
