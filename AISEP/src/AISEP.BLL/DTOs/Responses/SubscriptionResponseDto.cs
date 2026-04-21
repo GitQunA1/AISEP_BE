@@ -13,6 +13,7 @@ namespace AISEP.BLL.DTOs.Responses
         public int UsedAiRequests { get; set; }
         public int UsedProjectViews { get; set; }
         public int RemainingFreeBookings { get; set; }
+        public int BonusFreeBookings { get; set; }
 
         public string PackageName { get; set; } = string.Empty;
         public string UserName { get; set; } = string.Empty;

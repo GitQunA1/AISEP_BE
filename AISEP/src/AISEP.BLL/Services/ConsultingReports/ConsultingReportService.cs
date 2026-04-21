@@ -202,6 +202,7 @@ namespace AISEP.BLL.Services.ConsultingReports
             foreach (var booking in overdueInitialSubmissions)
             {
                 booking.Status = BookingStatus.ConsultingReportOverdue;
+                await RefundFreeBookingQuotaForOverdueConsultingAsync(booking.CustomerId);
                 changed += 1;
             }
 
@@ -336,6 +337,21 @@ namespace AISEP.BLL.Services.ConsultingReports
                 NotificationType.General,
                 booking.BookingId,
                 "Booking");
+        }
+
+        private async Task RefundFreeBookingQuotaForOverdueConsultingAsync(int customerId)
+        {
+            var subscription = await _unitOfWork.Subscriptions.GetLatestActiveAsync(customerId);
+            if (subscription is not null)
+            {
+                subscription.RemainingFreeBookings += 1;
+                _unitOfWork.Subscriptions.Update(subscription);
+                return;
+            }
+
+            var customer = await _unitOfWork.Users.GetByIdAsync(customerId)
+                ?? throw new KeyNotFoundException("Customer not found.");
+            customer.BonusFreeBookings += 1;
         }
     }
 }

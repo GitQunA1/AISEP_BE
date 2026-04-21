@@ -189,7 +189,11 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.UserEmail,
                     opt => opt.MapFrom(src => src.User != null
                         ? (src.User.Email ?? string.Empty)
-                        : string.Empty));
+                        : string.Empty))
+                .ForMember(dest => dest.BonusFreeBookings,
+                    opt => opt.MapFrom(src => src.User != null
+                        ? src.User.BonusFreeBookings
+                        : 0));
 
             // Transaction Entity -> Payment responses
             CreateMap<Transaction, CheckoutResponse>()
