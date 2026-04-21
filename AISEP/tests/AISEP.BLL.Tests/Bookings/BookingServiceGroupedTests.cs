@@ -211,41 +211,6 @@ public class BookingServiceGroupedTests
     }
 
     [Fact]
-    public async Task UT118_CreateBookingAsync_ShouldThrow_WhenFreeRebookFromComplaintAlreadyUsed()
-    {
-        var advisor = BuildAdvisor(10, 9000);
-        var project = BuildProject(20, ProjectStatus.Approved);
-        var slots = BuildConsecutiveSlots(advisor.AdvisorId, DateTime.UtcNow.Date.AddDays(2), 9, 2);
-        var sourceBooking = new Booking
-        {
-            BookingId = 501,
-            CustomerId = 5000,
-            ProjectId = 20,
-            AdvisorId = 10,
-            Status = BookingStatus.ComplaintAccepted
-        };
-
-        var (service, _, bookingRepo, advisorRepo, projectRepo, assignmentRepo, availabilityRepo, _, _, _, _, _, _, _, _) = CreateSut();
-        advisorRepo.Setup(x => x.GetByIdAsync(10)).ReturnsAsync(advisor);
-        projectRepo.Setup(x => x.GetByIdAsync(20)).ReturnsAsync(project);
-        assignmentRepo.Setup(x => x.GetByProjectIdAsync(20)).ReturnsAsync([BuildAssignment(project.ProjectId, advisor.AdvisorId, advisor)]);
-        availabilityRepo.Setup(x => x.GetByIdsAsync(It.IsAny<IEnumerable<int>>())).ReturnsAsync(slots);
-        bookingRepo.Setup(x => x.GetByIdAsync(501)).ReturnsAsync(sourceBooking);
-        bookingRepo.Setup(x => x.ExistsFreeRebookFromComplaintByOldBookingIdAsync(501)).ReturnsAsync(true);
-
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            service.CreateBookingAsync(new CreateBookingRequest
-            {
-                AdvisorId = 10,
-                ProjectId = 20,
-                OldBookingId = 501,
-                AdvisorAvailabilitySlotIds = slots.Select(x => x.AdvisorAvailabilityId).ToList()
-            }));
-
-        Assert.Contains("already been used", ex.Message);
-    }
-
-    [Fact]
     public async Task UT119_CreateBookingAsync_ShouldThrow_WhenPremiumFreeBookingDurationExceeds3Hours()
     {
         var advisor = BuildAdvisor(10, 9000);
@@ -640,7 +605,6 @@ public class BookingServiceGroupedTests
 
         bookingRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((Booking?)null);
         bookingRepositoryMock.Setup(x => x.GetByIdForAdvisorActionAsync(It.IsAny<int>())).ReturnsAsync((Booking?)null);
-        bookingRepositoryMock.Setup(x => x.ExistsFreeRebookFromComplaintByOldBookingIdAsync(It.IsAny<int>())).ReturnsAsync(false);
         bookingRepositoryMock.Setup(x => x.AddAsync(It.IsAny<Booking>())).Returns(Task.CompletedTask);
 
         bookingSlotRepositoryMock.Setup(x => x.AddRangeAsync(It.IsAny<IEnumerable<BookingSlot>>())).Returns(Task.CompletedTask);
@@ -674,7 +638,6 @@ public class BookingServiceGroupedTests
                 Price = b.Price,
                 Note = b.Note,
                 IsPaymentWaived = b.IsPaymentWaived,
-                IsFreeRebookFromComplaint = b.IsFreeRebookFromComplaint,
                 UsedPremiumFreeQuota = b.UsedPremiumFreeQuota,
                 AdvisorAvailabilitySlotIds = b.BookingSlots.Select(x => x.AdvisorAvailabilityId).ToList(),
                 SlotCount = b.BookingSlots.Count

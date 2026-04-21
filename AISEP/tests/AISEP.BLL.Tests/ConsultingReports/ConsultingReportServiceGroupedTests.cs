@@ -309,7 +309,7 @@ public class ConsultingReportServiceGroupedTests
     }
 
     [Fact]
-    public async Task UT142_RequestRevisionAsync_ShouldEscalateToStaff_WhenRevisionCountReachedMax()
+    public async Task UT142_RequestRevisionAsync_ShouldThrow_WhenRevisionCountReachedMax()
     {
         var booking = BuildBooking(bookingId: 402, advisorId: 10, customerId: 5000, status: BookingStatus.Confirmed, endTime: DateTime.UtcNow.AddHours(-2));
         var report = BuildReport(802, booking, ConsultingReportStatus.Submitted, revisionCount: 3);
@@ -318,18 +318,13 @@ public class ConsultingReportServiceGroupedTests
         userService.Setup(x => x.GetUserId()).Returns(5000);
         reportRepository.Setup(x => x.GetByIdAsync(802)).ReturnsAsync(report);
 
-        var result = await service.RequestRevisionAsync(802, "  Need clearer action items  ");
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.RequestRevisionAsync(802, "  Need clearer action items  "));
 
-        Assert.Equal(ConsultingReportStatus.EscalatedToStaff, report.Status);
-        Assert.Equal("Need clearer action items", report.RevisionRequestReason);
-        Assert.NotNull(report.StartupReviewedAt);
-        Assert.Null(report.StartupReviewDueAt);
-        Assert.Null(report.AdvisorRevisionDueAt);
+        Assert.Contains("Maximum revision requests reached", ex.Message);
         Assert.Equal(3, report.RevisionCount);
-        Assert.Equal("EscalatedToStaff", result.Status);
-
-        unitOfWork.Verify(x => x.SaveChangesAsync(), Times.Once);
-        reportRepository.Verify(x => x.Update(report), Times.Once);
+        unitOfWork.Verify(x => x.SaveChangesAsync(), Times.Never);
+        reportRepository.Verify(x => x.Update(report), Times.Never);
     }
 
     [Fact]
@@ -388,7 +383,7 @@ public class ConsultingReportServiceGroupedTests
     }
 
     [Fact]
-    public async Task UT148_ProcessReportDeadlinesAsync_ShouldEscalateToStaff_WhenAdvisorRevisionTimesOut()
+    public async Task UT148_ProcessReportDeadlinesAsync_ShouldKeepRevisionRequested_WhenAdvisorRevisionTimesOut()
     {
         var booking = BuildBooking(
             bookingId: 502,
@@ -408,12 +403,36 @@ public class ConsultingReportServiceGroupedTests
         var affected = await service.ProcessReportDeadlinesAsync();
 
         Assert.Equal(1, affected);
-        Assert.Equal(ConsultingReportStatus.EscalatedToStaff, report.Status);
+        Assert.Equal(ConsultingReportStatus.RevisionRequested, report.Status);
         Assert.Null(report.AdvisorRevisionDueAt);
         Assert.Null(report.StartupReviewDueAt);
 
         reportRepository.Verify(x => x.Update(report), Times.Once);
         bookingRepository.Verify(x => x.GetByIdWithAdvisorWalletAsync(It.IsAny<int>()), Times.Never);
+        unitOfWork.Verify(x => x.SaveChangesAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task UT149_ProcessReportDeadlinesAsync_ShouldMarkBookingOverdue_WhenInitialSubmissionTimesOut()
+    {
+        var overdueBooking = BuildBooking(
+            bookingId: 503,
+            advisorId: 10,
+            customerId: 5000,
+            status: BookingStatus.Confirmed,
+            endTime: DateTime.UtcNow.AddHours(-25),
+            chatOpen: true);
+
+        var (service, unitOfWork, bookingRepository, _, reportRepository, _, _, _, _, _, _) = CreateSut();
+        bookingRepository
+            .Setup(x => x.GetConfirmedWithoutConsultingReportPastDueAsync(It.IsAny<DateTime>()))
+            .ReturnsAsync([overdueBooking]);
+
+        var affected = await service.ProcessReportDeadlinesAsync();
+
+        Assert.Equal(1, affected);
+        Assert.Equal(BookingStatus.ConsultingReportOverdue, overdueBooking.Status);
+        reportRepository.Verify(x => x.Update(It.IsAny<ConsultingReport>()), Times.Never);
         unitOfWork.Verify(x => x.SaveChangesAsync(), Times.Once);
     }
 
@@ -491,6 +510,7 @@ public class ConsultingReportServiceGroupedTests
 
         bookingRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((Booking?)null);
         bookingRepositoryMock.Setup(x => x.GetByIdWithAdvisorWalletAsync(It.IsAny<int>())).ReturnsAsync((Booking?)null);
+        bookingRepositoryMock.Setup(x => x.GetConfirmedWithoutConsultingReportPastDueAsync(It.IsAny<DateTime>())).ReturnsAsync([]);
         walletTransactionRepositoryMock.Setup(x => x.AddAsync(It.IsAny<WalletTransaction>())).Returns(Task.CompletedTask);
 
         advisorRepositoryMock

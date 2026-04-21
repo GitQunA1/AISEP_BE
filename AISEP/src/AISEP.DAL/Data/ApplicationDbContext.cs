@@ -61,6 +61,7 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.FullName).HasMaxLength(150);
                 entity.Property(e => e.Role).HasConversion<string>().IsRequired();
                 entity.Property(e => e.Status).HasConversion<string>().IsRequired();
+                entity.Property(e => e.BonusFreeBookings).HasDefaultValue(0);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
             });
 
@@ -361,10 +362,8 @@ namespace AISEP.DAL.Data
                 entity.HasKey(e => e.BookingId);
                 entity.Property(e => e.Price).HasColumnType("decimal(18,2)").IsRequired();
                 entity.Property(e => e.SystemCommissionAmount).HasColumnType("decimal(18,2)").HasDefaultValue(0m);
-                entity.Property(e => e.IsFreeRebookFromComplaint).HasDefaultValue(false);
                 entity.Property(e => e.IsPaymentWaived).HasDefaultValue(false);
                 entity.Property(e => e.UsedPremiumFreeQuota).HasDefaultValue(false);
-                entity.Property(e => e.PremiumFreeQuotaRefunded).HasDefaultValue(false);
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.Note).HasMaxLength(1000);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");

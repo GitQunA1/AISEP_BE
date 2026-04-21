@@ -5,9 +5,10 @@
         Pending,
         ApprovedAwaitingPayment,
         Confirmed,
+        ConsultingReportOverdue,
+        ComplaintPending,
         Completed,
         ComplaintAccepted,
-        ComplaintRejected,
         Cancel,
         NoResponse
     }

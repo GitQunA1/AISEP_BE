@@ -17,6 +17,8 @@ namespace AISEP.BLL.Services.UserReports
 {
     public class UserReportService : IUserReportService
     {
+        private const decimal LegacyAdvisorPayoutRate = 0.8m;
+
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserService _userService;
         private readonly IStorageService _storageService;
@@ -86,6 +88,11 @@ namespace AISEP.BLL.Services.UserReports
             report.ResolvedAt = null;
             report.ResolvedById = null;
 
+            if (booking.ConsultingReport?.Status == ConsultingReportStatus.Submitted)
+            {
+                booking.Status = BookingStatus.ComplaintPending;
+            }
+
             await _unitOfWork.UserReports.AddAsync(report);
             await _unitOfWork.SaveChangesAsync();
             await NotifyReviewersReportCreatedAsync(report);
@@ -117,7 +124,13 @@ namespace AISEP.BLL.Services.UserReports
 
             if (report.Booking is not null)
             {
+                var wasComplaintAccepted = report.Booking.Status == BookingStatus.ComplaintAccepted;
                 report.Booking.Status = BookingStatus.ComplaintAccepted;
+                if (!wasComplaintAccepted)
+                {
+                    await CreditFreeBookingQuotaAsync(report.Booking.CustomerId);
+                }
+                await DisburseAdvisorForAcceptedComplaintAsync(report.Booking);
 
                 if (report.Booking.ChatSession is not null && report.Booking.ChatSession.IsOpen)
                 {
@@ -278,6 +291,66 @@ namespace AISEP.BLL.Services.UserReports
             return report.ReporterId == customerUserId
                 ? advisorUserId
                 : customerUserId;
+        }
+
+        private async Task DisburseAdvisorForAcceptedComplaintAsync(Booking booking)
+        {
+            if (booking.ConsultingReport is null || booking.ConsultingReport.IsPayoutProcessed)
+            {
+                return;
+            }
+
+            var bookingWithWallet = await _unitOfWork.Bookings.GetByIdWithAdvisorWalletAsync(booking.BookingId)
+                ?? throw new KeyNotFoundException("Booking not found for payout.");
+
+            if (bookingWithWallet.Advisor?.Wallet is null)
+                throw new InvalidOperationException("Advisor wallet not found.");
+
+            var payoutAmount = bookingWithWallet.SystemCommissionConfigId.HasValue
+                ? Math.Round(bookingWithWallet.Price - bookingWithWallet.SystemCommissionAmount, 2, MidpointRounding.AwayFromZero)
+                : Math.Round(bookingWithWallet.Price * LegacyAdvisorPayoutRate, 2, MidpointRounding.AwayFromZero);
+
+            if (payoutAmount > 0)
+            {
+                bookingWithWallet.Advisor.Wallet.Balance += payoutAmount;
+
+                await _unitOfWork.WalletTransactions.AddAsync(new WalletTransaction
+                {
+                    WalletId = bookingWithWallet.Advisor.Wallet.WalletId,
+                    Amount = payoutAmount,
+                    Type = WalletTransactionType.Deposit,
+                    Status = WalletTransactionStatus.Completed,
+                    CreatedAt = DateTime.UtcNow
+                });
+
+                await _notificationService.SendNotificationAsync(
+                    bookingWithWallet.Advisor.UserId,
+                    "Ví đã được cộng tiền từ booking có khiếu nại",
+                    $"Ví của bạn đã được cộng {payoutAmount:0.##} từ booking.",
+                    NotificationType.General,
+                    bookingWithWallet.BookingId,
+                    "Booking");
+            }
+
+            booking.ConsultingReport.IsPayoutProcessed = true;
+            booking.ConsultingReport.AdvisorPayoutAmount = payoutAmount;
+            booking.ConsultingReport.PayoutProcessedAt = DateTime.UtcNow;
+        }
+
+        private async Task CreditFreeBookingQuotaAsync(int customerId)
+        {
+            var customer = await _unitOfWork.Users.GetByIdAsync(customerId)
+                ?? throw new KeyNotFoundException("Customer not found.");
+            var subscription = await _unitOfWork.Subscriptions.GetLatestActiveAsync(customerId);
+
+            if (subscription is not null)
+            {
+                subscription.RemainingFreeBookings += 1;
+                _unitOfWork.Subscriptions.Update(subscription);
+                return;
+            }
+
+            customer.BonusFreeBookings += 1;
         }
     }
 }

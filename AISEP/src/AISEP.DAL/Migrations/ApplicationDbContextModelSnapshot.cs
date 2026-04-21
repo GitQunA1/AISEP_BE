@@ -262,11 +262,6 @@ namespace AISEP.Migrations
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsFreeRebookFromComplaint")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
                     b.Property<bool>("IsPaymentWaived")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -278,11 +273,6 @@ namespace AISEP.Migrations
 
                     b.Property<int?>("OldBookingId")
                         .HasColumnType("integer");
-
-                    b.Property<bool>("PremiumFreeQuotaRefunded")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
@@ -1644,6 +1634,11 @@ namespace AISEP.Migrations
 
                     b.Property<DateTime?>("DateOfBirth")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("BonusFreeBookings")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
