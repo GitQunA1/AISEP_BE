@@ -236,11 +236,11 @@ namespace AISEP.BLL.Services.UserReports
                 return;
             }
 
-            var title = "New user report pending review";
+            var title = "Có báo cáo người dùng mới chờ xử lý";
             var bookingPart = report.BookingId.HasValue
-                ? " for a booking"
+                ? " cho một lịch tư vấn"
                 : string.Empty;
-            var message = $"A user report{bookingPart} is pending review.";
+            var message = $"Có báo cáo người dùng{bookingPart} đang chờ xử lý.";
 
             foreach (var reviewerId in reviewerIds)
             {
@@ -256,22 +256,22 @@ namespace AISEP.BLL.Services.UserReports
 
         private async Task NotifyReportStatusChangedAsync(UserReport report)
         {
-            var statusText = report.Status.ToString();
+            var statusText = GetUserReportStatusDisplayText(report.Status);
             var suffix = string.IsNullOrWhiteSpace(report.ResolutionNote)
                 ? string.Empty
-                : $" Note: {report.ResolutionNote}";
+                : $" Ghi chú: {report.ResolutionNote}";
             await _notificationService.SendNotificationAsync(
                 report.ReporterId,
-                "Your user report has been updated",
-                $"Your report status is now {statusText}.{suffix}",
+                "Báo cáo của bạn đã được cập nhật",
+                $"Trạng thái báo cáo của bạn hiện là: {statusText}.{suffix}",
                 NotificationType.General,
                 report.UserReportId,
                 "UserReport");
 
             await _notificationService.SendNotificationAsync(
                 ResolveCounterpartyUserId(report),
-                "A user report status has been updated",
-                $"A report involving your account is now {statusText}.{suffix}",
+                "Trạng thái báo cáo liên quan đến bạn đã được cập nhật",
+                $"Một báo cáo liên quan đến tài khoản của bạn hiện có trạng thái: {statusText}.{suffix}",
                 NotificationType.General,
                 report.UserReportId,
                 "UserReport");
@@ -325,8 +325,8 @@ namespace AISEP.BLL.Services.UserReports
 
                 await _notificationService.SendNotificationAsync(
                     bookingWithWallet.Advisor.UserId,
-                    "Ví đã được cộng tiền từ booking có khiếu nại",
-                    $"Ví của bạn đã được cộng {payoutAmount:0.##} từ booking.",
+                    "Ví đã được cộng tiền từ lịch tư vấn có khiếu nại",
+                    $"Ví của bạn đã được cộng {payoutAmount:0.##} từ lịch tư vấn.",
                     NotificationType.General,
                     bookingWithWallet.BookingId,
                     "Booking");
@@ -351,6 +351,17 @@ namespace AISEP.BLL.Services.UserReports
             }
 
             customer.BonusFreeBookings += 1;
+        }
+
+        private static string GetUserReportStatusDisplayText(UserReportStatus status)
+        {
+            return status switch
+            {
+                UserReportStatus.Pending => "Đang chờ xử lý",
+                UserReportStatus.Resolved => "Đã xử lý hợp lệ",
+                UserReportStatus.Dismissed => "Đã bác bỏ",
+                _ => status.ToString()
+            };
         }
     }
 }

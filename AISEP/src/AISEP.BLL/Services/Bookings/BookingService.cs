@@ -252,8 +252,8 @@ namespace AISEP.BLL.Services.Bookings
             var createdBooking = await _unitOfWork.Bookings.GetByIdAsync(booking.BookingId);
             await _notificationService.SendNotificationAsync(
                 advisor.UserId,
-                "Có yêu cầu booking mới",
-                $"Bạn có yêu cầu booking mới  đang chờ phản hồi.",
+                "Có yêu cầu đặt lịch tư vấn mới",
+                "Bạn có yêu cầu đặt lịch tư vấn mới đang chờ phản hồi.",
                 NotificationType.General,
                 booking.BookingId,
                 "Booking");
@@ -452,11 +452,11 @@ namespace AISEP.BLL.Services.Bookings
 
             var requiresPayment = booking.Status == BookingStatus.ApprovedAwaitingPayment;
             var notificationTitle = requiresPayment
-                ? "Booking đã được chấp nhận"
-                : "Booking đã được xác nhận";
+                ? "Lịch tư vấn đã được chấp nhận"
+                : "Lịch tư vấn đã được xác nhận";
             var notificationMessage = requiresPayment
-                ? "Booking của bạn đã được chấp nhận. Vui lòng tiến hành thanh toán."
-                : "Booking của bạn đã được xác nhận. Bạn có thể bắt đầu trao đổi với advisor.";
+                ? "Lịch tư vấn của bạn đã được chấp nhận. Vui lòng tiến hành thanh toán."
+                : "Lịch tư vấn của bạn đã được xác nhận. Bạn có thể bắt đầu trao đổi với cố vấn.";
 
             await _notificationService.SendNotificationAsync(
                 booking.CustomerId,
@@ -491,8 +491,8 @@ namespace AISEP.BLL.Services.Bookings
 
             await _notificationService.SendNotificationAsync(
                 booking.CustomerId,
-                "Booking bị từ chối",
-                "Advisor đã từ chối booking này. Bạn có thể đặt lại thời gian khác hoặc chọn advisor khác.",
+                "Lịch tư vấn bị từ chối",
+                "Cố vấn đã từ chối lịch tư vấn này. Bạn có thể đặt lại thời gian khác hoặc chọn cố vấn khác.",
                 NotificationType.General);
 
             return _mapper.Map<BookingResponse>(booking);
@@ -597,19 +597,19 @@ namespace AISEP.BLL.Services.Bookings
             {
                 await _notificationService.SendNotificationAsync(
                     booking.CustomerId,
-                    "Advisor chưa phản hồi",
-                    "Booking đã quá thời gian phản hồi và được chuyển sang NoResponse. Hiện chưa có advisor thay thế phù hợp, vui lòng chọn advisor khác.",
+                    "Cố vấn chưa phản hồi",
+                    "Lịch tư vấn đã quá thời gian phản hồi và được chuyển sang trạng thái Không phản hồi. Hiện chưa có cố vấn thay thế phù hợp, vui lòng chọn cố vấn khác.",
                     NotificationType.General);
                 return;
             }
 
             var suggestedText = string.Join(", ", suggestedAdvisors.Select(x =>
-                (x.User.UserName ?? "Advisor")));
+                (x.User.UserName ?? "Cố vấn")));
 
             await _notificationService.SendNotificationAsync(
                 booking.CustomerId,
-                "Advisor chưa phản hồi",
-                $"Booking đã quá thời gian phản hồi và được chuyển sang NoResponse. Gợi ý advisor thay thế: {suggestedText}. Vui lòng đặt lại với một advisor trong danh sách.",
+                "Cố vấn chưa phản hồi",
+                $"Lịch tư vấn đã quá thời gian phản hồi và được chuyển sang trạng thái Không phản hồi. Gợi ý cố vấn thay thế: {suggestedText}. Vui lòng đặt lại với một cố vấn trong danh sách.",
                 NotificationType.General);
         }
 

@@ -68,8 +68,8 @@ namespace AISEP.BLL.Services.Investors
             await _unitOfWork.Investors.AddAsync(investor);
             await _unitOfWork.SaveChangesAsync();
             await NotifyStaffAndAdminsAsync(
-                "Hồ sơ investor chờ duyệt",
-                $"Có hồ sơ investor mới đã được gửi và đang chờ phê duyệt.");
+                "Hồ sơ nhà đầu tư chờ duyệt",
+                "Có hồ sơ nhà đầu tư mới đã được gửi và đang chờ phê duyệt.");
 
             var created = await _unitOfWork.Investors.GetByIdAsync(investor.InvestorId);
             return _mapper.Map<InvestorResponse>(created!);
@@ -147,8 +147,8 @@ namespace AISEP.BLL.Services.Investors
             await _unitOfWork.SaveChangesAsync();
             await _notificationService.SendNotificationAsync(
                 investor.UserId,
-                "Hồ sơ investor đã được duyệt",
-                "Hồ sơ investor của bạn đã được duyệt.",
+                "Hồ sơ nhà đầu tư đã được duyệt",
+                "Hồ sơ nhà đầu tư của bạn đã được duyệt.",
                 NotificationType.General,
                 investor.InvestorId,
                 "Investor");
@@ -174,8 +174,8 @@ namespace AISEP.BLL.Services.Investors
             await _unitOfWork.SaveChangesAsync();
             await _notificationService.SendNotificationAsync(
                 investor.UserId,
-                "Hồ sơ investor bị từ chối",
-                $"Hồ sơ investor của bạn đã bị từ chối. Lý do: {rejectionReason}",
+                "Hồ sơ nhà đầu tư bị từ chối",
+                $"Hồ sơ nhà đầu tư của bạn đã bị từ chối. Lý do: {rejectionReason}",
                 NotificationType.General,
                 investor.InvestorId,
                 "Investor");

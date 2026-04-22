@@ -86,8 +86,8 @@ namespace AISEP.BLL.Services.Advisors
             await _unitOfWork.Advisors.AddAsync(advisor);
             await _unitOfWork.SaveChangesAsync();
             await NotifyStaffAndAdminsAsync(
-                "Hồ sơ advisor chờ duyệt",
-                $"Hồ sơ advisor m?i đã được gửi và đang chờ phê duyệt.");
+                "Hồ sơ cố vấn chờ duyệt",
+                "Hồ sơ cố vấn mới đã được gửi và đang chờ phê duyệt.");
 
             var created = await _unitOfWork.Advisors.GetByIdAsync(advisor.AdvisorId);
             return _mapper.Map<AdvisorResponse>(created!);
@@ -203,8 +203,8 @@ namespace AISEP.BLL.Services.Advisors
             await _unitOfWork.SaveChangesAsync();
             await _notificationService.SendNotificationAsync(
                 advisor.UserId,
-                "Hồ sơ advisor đã được duyệt",
-                "Hồ sơ advisor của bạn đã được duyệt và ví hiện đang hoạt động.",
+                "Hồ sơ cố vấn đã được duyệt",
+                "Hồ sơ cố vấn của bạn đã được duyệt và ví hiện đang hoạt động.",
                 NotificationType.General,
                 advisor.AdvisorId,
                 "Advisor");
@@ -231,8 +231,8 @@ namespace AISEP.BLL.Services.Advisors
             await _unitOfWork.SaveChangesAsync();
             await _notificationService.SendNotificationAsync(
                 advisor.UserId,
-                "Hồ sơ advisor bị từ chối",
-                $"Hồ sơ advisor của bạn đã bị từ chối. Lý do: {rejectionReason}",
+                "Hồ sơ cố vấn bị từ chối",
+                $"Hồ sơ cố vấn của bạn đã bị từ chối. Lý do: {rejectionReason}",
                 NotificationType.General,
                 advisor.AdvisorId,
                 "Advisor");

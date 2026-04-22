@@ -83,8 +83,8 @@ namespace AISEP.BLL.Services.SystemCommissions
             await _unitOfWork.SaveChangesAsync();
 
             await NotifyStaffAndAdminsAsync(
-                "System commission updated",
-                $"System commission has been updated to {config.Percent:0.##}%.");
+                "Đã cập nhật mức phí hệ thống",
+                $"Mức phí hệ thống đã được cập nhật thành {config.Percent:0.##}%.");
 
             return new SystemCommissionCurrentResponse
             {
