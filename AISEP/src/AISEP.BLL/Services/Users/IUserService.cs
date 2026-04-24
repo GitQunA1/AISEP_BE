@@ -23,5 +23,6 @@ namespace AISEP.BLL.Services.Users
         Task<bool> DeleteForAdminAsync(int id);
         Task<bool> UnbanAsync(int id);
         Task<UserResponse> GetByProjectId(int id);
+        Task<int> GetBonusFreeBookingsAsync(int id);
     }
 }

@@ -11,6 +11,7 @@ using Sieve.Models;
 using Sieve.Services;
 using AISEP.BLL.Services.Users;
 using AISEP.BLL.Services.Notifications;
+using AISEP.BLL.Services.FormValidationRules;
 using AISEP.BLL.Exceptions;
 
 namespace AISEP.BLL.Services.Investors
@@ -22,14 +23,16 @@ namespace AISEP.BLL.Services.Investors
         private readonly IMapper _mapper;
         private readonly IUserService _userService;
         private readonly INotificationService _notificationService;
+        private readonly IDynamicFormSubmissionValidationService _dynamicFormValidationService;
 
-        public InvestorService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IUserService userService, INotificationService notificationService)
+        public InvestorService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IUserService userService, INotificationService notificationService, IDynamicFormSubmissionValidationService dynamicFormValidationService)
         {
             _unitOfWork = unitOfWork;
             _sieveProcessor = sieveProcessor;
             _mapper = mapper;
             _userService = userService;
             _notificationService = notificationService;
+            _dynamicFormValidationService = dynamicFormValidationService;
         }
 
         public async Task<PagedResult<InvestorResponse>> GetAllAsync(SieveModel model)
@@ -57,6 +60,9 @@ namespace AISEP.BLL.Services.Investors
 
         public async Task<InvestorResponse?> CreateAsync(CreateInvestorRequest dto)
         {
+            
+            await _dynamicFormValidationService.ValidateAsync("investor.create", dto);
+
             var userId = _userService.GetUserId();
             var existing = await _unitOfWork.Investors.GetByUserIdAsync(userId);
             if (existing is not null)
@@ -79,6 +85,9 @@ namespace AISEP.BLL.Services.Investors
 
         public async Task<InvestorResponse?> UpdateAsync(int id, UpdateInvestorRequest dto)
         {
+            
+            await _dynamicFormValidationService.ValidateAsync("investor.update", dto);
+
             var userId = _userService.GetUserId();
 
             var investor = await _unitOfWork.Investors.GetByIdAsync(id);

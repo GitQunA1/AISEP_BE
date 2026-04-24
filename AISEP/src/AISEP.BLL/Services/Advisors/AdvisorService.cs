@@ -10,6 +10,7 @@ using Sieve.Services;
 using AISEP.BLL.Services.Users;
 using AISEP.BLL.Services.Wallets;
 using AISEP.BLL.Services.Notifications;
+using AISEP.BLL.Services.FormValidationRules;
 using AISEP.DAL.Enums;
 using AISEP.BLL.Exceptions;
 using Microsoft.EntityFrameworkCore;
@@ -25,8 +26,9 @@ namespace AISEP.BLL.Services.Advisors
         private readonly IUserService _userService;
         private readonly IWalletService _walletService;
         private readonly INotificationService _notificationService;
+        private readonly IDynamicFormSubmissionValidationService _dynamicFormValidationService;
 
-        public AdvisorService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IStorageService storage, IUserService userService, IWalletService walletService, INotificationService notificationService)
+        public AdvisorService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IStorageService storage, IUserService userService, IWalletService walletService, INotificationService notificationService, IDynamicFormSubmissionValidationService dynamicFormValidationService)
         {
             _unitOfWork     = unitOfWork;
             _sieveProcessor = sieveProcessor;
@@ -35,8 +37,10 @@ namespace AISEP.BLL.Services.Advisors
             _userService = userService;
             _walletService = walletService;
             _notificationService = notificationService;
+            _dynamicFormValidationService = dynamicFormValidationService;
         }
 
+       
         public async Task<PagedResult<AdvisorResponse>> GetAllAsync(SieveModel model)
         {
             var query = _unitOfWork.Advisors.GetAllQuery();
@@ -44,6 +48,7 @@ namespace AISEP.BLL.Services.Advisors
                 a => _mapper.Map<AdvisorResponse>(a));
         }
 
+        
         public async Task<AdvisorResponse?> GetByIdAsync(int advisorId)
         {
             var advisor = await _unitOfWork.Advisors.GetByIdAsync(advisorId);
@@ -52,6 +57,7 @@ namespace AISEP.BLL.Services.Advisors
             return _mapper.Map<AdvisorResponse>(advisor);
         }
 
+        
         public async Task<AdvisorResponse?> GetMyProfileAsync()
         {
             var userId = _userService.GetUserId();
@@ -63,6 +69,9 @@ namespace AISEP.BLL.Services.Advisors
 
         public async Task<AdvisorResponse?> CreateAsync(CreateAdvisorRequest dto)
         {
+            
+            await _dynamicFormValidationService.ValidateAsync("advisor.create", dto);
+
             var userId =  _userService.GetUserId();
             var existing = await _unitOfWork.Advisors.GetByUserIdAsync(userId);
             if (existing is not null)
@@ -97,6 +106,9 @@ namespace AISEP.BLL.Services.Advisors
 
         public async Task<AdvisorResponse?> UpdateAsync(int id, UpdateAdvisorRequest dto)
         {   
+         
+            await _dynamicFormValidationService.ValidateAsync("advisor.update", dto);
+
             var userId = _userService.GetUserId();
             var advisor = await _unitOfWork.Advisors.GetByIdAsync(id);
             if (advisor is null)
@@ -258,6 +270,7 @@ namespace AISEP.BLL.Services.Advisors
         }
 
         private async Task NotifyStaffAndAdminsAsync(string title, string message, int? referenceId = null, string? referenceType = null)
+       
         {
             var reviewerIds = await _unitOfWork.Users.GetAllQuery()
                 .Where(u => u.Role == UserRole.Staff || u.Role == UserRole.Admin)

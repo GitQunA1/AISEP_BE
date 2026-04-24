@@ -50,6 +50,7 @@ namespace AISEP.DAL.Data
         public DbSet<UserReport> UserReports { get; set; }
         public DbSet<AdvisorAvailability> AdvisorAvailabilities { get; set; }
         public DbSet<BookingSlot> BookingSlots { get; set; }
+        public DbSet<FormValidationRule> FormValidationRules { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -831,6 +832,22 @@ namespace AISEP.DAL.Data
 
                 entity.Property(pf => pf.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
                
+            });
+
+            modelBuilder.Entity<FormValidationRule>(entity =>
+            {
+                entity.ToTable("form_validation_rules");
+
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.FormKey).HasMaxLength(100).IsRequired();
+                entity.Property(e => e.FieldKey).HasMaxLength(100).IsRequired();
+                entity.Property(e => e.CustomRegexPattern).HasColumnType("text");
+                entity.Property(e => e.MinValue).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.MaxValue).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.AllowedFileTypesJson).HasColumnType("text");
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.HasIndex(e => new { e.FormKey, e.FieldKey }).IsUnique();
             });
         }
     }

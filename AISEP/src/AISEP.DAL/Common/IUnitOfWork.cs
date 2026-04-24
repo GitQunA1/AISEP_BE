@@ -30,6 +30,7 @@ using AISEP.DAL.Repositories.Notifications;
 using AISEP.DAL.Repositories.ConnectionRequests;
 using AISEP.DAL.Repositories.Deals;
 using AISEP.DAL.Repositories.PostPrs;
+using AISEP.DAL.Repositories.FormValidationRules;
 using AISEP.DAL.Repositories.SystemCommissionConfigs;
 using AISEP.DAL.Repositories.SystemTerms;
 namespace AISEP.DAL.Common
@@ -71,6 +72,7 @@ namespace AISEP.DAL.Common
         IConnectionRequestRepository ConnectionRequests { get; }
         IDealRepository              Deals              { get; }
         IPostPrRepository            PostPrs            { get; }
+        IFormValidationRuleRepository FormValidationRules { get; }
 
         Task<int> SaveChangesAsync();
     }

@@ -5,6 +5,7 @@ using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.Storage;
 using AISEP.BLL.Services.Users;
 using AISEP.BLL.Services.Notifications;
+using AISEP.BLL.Services.FormValidationRules;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
@@ -23,8 +24,9 @@ namespace AISEP.BLL.Services.Startups
         private readonly IUserService    _userService;
         private readonly IStorageService _storage;
         private readonly INotificationService _notificationService;
+        private readonly IDynamicFormSubmissionValidationService _dynamicFormValidationService;
 
-        public StartupService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IUserService userService, IStorageService storage, INotificationService notificationService)
+        public StartupService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IUserService userService, IStorageService storage, INotificationService notificationService, IDynamicFormSubmissionValidationService dynamicFormValidationService)
         {
             _unitOfWork     = unitOfWork;
             _sieveProcessor = sieveProcessor;
@@ -32,6 +34,7 @@ namespace AISEP.BLL.Services.Startups
             _userService    = userService;
             _storage        = storage;
             _notificationService = notificationService;
+            _dynamicFormValidationService = dynamicFormValidationService;
         }
 
         public async Task<PagedResult<StartupResponse>> SearchStartupsAsync(SieveModel model, string? industry = null, string? stage = null)
@@ -75,6 +78,9 @@ namespace AISEP.BLL.Services.Startups
 
         public async Task<StartupResponse> CreateStartupAsync(CreateStartupRequest dto)
         { 
+            
+            await _dynamicFormValidationService.ValidateAsync("startup.create", dto);
+
             var userId = _userService.GetUserId();
             var existing = await _unitOfWork.Startups.GetByUserIdAsync(userId);
             if (existing is not null)
@@ -113,6 +119,9 @@ namespace AISEP.BLL.Services.Startups
 
         public async Task<StartupResponse> UpdateStartupAsync(int id, UpdateStartupRequest dto)
         {
+           
+            await _dynamicFormValidationService.ValidateAsync("startup.update", dto);
+
             var userId = _userService.GetUserId(); 
             var startup = await _unitOfWork.Startups.GetByIdAsync(id);
             if (startup is null)

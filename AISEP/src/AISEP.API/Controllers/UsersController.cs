@@ -38,6 +38,22 @@ namespace AISEP.API.Controllers
             return Ok(ApiResponse<object>.SuccessResponse(user, "Success"));
         }
 
+        [HttpGet("me/bonus")]
+        [Authorize]
+        public async Task<IActionResult> GetMyBonus()
+        {
+            try
+            {
+                var userId = _userService.GetUserId();
+                var bonus = await _userService.GetBonusFreeBookingsAsync(userId);
+                return Ok(ApiResponse<object>.SuccessResponse(bonus, "Success"));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not found", 404));
+            }
+        }
+
         [HttpPut("{id:int}")]
         [Authorize]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateUserRequest request)
