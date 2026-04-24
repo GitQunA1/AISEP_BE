@@ -69,7 +69,9 @@ namespace AISEP.BLL.Services.Investors
             await _unitOfWork.SaveChangesAsync();
             await NotifyStaffAndAdminsAsync(
                 "Hồ sơ nhà đầu tư chờ duyệt",
-                "Có hồ sơ nhà đầu tư mới đã được gửi và đang chờ phê duyệt.");
+                "Có hồ sơ nhà đầu tư mới đã được gửi và đang chờ phê duyệt.",
+                investor.InvestorId,
+                "Investor");
 
             var created = await _unitOfWork.Investors.GetByIdAsync(investor.InvestorId);
             return _mapper.Map<InvestorResponse>(created!);
@@ -181,7 +183,7 @@ namespace AISEP.BLL.Services.Investors
                 "Investor");
         }
 
-        private async Task NotifyStaffAndAdminsAsync(string title, string message)
+        private async Task NotifyStaffAndAdminsAsync(string title, string message, int? referenceId = null, string? referenceType = null)
         {
             var reviewerIds = await _unitOfWork.Users.GetAllQuery()
                 .Where(u => u.Role == UserRole.Staff || u.Role == UserRole.Admin)
@@ -194,7 +196,9 @@ namespace AISEP.BLL.Services.Investors
                     reviewerId,
                     title,
                     message,
-                    NotificationType.System);
+                    NotificationType.System,
+                    referenceId,
+                    referenceType);
             }
         }
     }

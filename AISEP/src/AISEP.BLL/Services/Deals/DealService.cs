@@ -85,7 +85,9 @@ namespace AISEP.BLL.Services.Deals
                 project.Startup.UserId,
                 "Đề xuất thỏa thuận đầu tư mới",
                 $"Có đề xuất thỏa thuận đầu tư mới cho dự án '{project.ProjectName}'.",
-                NotificationType.Deal);
+                NotificationType.Deal,
+                deal.DealId,
+                "Deal");
 
             var created = await _unitOfWork.Deals.GetByIdWithDetailsAsync(deal.DealId)
                 ?? throw new KeyNotFoundException("Created deal not found.");

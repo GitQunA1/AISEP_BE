@@ -84,7 +84,9 @@ namespace AISEP.BLL.Services.SystemCommissions
 
             await NotifyStaffAndAdminsAsync(
                 "Đã cập nhật mức phí hệ thống",
-                $"Mức phí hệ thống đã được cập nhật thành {config.Percent:0.##}%.");
+                $"Mức phí hệ thống đã được cập nhật thành {config.Percent:0.##}%.",
+                config.SystemCommissionConfigId,
+                "SystemCommissionConfig");
 
             return new SystemCommissionCurrentResponse
             {
@@ -159,7 +161,7 @@ namespace AISEP.BLL.Services.SystemCommissions
             };
         }
 
-        private async Task NotifyStaffAndAdminsAsync(string title, string message)
+        private async Task NotifyStaffAndAdminsAsync(string title, string message, int? referenceId = null, string? referenceType = null)
         {
             var reviewerIds = await _unitOfWork.Users.GetAllQuery()
                 .Where(u => u.Role == UserRole.Staff || u.Role == UserRole.Admin)
@@ -172,7 +174,9 @@ namespace AISEP.BLL.Services.SystemCommissions
                     reviewerId,
                     title,
                     message,
-                    NotificationType.System);
+                    NotificationType.System,
+                    referenceId,
+                    referenceType);
             }
         }
     }

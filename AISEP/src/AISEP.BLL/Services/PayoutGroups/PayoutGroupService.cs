@@ -197,6 +197,7 @@ namespace AISEP.BLL.Services.Payouts
 
             var advisorNoticeTitle = "Thiếu thông tin ngân hàng nhận thanh toán";
             var advisorNoticeMessage = "Hệ thống không thể tạo khoản thanh toán vì bạn chưa cập nhật thông tin ngân hàng. Vui lòng cập nhật để nhận thanh toán.";
+            var firstMissingAdvisorUserId = missingBankAdvisors[0].UserId;
 
             foreach (var advisor in missingBankAdvisors)
             {
@@ -204,7 +205,9 @@ namespace AISEP.BLL.Services.Payouts
                     advisor.UserId,
                     advisorNoticeTitle,
                     advisorNoticeMessage,
-                    NotificationType.System);
+                    NotificationType.System,
+                    advisor.UserId,
+                    "AdvisorBankAccount");
             }
 
             var names = string.Join(", ", missingBankAdvisors.Select(x => x.Name).Distinct());
@@ -222,7 +225,9 @@ namespace AISEP.BLL.Services.Payouts
                     reviewerId,
                     reviewerNoticeTitle,
                     reviewerNoticeMessage,
-                    NotificationType.System);
+                    NotificationType.System,
+                    firstMissingAdvisorUserId,
+                    "AdvisorBankAccount");
             }
         }
 

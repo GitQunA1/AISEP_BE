@@ -104,7 +104,9 @@ namespace AISEP.BLL.Services.Startups
             await _unitOfWork.SaveChangesAsync();
             await NotifyStaffAndAdminsAsync(
                 "Hồ sơ startup chờ duyệt",
-                "Có hồ sơ startup mới đã được gửi và đang chờ phê duyệt.");
+                "Có hồ sơ startup mới đã được gửi và đang chờ phê duyệt.",
+                startup.StartupId,
+                "Startup");
 
             return _mapper.Map<StartupResponse>(startup);
         }
@@ -215,7 +217,7 @@ namespace AISEP.BLL.Services.Startups
         private async Task<string?> UploadIfPresent(IFormFile? file, string folder)
             => file is not null ? await _storage.UploadFileAsync(file, folder) : null;
 
-        private async Task NotifyStaffAndAdminsAsync(string title, string message)
+        private async Task NotifyStaffAndAdminsAsync(string title, string message, int? referenceId = null, string? referenceType = null)
         {
             var reviewerIds = await _unitOfWork.Users.GetAllQuery()
                 .Where(u => u.Role == UserRole.Staff || u.Role == UserRole.Admin)
@@ -228,7 +230,9 @@ namespace AISEP.BLL.Services.Startups
                     reviewerId,
                     title,
                     message,
-                    NotificationType.System);
+                    NotificationType.System,
+                    referenceId,
+                    referenceType);
             }
         }
        

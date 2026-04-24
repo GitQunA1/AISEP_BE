@@ -493,7 +493,9 @@ namespace AISEP.BLL.Services.Bookings
                 booking.CustomerId,
                 "Lịch tư vấn bị từ chối",
                 "Cố vấn đã từ chối lịch tư vấn này. Bạn có thể đặt lại thời gian khác hoặc chọn cố vấn khác.",
-                NotificationType.General);
+                NotificationType.General,
+                booking.BookingId,
+                "Booking");
 
             return _mapper.Map<BookingResponse>(booking);
         }
@@ -599,7 +601,9 @@ namespace AISEP.BLL.Services.Bookings
                     booking.CustomerId,
                     "Cố vấn chưa phản hồi",
                     "Lịch tư vấn đã quá thời gian phản hồi và được chuyển sang trạng thái Không phản hồi. Hiện chưa có cố vấn thay thế phù hợp, vui lòng chọn cố vấn khác.",
-                    NotificationType.General);
+                    NotificationType.General,
+                    booking.BookingId,
+                    "Booking");
                 return;
             }
 
@@ -610,7 +614,9 @@ namespace AISEP.BLL.Services.Bookings
                 booking.CustomerId,
                 "Cố vấn chưa phản hồi",
                 $"Lịch tư vấn đã quá thời gian phản hồi và được chuyển sang trạng thái Không phản hồi. Gợi ý cố vấn thay thế: {suggestedText}. Vui lòng đặt lại với một cố vấn trong danh sách.",
-                NotificationType.General);
+                NotificationType.General,
+                booking.BookingId,
+                "Booking");
         }
 
         private async Task<List<Advisor>> FindReplacementAdvisorsAsync(Project? project, int excludedAdvisorId, int topN)

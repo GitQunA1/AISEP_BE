@@ -87,7 +87,9 @@ namespace AISEP.BLL.Services.Advisors
             await _unitOfWork.SaveChangesAsync();
             await NotifyStaffAndAdminsAsync(
                 "Hồ sơ cố vấn chờ duyệt",
-                "Hồ sơ cố vấn mới đã được gửi và đang chờ phê duyệt.");
+                "Hồ sơ cố vấn mới đã được gửi và đang chờ phê duyệt.",
+                advisor.AdvisorId,
+                "Advisor");
 
             var created = await _unitOfWork.Advisors.GetByIdAsync(advisor.AdvisorId);
             return _mapper.Map<AdvisorResponse>(created!);
@@ -255,7 +257,7 @@ namespace AISEP.BLL.Services.Advisors
             return merged.Distinct().ToList();
         }
 
-        private async Task NotifyStaffAndAdminsAsync(string title, string message)
+        private async Task NotifyStaffAndAdminsAsync(string title, string message, int? referenceId = null, string? referenceType = null)
         {
             var reviewerIds = await _unitOfWork.Users.GetAllQuery()
                 .Where(u => u.Role == UserRole.Staff || u.Role == UserRole.Admin)
@@ -268,7 +270,9 @@ namespace AISEP.BLL.Services.Advisors
                     reviewerId,
                     title,
                     message,
-                    NotificationType.System);
+                    NotificationType.System,
+                    referenceId,
+                    referenceType);
             }
         }
     }
