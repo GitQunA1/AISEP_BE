@@ -220,6 +220,9 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.PaymentCode,
                     opt => opt.MapFrom(src => src.PaymentCode ?? string.Empty));
 
+            // SystemTerm Entity -> SystemTermResponse
+            CreateMap<SystemTerm, SystemTermResponse>();
+
             CreateMap<Transaction, AdminTransactionResponse>()
                 .ForMember(dest => dest.Type,
                     opt => opt.MapFrom(src => src.Type.ToString()))
