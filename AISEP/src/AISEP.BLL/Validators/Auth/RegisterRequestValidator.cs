@@ -44,6 +44,13 @@ namespace AISEP.BLL.Validators.Auth
                 .NotEmpty().WithMessage("Xác nhận mật khẩu là bắt buộc.")
                 .Equal(x => x.Password).WithMessage("Mật khẩu xác nhận không khớp.");
 
+            RuleFor(x => x.IsTermsAccepted)
+                .Equal(true).WithMessage("Bạn phải đồng ý điều khoản sử dụng.");
+
+            RuleFor(x => x.TermsVersion)
+                .NotEmpty().WithMessage("Phiên bản điều khoản là bắt buộc.")
+                .MaximumLength(50).WithMessage("Phiên bản điều khoản không được vượt quá 50 ký tự.");
+
             RuleFor(x => x.Role)
                 .IsInEnum().WithMessage("Vai trò không hợp lệ.");
         }

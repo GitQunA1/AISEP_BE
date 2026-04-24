@@ -12,6 +12,7 @@ namespace AISEP.BLL.Services.Auth
         Task<(bool Success, TokenResponse? TokenResponse, string Message)> RefreshTokenAsync(string refreshToken);
         Task<(bool Success, string Message)> RevokeTokenAsync(string refreshToken);
         Task<(bool Success, string Message)> LogoutAsync(int userId);
+        Task<(bool Success, string Message)> AcceptTermsAsync(int userId);
         Task<(bool Success, string Message)> ForgotPasswordAsync(ForgotPasswordRequest model);
         Task<(bool Success, string Message)> ResetPasswordAsync(ResetPasswordRequest model);
         Task<(bool Success, string Message)> ChangePasswordAsync(int userId, ChangePasswordRequest model);

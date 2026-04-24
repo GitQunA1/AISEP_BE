@@ -3,17 +3,20 @@ using System;
 using AISEP.DAL.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace AISEP.Migrations
+namespace AISEP.DAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260424163425_AddSystemTermsAndUserTermsAcceptance")]
+    partial class AddSystemTermsAndUserTermsAcceptance
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -642,66 +645,6 @@ namespace AISEP.Migrations
                     b.HasIndex("ProjectId");
 
                     b.ToTable("documents", (string)null);
-                });
-
-            modelBuilder.Entity("AISEP.DAL.Entities.FormValidationRule", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AllowedFileTypesJson")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<string>("CustomRegexPattern")
-                        .HasColumnType("text");
-
-                    b.Property<string>("FieldKey")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("FormKey")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<bool>("IsRequired")
-                        .HasColumnType("boolean");
-
-                    b.Property<long?>("MaxFileSizeBytes")
-                        .HasColumnType("bigint");
-
-                    b.Property<int?>("MaxLength")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal?>("MaxValue")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int?>("MinLength")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal?>("MinValue")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FormKey", "FieldKey")
-                        .IsUnique();
-
-                    b.ToTable("form_validation_rules", (string)null);
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.Investor", b =>

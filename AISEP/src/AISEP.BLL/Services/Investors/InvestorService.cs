@@ -35,14 +35,12 @@ namespace AISEP.BLL.Services.Investors
             _dynamicFormValidationService = dynamicFormValidationService;
         }
 
-        // Lấy danh sách investor có phân trang/lọc.
         public async Task<PagedResult<InvestorResponse>> GetAllAsync(SieveModel model)
         {
             var query = _unitOfWork.Investors.GetAllQuery();
             return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, i => _mapper.Map<InvestorResponse>(i));
         }
 
-        // Lấy chi tiết investor theo id.
         public async Task<InvestorResponse?> GetByIdAsync(int investorId)
         {
             var investor = await _unitOfWork.Investors.GetByIdAsync(investorId);
@@ -51,7 +49,6 @@ namespace AISEP.BLL.Services.Investors
             return _mapper.Map<InvestorResponse>(investor);
         }
 
-        // Lấy hồ sơ investor của user hiện tại.
         public async Task<InvestorResponse?> GetMyProfileAsync()
         {
             var userId = _userService.GetUserId();
@@ -61,10 +58,9 @@ namespace AISEP.BLL.Services.Investors
             return _mapper.Map<InvestorResponse>(investor);
         }
 
-        // Tạo hồ sơ investor mới sau khi validate theo rule động của investor.create.
         public async Task<InvestorResponse?> CreateAsync(CreateInvestorRequest dto)
         {
-            // Rule field-level cho create giờ lấy động từ DB thay cho create validator cũ.
+            
             await _dynamicFormValidationService.ValidateAsync("investor.create", dto);
 
             var userId = _userService.GetUserId();
@@ -78,17 +74,18 @@ namespace AISEP.BLL.Services.Investors
             await _unitOfWork.Investors.AddAsync(investor);
             await _unitOfWork.SaveChangesAsync();
             await NotifyStaffAndAdminsAsync(
-                "Hồ sơ investor chờ duyệt",
-                $"Có hồ sơ investor mới đã được gửi và đang chờ phê duyệt.");
+                "Hồ sơ nhà đầu tư chờ duyệt",
+                "Có hồ sơ nhà đầu tư mới đã được gửi và đang chờ phê duyệt.",
+                investor.InvestorId,
+                "Investor");
 
             var created = await _unitOfWork.Investors.GetByIdAsync(investor.InvestorId);
             return _mapper.Map<InvestorResponse>(created!);
         }
 
-        // Cập nhật hồ sơ investor sau khi validate theo rule động của investor.update.
         public async Task<InvestorResponse?> UpdateAsync(int id, UpdateInvestorRequest dto)
         {
-            // Update dùng form key riêng để rule required/optional có thể khác create.
+            
             await _dynamicFormValidationService.ValidateAsync("investor.update", dto);
 
             var userId = _userService.GetUserId();
@@ -142,7 +139,6 @@ namespace AISEP.BLL.Services.Investors
             return _mapper.Map<InvestorResponse>(investor);
         }
 
-        // Duyệt hồ sơ investor đang ở trạng thái Pending.
         public async Task ApproveInvestorAsync(int investorId)
         {
             var userId = _userService.GetUserId();
@@ -162,14 +158,13 @@ namespace AISEP.BLL.Services.Investors
             await _unitOfWork.SaveChangesAsync();
             await _notificationService.SendNotificationAsync(
                 investor.UserId,
-                "Hồ sơ investor đã được duyệt",
-                "Hồ sơ investor của bạn đã được duyệt.",
+                "Hồ sơ nhà đầu tư đã được duyệt",
+                "Hồ sơ nhà đầu tư của bạn đã được duyệt.",
                 NotificationType.General,
                 investor.InvestorId,
                 "Investor");
         }
 
-        // Từ chối hồ sơ investor đang ở trạng thái Pending.
         public async Task RejectInvestorAsync(int investorId, string rejectionReason)
         {
             var userId = _userService.GetUserId();
@@ -190,15 +185,14 @@ namespace AISEP.BLL.Services.Investors
             await _unitOfWork.SaveChangesAsync();
             await _notificationService.SendNotificationAsync(
                 investor.UserId,
-                "Hồ sơ investor bị từ chối",
-                $"Hồ sơ investor của bạn đã bị từ chối. Lý do: {rejectionReason}",
+                "Hồ sơ nhà đầu tư bị từ chối",
+                $"Hồ sơ nhà đầu tư của bạn đã bị từ chối. Lý do: {rejectionReason}",
                 NotificationType.General,
                 investor.InvestorId,
                 "Investor");
         }
 
-        // Gửi thông báo tới Staff/Admin khi có hồ sơ investor mới chờ duyệt.
-        private async Task NotifyStaffAndAdminsAsync(string title, string message)
+        private async Task NotifyStaffAndAdminsAsync(string title, string message, int? referenceId = null, string? referenceType = null)
         {
             var reviewerIds = await _unitOfWork.Users.GetAllQuery()
                 .Where(u => u.Role == UserRole.Staff || u.Role == UserRole.Admin)
@@ -211,7 +205,9 @@ namespace AISEP.BLL.Services.Investors
                     reviewerId,
                     title,
                     message,
-                    NotificationType.System);
+                    NotificationType.System,
+                    referenceId,
+                    referenceType);
             }
         }
     }

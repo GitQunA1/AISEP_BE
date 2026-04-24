@@ -18,6 +18,9 @@ namespace AISEP.DAL.Entities
         public DateTime? DateOfBirth { get; set; }
 
         public DateTime CreatedAt { get; set; }
+        public bool IsTermsAccepted { get; set; }
+        public string? TermsVersion { get; set; }
+        public DateTimeOffset? TermsAcceptedAt { get; set; }
 
         // Navigation properties
         public Startup? Startup { get; set; }

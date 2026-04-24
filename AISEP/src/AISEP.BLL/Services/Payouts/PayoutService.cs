@@ -183,8 +183,8 @@ namespace AISEP.BLL.Services.Payouts
         {
             await _notificationService.SendNotificationAsync(
                 payout.Wallet.Advisor.UserId,
-                "Payout đã được thanh toán",
-                $"Khoản payout với số tiền {payout.Amount:0.##} đã được chuyển thành công.",
+                "Khoản thanh toán đã được xử lý",
+                $"Khoản thanh toán với số tiền {payout.Amount:0.##} đã được chuyển thành công.",
                 NotificationType.System,
                 payout.PayoutId,
                 "Payout");
@@ -193,13 +193,13 @@ namespace AISEP.BLL.Services.Payouts
         private async Task NotifyAdvisorRejectedAsync(Payout payout)
         {
             var reason = string.IsNullOrWhiteSpace(payout.RejectReason)
-                ? "Vui lòng kiểm tra lại thông tin payout."
+                ? "Vui lòng kiểm tra lại thông tin thanh toán."
                 : payout.RejectReason;
 
             await _notificationService.SendNotificationAsync(
                 payout.Wallet.Advisor.UserId,
-                "Payout bị từ chối",
-                $"Khoản payout đã bị từ chối. Lý do: {reason}",
+                "Khoản thanh toán bị từ chối",
+                $"Khoản thanh toán đã bị từ chối. Lý do: {reason}",
                 NotificationType.System,
                 payout.PayoutId,
                 "Payout");
@@ -209,8 +209,8 @@ namespace AISEP.BLL.Services.Payouts
         {
             await _notificationService.SendNotificationAsync(
                 payout.Wallet.Advisor.UserId,
-                "Yêu cầu retry payout đã được gửi",
-                "Khoản payout đã được chuyển sang PendingRecheck và đang chờ staff xem lại.",
+                "Yêu cầu gửi lại thanh toán đã được gửi",
+                "Khoản thanh toán đã được chuyển sang để kiểm tra lại và đang chờ nhân viên xem xét.",
                 NotificationType.System,
                 payout.PayoutId,
                 "Payout");
@@ -228,9 +228,9 @@ namespace AISEP.BLL.Services.Payouts
                 return;
             }
 
-            var advisorName = payout.Wallet.Advisor.User?.UserName ?? "Advisor";
-            var title = "Có yêu cầu retry payout";
-            var message = $"{advisorName} đã gửi yêu cầu retry payout và đang chờ staff xem lại.";
+            var advisorName = payout.Wallet.Advisor.User?.UserName ?? "Cố vấn";
+            var title = "Có yêu cầu gửi lại thanh toán";
+            var message = $"{advisorName} đã gửi yêu cầu gửi lại thanh toán và đang chờ nhân viên xem xét.";
 
             foreach (var staffId in staffIds)
             {

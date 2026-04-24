@@ -83,9 +83,11 @@ namespace AISEP.BLL.Services.Deals
 
             await _notificationService.SendNotificationAsync(
                 project.Startup.UserId,
-                "Đề xuất deal mới",
-                $"Có đề xuất deal mới cho dự án '{project.ProjectName}'.",
-                NotificationType.Deal);
+                "Đề xuất thỏa thuận đầu tư mới",
+                $"Có đề xuất thỏa thuận đầu tư mới cho dự án '{project.ProjectName}'.",
+                NotificationType.Deal,
+                deal.DealId,
+                "Deal");
 
             var created = await _unitOfWork.Deals.GetByIdWithDetailsAsync(deal.DealId)
                 ?? throw new KeyNotFoundException("Created deal not found.");
@@ -159,8 +161,8 @@ namespace AISEP.BLL.Services.Deals
                 deal.StartupConfirmed = true;
                 deal.Status = DealStatus.Confirmed;
 
-                notificationTitle = "Deal đã được xác nhận";
-                notificationMessage = $"Deal của bạn đã được startup xác nhận.";
+                notificationTitle = "Thỏa thuận đầu tư đã được xác nhận";
+                notificationMessage = "Thỏa thuận đầu tư của bạn đã được startup xác nhận.";
             }
             else
             {
@@ -172,8 +174,8 @@ namespace AISEP.BLL.Services.Deals
                 deal.StartupConfirmed = false;
                 deal.Status = DealStatus.Rejected;
 
-                notificationTitle = "Deal bị từ chối";
-                notificationMessage = $"Deal của bạn đã bị startup từ chối. Lý do: {trimmedReason}";
+                notificationTitle = "Thỏa thuận đầu tư bị từ chối";
+                notificationMessage = $"Thỏa thuận đầu tư của bạn đã bị startup từ chối. Lý do: {trimmedReason}";
             }
 
             _unitOfWork.Deals.Update(deal);
@@ -260,7 +262,7 @@ namespace AISEP.BLL.Services.Deals
             await _notificationService.SendNotificationAsync(
                 deal.Project.Startup.UserId,
                 "Nhà đầu tư đã ký hợp đồng",
-                $"Nhà đầu tư đã ký deal. Vui lòng xem lại và ký để hoàn tất.",
+                "Nhà đầu tư đã ký thỏa thuận. Vui lòng xem lại và ký để hoàn tất.",
                 NotificationType.Deal,
                 deal.DealId,
                 "Deal");
@@ -334,7 +336,7 @@ namespace AISEP.BLL.Services.Deals
             await _notificationService.SendNotificationAsync(
                 deal.Investor.UserId,
                 "Hợp đồng đã hoàn tất",
-                $"Startup đã ký deal. Hợp đồng hiện đã hoàn tất.",
+                "Startup đã ký thỏa thuận. Hợp đồng hiện đã hoàn tất.",
                 NotificationType.Deal,
                 deal.DealId,
                 "Deal");
@@ -380,7 +382,7 @@ namespace AISEP.BLL.Services.Deals
             await _notificationService.SendNotificationAsync(
                 deal.Investor.UserId,
                 "Hợp đồng bị startup từ chối",
-                $"Startup đã từ chối deal. Lý do: {startupReason}",
+                $"Startup đã từ chối thỏa thuận. Lý do: {startupReason}",
                 NotificationType.Deal,
                 deal.DealId,
                 "Deal");
@@ -875,7 +877,7 @@ namespace AISEP.BLL.Services.Deals
                     await _notificationService.SendNotificationAsync(
                         investorUserId,
                         "Đã chuyển giao quyền sở hữu tài liệu",
-                        $"Deal #{dealId} đã được ghi nhận chuyển giao quyền sở hữu tài liệu trên Blockchain cho ví {investorWallet}. Mã giao dịch: {txHash}",
+                        $"Thỏa thuận #{dealId} đã được ghi nhận chuyển giao quyền sở hữu tài liệu trên Blockchain cho ví {investorWallet}. Mã giao dịch: {txHash}",
                         NotificationType.Deal,
                         dealId,
                         "Deal");

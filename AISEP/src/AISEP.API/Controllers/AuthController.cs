@@ -43,6 +43,26 @@ namespace AISEP.API.Controllers
             return Ok(ApiResponse<object>.SuccessResponse(new { userId, email, emailSent = true }, message));
         }
 
+        [HttpPut("accept-terms")]
+        [Authorize(Roles = "Startup,Investor")]
+        public async Task<IActionResult> AcceptTerms()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(ApiResponse<object>.ErrorResponse("Unauthorized access.", "Unauthorized", 401));
+            }
+
+            var (success, message) = await _authService.AcceptTermsAsync(int.Parse(userId));
+
+            if (!success)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse(message, message));
+            }
+
+            return Ok(ApiResponse<object>.SuccessResponse(null!, message));
+        }
+
         [HttpGet("confirm-email")]
         public async Task<IActionResult> ConfirmEmail([FromQuery] string userId, [FromQuery] string token)
         {

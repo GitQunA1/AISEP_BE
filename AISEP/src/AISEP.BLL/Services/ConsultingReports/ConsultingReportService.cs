@@ -239,7 +239,7 @@ namespace AISEP.BLL.Services.ConsultingReports
                 _unitOfWork.ConsultingReports.Update(report);
                 await NotifyCustomerToReportStaffAsync(
                     report.Booking,
-                    "Advisor đã quá hạn nộp bản chỉnh sửa. Nếu vấn đề vẫn chưa được giải quyết, vui lòng gửi báo cáo tới staff để được hỗ trợ.");
+                    "Cố vấn đã quá hạn nộp bản chỉnh sửa. Nếu vấn đề vẫn chưa được giải quyết, vui lòng gửi báo cáo tới đội ngũ hỗ trợ để được trợ giúp.");
                 changed += 1;
             }
 
@@ -281,8 +281,8 @@ namespace AISEP.BLL.Services.ConsultingReports
                 });
                 await _notificationService.SendNotificationAsync(
                     bookingWithWallet.Advisor.UserId,
-                    "Ví đã được cộng tiền từ booking hoàn tất",
-                    $"Ví của bạn đã được cộng {payoutAmount:0.##} từ booking.",
+                    "Ví đã được cộng tiền từ lịch tư vấn hoàn tất",
+                    $"Ví của bạn đã được cộng {payoutAmount:0.##} từ lịch tư vấn.",
                     NotificationType.General,
                     bookingWithWallet.BookingId,
                     "Booking");
@@ -334,7 +334,7 @@ namespace AISEP.BLL.Services.ConsultingReports
         {
             await _notificationService.SendNotificationAsync(
                 booking.CustomerId,
-                "Vấn đề cần được báo cáo tới staff",
+                "Vấn đề cần được báo cáo tới đội ngũ hỗ trợ",
                 message,
                 NotificationType.General,
                 booking.BookingId,
@@ -344,11 +344,11 @@ namespace AISEP.BLL.Services.ConsultingReports
         private async Task NotifyCustomerReportSubmittedAsync(Booking booking, bool isRevisionSubmission)
         {
             var title = isRevisionSubmission
-                ? "Advisor đã nộp lại báo cáo tư vấn"
-                : "Advisor đã nộp báo cáo tư vấn";
+                ? "Cố vấn đã nộp lại báo cáo tư vấn"
+                : "Cố vấn đã nộp báo cáo tư vấn";
             var message = isRevisionSubmission
-                ? "Advisor đã cập nhật và nộp lại báo cáo tư vấn. Bạn có 24 giờ để xem và phản hồi."
-                : "Advisor đã nộp báo cáo tư vấn. Bạn có 24 giờ để xem và phản hồi.";
+                ? "Cố vấn đã cập nhật và nộp lại báo cáo tư vấn. Bạn có 24 giờ để xem và phản hồi."
+                : "Cố vấn đã nộp báo cáo tư vấn. Bạn có 24 giờ để xem và phản hồi.";
 
             await _notificationService.SendNotificationAsync(
                 booking.CustomerId,

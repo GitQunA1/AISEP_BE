@@ -10,6 +10,8 @@ namespace AISEP.BLL.DTOs.Requests
         public string Password { get; set; } = string.Empty;
        
         public string ConfirmPassword { get; set; } = string.Empty;
+        public bool IsTermsAccepted { get; set; }
+        public string TermsVersion { get; set; } = string.Empty;
         public UserRole Role { get; set; }
     }
 }

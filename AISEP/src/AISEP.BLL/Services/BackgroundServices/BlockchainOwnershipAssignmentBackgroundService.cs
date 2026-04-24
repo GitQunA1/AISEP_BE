@@ -52,7 +52,7 @@ namespace AISEP.BLL.Services.BackgroundServices
                     await notificationService.SendNotificationAsync(
                         workItem.InvestorUserId,
                         "Đã chuyển giao quyền sở hữu tài liệu",
-                        $"Deal #{workItem.DealId} đã được ghi nhận chuyển giao quyền sở hữu tài liệu trên Blockchain cho ví {workItem.InvestorWallet}. Mã giao dịch: {txHash}",
+                        $"Thỏa thuận #{workItem.DealId} đã được ghi nhận chuyển giao quyền sở hữu tài liệu trên chuỗi khối cho ví {workItem.InvestorWallet}. Mã giao dịch: {txHash}",
                         NotificationType.Deal,
                         workItem.DealId,
                         "Deal");

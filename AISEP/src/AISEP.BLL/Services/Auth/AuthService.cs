@@ -56,6 +56,23 @@ namespace AISEP.BLL.Services.Auth
                 return (false, "Cannot register as Admin or Staff through public registration", null, null);
             }
 
+            if (!model.IsTermsAccepted)
+            {
+                return (false, "You must accept the latest terms to register", null, null);
+            }
+
+            var activeSystemTerm = await _unitOfWork.SystemTerms.GetActiveAsync();
+            if (activeSystemTerm is null)
+            {
+                return (false, "System terms are not configured", null, null);
+            }
+
+            var requestedTermsVersion = model.TermsVersion.Trim();
+            if (!string.Equals(requestedTermsVersion, activeSystemTerm.Version, StringComparison.OrdinalIgnoreCase))
+            {
+                return (false, "Terms version is invalid or outdated", null, null);
+            }
+
 
             var userName = model.Name.Trim();
 
@@ -68,6 +85,9 @@ namespace AISEP.BLL.Services.Auth
                 Email = model.Email,
                 Role = model.Role,
                 Status = UserStatus.Pending,
+                IsTermsAccepted = true,
+                TermsVersion = activeSystemTerm.Version,
+                TermsAcceptedAt = DateTimeOffset.UtcNow,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -308,6 +328,39 @@ namespace AISEP.BLL.Services.Auth
             await _signInManager.SignOutAsync();
 
             return (true, "Logout successful");
+        }
+
+        public async Task<(bool Success, string Message)> AcceptTermsAsync(int userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user is null)
+            {
+                return (false, "User not found.");
+            }
+
+            if (user.Role != UserRole.Startup && user.Role != UserRole.Investor)
+            {
+                return (false, "Only startup and investor accounts can accept terms.");
+            }
+
+            var activeSystemTerm = await _unitOfWork.SystemTerms.GetActiveAsync();
+            if (activeSystemTerm is null)
+            {
+                return (false, "System terms are not configured.");
+            }
+
+            user.IsTermsAccepted = true;
+            user.TermsVersion = activeSystemTerm.Version;
+            user.TermsAcceptedAt = DateTimeOffset.UtcNow;
+
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                var errors = string.Join(", ", updateResult.Errors.Select(e => e.Description));
+                return (false, errors);
+            }
+
+            return (true, "Terms accepted successfully.");
         }
 
         public async Task<(bool Success, string Message)> ForgotPasswordAsync(ForgotPasswordRequest model)

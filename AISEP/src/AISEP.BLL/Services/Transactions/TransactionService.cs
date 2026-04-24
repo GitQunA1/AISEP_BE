@@ -1,17 +1,39 @@
 using AISEP.BLL.DTOs.Responses;
+using AISEP.BLL.Helpers;
 using AISEP.DAL.Common;
 using AISEP.DAL.Enums;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Sieve.Models;
+using Sieve.Services;
 
 namespace AISEP.BLL.Services.Transactions
 {
     public class TransactionService : ITransactionService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ISieveProcessor _sieveProcessor;
+        private readonly IMapper _mapper;
 
-        public TransactionService(IUnitOfWork unitOfWork)
+        public TransactionService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
+            _sieveProcessor = sieveProcessor;
+            _mapper = mapper;
+        }
+
+        public async Task<PagedResult<AdminTransactionResponse>> GetAllForAdminAsync(SieveModel model)
+        {
+            model ??= new SieveModel();
+
+            var query = _unitOfWork.Transactions.GetQuery()
+                .Include(t => t.User);
+
+            return await PaginationHelper.PaginateAsync(
+                query,
+                model,
+                _sieveProcessor,
+                transaction => _mapper.Map<AdminTransactionResponse>(transaction));
         }
 
         public async Task<CollectedBookingCommissionSummaryResponse> GetCollectedBookingCommissionSummaryAsync()

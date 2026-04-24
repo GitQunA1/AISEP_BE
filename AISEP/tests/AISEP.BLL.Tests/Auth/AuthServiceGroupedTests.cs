@@ -7,6 +7,7 @@ using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using AISEP.DAL.Repositories.RefreshTokens;
+using AISEP.DAL.Repositories.SystemTerms;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -32,11 +33,13 @@ public class AuthServiceGroupedTests
             Email = "newuser@test.local",
             Password = "P@ssw0rd!",
             ConfirmPassword = "P@ssw0rd!",
+            IsTermsAccepted = true,
+            TermsVersion = "v1.0",
             Role = UserRole.Startup
         };
 
         // Scenario 1: email already registered
-        var (service1, userManager1, _, _, _, _, _) = CreateSut();
+        var (service1, userManager1, _, _, _, _, _, _) = CreateSut();
         userManager1
             .Setup(x => x.FindByEmailAsync(baseRequest.Email))
             .ReturnsAsync(new User { Id = 900, Email = baseRequest.Email });
@@ -53,10 +56,12 @@ public class AuthServiceGroupedTests
             Email = "admin@test.local",
             Password = "P@ssw0rd!",
             ConfirmPassword = "P@ssw0rd!",
+            IsTermsAccepted = true,
+            TermsVersion = "v1.0",
             Role = UserRole.Admin
         };
 
-        var (service2, userManager2, _, _, _, _, _) = CreateSut();
+        var (service2, userManager2, _, _, _, _, _, _) = CreateSut();
         userManager2.Setup(x => x.FindByEmailAsync(adminRequest.Email)).ReturnsAsync((User?)null);
 
         var blockedRoleResult = await service2.RegisterAsync(adminRequest);
@@ -64,7 +69,7 @@ public class AuthServiceGroupedTests
         Assert.Contains("Cannot register as Admin or Staff", blockedRoleResult.Message);
 
         // Scenario 3: identity create failed
-        var (service3, userManager3, _, _, _, _, _) = CreateSut();
+        var (service3, userManager3, _, _, _, _, _, _) = CreateSut();
         userManager3.Setup(x => x.FindByEmailAsync(baseRequest.Email)).ReturnsAsync((User?)null);
         userManager3
             .Setup(x => x.CreateAsync(It.IsAny<User>(), baseRequest.Password))
@@ -75,7 +80,7 @@ public class AuthServiceGroupedTests
         Assert.Contains("Create user failed", createFailedResult.Message);
 
         // Scenario 4 + 5: registration success sends email and returns user info
-        var (service4, userManager4, _, _, _, _, emailService4) = CreateSut();
+        var (service4, userManager4, _, _, _, _, _, emailService4) = CreateSut();
         userManager4.Setup(x => x.FindByEmailAsync(baseRequest.Email)).ReturnsAsync((User?)null);
         userManager4
             .Setup(x => x.CreateAsync(It.IsAny<User>(), baseRequest.Password))
@@ -102,7 +107,7 @@ public class AuthServiceGroupedTests
     public async Task UT002_ConfirmEmailAsync_ShouldHandleGroupedScenarios()
     {
         // Scenario 1: user not found
-        var (service1, userManager1, _, _, _, _, _) = CreateSut();
+        var (service1, userManager1, _, _, _, _, _, _) = CreateSut();
         userManager1.Setup(x => x.FindByIdAsync("1")).ReturnsAsync((User?)null);
 
         var notFoundResult = await service1.ConfirmEmailAsync("1", EncodeToken("token"));
@@ -110,7 +115,7 @@ public class AuthServiceGroupedTests
         Assert.Equal("User not found", notFoundResult.Message);
 
         // Scenario 2: already confirmed
-        var (service2, userManager2, _, _, _, _, _) = CreateSut();
+        var (service2, userManager2, _, _, _, _, _, _) = CreateSut();
         var confirmedUser = new User { Id = 2, EmailConfirmed = true, Status = UserStatus.Active };
         userManager2.Setup(x => x.FindByIdAsync("2")).ReturnsAsync(confirmedUser);
 
@@ -119,7 +124,7 @@ public class AuthServiceGroupedTests
         Assert.Equal("Email already confirmed", alreadyConfirmedResult.Message);
 
         // Scenario 3: token decode is valid but confirm fails at identity layer
-        var (service3, userManager3, _, _, _, _, _) = CreateSut();
+        var (service3, userManager3, _, _, _, _, _, _) = CreateSut();
         var pendingUser1 = new User { Id = 3, EmailConfirmed = false, Status = UserStatus.Pending };
         userManager3.Setup(x => x.FindByIdAsync("3")).ReturnsAsync(pendingUser1);
         userManager3
@@ -131,7 +136,7 @@ public class AuthServiceGroupedTests
         Assert.Contains("Email confirmation failed", confirmFailedResult.Message);
 
         // Scenario 4: success updates status and email confirmation
-        var (service4, userManager4, _, _, _, _, _) = CreateSut();
+        var (service4, userManager4, _, _, _, _, _, _) = CreateSut();
         var pendingUser2 = new User { Id = 4, EmailConfirmed = false, Status = UserStatus.Pending };
         userManager4.Setup(x => x.FindByIdAsync("4")).ReturnsAsync(pendingUser2);
         userManager4
@@ -150,7 +155,7 @@ public class AuthServiceGroupedTests
     public async Task UT003_ResendConfirmationAsync_ShouldHandleGroupedScenarios()
     {
         // Scenario 1: user not found should return generic success
-        var (service1, userManager1, _, _, _, _, _) = CreateSut();
+        var (service1, userManager1, _, _, _, _, _, _) = CreateSut();
         userManager1.Setup(x => x.FindByEmailAsync("missing@test.local")).ReturnsAsync((User?)null);
 
         var notFoundResult = await service1.ResendConfirmationAsync("missing@test.local");
@@ -158,7 +163,7 @@ public class AuthServiceGroupedTests
         Assert.Contains("If the email exists", notFoundResult.Message);
 
         // Scenario 2: already confirmed
-        var (service2, userManager2, _, _, _, _, _) = CreateSut();
+        var (service2, userManager2, _, _, _, _, _, _) = CreateSut();
         userManager2
             .Setup(x => x.FindByEmailAsync("confirmed@test.local"))
             .ReturnsAsync(new User
@@ -175,7 +180,7 @@ public class AuthServiceGroupedTests
         Assert.Equal("Email is already confirmed", alreadyConfirmedResult.Message);
 
         // Scenario 3: sending email fails
-        var (service3, userManager3, _, _, _, _, emailService3) = CreateSut();
+        var (service3, userManager3, _, _, _, _, _, emailService3) = CreateSut();
         var pendingUser1 = new User
         {
             Id = 11,
@@ -195,7 +200,7 @@ public class AuthServiceGroupedTests
         Assert.Equal("Failed to send email. Please try again later.", sendFailedResult.Message);
 
         // Scenario 4: success path
-        var (service4, userManager4, _, _, _, _, emailService4) = CreateSut();
+        var (service4, userManager4, _, _, _, _, _, emailService4) = CreateSut();
         var pendingUser2 = new User
         {
             Id = 12,
@@ -227,7 +232,7 @@ public class AuthServiceGroupedTests
         var request = new LoginRequest { Email = "user@test.local", Password = "P@ssw0rd!" };
 
         // Scenario 1: user not found
-        var (service1, userManager1, _, _, _, _, _) = CreateSut();
+        var (service1, userManager1, _, _, _, _, _, _) = CreateSut();
         userManager1.Setup(x => x.FindByEmailAsync(request.Email)).ReturnsAsync((User?)null);
 
         var userMissingResult = await service1.LoginAsync(request);
@@ -236,7 +241,7 @@ public class AuthServiceGroupedTests
         Assert.Equal("Invalid email or password", userMissingResult.Message);
 
         // Scenario 2: banned user
-        var (service2, userManager2, _, _, _, _, _) = CreateSut();
+        var (service2, userManager2, _, _, _, _, _, _) = CreateSut();
         userManager2.Setup(x => x.FindByEmailAsync(request.Email)).ReturnsAsync(new User
         {
             Id = 20,
@@ -252,7 +257,7 @@ public class AuthServiceGroupedTests
         Assert.Equal("Account has been banned", bannedResult.Message);
 
         // Scenario 3: email not confirmed
-        var (service3, userManager3, _, _, _, _, _) = CreateSut();
+        var (service3, userManager3, _, _, _, _, _, _) = CreateSut();
         userManager3.Setup(x => x.FindByEmailAsync(request.Email)).ReturnsAsync(new User
         {
             Id = 21,
@@ -268,7 +273,7 @@ public class AuthServiceGroupedTests
         Assert.Contains("Email has not been confirmed", emailNotConfirmedResult.Message);
 
         // Scenario 4: account locked out after password check
-        var (service4, userManager4, signInManager4, _, _, _, _) = CreateSut();
+        var (service4, userManager4, signInManager4, _, _, _, _, _) = CreateSut();
         var lockedUser = new User
         {
             Id = 22,
@@ -288,7 +293,7 @@ public class AuthServiceGroupedTests
         Assert.Equal("Account locked due to multiple failed login attempts", lockedOutResult.Message);
 
         // Scenario 5: invalid credentials after password check
-        var (service5, userManager5, signInManager5, _, _, _, _) = CreateSut();
+        var (service5, userManager5, signInManager5, _, _, _, _, _) = CreateSut();
         var wrongPasswordUser = new User
         {
             Id = 23,
@@ -312,7 +317,7 @@ public class AuthServiceGroupedTests
     public async Task UT005_LoginAsync_ShouldReturnTokens_WhenCredentialsValid()
     {
         var request = new LoginRequest { Email = "good@test.local", Password = "P@ssw0rd!" };
-        var (service, userManager, signInManager, jwtService, unitOfWork, refreshTokenRepo, _) = CreateSut();
+        var (service, userManager, signInManager, jwtService, unitOfWork, refreshTokenRepo, _, _) = CreateSut();
 
         var validUser = new User
         {
@@ -359,7 +364,7 @@ public class AuthServiceGroupedTests
     [Fact]
     public async Task UT008_LogoutAsync_ShouldRevokeAllActiveTokensAndSignOut()
     {
-        var (service, _, signInManager, _, unitOfWork, refreshTokenRepo, _) = CreateSut();
+        var (service, _, signInManager, _, unitOfWork, refreshTokenRepo, _, _) = CreateSut();
         var activeTokens = new List<RefreshToken>
         {
             new()
@@ -406,13 +411,13 @@ public class AuthServiceGroupedTests
     public async Task UT009_ForgotPasswordAsync_ShouldHandleGroupedScenarios()
     {
         // Scenario 1: empty email returns generic success
-        var (service1, _, _, _, _, _, _) = CreateSut();
+        var (service1, _, _, _, _, _, _, _) = CreateSut();
         var emptyEmailResult = await service1.ForgotPasswordAsync(new ForgotPasswordRequest { Email = "  " });
         Assert.True(emptyEmailResult.Success);
         Assert.Contains("If the account exists", emptyEmailResult.Message);
 
         // Scenario 2: user not found also returns generic success
-        var (service2, userManager2, _, _, _, _, _) = CreateSut();
+        var (service2, userManager2, _, _, _, _, _, _) = CreateSut();
         userManager2.Setup(x => x.FindByEmailAsync("nouser@test.local")).ReturnsAsync((User?)null);
 
         var notFoundResult = await service2.ForgotPasswordAsync(new ForgotPasswordRequest { Email = "nouser@test.local" });
@@ -420,7 +425,7 @@ public class AuthServiceGroupedTests
         Assert.Contains("If the account exists", notFoundResult.Message);
 
         // Scenario 3: email sending throws
-        var (service3, userManager3, _, _, _, _, emailService3) = CreateSut();
+        var (service3, userManager3, _, _, _, _, _, emailService3) = CreateSut();
         var forgotUser1 = new User { Id = 3001, Email = "forgot1@test.local", UserName = "forgot1" };
         userManager3.Setup(x => x.FindByEmailAsync("forgot1@test.local")).ReturnsAsync(forgotUser1);
         userManager3.Setup(x => x.GeneratePasswordResetTokenAsync(forgotUser1)).ReturnsAsync("reset-token-1");
@@ -433,7 +438,7 @@ public class AuthServiceGroupedTests
         Assert.Equal("Failed to send reset email. Please try again later.", sendFailedResult.Message);
 
         // Scenario 4: user exists and reset email is sent
-        var (service4, userManager4, _, _, _, _, emailService4) = CreateSut();
+        var (service4, userManager4, _, _, _, _, _, emailService4) = CreateSut();
         var forgotUser2 = new User { Id = 3002, Email = "forgot2@test.local", UserName = "forgot2" };
         userManager4.Setup(x => x.FindByEmailAsync("forgot2@test.local")).ReturnsAsync(forgotUser2);
         userManager4.Setup(x => x.GeneratePasswordResetTokenAsync(forgotUser2)).ReturnsAsync("reset-token-2");
@@ -457,7 +462,7 @@ public class AuthServiceGroupedTests
     public async Task UT010_ResetPasswordAsync_ShouldHandleGroupedScenarios()
     {
         // Scenario 1: user not found
-        var (service1, userManager1, _, _, _, _, _) = CreateSut();
+        var (service1, userManager1, _, _, _, _, _, _) = CreateSut();
         userManager1.Setup(x => x.FindByIdAsync("4001")).ReturnsAsync((User?)null);
 
         var userMissingResult = await service1.ResetPasswordAsync(new ResetPasswordRequest
@@ -471,7 +476,7 @@ public class AuthServiceGroupedTests
         Assert.Equal("Invalid reset request.", userMissingResult.Message);
 
         // Scenario 2: base64 decode fails and service falls back to raw token
-        var (service2, userManager2, _, _, _, _, _) = CreateSut();
+        var (service2, userManager2, _, _, _, _, _, _) = CreateSut();
         var user2 = new User { Id = 4002, Email = "reset2@test.local" };
         var invalidBase64Token = "***invalid-base64***";
         userManager2.Setup(x => x.FindByIdAsync("4002")).ReturnsAsync(user2);
@@ -493,7 +498,7 @@ public class AuthServiceGroupedTests
             Times.Once);
 
         // Scenario 3: successful reset revokes active refresh tokens
-        var (service3, userManager3, _, _, unitOfWork3, refreshTokenRepo3, _) = CreateSut();
+        var (service3, userManager3, _, _, unitOfWork3, refreshTokenRepo3, _, _) = CreateSut();
         var user3 = new User { Id = 4003, Email = "reset3@test.local" };
         var activeTokens = new List<RefreshToken>
         {
@@ -537,7 +542,7 @@ public class AuthServiceGroupedTests
     public async Task UT011_ChangePasswordAsync_ShouldHandleGroupedScenarios()
     {
         // Scenario 1: user not found
-        var (service1, userManager1, _, _, _, _, _) = CreateSut();
+        var (service1, userManager1, _, _, _, _, _, _) = CreateSut();
         userManager1.Setup(x => x.FindByIdAsync("5001")).ReturnsAsync((User?)null);
 
         var userMissingResult = await service1.ChangePasswordAsync(5001, new ChangePasswordRequest
@@ -550,7 +555,7 @@ public class AuthServiceGroupedTests
         Assert.Equal("User not found.", userMissingResult.Message);
 
         // Scenario 2: identity change password fails
-        var (service2, userManager2, _, _, _, _, _) = CreateSut();
+        var (service2, userManager2, _, _, _, _, _, _) = CreateSut();
         var user2 = new User { Id = 5002, Email = "change2@test.local" };
         userManager2.Setup(x => x.FindByIdAsync("5002")).ReturnsAsync(user2);
         userManager2
@@ -567,7 +572,7 @@ public class AuthServiceGroupedTests
         Assert.Contains("Current password is incorrect", failedResult.Message);
 
         // Scenario 3: successful change revokes active refresh tokens
-        var (service3, userManager3, _, _, unitOfWork3, refreshTokenRepo3, _) = CreateSut();
+        var (service3, userManager3, _, _, unitOfWork3, refreshTokenRepo3, _, _) = CreateSut();
         var user3 = new User { Id = 5003, Email = "change3@test.local" };
         var activeTokens = new List<RefreshToken>
         {
@@ -618,6 +623,7 @@ public class AuthServiceGroupedTests
         Mock<IJwtService> JwtService,
         Mock<IUnitOfWork> UnitOfWork,
         Mock<IRefreshTokenRepository> RefreshTokenRepository,
+        Mock<ISystemTermRepository> SystemTermRepository,
         Mock<IEmailService> EmailService) CreateSut()
     {
         var userManagerMock = CreateUserManagerMock();
@@ -625,10 +631,21 @@ public class AuthServiceGroupedTests
         var jwtServiceMock = new Mock<IJwtService>();
         var unitOfWorkMock = new Mock<IUnitOfWork>();
         var refreshTokenRepositoryMock = new Mock<IRefreshTokenRepository>();
+        var systemTermRepositoryMock = new Mock<ISystemTermRepository>();
         var emailServiceMock = new Mock<IEmailService>();
 
         unitOfWorkMock.SetupGet(x => x.RefreshTokens).Returns(refreshTokenRepositoryMock.Object);
+        unitOfWorkMock.SetupGet(x => x.SystemTerms).Returns(systemTermRepositoryMock.Object);
         unitOfWorkMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
+
+        systemTermRepositoryMock.Setup(x => x.GetActiveAsync()).ReturnsAsync(new SystemTerm
+        {
+            Id = 1,
+            ContentHtml = "<p>Terms</p>",
+            Version = "v1.0",
+            IsActive = true,
+            CreatedAt = DateTimeOffset.UtcNow
+        });
 
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -660,6 +677,7 @@ public class AuthServiceGroupedTests
             jwtServiceMock,
             unitOfWorkMock,
             refreshTokenRepositoryMock,
+            systemTermRepositoryMock,
             emailServiceMock);
     }
 
@@ -698,3 +716,4 @@ public class AuthServiceGroupedTests
             confirmation.Object);
     }
 }
+

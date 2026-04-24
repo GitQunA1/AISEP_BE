@@ -135,6 +135,10 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.FullName,
                     opt => opt.MapFrom(src => src.FullName));
 
+            CreateMap<User, AdminUserResponse>()
+                .ForMember(dest => dest.UserId,
+                    opt => opt.MapFrom(src => src.Id));
+
             // Startup Entity ? StartupResponse
             CreateMap<Startup, StartupResponse>()
                 .ForMember(dest => dest.Id,
@@ -215,6 +219,19 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.PaymentCode,
                     opt => opt.MapFrom(src => src.PaymentCode ?? string.Empty));
+
+            // SystemTerm Entity -> SystemTermResponse
+            CreateMap<SystemTerm, SystemTermResponse>();
+
+            CreateMap<Transaction, AdminTransactionResponse>()
+                .ForMember(dest => dest.Type,
+                    opt => opt.MapFrom(src => src.Type.ToString()))
+                .ForMember(dest => dest.Status,
+                    opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.UserName,
+                    opt => opt.MapFrom(src => src.User != null ? src.User.UserName : null))
+                .ForMember(dest => dest.UserEmail,
+                    opt => opt.MapFrom(src => src.User != null ? src.User.Email : null));
 
             // CreateInvestorRequest ? Investor Entity
             CreateMap<CreateInvestorRequest, Investor>()

@@ -40,7 +40,7 @@ namespace AISEP.BLL.Services.Advisors
             _dynamicFormValidationService = dynamicFormValidationService;
         }
 
-        // Lấy danh sách advisor có phân trang/lọc.
+       
         public async Task<PagedResult<AdvisorResponse>> GetAllAsync(SieveModel model)
         {
             var query = _unitOfWork.Advisors.GetAllQuery();
@@ -48,7 +48,7 @@ namespace AISEP.BLL.Services.Advisors
                 a => _mapper.Map<AdvisorResponse>(a));
         }
 
-        // Lấy chi tiết advisor theo id.
+        
         public async Task<AdvisorResponse?> GetByIdAsync(int advisorId)
         {
             var advisor = await _unitOfWork.Advisors.GetByIdAsync(advisorId);
@@ -57,7 +57,7 @@ namespace AISEP.BLL.Services.Advisors
             return _mapper.Map<AdvisorResponse>(advisor);
         }
 
-        // Lấy hồ sơ advisor của user hiện tại.
+        
         public async Task<AdvisorResponse?> GetMyProfileAsync()
         {
             var userId = _userService.GetUserId();
@@ -67,10 +67,9 @@ namespace AISEP.BLL.Services.Advisors
             return _mapper.Map<AdvisorResponse>(advisor);
         }
 
-        // Tạo hồ sơ advisor mới sau khi validate theo rule động của advisor.create.
         public async Task<AdvisorResponse?> CreateAsync(CreateAdvisorRequest dto)
         {
-            // advisor.create sẽ lấy rule động từ bảng validation ngay lúc submit.
+            
             await _dynamicFormValidationService.ValidateAsync("advisor.create", dto);
 
             var userId =  _userService.GetUserId();
@@ -96,17 +95,18 @@ namespace AISEP.BLL.Services.Advisors
             await _unitOfWork.Advisors.AddAsync(advisor);
             await _unitOfWork.SaveChangesAsync();
             await NotifyStaffAndAdminsAsync(
-                "Hồ sơ advisor chờ duyệt",
-                $"Hồ sơ advisor m?i đã được gửi và đang chờ phê duyệt.");
+                "Hồ sơ cố vấn chờ duyệt",
+                "Hồ sơ cố vấn mới đã được gửi và đang chờ phê duyệt.",
+                advisor.AdvisorId,
+                "Advisor");
 
             var created = await _unitOfWork.Advisors.GetByIdAsync(advisor.AdvisorId);
             return _mapper.Map<AdvisorResponse>(created!);
         }
 
-        // Cập nhật hồ sơ advisor sau khi validate theo rule động của advisor.update.
         public async Task<AdvisorResponse?> UpdateAsync(int id, UpdateAdvisorRequest dto)
         {   
-            // advisor.update có thể có rule required lỏng hơn advisor.create.
+         
             await _dynamicFormValidationService.ValidateAsync("advisor.update", dto);
 
             var userId = _userService.GetUserId();
@@ -187,7 +187,6 @@ namespace AISEP.BLL.Services.Advisors
             return _mapper.Map<AdvisorResponse>(advisor);
         }
 
-        // Xóa hồ sơ advisor theo id.
         public async Task<bool> DeleteAsync(int advisorId)
         {
             var advisor = await _unitOfWork.Advisors.GetByIdAsync(advisorId);
@@ -198,7 +197,6 @@ namespace AISEP.BLL.Services.Advisors
             return true;
         }
 
-        // Duyệt hồ sơ advisor đang ở trạng thái Pending và đồng bộ trạng thái ví.
         public async Task ApproveAdvisorAsync(int advisorId)
         {
             var userId = _userService.GetUserId();
@@ -219,14 +217,13 @@ namespace AISEP.BLL.Services.Advisors
             await _unitOfWork.SaveChangesAsync();
             await _notificationService.SendNotificationAsync(
                 advisor.UserId,
-                "Hồ sơ advisor đã được duyệt",
-                "Hồ sơ advisor của bạn đã được duyệt và ví hiện đang hoạt động.",
+                "Hồ sơ cố vấn đã được duyệt",
+                "Hồ sơ cố vấn của bạn đã được duyệt và ví hiện đang hoạt động.",
                 NotificationType.General,
                 advisor.AdvisorId,
                 "Advisor");
         }
 
-        // Từ chối hồ sơ advisor đang ở trạng thái Pending và đồng bộ trạng thái ví.
         public async Task RejectAdvisorAsync(int advisorId, string rejectionReason)
         {
             var userId = _userService.GetUserId();
@@ -248,8 +245,8 @@ namespace AISEP.BLL.Services.Advisors
             await _unitOfWork.SaveChangesAsync();
             await _notificationService.SendNotificationAsync(
                 advisor.UserId,
-                "Hồ sơ advisor bị từ chối",
-                $"Hồ sơ advisor của bạn đã bị từ chối. Lý do: {rejectionReason}",
+                "Hồ sơ cố vấn bị từ chối",
+                $"Hồ sơ cố vấn của bạn đã bị từ chối. Lý do: {rejectionReason}",
                 NotificationType.General,
                 advisor.AdvisorId,
                 "Advisor");
@@ -257,11 +254,9 @@ namespace AISEP.BLL.Services.Advisors
 
         
 
-        // Upload file nếu request có gửi file lên.
         private async Task<string?> UploadIfPresent(IFormFile? file, string folder)
             => file is not null ? await _storage.UploadFileAsync(file, folder) : null;
 
-        // Gom và loại trùng danh sách industry được gửi lên từ request.
         private static List<Industry> ResolveRequestedIndustries(List<Industry>? industries)
         {
             var merged = new List<Industry>();
@@ -274,8 +269,8 @@ namespace AISEP.BLL.Services.Advisors
             return merged.Distinct().ToList();
         }
 
-        // Gửi thông báo tới Staff/Admin khi có hồ sơ advisor mới chờ duyệt.
-        private async Task NotifyStaffAndAdminsAsync(string title, string message)
+        private async Task NotifyStaffAndAdminsAsync(string title, string message, int? referenceId = null, string? referenceType = null)
+       
         {
             var reviewerIds = await _unitOfWork.Users.GetAllQuery()
                 .Where(u => u.Role == UserRole.Staff || u.Role == UserRole.Admin)
@@ -288,7 +283,9 @@ namespace AISEP.BLL.Services.Advisors
                     reviewerId,
                     title,
                     message,
-                    NotificationType.System);
+                    NotificationType.System,
+                    referenceId,
+                    referenceType);
             }
         }
     }

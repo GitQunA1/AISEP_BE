@@ -54,7 +54,75 @@ namespace AISEP.BLL.Helpers
                 .CanFilter()
                 .CanSort();
             // User
+            mapper.Property<User>(u => u.Id)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<User>(u => u.UserName)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<User>(u => u.FullName)
+                .CanFilter()
+                .CanSort();
             mapper.Property<User>(u => u.Email)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<User>(u => u.PhoneNumber)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<User>(u => u.Role)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<User>(u => u.Status)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<User>(u => u.IsPremium)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<User>(u => u.DateOfBirth)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<User>(u => u.CreatedAt)
+                .CanFilter()
+                .CanSort();
+
+            // Transaction
+            mapper.Property<Transaction>(t => t.TransactionId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Transaction>(t => t.UserId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Transaction>(t => t.Amount)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Transaction>(t => t.Type)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Transaction>(t => t.Status)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Transaction>(t => t.ReferenceType)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Transaction>(t => t.ReferenceId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Transaction>(t => t.PaymentCode)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Transaction>(t => t.SepayTransactionId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Transaction>(t => t.CompletedAt)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Transaction>(t => t.CreatedAt)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Transaction>(t => t.User.UserName)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Transaction>(t => t.User.Email)
                 .CanFilter()
                 .CanSort();
             //Reviews
