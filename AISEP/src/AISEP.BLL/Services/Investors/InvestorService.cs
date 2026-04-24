@@ -11,6 +11,7 @@ using Sieve.Models;
 using Sieve.Services;
 using AISEP.BLL.Services.Users;
 using AISEP.BLL.Services.Notifications;
+using AISEP.BLL.Services.FormValidationRules;
 using AISEP.BLL.Exceptions;
 
 namespace AISEP.BLL.Services.Investors
@@ -22,22 +23,26 @@ namespace AISEP.BLL.Services.Investors
         private readonly IMapper _mapper;
         private readonly IUserService _userService;
         private readonly INotificationService _notificationService;
+        private readonly IDynamicFormSubmissionValidationService _dynamicFormValidationService;
 
-        public InvestorService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IUserService userService, INotificationService notificationService)
+        public InvestorService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IUserService userService, INotificationService notificationService, IDynamicFormSubmissionValidationService dynamicFormValidationService)
         {
             _unitOfWork = unitOfWork;
             _sieveProcessor = sieveProcessor;
             _mapper = mapper;
             _userService = userService;
             _notificationService = notificationService;
+            _dynamicFormValidationService = dynamicFormValidationService;
         }
 
+        // Lấy danh sách investor có phân trang/lọc.
         public async Task<PagedResult<InvestorResponse>> GetAllAsync(SieveModel model)
         {
             var query = _unitOfWork.Investors.GetAllQuery();
             return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, i => _mapper.Map<InvestorResponse>(i));
         }
 
+        // Lấy chi tiết investor theo id.
         public async Task<InvestorResponse?> GetByIdAsync(int investorId)
         {
             var investor = await _unitOfWork.Investors.GetByIdAsync(investorId);
@@ -46,6 +51,7 @@ namespace AISEP.BLL.Services.Investors
             return _mapper.Map<InvestorResponse>(investor);
         }
 
+        // Lấy hồ sơ investor của user hiện tại.
         public async Task<InvestorResponse?> GetMyProfileAsync()
         {
             var userId = _userService.GetUserId();
@@ -55,8 +61,12 @@ namespace AISEP.BLL.Services.Investors
             return _mapper.Map<InvestorResponse>(investor);
         }
 
+        // Tạo hồ sơ investor mới sau khi validate theo rule động của investor.create.
         public async Task<InvestorResponse?> CreateAsync(CreateInvestorRequest dto)
         {
+            // Rule field-level cho create giờ lấy động từ DB thay cho create validator cũ.
+            await _dynamicFormValidationService.ValidateAsync("investor.create", dto);
+
             var userId = _userService.GetUserId();
             var existing = await _unitOfWork.Investors.GetByUserIdAsync(userId);
             if (existing is not null)
@@ -75,8 +85,12 @@ namespace AISEP.BLL.Services.Investors
             return _mapper.Map<InvestorResponse>(created!);
         }
 
+        // Cập nhật hồ sơ investor sau khi validate theo rule động của investor.update.
         public async Task<InvestorResponse?> UpdateAsync(int id, UpdateInvestorRequest dto)
         {
+            // Update dùng form key riêng để rule required/optional có thể khác create.
+            await _dynamicFormValidationService.ValidateAsync("investor.update", dto);
+
             var userId = _userService.GetUserId();
 
             var investor = await _unitOfWork.Investors.GetByIdAsync(id);
@@ -128,6 +142,7 @@ namespace AISEP.BLL.Services.Investors
             return _mapper.Map<InvestorResponse>(investor);
         }
 
+        // Duyệt hồ sơ investor đang ở trạng thái Pending.
         public async Task ApproveInvestorAsync(int investorId)
         {
             var userId = _userService.GetUserId();
@@ -154,6 +169,7 @@ namespace AISEP.BLL.Services.Investors
                 "Investor");
         }
 
+        // Từ chối hồ sơ investor đang ở trạng thái Pending.
         public async Task RejectInvestorAsync(int investorId, string rejectionReason)
         {
             var userId = _userService.GetUserId();
@@ -181,6 +197,7 @@ namespace AISEP.BLL.Services.Investors
                 "Investor");
         }
 
+        // Gửi thông báo tới Staff/Admin khi có hồ sơ investor mới chờ duyệt.
         private async Task NotifyStaffAndAdminsAsync(string title, string message)
         {
             var reviewerIds = await _unitOfWork.Users.GetAllQuery()

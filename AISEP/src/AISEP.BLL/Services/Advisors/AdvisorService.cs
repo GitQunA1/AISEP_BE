@@ -10,6 +10,7 @@ using Sieve.Services;
 using AISEP.BLL.Services.Users;
 using AISEP.BLL.Services.Wallets;
 using AISEP.BLL.Services.Notifications;
+using AISEP.BLL.Services.FormValidationRules;
 using AISEP.DAL.Enums;
 using AISEP.BLL.Exceptions;
 using Microsoft.EntityFrameworkCore;
@@ -25,8 +26,9 @@ namespace AISEP.BLL.Services.Advisors
         private readonly IUserService _userService;
         private readonly IWalletService _walletService;
         private readonly INotificationService _notificationService;
+        private readonly IDynamicFormSubmissionValidationService _dynamicFormValidationService;
 
-        public AdvisorService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IStorageService storage, IUserService userService, IWalletService walletService, INotificationService notificationService)
+        public AdvisorService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IStorageService storage, IUserService userService, IWalletService walletService, INotificationService notificationService, IDynamicFormSubmissionValidationService dynamicFormValidationService)
         {
             _unitOfWork     = unitOfWork;
             _sieveProcessor = sieveProcessor;
@@ -35,8 +37,10 @@ namespace AISEP.BLL.Services.Advisors
             _userService = userService;
             _walletService = walletService;
             _notificationService = notificationService;
+            _dynamicFormValidationService = dynamicFormValidationService;
         }
 
+        // Lấy danh sách advisor có phân trang/lọc.
         public async Task<PagedResult<AdvisorResponse>> GetAllAsync(SieveModel model)
         {
             var query = _unitOfWork.Advisors.GetAllQuery();
@@ -44,6 +48,7 @@ namespace AISEP.BLL.Services.Advisors
                 a => _mapper.Map<AdvisorResponse>(a));
         }
 
+        // Lấy chi tiết advisor theo id.
         public async Task<AdvisorResponse?> GetByIdAsync(int advisorId)
         {
             var advisor = await _unitOfWork.Advisors.GetByIdAsync(advisorId);
@@ -52,6 +57,7 @@ namespace AISEP.BLL.Services.Advisors
             return _mapper.Map<AdvisorResponse>(advisor);
         }
 
+        // Lấy hồ sơ advisor của user hiện tại.
         public async Task<AdvisorResponse?> GetMyProfileAsync()
         {
             var userId = _userService.GetUserId();
@@ -61,8 +67,12 @@ namespace AISEP.BLL.Services.Advisors
             return _mapper.Map<AdvisorResponse>(advisor);
         }
 
+        // Tạo hồ sơ advisor mới sau khi validate theo rule động của advisor.create.
         public async Task<AdvisorResponse?> CreateAsync(CreateAdvisorRequest dto)
         {
+            // advisor.create sẽ lấy rule động từ bảng validation ngay lúc submit.
+            await _dynamicFormValidationService.ValidateAsync("advisor.create", dto);
+
             var userId =  _userService.GetUserId();
             var existing = await _unitOfWork.Advisors.GetByUserIdAsync(userId);
             if (existing is not null)
@@ -93,8 +103,12 @@ namespace AISEP.BLL.Services.Advisors
             return _mapper.Map<AdvisorResponse>(created!);
         }
 
+        // Cập nhật hồ sơ advisor sau khi validate theo rule động của advisor.update.
         public async Task<AdvisorResponse?> UpdateAsync(int id, UpdateAdvisorRequest dto)
         {   
+            // advisor.update có thể có rule required lỏng hơn advisor.create.
+            await _dynamicFormValidationService.ValidateAsync("advisor.update", dto);
+
             var userId = _userService.GetUserId();
             var advisor = await _unitOfWork.Advisors.GetByIdAsync(id);
             if (advisor is null)
@@ -173,6 +187,7 @@ namespace AISEP.BLL.Services.Advisors
             return _mapper.Map<AdvisorResponse>(advisor);
         }
 
+        // Xóa hồ sơ advisor theo id.
         public async Task<bool> DeleteAsync(int advisorId)
         {
             var advisor = await _unitOfWork.Advisors.GetByIdAsync(advisorId);
@@ -183,6 +198,7 @@ namespace AISEP.BLL.Services.Advisors
             return true;
         }
 
+        // Duyệt hồ sơ advisor đang ở trạng thái Pending và đồng bộ trạng thái ví.
         public async Task ApproveAdvisorAsync(int advisorId)
         {
             var userId = _userService.GetUserId();
@@ -210,6 +226,7 @@ namespace AISEP.BLL.Services.Advisors
                 "Advisor");
         }
 
+        // Từ chối hồ sơ advisor đang ở trạng thái Pending và đồng bộ trạng thái ví.
         public async Task RejectAdvisorAsync(int advisorId, string rejectionReason)
         {
             var userId = _userService.GetUserId();
@@ -240,9 +257,11 @@ namespace AISEP.BLL.Services.Advisors
 
         
 
+        // Upload file nếu request có gửi file lên.
         private async Task<string?> UploadIfPresent(IFormFile? file, string folder)
             => file is not null ? await _storage.UploadFileAsync(file, folder) : null;
 
+        // Gom và loại trùng danh sách industry được gửi lên từ request.
         private static List<Industry> ResolveRequestedIndustries(List<Industry>? industries)
         {
             var merged = new List<Industry>();
@@ -255,6 +274,7 @@ namespace AISEP.BLL.Services.Advisors
             return merged.Distinct().ToList();
         }
 
+        // Gửi thông báo tới Staff/Admin khi có hồ sơ advisor mới chờ duyệt.
         private async Task NotifyStaffAndAdminsAsync(string title, string message)
         {
             var reviewerIds = await _unitOfWork.Users.GetAllQuery()

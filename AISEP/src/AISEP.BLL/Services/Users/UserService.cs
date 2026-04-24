@@ -150,6 +150,15 @@ namespace AISEP.BLL.Services.Users
             return _mapper.Map<UserResponse>(user);
         }
 
+        public async Task<int> GetBonusFreeBookingsAsync(int id)
+        {
+            var user = await _unitOfWork.Users.GetByIdAsync(id);
+            if (user == null)
+                throw new KeyNotFoundException("User not found");
+
+            return user.BonusFreeBookings;
+        }
+
         private static DateTime NormalizeDateOfBirthToUtc(DateTime dateOfBirth)
         {
             var dateOnly = dateOfBirth.Date;

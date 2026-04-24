@@ -5,6 +5,7 @@ using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.Storage;
 using AISEP.BLL.Services.Users;
 using AISEP.BLL.Services.Notifications;
+using AISEP.BLL.Services.FormValidationRules;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
@@ -23,8 +24,9 @@ namespace AISEP.BLL.Services.Startups
         private readonly IUserService    _userService;
         private readonly IStorageService _storage;
         private readonly INotificationService _notificationService;
+        private readonly IDynamicFormSubmissionValidationService _dynamicFormValidationService;
 
-        public StartupService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IUserService userService, IStorageService storage, INotificationService notificationService)
+        public StartupService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IUserService userService, IStorageService storage, INotificationService notificationService, IDynamicFormSubmissionValidationService dynamicFormValidationService)
         {
             _unitOfWork     = unitOfWork;
             _sieveProcessor = sieveProcessor;
@@ -32,6 +34,7 @@ namespace AISEP.BLL.Services.Startups
             _userService    = userService;
             _storage        = storage;
             _notificationService = notificationService;
+            _dynamicFormValidationService = dynamicFormValidationService;
         }
 
         public async Task<PagedResult<StartupResponse>> SearchStartupsAsync(SieveModel model, string? industry = null, string? stage = null)
@@ -42,6 +45,7 @@ namespace AISEP.BLL.Services.Startups
             return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, s => _mapper.Map<StartupResponse>(s));
         }
 
+        // Lấy chi tiết một startup theo id.
         public async Task<StartupResponse?> GetStartupByIdAsync(int id)
         {
             var startup = await _unitOfWork.Startups.GetByIdAsync(id);
@@ -50,6 +54,7 @@ namespace AISEP.BLL.Services.Startups
             return _mapper.Map<StartupResponse>(startup);
         }
 
+        // Lấy hồ sơ startup của user hiện tại.
         public async Task<StartupResponse?> GetMyProfileAsync()
         {
             var userId = _userService.GetUserId();
@@ -59,12 +64,14 @@ namespace AISEP.BLL.Services.Startups
             return _mapper.Map<StartupResponse>(startup);
         }
 
+        // Lấy danh sách startup có phân trang/lọc.
         public async Task<PagedResult<StartupResponse>> GetAllStartupsAsync(SieveModel model)
         {
             var query = _unitOfWork.Startups.GetStartupQuery();
             return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, s => _mapper.Map<StartupResponse>(s));
         }
 
+        // Lấy danh sách startup theo trạng thái duyệt.
         public async Task<PagedResult<StartupResponse>> GetStartupsByStatusAsync(SieveModel model, string? status = null)
         {
             ApprovalStatus? parsedStatus = Enum.TryParse<ApprovalStatus>(status, ignoreCase: true, out var statusResult)
@@ -73,8 +80,12 @@ namespace AISEP.BLL.Services.Startups
             return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, s => _mapper.Map<StartupResponse>(s));
         }
 
+        // Tạo hồ sơ startup mới sau khi validate theo rule động trong DB.
         public async Task<StartupResponse> CreateStartupAsync(CreateStartupRequest dto)
         { 
+            // startup.create sẽ đọc rule từ form_validation_rules trước khi chạy business logic create.
+            await _dynamicFormValidationService.ValidateAsync("startup.create", dto);
+
             var userId = _userService.GetUserId();
             var existing = await _unitOfWork.Startups.GetByUserIdAsync(userId);
             if (existing is not null)
@@ -109,8 +120,12 @@ namespace AISEP.BLL.Services.Startups
             return _mapper.Map<StartupResponse>(startup);
         }
 
+        // Cập nhật hồ sơ startup sau khi validate theo rule động của startup.update.
         public async Task<StartupResponse> UpdateStartupAsync(int id, UpdateStartupRequest dto)
         {
+            // startup.update có thể khác startup.create, đặc biệt ở các field optional/bắt buộc.
+            await _dynamicFormValidationService.ValidateAsync("startup.update", dto);
+
             var userId = _userService.GetUserId(); 
             var startup = await _unitOfWork.Startups.GetByIdAsync(id);
             if (startup is null)
@@ -159,6 +174,7 @@ namespace AISEP.BLL.Services.Startups
             return _mapper.Map<StartupResponse>(startup);
         }
 
+        // Duyệt hồ sơ startup đang ở trạng thái Pending.
         public async Task ApproveStartupAsync(int startupId)
         {
             var userId = _userService.GetUserId();
@@ -185,6 +201,7 @@ namespace AISEP.BLL.Services.Startups
                 "Startup");
         }
 
+        // Từ chối hồ sơ startup đang ở trạng thái Pending.
         public async Task RejectStartupAsync(int startupId, RejectStartupRequest dto)
         {
             var userId = _userService.GetUserId();
@@ -213,10 +230,11 @@ namespace AISEP.BLL.Services.Startups
         }
 
 
-
+        // Upload file nếu request có gửi file lên.
         private async Task<string?> UploadIfPresent(IFormFile? file, string folder)
             => file is not null ? await _storage.UploadFileAsync(file, folder) : null;
 
+        // Gửi thông báo tới toàn bộ Staff/Admin khi có hồ sơ startup mới chờ xử lý.
         private async Task NotifyStaffAndAdminsAsync(string title, string message)
         {
             var reviewerIds = await _unitOfWork.Users.GetAllQuery()

@@ -4,6 +4,7 @@ using AISEP.BLL.Exceptions;
 using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.Storage;
 using AISEP.BLL.Services.Users;
+using AISEP.BLL.Services.FormValidationRules;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
@@ -21,21 +22,25 @@ namespace AISEP.BLL.Services.Projects
         private readonly IMapper _mapper;
         private readonly IUserService _userService;
         private readonly IStorageService _storage;
+        private readonly IDynamicFormSubmissionValidationService _dynamicFormValidationService;
 
         public ProjectService(
             IUnitOfWork unitOfWork,
             ISieveProcessor sieveProcessor,
             IMapper mapper,
             IUserService userService,
-            IStorageService storage)
+            IStorageService storage,
+            IDynamicFormSubmissionValidationService dynamicFormValidationService)
         {
             _unitOfWork = unitOfWork;
             _sieveProcessor = sieveProcessor;
             _mapper = mapper;
             _userService = userService;
             _storage = storage;
+            _dynamicFormValidationService = dynamicFormValidationService;
         }
 
+        // Lấy toàn bộ project, có bổ sung ngữ cảnh user hiện tại để map response phù hợp.
         public async Task<PagedResult<ProjectResponse>> GetAllProjectsAsync(SieveModel model)
         {
             var currentUserId = GetCurrentUserIdOrNull();
@@ -48,6 +53,7 @@ namespace AISEP.BLL.Services.Projects
                 p => MapProjectResponseWithCurrentUser(p, currentUserId, currentInvestorId));
         }
 
+        // Lấy project cho non-premium và tính thêm trạng thái unlock của user hiện tại.
         public async Task<PagedResult<NonPremiumProjectResponse>> GetAllProjectsForNonPremiumAsync(SieveModel model)
         {
             var currentUserId = GetCurrentUserIdOrNull();
@@ -74,6 +80,7 @@ namespace AISEP.BLL.Services.Projects
             return pagedResult;
         }
 
+        // Lấy một project cho non-premium theo id.
         public async Task<NonPremiumProjectResponse?> GetProjectForNonPremiumByIdAsync(int id)
         {
             var project = await _unitOfWork.Projects.GetByIdAsync(id);
@@ -90,6 +97,7 @@ namespace AISEP.BLL.Services.Projects
             return response;
         }
 
+        // Lấy chi tiết project theo id, đồng thời xử lý logic quota/unlock nếu cần.
         public async Task<ProjectResponse?> GetProjectByIdAsync(int id)
         {
             var project = await _unitOfWork.Projects.GetByIdAsync(id);
@@ -119,6 +127,7 @@ namespace AISEP.BLL.Services.Projects
             return MapProjectResponseWithCurrentUser(project, userId, currentInvestorId);
         }
 
+        // Lấy danh sách project của startup hiện tại.
         public async Task<PagedResult<ProjectResponse>> GetMyProjectsAsync(SieveModel model)
         {
             var userId = _userService.GetUserId();
@@ -129,13 +138,18 @@ namespace AISEP.BLL.Services.Projects
             return await PaginationHelper.PaginateAsync(_unitOfWork.Projects.GetByStartupIdQuery(startup.StartupId), model, _sieveProcessor, p => _mapper.Map<ProjectResponse>(p));
         }
 
+        // Lấy danh sách project đang ở trạng thái Draft.
         public async Task<PagedResult<ProjectResponse>> GetDraftProjectsAsync(SieveModel model)
         {
             return await PaginationHelper.PaginateAsync(_unitOfWork.Projects.GetByStatusQuery(ProjectStatus.Draft), model, _sieveProcessor, p => _mapper.Map<ProjectResponse>(p));
         }
 
+        // Tạo project mới: validate field-level từ DB rồi validate thêm business rule theo stage.
         public async Task<ProjectResponse> CreateProjectAsync( CreateProjectRequest dto)
         {
+            // Trước hết validate field-level theo rule trong DB.
+            await _dynamicFormValidationService.ValidateAsync("project.create", dto);
+
             var userId = _userService.GetUserId();
             var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
             if (startup is null)
@@ -147,6 +161,8 @@ namespace AISEP.BLL.Services.Projects
             project.Status = ProjectStatus.Draft;
             project.CreatedAt = DateTime.UtcNow;
             project.ProjectImageUrl = await UploadIfPresent(dto.ProjectImageFile, "project-images");
+            // Rule theo stage vẫn giữ trong code vì đây là business rule phụ thuộc nhiều field cùng lúc.
+            ValidateByStageLikeCreate(project);
 
             await _unitOfWork.Projects.AddAsync(project);
             await _unitOfWork.SaveChangesAsync();
@@ -154,8 +170,12 @@ namespace AISEP.BLL.Services.Projects
             return _mapper.Map<ProjectResponse>(project);
         }
 
+        // Cập nhật project: validate field-level từ DB, patch entity, rồi validate lại business rule theo stage.
         public async Task<ProjectResponse> UpdateProjectAsync(int projectId, UpdateProjectRequest dto)
         {
+            // project.update cũng validate field-level từ DB trước khi patch dữ liệu vào entity.
+            await _dynamicFormValidationService.ValidateAsync("project.update", dto);
+
             var userId  = _userService.GetUserId();
             var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
             if (project is null)
@@ -206,6 +226,7 @@ namespace AISEP.BLL.Services.Projects
             return _mapper.Map<ProjectResponse>(project);
         }
 
+        // Chuyển project từ Draft sang Pending để chờ duyệt.
         public async Task SubmitProjectAsync(int projectId)
         {
             var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
@@ -221,6 +242,7 @@ namespace AISEP.BLL.Services.Projects
             await _unitOfWork.SaveChangesAsync();
         }
 
+        // Từ chối project đang ở trạng thái Pending.
         public async Task RejectProjectAsync(int projectId, RejectProjectRequest dto)
         {
             var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
@@ -238,6 +260,7 @@ namespace AISEP.BLL.Services.Projects
             await _unitOfWork.SaveChangesAsync();
         }
 
+        // Xác định user hiện tại có được bypass quota xem project hay không.
         private static bool CanBypassViewQuota(Project project, int userId, string? role)
         {
             if (string.Equals(role, "Staff", StringComparison.OrdinalIgnoreCase)
@@ -249,6 +272,7 @@ namespace AISEP.BLL.Services.Projects
             return project.Startup.UserId == userId;
         }
 
+        // Xác định role hiện tại có phải tiêu hao quota khi xem project hay không.
         private static bool RequiresViewQuota(string? role)
         {
             return string.Equals(role, "Investor", StringComparison.OrdinalIgnoreCase)
@@ -256,6 +280,7 @@ namespace AISEP.BLL.Services.Projects
                 || string.Equals(role, "User", StringComparison.OrdinalIgnoreCase);
         }
 
+        // Trừ quota xem project và tạo bản ghi unlock cho user hiện tại.
         private async Task ConsumeProjectViewQuotaAndUnlockAsync(int userId, int projectId)
         {
             var subscription = await _unitOfWork.Subscriptions.GetLatestActiveAsync(userId)
@@ -282,6 +307,7 @@ namespace AISEP.BLL.Services.Projects
             await _unitOfWork.SaveChangesAsync();
         }
 
+        // Lấy user id hiện tại hoặc null nếu chưa đăng nhập.
         private int? GetCurrentUserIdOrNull()
         {
             if (!_userService.IsAuthenticated())
@@ -292,6 +318,7 @@ namespace AISEP.BLL.Services.Projects
             return _userService.GetUserId();
         }
 
+        // Nếu user hiện tại là investor thì lấy investor id tương ứng, ngược lại trả null.
         private async Task<int?> GetCurrentInvestorIdOrNullAsync(int? currentUserId)
         {
             if (!currentUserId.HasValue)
@@ -309,6 +336,7 @@ namespace AISEP.BLL.Services.Projects
             return investor?.InvestorId;
         }
 
+        // Map Project sang response đầy đủ, có bơm thêm current user context cho AutoMapper khi cần.
         private ProjectResponse MapProjectResponseWithCurrentUser(Project project, int? currentUserId, int? currentInvestorId)
         {
             if (currentUserId.HasValue || currentInvestorId.HasValue)
@@ -330,6 +358,7 @@ namespace AISEP.BLL.Services.Projects
             return _mapper.Map<ProjectResponse>(project);
         }
 
+        // Map Project sang response non-premium, có bơm thêm current user context cho AutoMapper khi cần.
         private NonPremiumProjectResponse MapNonPremiumProjectResponseWithCurrentUser(Project project, int? currentUserId, int? currentInvestorId)
         {
             if (currentUserId.HasValue || currentInvestorId.HasValue)
@@ -351,6 +380,7 @@ namespace AISEP.BLL.Services.Projects
             return _mapper.Map<NonPremiumProjectResponse>(project);
         }
 
+        // Rule business theo stage của project, áp dụng cho cả create lẫn update sau khi entity đã có dữ liệu cuối cùng.
         private static void ValidateByStageLikeCreate(Project project)
         {
             if (!HasValue(project.ProjectName))
@@ -389,6 +419,7 @@ namespace AISEP.BLL.Services.Projects
             }
         }
 
+        // Hỗ trợ check string có dữ liệu thực hay không.
         private static bool HasValue(string? value)
         {
             return !string.IsNullOrWhiteSpace(value);
@@ -420,6 +451,7 @@ namespace AISEP.BLL.Services.Projects
         //    return response;
         //}
 
+        // Upload file nếu request có gửi ảnh project lên.
         private async Task<string?> UploadIfPresent(IFormFile? file, string folder)
             => file is not null ? await _storage.UploadFileAsync(file, folder) : null;
     }

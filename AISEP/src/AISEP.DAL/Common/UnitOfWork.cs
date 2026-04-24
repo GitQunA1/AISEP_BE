@@ -34,6 +34,7 @@ using AISEP.DAL.Repositories.Deals;
 //using AISEP.DAL.Repositories.WithdrawRequests;
 using AISEP.DAL.Repositories.SystemCommissionConfigs;
 using AISEP.DAL.Repositories.PostPrs;
+using AISEP.DAL.Repositories.FormValidationRules;
 
 namespace AISEP.DAL.Common
 {
@@ -75,6 +76,7 @@ namespace AISEP.DAL.Common
         private IConnectionRequestRepository? _connectionRequests;
         private IDealRepository?              _deals;
         private IPostPrRepository?            _postPrs;
+        private IFormValidationRuleRepository? _formValidationRules;
         public UnitOfWork(ApplicationDbContext context)
         {
             _context = context;
@@ -114,6 +116,7 @@ namespace AISEP.DAL.Common
         public IConnectionRequestRepository ConnectionRequests => _connectionRequests ??= new ConnectionRequestRepository(_context);
         public IDealRepository              Deals              => _deals              ??= new DealRepository(_context);
         public IPostPrRepository            PostPrs            => _postPrs            ??= new PostPrRepository(_context);
+        public IFormValidationRuleRepository FormValidationRules => _formValidationRules ??= new FormValidationRuleRepository(_context);
 
         public async Task<int> SaveChangesAsync()
         {
