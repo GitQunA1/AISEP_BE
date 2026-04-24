@@ -31,6 +31,7 @@ using AISEP.DAL.Repositories.ConnectionRequests;
 using AISEP.DAL.Repositories.Deals;
 using AISEP.DAL.Repositories.PostPrs;
 using AISEP.DAL.Repositories.SystemCommissionConfigs;
+using AISEP.DAL.Repositories.SystemTerms;
 namespace AISEP.DAL.Common
 {
     public interface IUnitOfWork : IDisposable
@@ -66,6 +67,7 @@ namespace AISEP.DAL.Common
         IPayoutRepository     Payouts     { get; }
         IPayoutGroupRepository PayoutGroups { get; }
         ISystemCommissionConfigRepository SystemCommissionConfigs { get; }
+        ISystemTermRepository SystemTerms { get; }
         IConnectionRequestRepository ConnectionRequests { get; }
         IDealRepository              Deals              { get; }
         IPostPrRepository            PostPrs            { get; }

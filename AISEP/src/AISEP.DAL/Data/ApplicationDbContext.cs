@@ -29,6 +29,7 @@ namespace AISEP.DAL.Data
         public DbSet<Deal> Deals { get; set; }
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<SystemCommissionConfig> SystemCommissionConfigs { get; set; }
+        public DbSet<SystemTerm> SystemTerms { get; set; }
         public DbSet<Wallet> Wallets { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
@@ -62,6 +63,8 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.Role).HasConversion<string>().IsRequired();
                 entity.Property(e => e.Status).HasConversion<string>().IsRequired();
                 entity.Property(e => e.BonusFreeBookings).HasDefaultValue(0);
+                entity.Property(e => e.IsTermsAccepted).HasDefaultValue(false);
+                entity.Property(e => e.TermsVersion).HasMaxLength(50);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
             });
 
@@ -410,6 +413,19 @@ namespace AISEP.DAL.Data
                     .WithMany()
                     .HasForeignKey(e => e.CreatedById)
                     .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => e.IsActive)
+                    .HasFilter("\"IsActive\" = TRUE")
+                    .IsUnique();
+            });
+
+            modelBuilder.Entity<SystemTerm>(entity =>
+            {
+                entity.ToTable("system_terms");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.ContentHtml).HasColumnType("text").IsRequired();
+                entity.Property(e => e.Version).HasMaxLength(50).IsRequired();
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                 entity.HasIndex(e => e.IsActive)
                     .HasFilter("\"IsActive\" = TRUE")

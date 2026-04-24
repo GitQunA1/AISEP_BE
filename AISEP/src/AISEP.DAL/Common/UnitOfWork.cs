@@ -34,6 +34,7 @@ using AISEP.DAL.Repositories.Deals;
 //using AISEP.DAL.Repositories.WithdrawRequests;
 using AISEP.DAL.Repositories.SystemCommissionConfigs;
 using AISEP.DAL.Repositories.PostPrs;
+using AISEP.DAL.Repositories.SystemTerms;
 
 namespace AISEP.DAL.Common
 {
@@ -72,6 +73,7 @@ namespace AISEP.DAL.Common
         private IPayoutRepository?     _payouts;
         private IPayoutGroupRepository? _payoutGroups;
         private ISystemCommissionConfigRepository? _systemCommissionConfigs;
+        private ISystemTermRepository? _systemTerms;
         private IConnectionRequestRepository? _connectionRequests;
         private IDealRepository?              _deals;
         private IPostPrRepository?            _postPrs;
@@ -111,6 +113,7 @@ namespace AISEP.DAL.Common
         public IPayoutRepository     Payouts     => _payouts     ??= new PayoutRepository(_context);
         public IPayoutGroupRepository PayoutGroups => _payoutGroups ??= new PayoutGroupRepository(_context);
         public ISystemCommissionConfigRepository SystemCommissionConfigs => _systemCommissionConfigs ??= new SystemCommissionConfigRepository(_context);
+        public ISystemTermRepository SystemTerms => _systemTerms ??= new SystemTermRepository(_context);
         public IConnectionRequestRepository ConnectionRequests => _connectionRequests ??= new ConnectionRequestRepository(_context);
         public IDealRepository              Deals              => _deals              ??= new DealRepository(_context);
         public IPostPrRepository            PostPrs            => _postPrs            ??= new PostPrRepository(_context);
