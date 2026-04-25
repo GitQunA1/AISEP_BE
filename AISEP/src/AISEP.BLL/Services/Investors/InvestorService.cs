@@ -12,6 +12,7 @@ using Sieve.Services;
 using AISEP.BLL.Services.Users;
 using AISEP.BLL.Services.Notifications;
 using AISEP.BLL.Services.FormValidationRules;
+using AISEP.BLL.Services.Storage;
 using AISEP.BLL.Exceptions;
 
 namespace AISEP.BLL.Services.Investors
@@ -24,8 +25,9 @@ namespace AISEP.BLL.Services.Investors
         private readonly IUserService _userService;
         private readonly INotificationService _notificationService;
         private readonly IDynamicFormSubmissionValidationService _dynamicFormValidationService;
+        private readonly IStorageService _storage;
 
-        public InvestorService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IUserService userService, INotificationService notificationService, IDynamicFormSubmissionValidationService dynamicFormValidationService)
+        public InvestorService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor, IMapper mapper, IUserService userService, INotificationService notificationService, IDynamicFormSubmissionValidationService dynamicFormValidationService, IStorageService storage)
         {
             _unitOfWork = unitOfWork;
             _sieveProcessor = sieveProcessor;
@@ -33,6 +35,7 @@ namespace AISEP.BLL.Services.Investors
             _userService = userService;
             _notificationService = notificationService;
             _dynamicFormValidationService = dynamicFormValidationService;
+            _storage = storage;
         }
 
         public async Task<PagedResult<InvestorResponse>> GetAllAsync(SieveModel model)
@@ -70,6 +73,7 @@ namespace AISEP.BLL.Services.Investors
 
             var investor = _mapper.Map<Investor>(dto);
             investor.UserId = userId;
+            investor.ProfileImageUrl = await UploadIfPresent(dto.ProfileImageFile, "investor-profiles");
             investor.ApprovalStatus = ApprovalStatus.Pending;
             await _unitOfWork.Investors.AddAsync(investor);
             await _unitOfWork.SaveChangesAsync();
@@ -125,6 +129,9 @@ namespace AISEP.BLL.Services.Investors
 
             if (dto.PreviousInvestments is not null)
                 investor.PreviousInvestments = dto.PreviousInvestments.Trim();
+
+            if (dto.ProfileImageFile is not null)
+                investor.ProfileImageUrl = await _storage.UploadFileAsync(dto.ProfileImageFile, "investor-profiles");
 
             investor.ApprovalStatus = ApprovalStatus.Pending;
             investor.ApprovedAt = null;
@@ -210,6 +217,9 @@ namespace AISEP.BLL.Services.Investors
                     referenceType);
             }
         }
+
+        private async Task<string?> UploadIfPresent(IFormFile? file, string folder)
+            => file is not null ? await _storage.UploadFileAsync(file, folder) : null;
     }
 }
 

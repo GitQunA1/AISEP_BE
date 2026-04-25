@@ -16,6 +16,7 @@ namespace AISEP.DAL.Entities
         public Industry? FocusIndustry { get; set; }
         public PreferredStage? PreferredStage { get; set; }
         public string? PreviousInvestments { get; set; }
+        public string? ProfileImageUrl { get; set; }
         public string? IdentityDocumentUrl { get; set; }
         public ApprovalStatus ApprovalStatus { get; set; } = ApprovalStatus.Unverified;
         public int? ApprovedById { get; set; }

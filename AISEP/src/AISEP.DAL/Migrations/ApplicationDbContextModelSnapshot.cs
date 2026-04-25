@@ -748,6 +748,9 @@ namespace AISEP.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<string>("ProfileImageUrl")
+                        .HasColumnType("text");
+
                     b.Property<string>("PreferredStage")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");

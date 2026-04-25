@@ -14,5 +14,6 @@ namespace AISEP.BLL.DTOs.Requests
         public Industry?       FocusIndustry       { get; set; }
         public PreferredStage? PreferredStage      { get; set; }
         public string?         PreviousInvestments { get; set; }
+        public IFormFile?      ProfileImageFile    { get; set; }
     }
 }
