@@ -18,6 +18,7 @@ namespace AISEP.BLL.DTOs.Responses
         public string? FocusIndustry { get; set; }
         public PreferredStage? PreferredStage { get; set; }
         public string? PreviousInvestments { get; set; }
+        public string? ProfileImageUrl { get; set; }
         public string Status { get; set; } = string.Empty;
     }
 }

@@ -241,6 +241,7 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.ConnectionRequests, opt => opt.Ignore())
                 .ForMember(dest => dest.Deals,              opt => opt.Ignore())
                 .ForMember(dest => dest.InvestorAIAnalyses, opt => opt.Ignore())
+                .ForMember(dest => dest.ProfileImageUrl,    opt => opt.Ignore())
                 .ForMember(dest => dest.InvestmentAmount,
                     opt => opt.MapFrom(src => src.InvestmentAmount > 0 ? src.InvestmentAmount : null));
 
@@ -251,7 +252,8 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.User,               opt => opt.Ignore())
                 .ForMember(dest => dest.ConnectionRequests, opt => opt.Ignore())
                 .ForMember(dest => dest.Deals,              opt => opt.Ignore())
-                .ForMember(dest => dest.InvestorAIAnalyses, opt => opt.Ignore());
+                .ForMember(dest => dest.InvestorAIAnalyses, opt => opt.Ignore())
+                .ForMember(dest => dest.ProfileImageUrl,    opt => opt.Ignore());
 
             // ProjectFollower Entity ? FollowedProjectResponse
             CreateMap<ProjectFollower, FollowedProjectResponse>()
