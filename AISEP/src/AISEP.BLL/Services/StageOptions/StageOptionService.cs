@@ -7,39 +7,33 @@ using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
 using Sieve.Services;
 
-namespace AISEP.BLL.Services.IndustryOptions
+namespace AISEP.BLL.Services.StageOptions
 {
-    public class IndustryOptionService : IIndustryOptionService
+    public class StageOptionService : IStageOptionService
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ISieveProcessor _sieveProcessor;
 
-        public IndustryOptionService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor)
+        public StageOptionService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor)
         {
             _unitOfWork = unitOfWork;
             _sieveProcessor = sieveProcessor;
         }
 
-        // Trả danh sách ngành động có hỗ trợ filter, sort và phân trang bằng Sieve.
-        public async Task<PagedResult<IndustryOptionResponse>> GetAllAsync(SieveModel model)
+        public async Task<PagedResult<StageOptionResponse>> GetAllAsync(SieveModel model)
         {
-            var query = _unitOfWork.IndustryOptions.GetAllQuery()
+            var query = _unitOfWork.StageOptions.GetAllQuery()
                 .AsNoTracking();
 
-            return await PaginationHelper.PaginateAsync(
-                query,
-                model,
-                _sieveProcessor,
-                MapResponse);
+            return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, MapResponse);
         }
 
-        // Tạo option ngành mới để dùng chung cho startup, project, investor và advisor.
-        public async Task<IndustryOptionResponse> CreateAsync(CreateIndustryOptionRequest request)
+        public async Task<StageOptionResponse> CreateAsync(CreateStageOptionRequest request)
         {
             var value = NormalizeValue(request.Value);
             await EnsureValueIsUniqueAsync(value);
 
-            var entity = new IndustryOption
+            var entity = new StageOption
             {
                 Value = value,
                 IsActive = request.IsActive,
@@ -47,17 +41,16 @@ namespace AISEP.BLL.Services.IndustryOptions
                 UpdatedAt = DateTime.UtcNow
             };
 
-            await _unitOfWork.IndustryOptions.AddAsync(entity);
+            await _unitOfWork.StageOptions.AddAsync(entity);
             await _unitOfWork.SaveChangesAsync();
 
             return MapResponse(entity);
         }
 
-        // Cập nhật option ngành hiện có theo id.
-        public async Task<IndustryOptionResponse> UpdateAsync(int id, UpdateIndustryOptionRequest request)
+        public async Task<StageOptionResponse> UpdateAsync(int id, UpdateStageOptionRequest request)
         {
-            var entity = await _unitOfWork.IndustryOptions.GetByIdAsync(id)
-                ?? throw new KeyNotFoundException("Industry option not found.");
+            var entity = await _unitOfWork.StageOptions.GetByIdAsync(id)
+                ?? throw new KeyNotFoundException("Stage option not found.");
 
             var value = NormalizeValue(request.Value);
             await EnsureValueIsUniqueAsync(value, id);
@@ -66,7 +59,7 @@ namespace AISEP.BLL.Services.IndustryOptions
             entity.IsActive = request.IsActive;
             entity.UpdatedAt = DateTime.UtcNow;
 
-            _unitOfWork.IndustryOptions.Update(entity);
+            _unitOfWork.StageOptions.Update(entity);
             await _unitOfWork.SaveChangesAsync();
 
             return MapResponse(entity);
@@ -74,12 +67,12 @@ namespace AISEP.BLL.Services.IndustryOptions
 
         private async Task EnsureValueIsUniqueAsync(string value, int? currentId = null)
         {
-            var exists = await _unitOfWork.IndustryOptions.GetAllQuery()
+            var exists = await _unitOfWork.StageOptions.GetAllQuery()
                 .AnyAsync(x => x.Value.ToLower() == value.ToLower() && (!currentId.HasValue || x.Id != currentId.Value));
 
             if (exists)
             {
-                throw new InvalidOperationException("Industry option value already exists.");
+                throw new InvalidOperationException("Stage option value already exists.");
             }
         }
 
@@ -88,15 +81,15 @@ namespace AISEP.BLL.Services.IndustryOptions
             var normalized = value?.Trim() ?? string.Empty;
             if (string.IsNullOrWhiteSpace(normalized))
             {
-                throw new InvalidOperationException("Industry value is required.");
+                throw new InvalidOperationException("Stage value is required.");
             }
 
             return normalized;
         }
 
-        private static IndustryOptionResponse MapResponse(IndustryOption entity)
+        private static StageOptionResponse MapResponse(StageOption entity)
         {
-            return new IndustryOptionResponse
+            return new StageOptionResponse
             {
                 Id = entity.Id,
                 Value = entity.Value,

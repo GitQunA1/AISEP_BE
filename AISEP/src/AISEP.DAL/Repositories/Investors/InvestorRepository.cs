@@ -17,6 +17,7 @@ namespace AISEP.DAL.Repositories.Investors
         {
             return _context.Investors
                 .Include(i => i.User)
+                .Include(i => i.PreferredStageOption)
                 .Include(i => i.InvestorIndustries)
                     .ThenInclude(ii => ii.IndustryOption)
                 .OrderBy(i => i.InvestorId)
@@ -27,6 +28,7 @@ namespace AISEP.DAL.Repositories.Investors
         {
             return await _context.Investors
                 .Include(i => i.User)
+                .Include(i => i.PreferredStageOption)
                 .Include(i => i.InvestorIndustries)
                     .ThenInclude(ii => ii.IndustryOption)
                 .FirstOrDefaultAsync(i => i.InvestorId == investorId);
@@ -36,6 +38,7 @@ namespace AISEP.DAL.Repositories.Investors
         {
             return await _context.Investors
                 .Include(i => i.User)
+                .Include(i => i.PreferredStageOption)
                 .Include(i => i.InvestorIndustries)
                     .ThenInclude(ii => ii.IndustryOption)
                 .FirstOrDefaultAsync(i => i.UserId == userId);

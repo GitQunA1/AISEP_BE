@@ -156,8 +156,11 @@ namespace AISEP.BLL.Services.Projects
                 throw new KeyNotFoundException("Startup profile not found. Please create a startup profile first.");
 
             var industryOptions = await ResolveIndustryOptionsAsync(dto.IndustryOptionIds);
+            var stageOption = await ResolveStageOptionAsync(dto.StageOptionId, true);
             var project = _mapper.Map<Project>(dto);
             project.StartupId = startup.StartupId;
+            project.StageOptionId = stageOption!.Id;
+            project.StageOption = stageOption;
             project.Status = ProjectStatus.Draft;
             project.CreatedAt = DateTime.UtcNow;
             project.ProjectImageUrl = await UploadIfPresent(dto.ProjectImageFile, "project-images");
@@ -197,6 +200,12 @@ namespace AISEP.BLL.Services.Projects
                  project.Status = ProjectStatus.Draft;
 
             _mapper.Map(dto, project);
+            if (dto.StageOptionId.HasValue)
+            {
+                var stageOption = await ResolveStageOptionAsync(dto.StageOptionId.Value, true);
+                project.StageOptionId = stageOption!.Id;
+                project.StageOption = stageOption;
+            }
             if (dto.IndustryOptionIds is not null)
             {
                 var industryOptions = await ResolveIndustryOptionsAsync(dto.IndustryOptionIds);
@@ -483,6 +492,28 @@ namespace AISEP.BLL.Services.Projects
             }
 
             return options;
+        }
+
+        // Kiểm tra stage của project có tồn tại và đang active hay không.
+        private async Task<StageOption?> ResolveStageOptionAsync(int? stageOptionId, bool required)
+        {
+            if (!stageOptionId.HasValue)
+            {
+                if (required)
+                {
+                    throw new InvalidOperationException("Stage is required.");
+                }
+
+                return null;
+            }
+
+            var option = await _unitOfWork.StageOptions.GetByIdAsync(stageOptionId.Value);
+            if (option is null || !option.IsActive)
+            {
+                throw new InvalidOperationException("Selected stage is invalid or inactive.");
+            }
+
+            return option;
         }
 
         // Đồng bộ bảng project_industries với danh sách ngành mới nhất.

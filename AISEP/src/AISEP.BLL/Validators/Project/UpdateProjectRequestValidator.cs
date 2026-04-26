@@ -10,9 +10,6 @@ namespace AISEP.BLL.Validators.Project
             RuleFor(x => x)
                 .Must(HasAtLeastOneField)
                 .WithMessage("Cần cung cấp ít nhất một trường để cập nhật.");
-
-            // Rule field-level đã chuyển sang dynamic validation qua bảng form_validation_rules.
-            // File này chỉ giữ lại rule cấu trúc: update phải có ít nhất một field.
         }
 
         private static bool HasAtLeastOneField(UpdateProjectRequest request)
@@ -20,7 +17,7 @@ namespace AISEP.BLL.Validators.Project
             return request.ProjectName is not null
                 || request.ProjectImageFile is not null
                 || request.ShortDescription is not null
-                || request.DevelopmentStage.HasValue
+                || request.StageOptionId.HasValue
                 || request.ProblemStatement is not null
                 || request.SolutionDescription is not null
                 || request.TargetCustomers is not null

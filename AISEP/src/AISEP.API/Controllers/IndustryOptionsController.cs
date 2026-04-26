@@ -21,9 +21,9 @@ namespace AISEP.API.Controllers
        
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> GetAll([FromQuery] SieveModel model, [FromQuery] bool includeInactive = false)
+        public async Task<IActionResult> GetAll([FromQuery] SieveModel model)
         {
-            var result = await _industryOptionService.GetAllAsync(model, includeInactive);
+            var result = await _industryOptionService.GetAllAsync(model);
             return Ok(ApiResponse<object>.SuccessResponse(result, "Industry options retrieved successfully."));
         }
 

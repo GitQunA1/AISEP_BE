@@ -158,7 +158,7 @@ namespace AISEP.BLL.Helpers
             mapper.Property<Investor>(i => i.RiskTolerance)
                 .CanFilter()
                 .CanSort();
-            mapper.Property<Investor>(i => i.PreferredStage)
+            mapper.Property<Investor>(i => i.PreferredStageOption!.Value)
                 .CanFilter()
                 .CanSort();
             mapper.Property<Investor>(i => i.InvestmentAmount)
@@ -175,7 +175,7 @@ namespace AISEP.BLL.Helpers
             mapper.Property<Project>(p => p.Status)
                 .CanFilter()
                 .CanSort();
-            mapper.Property<Project>(p => p.DevelopmentStage)
+            mapper.Property<Project>(p => p.StageOption!.Value)
                 .CanFilter()
                 .CanSort();
             mapper.Property<Project>(p => p.CreatedAt)
