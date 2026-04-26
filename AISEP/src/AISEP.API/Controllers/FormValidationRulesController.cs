@@ -3,6 +3,7 @@ using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.FormValidationRules;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Sieve.Models;
 
 namespace AISEP.API.Controllers
 {
@@ -33,15 +34,14 @@ namespace AISEP.API.Controllers
             }
         }
 
-        // Trả bộ rule validate của một form để FE render form và validate phía client.
+        // Trả bộ rule validate của một form để FE render form và validate phía client, có hỗ trợ Sieve.
         [HttpGet("{formKey}")]
         [Authorize]
-        public async Task<IActionResult> GetByFormKey(string formKey)
+        public async Task<IActionResult> GetByFormKey(string formKey, [FromQuery] SieveModel model)
         {
             try
             {
-                // FE gọi endpoint này khi mở form create/update để lấy rule theo từng field.
-                var result = await _formValidationRuleService.GetByFormKeyAsync(formKey);
+                var result = await _formValidationRuleService.GetByFormKeyAsync(formKey, model);
                 return Ok(ApiResponse<object>.SuccessResponse(result, "Form validation rules retrieved successfully."));
             }
             catch (InvalidOperationException ex)
@@ -57,7 +57,6 @@ namespace AISEP.API.Controllers
         {
             try
             {
-                // Staff/Admin chỉ update rule đã tồn tại; lúc submit hệ thống sẽ đọc rule mới nhất từ DB.
                 var result = await _formValidationRuleService.UpdateAsync(id, request);
                 return Ok(ApiResponse<object>.SuccessResponse(result, "Form validation rule updated successfully."));
             }

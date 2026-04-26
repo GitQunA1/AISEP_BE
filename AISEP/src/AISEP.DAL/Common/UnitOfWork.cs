@@ -16,6 +16,7 @@ using AISEP.DAL.Repositories.RefreshTokens;
 using AISEP.DAL.Repositories.Reviews;
 using AISEP.DAL.Repositories.Startups;
 using AISEP.DAL.Repositories.StartupAIAnalyses;
+using AISEP.DAL.Repositories.IndustryOptions;
 using AISEP.DAL.Repositories.ProjectFollowers;
 using AISEP.DAL.Repositories.Investors;
 using AISEP.DAL.Repositories.Payouts;
@@ -58,6 +59,7 @@ namespace AISEP.DAL.Common
         private IProjectRepository?           _projects;
         private IProjectAdvisorAssignmentRepository? _projectAdvisorAssignments;
         private IStartupRepository?           _startups;
+        private IIndustryOptionRepository?    _industryOptions;
         private IInvestorRepository?          _investors;
         private IInvestorAIAnalysisRepository? _investorAIAnalyses;
         private IUserRepository?              _users;
@@ -93,6 +95,7 @@ namespace AISEP.DAL.Common
         public IProjectRepository           Projects           => _projects           ??= new ProjectRepository(_context);
         public IProjectAdvisorAssignmentRepository ProjectAdvisorAssignments => _projectAdvisorAssignments ??= new ProjectAdvisorAssignmentRepository(_context);
         public IStartupRepository           Startups           => _startups           ??= new StartupRepository(_context);
+        public IIndustryOptionRepository    IndustryOptions    => _industryOptions    ??= new IndustryOptionRepository(_context);
         public IInvestorRepository          Investors          => _investors          ??= new InvestorRepository(_context);
         public IInvestorAIAnalysisRepository InvestorAIAnalyses => _investorAIAnalyses ??= new InvestorAIAnalysisRepository(_context);
         public IUserRepository              Users              => _users              ??= new UserRepository(_context);

@@ -19,7 +19,7 @@ namespace AISEP.BLL.Validators.Advisor
         {
             return request.Bio is not null
                 || request.Expertise is not null
-                || request.Industries is not null
+                || request.IndustryOptionIds is not null
                 || request.PreviousExperience is not null
                 || request.LanguagesSpoken is not null
                 || request.Location is not null

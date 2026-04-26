@@ -155,12 +155,18 @@ namespace AISEP.BLL.Services.Projects
             if (startup is null)
                 throw new KeyNotFoundException("Startup profile not found. Please create a startup profile first.");
 
+            var industryOptions = await ResolveIndustryOptionsAsync(dto.IndustryOptionIds);
             var project = _mapper.Map<Project>(dto);
             project.StartupId = startup.StartupId;
-            project.Industry = dto.Industry!.Value;
             project.Status = ProjectStatus.Draft;
             project.CreatedAt = DateTime.UtcNow;
             project.ProjectImageUrl = await UploadIfPresent(dto.ProjectImageFile, "project-images");
+            project.ProjectIndustries = industryOptions
+                .Select(option => new ProjectIndustry
+                {
+                    IndustryOptionId = option.Id
+                })
+                .ToList();
             // Rule theo stage vẫn giữ trong code vì đây là business rule phụ thuộc nhiều field cùng lúc.
             ValidateByStageLikeCreate(project);
 
@@ -191,8 +197,11 @@ namespace AISEP.BLL.Services.Projects
                  project.Status = ProjectStatus.Draft;
 
             _mapper.Map(dto, project);
-            if (dto.Industry.HasValue)
-                project.Industry = dto.Industry.Value;
+            if (dto.IndustryOptionIds is not null)
+            {
+                var industryOptions = await ResolveIndustryOptionsAsync(dto.IndustryOptionIds);
+                SyncProjectIndustries(project, industryOptions.Select(x => x.Id));
+            }
             if (dto.ProjectImageFile is not null)
                 project.ProjectImageUrl = await _storage.UploadFileAsync(dto.ProjectImageFile, "project-images");
             if (dto.ProjectName is not null)
@@ -454,5 +463,58 @@ namespace AISEP.BLL.Services.Projects
         // Upload file nếu request có gửi ảnh project lên.
         private async Task<string?> UploadIfPresent(IFormFile? file, string folder)
             => file is not null ? await _storage.UploadFileAsync(file, folder) : null;
+
+        // Kiểm tra danh sách ngành của project có tồn tại và đang active hay không.
+        private async Task<List<IndustryOption>> ResolveIndustryOptionsAsync(IEnumerable<int>? optionIds)
+        {
+            var ids = optionIds?
+                .Distinct()
+                .ToList() ?? [];
+
+            if (ids.Count == 0)
+            {
+                throw new InvalidOperationException("At least one industry is required.");
+            }
+
+            var options = await _unitOfWork.IndustryOptions.GetByIdsAsync(ids);
+            if (options.Count != ids.Count || options.Any(x => !x.IsActive))
+            {
+                throw new InvalidOperationException("One or more selected industries are invalid or inactive.");
+            }
+
+            return options;
+        }
+
+        // Đồng bộ bảng project_industries với danh sách ngành mới nhất.
+        private static void SyncProjectIndustries(Project project, IEnumerable<int> industryOptionIds)
+        {
+            var requestedIds = industryOptionIds.ToHashSet();
+            if (requestedIds.Count == 0)
+            {
+                throw new InvalidOperationException("At least one industry is required.");
+            }
+
+            var toRemove = project.ProjectIndustries
+                .Where(x => !requestedIds.Contains(x.IndustryOptionId))
+                .ToList();
+
+            foreach (var item in toRemove)
+            {
+                project.ProjectIndustries.Remove(item);
+            }
+
+            var currentIds = project.ProjectIndustries
+                .Select(x => x.IndustryOptionId)
+                .ToHashSet();
+
+            foreach (var id in requestedIds.Where(x => !currentIds.Contains(x)))
+            {
+                project.ProjectIndustries.Add(new ProjectIndustry
+                {
+                    ProjectId = project.ProjectId,
+                    IndustryOptionId = id
+                });
+            }
+        }
     }
 }

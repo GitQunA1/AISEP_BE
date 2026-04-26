@@ -141,9 +141,6 @@ namespace AISEP.BLL.Helpers
             mapper.Property<Startup>(s => s.CompanyName)
                 .CanFilter()
                 .CanSort();
-            mapper.Property<Startup>(s => s.Industry)
-                .CanFilter()
-                .CanSort();
             mapper.Property<Startup>(s => s.CountryCity)
                 .CanFilter()
                 .CanSort();
@@ -153,9 +150,6 @@ namespace AISEP.BLL.Helpers
 
             // Investor
             mapper.Property<Investor>(i => i.OrganizationName)
-                .CanFilter()
-                .CanSort();
-            mapper.Property<Investor>(i => i.FocusIndustry)
                 .CanFilter()
                 .CanSort();
             mapper.Property<Investor>(i => i.InvestmentRegion)
@@ -185,9 +179,6 @@ namespace AISEP.BLL.Helpers
                 .CanFilter()
                 .CanSort();
             mapper.Property<Project>(p => p.CreatedAt)
-                .CanFilter()
-                .CanSort();
-            mapper.Property<Project>(p => p.Industry)
                 .CanFilter()
                 .CanSort();
 

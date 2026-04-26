@@ -19,11 +19,13 @@ namespace AISEP.DAL.Repositories.Startups
             return _context.Startups
                 .Include(s => s.Projects)
                     .ThenInclude(p => p.Followers)
+                .Include(s => s.StartupIndustries)
+                    .ThenInclude(si => si.IndustryOption)
                 .Include(s => s.User)
                 //.Include(s => s.Followers)
                 .Where(s =>
                     s.ApprovalStatus == ApprovalStatus.Approved &&
-                    (string.IsNullOrWhiteSpace(industry) || (s.Industry != null && s.Industry.ToString()!.ToLower().Contains(industry.ToLower()))) &&
+                    (string.IsNullOrWhiteSpace(industry) || s.StartupIndustries.Any(si => si.IndustryOption.Value.ToLower().Contains(industry.ToLower()))) &&
                     (string.IsNullOrWhiteSpace(searchTerm) || (s.CompanyName != null && s.CompanyName.ToLower().Contains(searchTerm.ToLower())))
                 )
                 .OrderBy(s => s.StartupId)
@@ -35,6 +37,8 @@ namespace AISEP.DAL.Repositories.Startups
             return await _context.Startups
                 .Include(s => s.Projects)
                     .ThenInclude(p => p.Followers)
+                .Include(s => s.StartupIndustries)
+                    .ThenInclude(si => si.IndustryOption)
                 .Include(s => s.User)
                 //.Include(s => s.Followers)
                 .FirstOrDefaultAsync(s => s.StartupId == id);
@@ -45,6 +49,8 @@ namespace AISEP.DAL.Repositories.Startups
             return await _context.Startups
                 .Include(s => s.Projects)
                     .ThenInclude(p => p.Followers)
+                .Include(s => s.StartupIndustries)
+                    .ThenInclude(si => si.IndustryOption)
                 .Include(s => s.User)
                 .FirstOrDefaultAsync(s => s.UserId == userId);
         }
@@ -54,6 +60,8 @@ namespace AISEP.DAL.Repositories.Startups
             return _context.Startups
                 .Include(s => s.Projects)
                     .ThenInclude(p => p.Followers)
+                .Include(s => s.StartupIndustries)
+                    .ThenInclude(si => si.IndustryOption)
                 .Include(s => s.User)
                 .OrderBy(s => s.StartupId)
                 .AsQueryable();
@@ -64,6 +72,8 @@ namespace AISEP.DAL.Repositories.Startups
             return _context.Startups
                 .Include(s => s.Projects)
                     .ThenInclude(p => p.Followers)
+                .Include(s => s.StartupIndustries)
+                    .ThenInclude(si => si.IndustryOption)
                 .Include(s => s.User)
                 .Where(s => s.ApprovalStatus == ApprovalStatus.Pending)
                 .OrderBy(s => s.StartupId)
@@ -75,6 +85,8 @@ namespace AISEP.DAL.Repositories.Startups
             var query = _context.Startups
                 .Include(s => s.Projects)
                     .ThenInclude(p => p.Followers)
+                .Include(s => s.StartupIndustries)
+                    .ThenInclude(si => si.IndustryOption)
                 .Include(s => s.User)
                 .OrderBy(s => s.StartupId)
                 .AsQueryable();

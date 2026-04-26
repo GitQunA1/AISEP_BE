@@ -88,6 +88,7 @@ namespace AISEP.BLL.Services.Startups
 
             var logoUrl = await UploadIfPresent(dto.LogoFile, "startup-logos");
             var businessLicenseUrl = await UploadIfPresent(dto.BusinessLicenseFile, "startup-licenses");
+            var industryOptions = await ResolveIndustryOptionsAsync(dto.IndustryOptionIds);
 
             var startup = new Startup
             {
@@ -98,13 +99,19 @@ namespace AISEP.BLL.Services.Startups
                 PhoneNumber        = dto.PhoneNumber,
                 CountryCity        = dto.CountryCity,
                 Website            = dto.Website,
-                Industry           = dto.Industry,
                 LogoUrl            = logoUrl,
                 BusinessLicenseUrl = businessLicenseUrl,
                 ApprovalStatus     = ApprovalStatus.Pending,
                 CreatedAt          = DateTime.UtcNow
                
             };
+
+            startup.StartupIndustries = industryOptions
+                .Select(option => new StartupIndustry
+                {
+                    IndustryOptionId = option.Id
+                })
+                .ToList();
 
             await _unitOfWork.Startups.AddAsync(startup);
             await _unitOfWork.SaveChangesAsync();
@@ -148,8 +155,11 @@ namespace AISEP.BLL.Services.Startups
             if (dto.Website is not null)
                 startup.Website = dto.Website.Trim();
 
-            if (dto.Industry.HasValue)
-                startup.Industry = dto.Industry.Value;
+            if (dto.IndustryOptionIds is not null)
+            {
+                var industryOptions = await ResolveIndustryOptionsAsync(dto.IndustryOptionIds);
+                SyncStartupIndustries(startup, industryOptions.Select(x => x.Id));
+            }
 
             if (dto.LogoFile is not null)
                 startup.LogoUrl = await _storage.UploadFileAsync(dto.LogoFile, "startup-logos");
@@ -225,6 +235,59 @@ namespace AISEP.BLL.Services.Startups
 
         private async Task<string?> UploadIfPresent(IFormFile? file, string folder)
             => file is not null ? await _storage.UploadFileAsync(file, folder) : null;
+
+        // Chuyển danh sách id ngành từ request thành danh sách option hợp lệ đang active.
+        private async Task<List<IndustryOption>> ResolveIndustryOptionsAsync(IEnumerable<int>? optionIds)
+        {
+            var ids = optionIds?
+                .Distinct()
+                .ToList() ?? [];
+
+            if (ids.Count == 0)
+            {
+                throw new InvalidOperationException("At least one industry is required.");
+            }
+
+            var options = await _unitOfWork.IndustryOptions.GetByIdsAsync(ids);
+            if (options.Count != ids.Count || options.Any(x => !x.IsActive))
+            {
+                throw new InvalidOperationException("One or more selected industries are invalid or inactive.");
+            }
+
+            return options;
+        }
+
+        // Đồng bộ bảng nối startup_industries theo danh sách ngành mới nhất từ request.
+        private static void SyncStartupIndustries(Startup startup, IEnumerable<int> industryOptionIds)
+        {
+            var requestedIds = industryOptionIds.ToHashSet();
+            if (requestedIds.Count == 0)
+            {
+                throw new InvalidOperationException("At least one industry is required.");
+            }
+
+            var toRemove = startup.StartupIndustries
+                .Where(x => !requestedIds.Contains(x.IndustryOptionId))
+                .ToList();
+
+            foreach (var item in toRemove)
+            {
+                startup.StartupIndustries.Remove(item);
+            }
+
+            var currentIds = startup.StartupIndustries
+                .Select(x => x.IndustryOptionId)
+                .ToHashSet();
+
+            foreach (var id in requestedIds.Where(x => !currentIds.Contains(x)))
+            {
+                startup.StartupIndustries.Add(new StartupIndustry
+                {
+                    StartupId = startup.StartupId,
+                    IndustryOptionId = id
+                });
+            }
+        }
 
         private async Task NotifyStaffAndAdminsAsync(string title, string message, int? referenceId = null, string? referenceType = null)
         {

@@ -13,7 +13,6 @@ namespace AISEP.DAL.Entities
         public DateTime? InvestmentDate { get; set; }
         public RiskTolerance? RiskTolerance { get; set; }
         public string? InvestmentRegion { get; set; }
-        public Industry? FocusIndustry { get; set; }
         public PreferredStage? PreferredStage { get; set; }
         public string? PreviousInvestments { get; set; }
         public string? ProfileImageUrl { get; set; }
@@ -30,5 +29,6 @@ namespace AISEP.DAL.Entities
         public ICollection<ConnectionRequest> ConnectionRequests { get; set; } = new List<ConnectionRequest>();
         public ICollection<Deal> Deals { get; set; } = new List<Deal>();
         public ICollection<InvestorAIAnalysis> InvestorAIAnalyses { get; set; } = new List<InvestorAIAnalysis>();
+        public ICollection<InvestorIndustry> InvestorIndustries { get; set; } = new List<InvestorIndustry>();
     }
 }

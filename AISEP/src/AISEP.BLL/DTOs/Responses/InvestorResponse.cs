@@ -15,7 +15,7 @@ namespace AISEP.BLL.DTOs.Responses
         public DateTime? InvestmentDate { get; set; }
         public RiskTolerance? RiskTolerance { get; set; }
         public string? InvestmentRegion { get; set; }
-        public string? FocusIndustry { get; set; }
+        public List<string> Industries { get; set; } = [];
         public PreferredStage? PreferredStage { get; set; }
         public string? PreviousInvestments { get; set; }
         public string? ProfileImageUrl { get; set; }

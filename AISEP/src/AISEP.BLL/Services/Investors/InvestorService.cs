@@ -70,11 +70,18 @@ namespace AISEP.BLL.Services.Investors
             var existing = await _unitOfWork.Investors.GetByUserIdAsync(userId);
             if (existing is not null)
                 throw new InvalidOperationException("Investor profile already exists for this account.");
+            var industryOptions = await ResolveIndustryOptionsAsync(dto.IndustryOptionIds);
 
             var investor = _mapper.Map<Investor>(dto);
             investor.UserId = userId;
             investor.ProfileImageUrl = await UploadIfPresent(dto.ProfileImageFile, "investor-profiles");
             investor.ApprovalStatus = ApprovalStatus.Pending;
+            investor.InvestorIndustries = industryOptions
+                .Select(option => new InvestorIndustry
+                {
+                    IndustryOptionId = option.Id
+                })
+                .ToList();
             await _unitOfWork.Investors.AddAsync(investor);
             await _unitOfWork.SaveChangesAsync();
             await NotifyStaffAndAdminsAsync(
@@ -121,8 +128,11 @@ namespace AISEP.BLL.Services.Investors
             if (dto.InvestmentRegion is not null)
                 investor.InvestmentRegion = dto.InvestmentRegion.Trim();
 
-            if (dto.FocusIndustry.HasValue)
-                investor.FocusIndustry = dto.FocusIndustry.Value;
+            if (dto.IndustryOptionIds is not null)
+            {
+                var industryOptions = await ResolveIndustryOptionsAsync(dto.IndustryOptionIds);
+                SyncInvestorIndustries(investor, industryOptions.Select(x => x.Id));
+            }
 
             if (dto.PreferredStage.HasValue)
                 investor.PreferredStage = dto.PreferredStage.Value;
@@ -220,6 +230,59 @@ namespace AISEP.BLL.Services.Investors
 
         private async Task<string?> UploadIfPresent(IFormFile? file, string folder)
             => file is not null ? await _storage.UploadFileAsync(file, folder) : null;
+
+        // Kiểm tra danh sách ngành nhà đầu tư gửi lên có tồn tại và đang active hay không.
+        private async Task<List<IndustryOption>> ResolveIndustryOptionsAsync(IEnumerable<int>? optionIds)
+        {
+            var ids = optionIds?
+                .Distinct()
+                .ToList() ?? [];
+
+            if (ids.Count == 0)
+            {
+                throw new InvalidOperationException("At least one industry is required.");
+            }
+
+            var options = await _unitOfWork.IndustryOptions.GetByIdsAsync(ids);
+            if (options.Count != ids.Count || options.Any(x => !x.IsActive))
+            {
+                throw new InvalidOperationException("One or more selected industries are invalid or inactive.");
+            }
+
+            return options;
+        }
+
+        // Đồng bộ bảng nối investor_industries với danh sách ngành mới nhất.
+        private static void SyncInvestorIndustries(Investor investor, IEnumerable<int> industryOptionIds)
+        {
+            var requestedIds = industryOptionIds.ToHashSet();
+            if (requestedIds.Count == 0)
+            {
+                throw new InvalidOperationException("At least one industry is required.");
+            }
+
+            var toRemove = investor.InvestorIndustries
+                .Where(x => !requestedIds.Contains(x.IndustryOptionId))
+                .ToList();
+
+            foreach (var item in toRemove)
+            {
+                investor.InvestorIndustries.Remove(item);
+            }
+
+            var currentIds = investor.InvestorIndustries
+                .Select(x => x.IndustryOptionId)
+                .ToHashSet();
+
+            foreach (var id in requestedIds.Where(x => !currentIds.Contains(x)))
+            {
+                investor.InvestorIndustries.Add(new InvestorIndustry
+                {
+                    InvestorId = investor.InvestorId,
+                    IndustryOptionId = id
+                });
+            }
+        }
     }
 }
 

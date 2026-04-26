@@ -1,7 +1,11 @@
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
+using AISEP.BLL.Helpers;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
+using Microsoft.EntityFrameworkCore;
+using Sieve.Models;
+using Sieve.Services;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -15,33 +19,35 @@ namespace AISEP.BLL.Services.FormValidationRules
         };
 
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ISieveProcessor _sieveProcessor;
 
-        public FormValidationRuleService(IUnitOfWork unitOfWork)
+        public FormValidationRuleService(IUnitOfWork unitOfWork, ISieveProcessor sieveProcessor)
         {
             _unitOfWork = unitOfWork;
+            _sieveProcessor = sieveProcessor;
         }
 
-        // Lấy toàn bộ rule đang có của một form key để trả ra cho FE.
-        public async Task<FormValidationConfigResponse> GetByFormKeyAsync(string formKey)
+        // Lấy bộ rule của một form key có hỗ trợ filter, sort và phân trang bằng Sieve.
+        public async Task<PagedResult<FormValidationRuleResponse>> GetByFormKeyAsync(string formKey, SieveModel model)
         {
             var normalizedFormKey = NormalizeKey(formKey, nameof(formKey));
-            var rules = await _unitOfWork.FormValidationRules.GetByFormKeyAsync(normalizedFormKey);
+            var query = _unitOfWork.FormValidationRules.GetAllQuery()
+                .AsNoTracking()
+                .Where(x => x.FormKey == normalizedFormKey);
 
-            // Response này để FE render form và validate phía client.
-            return new FormValidationConfigResponse
-            {
-                FormKey = normalizedFormKey,
-                Fields = rules.Select(MapToResponse).ToList()
-            };
+            return await PaginationHelper.PaginateAsync(
+                query,
+                model,
+                _sieveProcessor,
+                MapToResponse);
         }
 
-        // Tạo mới một rule. Nếu rule của FormKey + FieldKey đã tồn tại thì báo conflict.
+        // Tạo mới một rule. Nếu rule của FormKey và FieldKey đã tồn tại thì báo conflict.
         public async Task<FormValidationRuleResponse> CreateAsync(CreateFormValidationRuleRequest request)
         {
             var normalizedFormKey = NormalizeKey(request.FormKey, nameof(request.FormKey));
             var normalizedFieldKey = NormalizeKey(request.FieldKey, nameof(request.FieldKey));
 
-            // Validate chính cấu hình rule trước khi lưu, tránh lưu rule lỗi vào DB.
             ValidateRequest(request);
 
             var rule = await _unitOfWork.FormValidationRules.GetByFormAndFieldAsync(normalizedFormKey, normalizedFieldKey);
@@ -59,7 +65,6 @@ namespace AISEP.BLL.Services.FormValidationRules
 
             ApplyRequest(rule, request);
             await _unitOfWork.FormValidationRules.AddAsync(rule);
-
             await _unitOfWork.SaveChangesAsync();
 
             return MapToResponse(rule);
@@ -139,7 +144,6 @@ namespace AISEP.BLL.Services.FormValidationRules
         // Áp dữ liệu từ request vào entity rule để lưu xuống DB.
         private static void ApplyRequest(FormValidationRule rule, UpsertFormValidationRuleRequest request)
         {
-            // Mỗi dòng trong DB là nguồn sự thật cho field-level validation của form tương ứng.
             rule.IsRequired = request.IsRequired;
             rule.MinLength = request.MinLength;
             rule.MaxLength = request.MaxLength;
@@ -183,7 +187,7 @@ namespace AISEP.BLL.Services.FormValidationRules
             };
         }
 
-        // Chuẩn hóa giá trị key bắt buộc như formKey/fieldKey.
+        // Chuẩn hóa giá trị key bắt buộc như formKey hoặc fieldKey.
         private static string NormalizeKey(string value, string parameterName)
         {
             if (string.IsNullOrWhiteSpace(value))

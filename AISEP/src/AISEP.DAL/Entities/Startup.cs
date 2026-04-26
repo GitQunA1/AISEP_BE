@@ -13,7 +13,6 @@ namespace AISEP.DAL.Entities
         public string? PhoneNumber { get; set; }
         public string? CountryCity { get; set; }
         public string? Website { get; set; }
-        public Industry? Industry { get; set; }
         public string? BusinessLicenseUrl { get; set; }
         public ApprovalStatus ApprovalStatus { get; set; } = ApprovalStatus.Unverified;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -29,5 +28,6 @@ namespace AISEP.DAL.Entities
         // Navigation properties
         public User User { get; set; } = null!;
         public ICollection<Project> Projects { get; set; } = new List<Project>();
+        public ICollection<StartupIndustry> StartupIndustries { get; set; } = new List<StartupIndustry>();
     }
 }

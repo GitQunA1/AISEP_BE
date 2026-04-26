@@ -11,7 +11,7 @@
         public string? PhoneNumber { get; set; }
         public string? CountryCity { get; set; }
         public string? Website { get; set; }
-        public string? Industry { get; set; }
+        public List<string> Industries { get; set; } = [];
         public string? BusinessLicenseUrl { get; set; }
         public string ApprovalStatus { get; set; } = string.Empty;
         public int FollowerCount { get; set; }

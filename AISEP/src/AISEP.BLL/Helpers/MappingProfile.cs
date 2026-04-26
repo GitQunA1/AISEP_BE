@@ -24,7 +24,7 @@ namespace AISEP.BLL.Helpers
                 //        .FirstOrDefault()))
                 .ForMember(dest => dest.Industries,
                     opt => opt.MapFrom(src => src.AdvisorIndustries
-                        .Select(ai => ai.Industry.ToString())
+                        .Select(ai => ai.IndustryOption.Value)
                         .ToList()))
                 .ForMember(dest => dest.ApprovalStatus,
                     opt => opt.MapFrom(src => src.ApprovalStatus.ToString()));
@@ -40,6 +40,7 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.Wallet,          opt => opt.Ignore())
                 .ForMember(dest => dest.ProfileImage,    opt => opt.Ignore())
                 .ForMember(dest => dest.Certifications,  opt => opt.Ignore())
+                .ForMember(dest => dest.AdvisorIndustries, opt => opt.Ignore())
                 .ForMember(dest => dest.HourlyRate,
                     opt => opt.MapFrom(src => src.HourlyRate > 0 ? src.HourlyRate : null));
 
@@ -53,7 +54,8 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.Bookings,        opt => opt.Ignore())
                 .ForMember(dest => dest.Wallet,          opt => opt.Ignore())
                 .ForMember(dest => dest.ProfileImage,    opt => opt.Ignore())
-                .ForMember(dest => dest.Certifications,  opt => opt.Ignore());
+                .ForMember(dest => dest.Certifications,  opt => opt.Ignore())
+                .ForMember(dest => dest.AdvisorIndustries, opt => opt.Ignore());
 
             // Document Entity ? DocumentResponse
             CreateMap<Document, DocumentResponse>()
@@ -149,8 +151,8 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.Email))
                 .ForMember(dest => dest.PhoneNumber,
                     opt => opt.MapFrom(src => src.PhoneNumber))
-                .ForMember(dest => dest.Industry,
-                    opt => opt.MapFrom(src => src.Industry != null ? src.Industry.ToString() : null))
+                .ForMember(dest => dest.Industries,
+                    opt => opt.MapFrom(src => src.StartupIndustries.Select(si => si.IndustryOption.Value).ToList()))
                 .ForMember(dest => dest.ApprovalStatus,
                     opt => opt.MapFrom(src => src.ApprovalStatus.ToString()))
                 .ForMember(dest => dest.FollowerCount,
@@ -174,6 +176,8 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.User != null ? src.User.UserName : null))
                 .ForMember(dest => dest.Email,
                     opt => opt.MapFrom(src => src.User != null ? src.User.Email : null))
+                .ForMember(dest => dest.Industries,
+                    opt => opt.MapFrom(src => src.InvestorIndustries.Select(ii => ii.IndustryOption.Value).ToList()))
                 .ForMember(dest => dest.Status,
                     opt => opt.MapFrom(src => src.ApprovalStatus.ToString()));
 
@@ -241,6 +245,7 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.ConnectionRequests, opt => opt.Ignore())
                 .ForMember(dest => dest.Deals,              opt => opt.Ignore())
                 .ForMember(dest => dest.InvestorAIAnalyses, opt => opt.Ignore())
+                .ForMember(dest => dest.InvestorIndustries, opt => opt.Ignore())
                 .ForMember(dest => dest.ProfileImageUrl,    opt => opt.Ignore())
                 .ForMember(dest => dest.InvestmentAmount,
                     opt => opt.MapFrom(src => src.InvestmentAmount > 0 ? src.InvestmentAmount : null));
@@ -253,6 +258,7 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.ConnectionRequests, opt => opt.Ignore())
                 .ForMember(dest => dest.Deals,              opt => opt.Ignore())
                 .ForMember(dest => dest.InvestorAIAnalyses, opt => opt.Ignore())
+                .ForMember(dest => dest.InvestorIndustries, opt => opt.Ignore())
                 .ForMember(dest => dest.ProfileImageUrl,    opt => opt.Ignore());
 
             // ProjectFollower Entity ? FollowedProjectResponse
@@ -261,8 +267,8 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.Project != null ? src.Project.ProjectName : "Unknown"))
                 .ForMember(dest => dest.ProjectImageUrl,
                     opt => opt.MapFrom(src => src.Project != null ? src.Project.ProjectImageUrl : null))
-                .ForMember(dest => dest.Industry,
-                    opt => opt.MapFrom(src => src.Project.Industry.ToString()))
+                .ForMember(dest => dest.Industries,
+                    opt => opt.MapFrom(src => src.Project.ProjectIndustries.Select(pi => pi.IndustryOption.Value).ToList()))
                 .ForMember(dest => dest.FollowedAt,
                     opt => opt.MapFrom(src => src.CreatedAt));
 
@@ -285,8 +291,8 @@ namespace AISEP.BLL.Helpers
             CreateMap<Project, ProjectResponse>()
                 .ForMember(dest => dest.DevelopmentStage,
                     opt => opt.MapFrom(src => src.DevelopmentStage != null ? src.DevelopmentStage.ToString() : null))
-                .ForMember(dest => dest.Industry,
-                    opt => opt.MapFrom(src => src.Industry.ToString()))
+                .ForMember(dest => dest.Industries,
+                    opt => opt.MapFrom(src => src.ProjectIndustries.Select(pi => pi.IndustryOption.Value).ToList()))
                 .ForMember(dest => dest.StartupPotentialScore,
                     opt => opt.MapFrom(src => src.StartupAIAnalysis != null ? src.StartupAIAnalysis.PotentialScore : null))
                 .ForMember(dest => dest.Status,
@@ -334,7 +340,7 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.ProjectAdvisorAssignments
                         .OrderByDescending(pa => pa.AssignedAt)
                         .Select(pa => pa.Advisor != null && pa.Advisor.AdvisorIndustries != null
-                            ? pa.Advisor.AdvisorIndustries.Select(ai => ai.Industry.ToString()).ToList()
+                            ? pa.Advisor.AdvisorIndustries.Select(ai => ai.IndustryOption.Value).ToList()
                             : new List<string>())
                         .FirstOrDefault() ?? new List<string>()));
 
@@ -344,8 +350,8 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.StartupId))
                 .ForMember(dest => dest.DevelopmentStage,
                     opt => opt.MapFrom(src => src.DevelopmentStage != null ? src.DevelopmentStage.ToString() : null))
-                .ForMember(dest => dest.Industry,
-                    opt => opt.MapFrom(src => src.Industry.ToString()))
+                .ForMember(dest => dest.Industries,
+                    opt => opt.MapFrom(src => src.ProjectIndustries.Select(pi => pi.IndustryOption.Value).ToList()))
                 .ForMember(dest => dest.Status,
                     opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.StartupPotentialScore,
@@ -388,7 +394,7 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.ProjectAdvisorAssignments
                         .OrderByDescending(pa => pa.AssignedAt)
                         .Select(pa => pa.Advisor != null && pa.Advisor.AdvisorIndustries != null
-                            ? pa.Advisor.AdvisorIndustries.Select(ai => ai.Industry.ToString()).ToList()
+                            ? pa.Advisor.AdvisorIndustries.Select(ai => ai.IndustryOption.Value).ToList()
                             : new List<string>())
                         .FirstOrDefault() ?? new List<string>()));
 
@@ -408,6 +414,7 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.Documents, opt => opt.Ignore())
                 .ForMember(dest => dest.StartupAIAnalysis, opt => opt.Ignore())
                 .ForMember(dest => dest.InvestorAIAnalyses, opt => opt.Ignore())
+                .ForMember(dest => dest.ProjectIndustries, opt => opt.Ignore())
                 .ForMember(dest => dest.UnlockedProjects, opt => opt.Ignore())
                 .ForMember(dest => dest.ConnectionRequests, opt => opt.Ignore())
                 .ForMember(dest => dest.Deals, opt => opt.Ignore());
@@ -428,6 +435,7 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.Documents, opt => opt.Ignore())
                 .ForMember(dest => dest.StartupAIAnalysis, opt => opt.Ignore())
                 .ForMember(dest => dest.InvestorAIAnalyses, opt => opt.Ignore())
+                .ForMember(dest => dest.ProjectIndustries, opt => opt.Ignore())
                 .ForMember(dest => dest.UnlockedProjects, opt => opt.Ignore())
                 .ForMember(dest => dest.ConnectionRequests, opt => opt.Ignore())
                 .ForMember(dest => dest.Deals, opt => opt.Ignore());

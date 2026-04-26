@@ -626,9 +626,13 @@ namespace AISEP.BLL.Services.Bookings
                 return [];
             }
 
+            var projectIndustryIds = project.ProjectIndustries
+                .Select(pi => pi.IndustryOptionId)
+                .ToHashSet();
+
             var advisors = await _unitOfWork.Advisors.GetAllQuery()
                 .Where(a => a.ApprovalStatus == ApprovalStatus.Approved
-                            && a.AdvisorIndustries.Any(ai => ai.Industry == project.Industry)
+                            && a.AdvisorIndustries.Any(ai => projectIndustryIds.Contains(ai.IndustryOptionId))
                             && a.AdvisorId != excludedAdvisorId)
                 .ToListAsync();
 

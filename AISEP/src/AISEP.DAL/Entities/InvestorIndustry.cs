@@ -1,13 +1,11 @@
-using AISEP.DAL.Enums;
-
 namespace AISEP.DAL.Entities
 {
-    public class AdvisorIndustry
+    public class InvestorIndustry
     {
-        public int AdvisorId { get; set; }
+        public int InvestorId { get; set; }
         public int IndustryOptionId { get; set; }
 
-        public Advisor Advisor { get; set; } = null!;
+        public Investor Investor { get; set; } = null!;
         public IndustryOption IndustryOption { get; set; } = null!;
     }
 }

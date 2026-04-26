@@ -5,7 +5,7 @@ namespace AISEP.BLL.DTOs.Responses
         public int ProjectId { get; set; }
         public string ProjectName { get; set; } = string.Empty;
         public string? ProjectImageUrl { get; set; }
-        public string Industry { get; set; } = string.Empty;
+        public List<string> Industries { get; set; } = [];
         public DateTime FollowedAt { get; set; }
     }
 }

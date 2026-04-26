@@ -19,6 +19,10 @@ namespace AISEP.DAL.Data
         public DbSet<Advisor> Advisors { get; set; }
         public DbSet<AdvisorBankAccount> AdvisorBankAccounts { get; set; }
         public DbSet<AdvisorIndustry> AdvisorIndustries { get; set; }
+        public DbSet<IndustryOption> IndustryOptions { get; set; }
+        public DbSet<StartupIndustry> StartupIndustries { get; set; }
+        public DbSet<ProjectIndustry> ProjectIndustries { get; set; }
+        public DbSet<InvestorIndustry> InvestorIndustries { get; set; }
         public DbSet<Project> Projects { get; set; }
         public DbSet<ProjectAdvisorAssignment> ProjectAdvisorAssignments { get; set; }
         public DbSet<ProjectFollower> ProjectFollowers { get; set; }
@@ -88,7 +92,6 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.PhoneNumber).HasMaxLength(50);
                 entity.Property(e => e.CountryCity).HasMaxLength(255);
                 entity.Property(e => e.Website).HasMaxLength(255);
-                entity.Property(e => e.Industry).HasConversion<string>();
                 entity.Property(e => e.BusinessLicenseUrl).HasMaxLength(255);
                 entity.Property(e => e.ApprovalStatus).HasConversion<string>().HasMaxLength(50);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
@@ -121,7 +124,6 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.InvestmentAmount).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.RiskTolerance).HasConversion<string>().HasMaxLength(50);
                 entity.Property(e => e.InvestmentRegion).HasMaxLength(255);
-                entity.Property(e => e.FocusIndustry).HasConversion<string>();
                 entity.Property(e => e.PreferredStage).HasConversion<string>().HasMaxLength(50);
                 entity.Property(e => e.PreviousInvestments).HasMaxLength(255);
                 entity.Property(e => e.IdentityDocumentUrl).HasMaxLength(255);
@@ -173,6 +175,17 @@ namespace AISEP.DAL.Data
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
+            modelBuilder.Entity<IndustryOption>(entity =>
+            {
+                entity.ToTable("industry_options");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Value).HasMaxLength(255).IsRequired();
+                entity.Property(e => e.IsActive).HasDefaultValue(true);
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.HasIndex(e => e.Value).IsUnique();
+            });
+
             modelBuilder.Entity<AdvisorBankAccount>(entity =>
             {
                 entity.ToTable("advisor_bank_accounts");
@@ -197,12 +210,64 @@ namespace AISEP.DAL.Data
             modelBuilder.Entity<AdvisorIndustry>(entity =>
             {
                 entity.ToTable("advisor_industries");
-                entity.HasKey(x => new { x.AdvisorId, x.Industry });
-                entity.Property(x => x.Industry).HasConversion<string>().HasMaxLength(50).IsRequired();
+                entity.HasKey(x => new { x.AdvisorId, x.IndustryOptionId });
 
                 entity.HasOne(x => x.Advisor)
                     .WithMany(a => a.AdvisorIndustries)
                     .HasForeignKey(x => x.AdvisorId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(x => x.IndustryOption)
+                    .WithMany(i => i.AdvisorIndustries)
+                    .HasForeignKey(x => x.IndustryOptionId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<StartupIndustry>(entity =>
+            {
+                entity.ToTable("startup_industries");
+                entity.HasKey(x => new { x.StartupId, x.IndustryOptionId });
+
+                entity.HasOne(x => x.Startup)
+                    .WithMany(s => s.StartupIndustries)
+                    .HasForeignKey(x => x.StartupId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(x => x.IndustryOption)
+                    .WithMany(i => i.StartupIndustries)
+                    .HasForeignKey(x => x.IndustryOptionId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ProjectIndustry>(entity =>
+            {
+                entity.ToTable("project_industries");
+                entity.HasKey(x => new { x.ProjectId, x.IndustryOptionId });
+
+                entity.HasOne(x => x.Project)
+                    .WithMany(p => p.ProjectIndustries)
+                    .HasForeignKey(x => x.ProjectId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(x => x.IndustryOption)
+                    .WithMany(i => i.ProjectIndustries)
+                    .HasForeignKey(x => x.IndustryOptionId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<InvestorIndustry>(entity =>
+            {
+                entity.ToTable("investor_industries");
+                entity.HasKey(x => new { x.InvestorId, x.IndustryOptionId });
+
+                entity.HasOne(x => x.Investor)
+                    .WithMany(i => i.InvestorIndustries)
+                    .HasForeignKey(x => x.InvestorId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(x => x.IndustryOption)
+                    .WithMany(i => i.InvestorIndustries)
+                    .HasForeignKey(x => x.IndustryOptionId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
@@ -214,7 +279,6 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.ProjectName).HasMaxLength(255).IsRequired();
                 entity.Property(e => e.ProjectImageUrl).HasMaxLength(500);
                 entity.Property(e => e.DevelopmentStage).HasConversion<string>().HasMaxLength(50);
-                entity.Property(e => e.Industry).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.MarketSize).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.Revenue).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
