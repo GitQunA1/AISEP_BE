@@ -1,5 +1,4 @@
-﻿using AISEP.DAL.Enums;
-using Sieve.Attributes;
+using AISEP.DAL.Enums;
 
 namespace AISEP.DAL.Entities
 {
@@ -8,13 +7,10 @@ namespace AISEP.DAL.Entities
         public int DealId { get; set; }
         public int InvestorId { get; set; }
         public int ProjectId { get; set; }
-        [Sieve(CanFilter = true, CanSort = true)]
         public decimal Amount { get; set; }
         public bool StartupConfirmed { get; set; }
         public bool InvestorConfirmed { get; set; }
-        [Sieve(CanFilter = true, CanSort = true)]
         public DealStatus Status { get; set; }
-        [Sieve(CanFilter = true, CanSort = true)]
         public DateTime DealDate { get; set; }
         public string? PaymentMethod { get; set; }
         public decimal? EquityPercentage { get; set; }
@@ -27,7 +23,6 @@ namespace AISEP.DAL.Entities
         public DateTime? StartupSignedAt { get; set; }
         public string? ContractPdfUrl { get; set; }
 
-        // Navigation properties
         public Investor Investor { get; set; } = null!;
         public Project Project { get; set; } = null!;
     }
