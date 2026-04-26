@@ -212,6 +212,29 @@ namespace AISEP.BLL.Helpers
                 .CanFilter()
                 .CanSort();
 
+            // Deal
+            mapper.Property<Deal>(d => d.DealId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Deal>(d => d.InvestorId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Deal>(d => d.ProjectId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Deal>(d => d.Amount)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Deal>(d => d.Status)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Deal>(d => d.DealDate)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Deal>(d => d.IsCompleted)
+                .CanFilter()
+                .CanSort();
+
             // Subscription
             mapper.Property<Subscription>(s => s.SubscriptionId)
                 .CanFilter()
@@ -442,6 +465,81 @@ namespace AISEP.BLL.Helpers
                 .CanFilter()
                 .CanSort();
             mapper.Property<SystemCommissionConfig>(c => c.CreatedAt)
+                .CanFilter()
+                .CanSort();
+
+            // IndustryOption
+            mapper.Property<IndustryOption>(i => i.Id)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<IndustryOption>(i => i.Value)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<IndustryOption>(i => i.IsActive)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<IndustryOption>(i => i.CreatedAt)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<IndustryOption>(i => i.UpdatedAt)
+                .CanFilter()
+                .CanSort();
+
+            // StageOption
+            mapper.Property<StageOption>(s => s.Id)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<StageOption>(s => s.Value)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<StageOption>(s => s.IsActive)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<StageOption>(s => s.CreatedAt)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<StageOption>(s => s.UpdatedAt)
+                .CanFilter()
+                .CanSort();
+
+            // FormValidationRule
+            mapper.Property<FormValidationRule>(r => r.Id)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<FormValidationRule>(r => r.FormKey)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<FormValidationRule>(r => r.FieldKey)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<FormValidationRule>(r => r.IsRequired)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<FormValidationRule>(r => r.MinLength)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<FormValidationRule>(r => r.MaxLength)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<FormValidationRule>(r => r.CustomRegexPattern)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<FormValidationRule>(r => r.MinValue)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<FormValidationRule>(r => r.MaxValue)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<FormValidationRule>(r => r.AllowedFileTypesJson)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<FormValidationRule>(r => r.MaxFileSizeBytes)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<FormValidationRule>(r => r.CreatedAt)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<FormValidationRule>(r => r.UpdatedAt)
                 .CanFilter()
                 .CanSort();
 
