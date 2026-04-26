@@ -21,7 +21,6 @@ namespace AISEP.DAL.Entities
         public string? TeamMembers { get; set; }
         public string? KeySkills { get; set; }
         public string? TeamExperience { get; set; }
-        public Industry Industry { get; set; }
         public int ViewCount { get; set; } = 0;
         public ProjectStatus Status { get; set; } = ProjectStatus.Draft;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -44,5 +43,6 @@ namespace AISEP.DAL.Entities
         public ICollection<Deal> Deals { get; set; } = new List<Deal>();
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
         public ICollection<ProjectAdvisorAssignment> ProjectAdvisorAssignments { get; set; } = new List<ProjectAdvisorAssignment>();
+        public ICollection<ProjectIndustry> ProjectIndustries { get; set; } = new List<ProjectIndustry>();
     }
 }

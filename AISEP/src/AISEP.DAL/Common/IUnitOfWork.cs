@@ -15,6 +15,7 @@ using AISEP.DAL.Repositories.RefreshTokens;
 using AISEP.DAL.Repositories.Reviews;
 using AISEP.DAL.Repositories.Startups;
 using AISEP.DAL.Repositories.StartupAIAnalyses;
+using AISEP.DAL.Repositories.IndustryOptions;
 using AISEP.DAL.Repositories.ProjectFollowers;
 using AISEP.DAL.Repositories.Investors;
 using AISEP.DAL.Repositories.Payouts;
@@ -46,6 +47,7 @@ namespace AISEP.DAL.Common
         IProjectRepository           Projects           { get; }
         IProjectAdvisorAssignmentRepository ProjectAdvisorAssignments { get; }
         IStartupRepository           Startups           { get; }
+        IIndustryOptionRepository    IndustryOptions    { get; }
         IInvestorRepository          Investors          { get; }
         IInvestorAIAnalysisRepository InvestorAIAnalyses { get; }
         IUserRepository              Users              { get; }

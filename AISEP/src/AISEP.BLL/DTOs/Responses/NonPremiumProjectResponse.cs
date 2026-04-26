@@ -11,7 +11,7 @@ namespace AISEP.BLL.DTOs.Responses
         public string? SolutionDescription { get; set; }
         public string? TargetCustomers { get; set; }
         public string? UniqueValueProposition { get; set; }
-        public string? Industry { get; set; }
+        public List<string> Industries { get; set; } = [];
         public string? ProjectImageUrl { get; set; }
         public string Status { get; set; } = string.Empty;
         public int? StartupPotentialScore { get; set; }

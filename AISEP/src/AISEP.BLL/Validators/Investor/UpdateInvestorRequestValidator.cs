@@ -24,9 +24,10 @@ namespace AISEP.BLL.Validators.Investor
                 || request.InvestmentDate.HasValue
                 || request.RiskTolerance.HasValue
                 || request.InvestmentRegion is not null
-                || request.FocusIndustry.HasValue
+                || request.IndustryOptionIds is not null
                 || request.PreferredStage.HasValue
-                || request.PreviousInvestments is not null;
+                || request.PreviousInvestments is not null
+                || request.ProfileImageFile is not null;
         }
     }
 }

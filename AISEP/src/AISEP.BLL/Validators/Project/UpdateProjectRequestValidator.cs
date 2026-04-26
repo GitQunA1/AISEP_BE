@@ -32,7 +32,7 @@ namespace AISEP.BLL.Validators.Project
                 || request.TeamMembers is not null
                 || request.KeySkills is not null
                 || request.TeamExperience is not null
-                || request.Industry.HasValue;
+                || request.IndustryOptionIds is not null;
         }
     }
 }

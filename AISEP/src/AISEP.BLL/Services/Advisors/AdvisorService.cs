@@ -83,12 +83,10 @@ namespace AISEP.BLL.Services.Advisors
             advisor.UserId     = userId;
             advisor.ProfileImage   = await UploadIfPresent(dto.ProfileImageFile,  "advisor-profiles");
             advisor.Certifications = await UploadIfPresent(dto.CertificationFile, "advisor-certifications");
-            var industries = ResolveRequestedIndustries(dto.Industries);
-            if (industries.Count == 0)
-                throw new InvalidOperationException("At least one industry is required.");
+            var industries = await ResolveIndustryOptionsAsync(dto.IndustryOptionIds);
 
             advisor.AdvisorIndustries = industries
-                .Select(industry => new AdvisorIndustry { Industry = industry })
+                .Select(industry => new AdvisorIndustry { IndustryOptionId = industry.Id })
                 .ToList();
             advisor.ApprovalStatus = ApprovalStatus.Pending;
             //advisor.CreatedAt      = DateTime.UtcNow;
@@ -134,37 +132,11 @@ namespace AISEP.BLL.Services.Advisors
             if (dto.HourlyRate.HasValue)
                 advisor.HourlyRate = dto.HourlyRate.Value;
 
-            var hasIndustryUpdate = dto.Industries is not null;
+            var hasIndustryUpdate = dto.IndustryOptionIds is not null;
             if (hasIndustryUpdate)
             {
-                var requestedIndustries = ResolveRequestedIndustries(dto.Industries).ToHashSet();
-                if (requestedIndustries.Count == 0)
-                    throw new InvalidOperationException("At least one industry is required.");
-
-                var currentIndustries = advisor.AdvisorIndustries
-                    .Select(ai => ai.Industry)
-                    .ToHashSet();
-
-                var toRemove = advisor.AdvisorIndustries
-                    .Where(ai => !requestedIndustries.Contains(ai.Industry))
-                    .ToList();
-
-                foreach (var item in toRemove)
-                {
-                    advisor.AdvisorIndustries.Remove(item);
-                }
-
-                var toAdd = requestedIndustries
-                    .Where(industry => !currentIndustries.Contains(industry));
-
-                foreach (var industry in toAdd)
-                {
-                    advisor.AdvisorIndustries.Add(new AdvisorIndustry
-                    {
-                        AdvisorId = advisor.AdvisorId,
-                        Industry = industry
-                    });
-                }
+                var requestedIndustries = await ResolveIndustryOptionsAsync(dto.IndustryOptionIds);
+                SyncAdvisorIndustries(advisor, requestedIndustries.Select(x => x.Id));
             }
 
             if (dto.ProfileImageFile is not null)
@@ -257,16 +229,57 @@ namespace AISEP.BLL.Services.Advisors
         private async Task<string?> UploadIfPresent(IFormFile? file, string folder)
             => file is not null ? await _storage.UploadFileAsync(file, folder) : null;
 
-        private static List<Industry> ResolveRequestedIndustries(List<Industry>? industries)
+        // Kiểm tra danh sách ngành của advisor có tồn tại và đang active hay không.
+        private async Task<List<IndustryOption>> ResolveIndustryOptionsAsync(IEnumerable<int>? optionIds)
         {
-            var merged = new List<Industry>();
+            var ids = optionIds?
+                .Distinct()
+                .ToList() ?? [];
 
-            if (industries is not null && industries.Count > 0)
+            if (ids.Count == 0)
             {
-                merged.AddRange(industries);
+                throw new InvalidOperationException("At least one industry is required.");
             }
 
-            return merged.Distinct().ToList();
+            var options = await _unitOfWork.IndustryOptions.GetByIdsAsync(ids);
+            if (options.Count != ids.Count || options.Any(x => !x.IsActive))
+            {
+                throw new InvalidOperationException("One or more selected industries are invalid or inactive.");
+            }
+
+            return options;
+        }
+
+        // Đồng bộ bảng advisor_industries theo danh sách ngành mới nhất từ request.
+        private static void SyncAdvisorIndustries(Advisor advisor, IEnumerable<int> industryOptionIds)
+        {
+            var requestedIds = industryOptionIds.ToHashSet();
+            if (requestedIds.Count == 0)
+            {
+                throw new InvalidOperationException("At least one industry is required.");
+            }
+
+            var toRemove = advisor.AdvisorIndustries
+                .Where(x => !requestedIds.Contains(x.IndustryOptionId))
+                .ToList();
+
+            foreach (var item in toRemove)
+            {
+                advisor.AdvisorIndustries.Remove(item);
+            }
+
+            var currentIds = advisor.AdvisorIndustries
+                .Select(x => x.IndustryOptionId)
+                .ToHashSet();
+
+            foreach (var id in requestedIds.Where(x => !currentIds.Contains(x)))
+            {
+                advisor.AdvisorIndustries.Add(new AdvisorIndustry
+                {
+                    AdvisorId = advisor.AdvisorId,
+                    IndustryOptionId = id
+                });
+            }
         }
 
         private async Task NotifyStaffAndAdminsAsync(string title, string message, int? referenceId = null, string? referenceType = null)

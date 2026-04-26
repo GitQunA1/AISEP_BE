@@ -13,6 +13,9 @@ namespace AISEP.DAL.Repositories.FormValidationRules
             _context = context;
         }
 
+        public IQueryable<FormValidationRule> GetAllQuery()
+            => _context.FormValidationRules.OrderBy(x => x.FieldKey).AsQueryable();
+
         public async Task<List<FormValidationRule>> GetByFormKeyAsync(string formKey)
             => await _context.FormValidationRules
                 .Where(x => x.FormKey == formKey)

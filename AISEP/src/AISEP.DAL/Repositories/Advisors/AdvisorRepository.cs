@@ -17,6 +17,7 @@ namespace AISEP.DAL.Repositories.Advisors
             => _context.Advisors
                 .Include(a => a.User)
                 .Include(a => a.AdvisorIndustries)
+                    .ThenInclude(ai => ai.IndustryOption)
                 .OrderBy(a => a.AdvisorId)
                 .AsQueryable();
 
@@ -24,12 +25,14 @@ namespace AISEP.DAL.Repositories.Advisors
             => await _context.Advisors
                 .Include(a => a.User)
                 .Include(a => a.AdvisorIndustries)
+                    .ThenInclude(ai => ai.IndustryOption)
                 .FirstOrDefaultAsync(a => a.AdvisorId == id);
 
         public async Task<Advisor?> GetByUserIdAsync(int userId)
             => await _context.Advisors
                 .Include(a => a.User)
                 .Include(a => a.AdvisorIndustries)
+                    .ThenInclude(ai => ai.IndustryOption)
                 .FirstOrDefaultAsync(a => a.UserId == userId);
 
         public async Task AddAsync(Advisor advisor)

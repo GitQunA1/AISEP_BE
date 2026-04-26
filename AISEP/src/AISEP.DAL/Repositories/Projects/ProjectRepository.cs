@@ -18,6 +18,8 @@ namespace AISEP.DAL.Repositories.Projects
         {
             return _context.Projects
                 .Include(p => p.Startup)
+                .Include(p => p.ProjectIndustries)
+                    .ThenInclude(pi => pi.IndustryOption)
                 .Include(p => p.StartupAIAnalysis)
                 .Include(p => p.Followers)
                 .Include(p => p.ConnectionRequests)
@@ -27,6 +29,7 @@ namespace AISEP.DAL.Repositories.Projects
                 .Include(p => p.ProjectAdvisorAssignments)
                     .ThenInclude(pa => pa.Advisor)
                         .ThenInclude(a => a.AdvisorIndustries)
+                            .ThenInclude(ai => ai.IndustryOption)
                 .OrderBy(p => p.ProjectId)
                 .AsQueryable();
         }
@@ -35,6 +38,8 @@ namespace AISEP.DAL.Repositories.Projects
         {
             return _context.Projects
                 .Include(p => p.Startup)
+                .Include(p => p.ProjectIndustries)
+                    .ThenInclude(pi => pi.IndustryOption)
                 .Include(p => p.StartupAIAnalysis)
                 .Include(p => p.Followers)
                 .Include(p => p.ConnectionRequests)
@@ -44,6 +49,7 @@ namespace AISEP.DAL.Repositories.Projects
                 .Include(p => p.ProjectAdvisorAssignments)
                     .ThenInclude(pa => pa.Advisor)
                         .ThenInclude(a => a.AdvisorIndustries)
+                            .ThenInclude(ai => ai.IndustryOption)
                 .Where(p => p.StartupId == startupId)
                 .OrderBy(p => p.ProjectId)
                 .AsQueryable();
@@ -53,6 +59,8 @@ namespace AISEP.DAL.Repositories.Projects
         {
             return _context.Projects
                 .Include(p => p.Startup)
+                .Include(p => p.ProjectIndustries)
+                    .ThenInclude(pi => pi.IndustryOption)
                 .Include(p => p.StartupAIAnalysis)
                 .Include(p => p.Followers)
                 .Include(p => p.ConnectionRequests)
@@ -62,6 +70,7 @@ namespace AISEP.DAL.Repositories.Projects
                 .Include(p => p.ProjectAdvisorAssignments)
                     .ThenInclude(pa => pa.Advisor)
                         .ThenInclude(a => a.AdvisorIndustries)
+                            .ThenInclude(ai => ai.IndustryOption)
                 .Where(p => p.Status == status)
                 .OrderBy(p => p.ProjectId)
                 .AsQueryable();
@@ -71,6 +80,8 @@ namespace AISEP.DAL.Repositories.Projects
         {
             return await _context.Projects
                 .Include(p => p.Startup)
+                .Include(p => p.ProjectIndustries)
+                    .ThenInclude(pi => pi.IndustryOption)
                 .Include(p => p.StartupAIAnalysis)
                 .Include(p => p.Followers)
                 .Include(p => p.ConnectionRequests)
@@ -80,6 +91,7 @@ namespace AISEP.DAL.Repositories.Projects
                 .Include(p => p.ProjectAdvisorAssignments)
                     .ThenInclude(pa => pa.Advisor)
                         .ThenInclude(a => a.AdvisorIndustries)
+                            .ThenInclude(ai => ai.IndustryOption)
                 .FirstOrDefaultAsync(p => p.ProjectId == id);
         }
 
@@ -87,6 +99,8 @@ namespace AISEP.DAL.Repositories.Projects
         {
             return await _context.Projects
                 .Include(p => p.Startup)
+                .Include(p => p.ProjectIndustries)
+                    .ThenInclude(pi => pi.IndustryOption)
                 .Include(p => p.Documents)
                 .FirstOrDefaultAsync(p => p.ProjectId == id);
         }

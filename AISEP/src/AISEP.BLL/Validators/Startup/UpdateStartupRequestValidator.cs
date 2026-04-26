@@ -23,7 +23,7 @@ namespace AISEP.BLL.Validators.Startup
                 || request.PhoneNumber is not null
                 || request.CountryCity is not null
                 || request.Website is not null
-                || request.Industry.HasValue
+                || request.IndustryOptionIds is not null
                 || request.LogoFile is not null
                 || request.BusinessLicenseFile is not null;
         }
