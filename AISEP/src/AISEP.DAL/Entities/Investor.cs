@@ -1,4 +1,5 @@
-﻿using AISEP.DAL.Enums;
+using AISEP.DAL.Enums;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AISEP.DAL.Entities
 {
@@ -13,7 +14,7 @@ namespace AISEP.DAL.Entities
         public DateTime? InvestmentDate { get; set; }
         public RiskTolerance? RiskTolerance { get; set; }
         public string? InvestmentRegion { get; set; }
-        public PreferredStage? PreferredStage { get; set; }
+        public int? PreferredStageOptionId { get; set; }
         public string? PreviousInvestments { get; set; }
         public string? ProfileImageUrl { get; set; }
         public string? IdentityDocumentUrl { get; set; }
@@ -24,8 +25,25 @@ namespace AISEP.DAL.Entities
         public DateTime? RejectedAt { get; set; }
         public string? RejectionReason { get; set; }
 
+        [NotMapped]
+        public PreferredStage? PreferredStage
+        {
+            get
+            {
+                if (PreferredStageOption is null)
+                {
+                    return null;
+                }
+
+                return Enum.TryParse<PreferredStage>(PreferredStageOption.Value, true, out var parsed)
+                    ? parsed
+                    : null;
+            }
+        }
+
         // Navigation properties
         public User User { get; set; } = null!;
+        public StageOption? PreferredStageOption { get; set; }
         public ICollection<ConnectionRequest> ConnectionRequests { get; set; } = new List<ConnectionRequest>();
         public ICollection<Deal> Deals { get; set; } = new List<Deal>();
         public ICollection<InvestorAIAnalysis> InvestorAIAnalyses { get; set; } = new List<InvestorAIAnalysis>();

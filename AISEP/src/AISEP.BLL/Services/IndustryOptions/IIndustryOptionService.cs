@@ -6,7 +6,7 @@ namespace AISEP.BLL.Services.IndustryOptions
 {
     public interface IIndustryOptionService
     {
-        Task<PagedResult<IndustryOptionResponse>> GetAllAsync(SieveModel model, bool includeInactive = false);
+        Task<PagedResult<IndustryOptionResponse>> GetAllAsync(SieveModel model);
         Task<IndustryOptionResponse> CreateAsync(CreateIndustryOptionRequest request);
         Task<IndustryOptionResponse> UpdateAsync(int id, UpdateIndustryOptionRequest request);
     }

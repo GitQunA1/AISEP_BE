@@ -1,4 +1,5 @@
-﻿using AISEP.DAL.Enums;
+using AISEP.DAL.Enums;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AISEP.DAL.Entities
 {
@@ -9,7 +10,7 @@ namespace AISEP.DAL.Entities
         public string ProjectName { get; set; } = string.Empty;
         public string? ProjectImageUrl { get; set; }
         public string? ShortDescription { get; set; }
-        public DevelopmentStage? DevelopmentStage { get; set; }
+        public int? StageOptionId { get; set; }
         public string? ProblemStatement { get; set; }
         public string? SolutionDescription { get; set; }
         public string? TargetCustomers { get; set; }
@@ -32,8 +33,25 @@ namespace AISEP.DAL.Entities
         public DateTime? RejectedAt { get; set; }
         public string? RejectionReason { get; set; }
 
+        [NotMapped]
+        public DevelopmentStage? DevelopmentStage
+        {
+            get
+            {
+                if (StageOption is null)
+                {
+                    return null;
+                }
+
+                return Enum.TryParse<DevelopmentStage>(StageOption.Value, true, out var parsed)
+                    ? parsed
+                    : null;
+            }
+        }
+
         // Navigation properties
         public Startup Startup { get; set; } = null!;
+        public StageOption? StageOption { get; set; }
         public ICollection<Document> Documents { get; set; } = new List<Document>();
         public StartupAIAnalysis? StartupAIAnalysis { get; set; }
         public ICollection<InvestorAIAnalysis> InvestorAIAnalyses { get; set; } = new List<InvestorAIAnalysis>();

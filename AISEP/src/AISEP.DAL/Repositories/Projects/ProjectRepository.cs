@@ -18,6 +18,7 @@ namespace AISEP.DAL.Repositories.Projects
         {
             return _context.Projects
                 .Include(p => p.Startup)
+                .Include(p => p.StageOption)
                 .Include(p => p.ProjectIndustries)
                     .ThenInclude(pi => pi.IndustryOption)
                 .Include(p => p.StartupAIAnalysis)
@@ -38,6 +39,7 @@ namespace AISEP.DAL.Repositories.Projects
         {
             return _context.Projects
                 .Include(p => p.Startup)
+                .Include(p => p.StageOption)
                 .Include(p => p.ProjectIndustries)
                     .ThenInclude(pi => pi.IndustryOption)
                 .Include(p => p.StartupAIAnalysis)
@@ -59,6 +61,7 @@ namespace AISEP.DAL.Repositories.Projects
         {
             return _context.Projects
                 .Include(p => p.Startup)
+                .Include(p => p.StageOption)
                 .Include(p => p.ProjectIndustries)
                     .ThenInclude(pi => pi.IndustryOption)
                 .Include(p => p.StartupAIAnalysis)
@@ -80,6 +83,7 @@ namespace AISEP.DAL.Repositories.Projects
         {
             return await _context.Projects
                 .Include(p => p.Startup)
+                .Include(p => p.StageOption)
                 .Include(p => p.ProjectIndustries)
                     .ThenInclude(pi => pi.IndustryOption)
                 .Include(p => p.StartupAIAnalysis)
@@ -99,6 +103,7 @@ namespace AISEP.DAL.Repositories.Projects
         {
             return await _context.Projects
                 .Include(p => p.Startup)
+                .Include(p => p.StageOption)
                 .Include(p => p.ProjectIndustries)
                     .ThenInclude(pi => pi.IndustryOption)
                 .Include(p => p.Documents)

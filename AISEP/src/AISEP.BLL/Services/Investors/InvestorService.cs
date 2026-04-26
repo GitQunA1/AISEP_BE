@@ -71,9 +71,12 @@ namespace AISEP.BLL.Services.Investors
             if (existing is not null)
                 throw new InvalidOperationException("Investor profile already exists for this account.");
             var industryOptions = await ResolveIndustryOptionsAsync(dto.IndustryOptionIds);
+            var preferredStageOption = await ResolveStageOptionAsync(dto.PreferredStageOptionId);
 
             var investor = _mapper.Map<Investor>(dto);
             investor.UserId = userId;
+            investor.PreferredStageOptionId = preferredStageOption?.Id;
+            investor.PreferredStageOption = preferredStageOption;
             investor.ProfileImageUrl = await UploadIfPresent(dto.ProfileImageFile, "investor-profiles");
             investor.ApprovalStatus = ApprovalStatus.Pending;
             investor.InvestorIndustries = industryOptions
@@ -134,8 +137,12 @@ namespace AISEP.BLL.Services.Investors
                 SyncInvestorIndustries(investor, industryOptions.Select(x => x.Id));
             }
 
-            if (dto.PreferredStage.HasValue)
-                investor.PreferredStage = dto.PreferredStage.Value;
+            if (dto.PreferredStageOptionId.HasValue)
+            {
+                var preferredStageOption = await ResolveStageOptionAsync(dto.PreferredStageOptionId);
+                investor.PreferredStageOptionId = preferredStageOption?.Id;
+                investor.PreferredStageOption = preferredStageOption;
+            }
 
             if (dto.PreviousInvestments is not null)
                 investor.PreviousInvestments = dto.PreviousInvestments.Trim();
@@ -250,6 +257,23 @@ namespace AISEP.BLL.Services.Investors
             }
 
             return options;
+        }
+
+        // Kiểm tra preferred stage của investor có tồn tại và đang active hay không.
+        private async Task<StageOption?> ResolveStageOptionAsync(int? stageOptionId)
+        {
+            if (!stageOptionId.HasValue)
+            {
+                return null;
+            }
+
+            var option = await _unitOfWork.StageOptions.GetByIdAsync(stageOptionId.Value);
+            if (option is null || !option.IsActive)
+            {
+                throw new InvalidOperationException("Selected preferred stage is invalid or inactive.");
+            }
+
+            return option;
         }
 
         // Đồng bộ bảng nối investor_industries với danh sách ngành mới nhất.

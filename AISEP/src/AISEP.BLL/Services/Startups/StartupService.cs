@@ -39,9 +39,7 @@ namespace AISEP.BLL.Services.Startups
 
         public async Task<PagedResult<StartupResponse>> SearchStartupsAsync(SieveModel model, string? industry = null, string? stage = null)
         {
-            DevelopmentStage? parsedStage = Enum.TryParse<DevelopmentStage>(stage, ignoreCase: true, out var stageResult)
-                ? stageResult : null;
-            var query = _unitOfWork.Startups.SearchStartupsQuery(industry, parsedStage);
+            var query = _unitOfWork.Startups.SearchStartupsQuery(industry, stage);
             return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, s => _mapper.Map<StartupResponse>(s));
         }
 

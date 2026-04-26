@@ -37,6 +37,7 @@ using AISEP.DAL.Repositories.SystemCommissionConfigs;
 using AISEP.DAL.Repositories.PostPrs;
 using AISEP.DAL.Repositories.FormValidationRules;
 using AISEP.DAL.Repositories.SystemTerms;
+using AISEP.DAL.Repositories.StageOptions;
 
 namespace AISEP.DAL.Common
 {
@@ -60,6 +61,7 @@ namespace AISEP.DAL.Common
         private IProjectAdvisorAssignmentRepository? _projectAdvisorAssignments;
         private IStartupRepository?           _startups;
         private IIndustryOptionRepository?    _industryOptions;
+        private IStageOptionRepository?       _stageOptions;
         private IInvestorRepository?          _investors;
         private IInvestorAIAnalysisRepository? _investorAIAnalyses;
         private IUserRepository?              _users;
@@ -96,6 +98,7 @@ namespace AISEP.DAL.Common
         public IProjectAdvisorAssignmentRepository ProjectAdvisorAssignments => _projectAdvisorAssignments ??= new ProjectAdvisorAssignmentRepository(_context);
         public IStartupRepository           Startups           => _startups           ??= new StartupRepository(_context);
         public IIndustryOptionRepository    IndustryOptions    => _industryOptions    ??= new IndustryOptionRepository(_context);
+        public IStageOptionRepository       StageOptions       => _stageOptions       ??= new StageOptionRepository(_context);
         public IInvestorRepository          Investors          => _investors          ??= new InvestorRepository(_context);
         public IInvestorAIAnalysisRepository InvestorAIAnalyses => _investorAIAnalyses ??= new InvestorAIAnalysisRepository(_context);
         public IUserRepository              Users              => _users              ??= new UserRepository(_context);

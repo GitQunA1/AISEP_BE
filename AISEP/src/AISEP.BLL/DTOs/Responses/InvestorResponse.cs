@@ -1,4 +1,4 @@
-﻿using AISEP.DAL.Enums;
+using AISEP.DAL.Enums;
 
 namespace AISEP.BLL.DTOs.Responses
 {
@@ -16,7 +16,7 @@ namespace AISEP.BLL.DTOs.Responses
         public RiskTolerance? RiskTolerance { get; set; }
         public string? InvestmentRegion { get; set; }
         public List<string> Industries { get; set; } = [];
-        public PreferredStage? PreferredStage { get; set; }
+        public string? PreferredStage { get; set; }
         public string? PreviousInvestments { get; set; }
         public string? ProfileImageUrl { get; set; }
         public string Status { get; set; } = string.Empty;

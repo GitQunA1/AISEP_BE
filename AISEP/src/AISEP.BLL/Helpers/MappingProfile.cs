@@ -178,6 +178,8 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.User != null ? src.User.Email : null))
                 .ForMember(dest => dest.Industries,
                     opt => opt.MapFrom(src => src.InvestorIndustries.Select(ii => ii.IndustryOption.Value).ToList()))
+                .ForMember(dest => dest.PreferredStage,
+                    opt => opt.MapFrom(src => src.PreferredStageOption != null ? src.PreferredStageOption.Value : null))
                 .ForMember(dest => dest.Status,
                     opt => opt.MapFrom(src => src.ApprovalStatus.ToString()));
 
@@ -246,6 +248,7 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.Deals,              opt => opt.Ignore())
                 .ForMember(dest => dest.InvestorAIAnalyses, opt => opt.Ignore())
                 .ForMember(dest => dest.InvestorIndustries, opt => opt.Ignore())
+                .ForMember(dest => dest.PreferredStageOption, opt => opt.Ignore())
                 .ForMember(dest => dest.ProfileImageUrl,    opt => opt.Ignore())
                 .ForMember(dest => dest.InvestmentAmount,
                     opt => opt.MapFrom(src => src.InvestmentAmount > 0 ? src.InvestmentAmount : null));
@@ -259,6 +262,7 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.Deals,              opt => opt.Ignore())
                 .ForMember(dest => dest.InvestorAIAnalyses, opt => opt.Ignore())
                 .ForMember(dest => dest.InvestorIndustries, opt => opt.Ignore())
+                .ForMember(dest => dest.PreferredStageOption, opt => opt.Ignore())
                 .ForMember(dest => dest.ProfileImageUrl,    opt => opt.Ignore());
 
             // ProjectFollower Entity ? FollowedProjectResponse
@@ -290,7 +294,7 @@ namespace AISEP.BLL.Helpers
             // Project Entity ? ProjectResponse
             CreateMap<Project, ProjectResponse>()
                 .ForMember(dest => dest.DevelopmentStage,
-                    opt => opt.MapFrom(src => src.DevelopmentStage != null ? src.DevelopmentStage.ToString() : null))
+                    opt => opt.MapFrom(src => src.StageOption != null ? src.StageOption.Value : null))
                 .ForMember(dest => dest.Industries,
                     opt => opt.MapFrom(src => src.ProjectIndustries.Select(pi => pi.IndustryOption.Value).ToList()))
                 .ForMember(dest => dest.StartupPotentialScore,
@@ -349,7 +353,7 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.StartupId,
                     opt => opt.MapFrom(src => src.StartupId))
                 .ForMember(dest => dest.DevelopmentStage,
-                    opt => opt.MapFrom(src => src.DevelopmentStage != null ? src.DevelopmentStage.ToString() : null))
+                    opt => opt.MapFrom(src => src.StageOption != null ? src.StageOption.Value : null))
                 .ForMember(dest => dest.Industries,
                     opt => opt.MapFrom(src => src.ProjectIndustries.Select(pi => pi.IndustryOption.Value).ToList()))
                 .ForMember(dest => dest.Status,
@@ -414,6 +418,7 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.Documents, opt => opt.Ignore())
                 .ForMember(dest => dest.StartupAIAnalysis, opt => opt.Ignore())
                 .ForMember(dest => dest.InvestorAIAnalyses, opt => opt.Ignore())
+                .ForMember(dest => dest.StageOption, opt => opt.Ignore())
                 .ForMember(dest => dest.ProjectIndustries, opt => opt.Ignore())
                 .ForMember(dest => dest.UnlockedProjects, opt => opt.Ignore())
                 .ForMember(dest => dest.ConnectionRequests, opt => opt.Ignore())
@@ -435,6 +440,7 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.Documents, opt => opt.Ignore())
                 .ForMember(dest => dest.StartupAIAnalysis, opt => opt.Ignore())
                 .ForMember(dest => dest.InvestorAIAnalyses, opt => opt.Ignore())
+                .ForMember(dest => dest.StageOption, opt => opt.Ignore())
                 .ForMember(dest => dest.ProjectIndustries, opt => opt.Ignore())
                 .ForMember(dest => dest.UnlockedProjects, opt => opt.Ignore())
                 .ForMember(dest => dest.ConnectionRequests, opt => opt.Ignore())

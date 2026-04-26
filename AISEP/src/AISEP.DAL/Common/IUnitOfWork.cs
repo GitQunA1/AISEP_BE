@@ -34,6 +34,7 @@ using AISEP.DAL.Repositories.PostPrs;
 using AISEP.DAL.Repositories.FormValidationRules;
 using AISEP.DAL.Repositories.SystemCommissionConfigs;
 using AISEP.DAL.Repositories.SystemTerms;
+using AISEP.DAL.Repositories.StageOptions;
 namespace AISEP.DAL.Common
 {
     public interface IUnitOfWork : IDisposable
@@ -48,6 +49,7 @@ namespace AISEP.DAL.Common
         IProjectAdvisorAssignmentRepository ProjectAdvisorAssignments { get; }
         IStartupRepository           Startups           { get; }
         IIndustryOptionRepository    IndustryOptions    { get; }
+        IStageOptionRepository       StageOptions       { get; }
         IInvestorRepository          Investors          { get; }
         IInvestorAIAnalysisRepository InvestorAIAnalyses { get; }
         IUserRepository              Users              { get; }
