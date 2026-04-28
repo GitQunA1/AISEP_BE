@@ -5,6 +5,7 @@ using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.Users;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
+using AISEP.DAL.Enums;
 using AutoMapper;
 using Sieve.Models;
 using Sieve.Services;
@@ -72,6 +73,7 @@ namespace AISEP.BLL.Services.AdvisorBankAccounts
             var currentUserId = _userService.GetUserId();
             var advisor = await _unitOfWork.Advisors.GetByUserIdAsync(currentUserId)
                 ?? throw new KeyNotFoundException("Advisor profile not found.");
+            EnsureAdvisorApproved(advisor);
 
             var existingActive = await _unitOfWork.AdvisorBankAccounts.GetActiveByAdvisorIdAsync(advisor.AdvisorId);
             if (existingActive is not null)
@@ -109,6 +111,7 @@ namespace AISEP.BLL.Services.AdvisorBankAccounts
             var currentUserId = _userService.GetUserId();
             if (account.Advisor.UserId != currentUserId)
                 throw new ForbiddenAccessException("You do not have permission to update this bank account.");
+            EnsureAdvisorApproved(account.Advisor);
 
             account.BankName = request.BankName.Trim();
             account.AccountNumber = request.AccountNumber.Trim();
@@ -132,6 +135,7 @@ namespace AISEP.BLL.Services.AdvisorBankAccounts
                 var currentUserId = _userService.GetUserId();
                 if (account.Advisor.UserId != currentUserId)
                     throw new ForbiddenAccessException("You do not have permission to deactivate this bank account.");
+                EnsureAdvisorApproved(account.Advisor);
             }
 
             if (!account.IsActive)
@@ -146,6 +150,12 @@ namespace AISEP.BLL.Services.AdvisorBankAccounts
             await _unitOfWork.SaveChangesAsync();
 
             return _mapper.Map<AdvisorBankAccountResponse>(account);
+        }
+
+        private static void EnsureAdvisorApproved(Advisor advisor)
+        {
+            if (advisor.ApprovalStatus != ApprovalStatus.Approved)
+                throw new InvalidOperationException("Your advisor profile must be approved before using this feature.");
         }
     }
 }

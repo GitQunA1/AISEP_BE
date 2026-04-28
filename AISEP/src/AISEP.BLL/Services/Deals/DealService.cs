@@ -60,6 +60,7 @@ namespace AISEP.BLL.Services.Deals
         {
             var investor = await _unitOfWork.Investors.GetByIdAsync(investorId)
                 ?? throw new KeyNotFoundException("Investor not found.");
+            EnsureInvestorApproved(investor);
 
             var project = await _unitOfWork.Projects.GetByIdAsync(dto.ProjectId)
                 ?? throw new KeyNotFoundException("Project not found.");
@@ -145,6 +146,7 @@ namespace AISEP.BLL.Services.Deals
             {
                 throw new ForbiddenAccessException("You do not have permission to respond to this deal.");
             }
+            EnsureStartupApproved(deal.Project.Startup);
 
             if (deal.Status != DealStatus.Pending)
             {
@@ -238,6 +240,7 @@ namespace AISEP.BLL.Services.Deals
                 ?? throw new KeyNotFoundException("Deal not found.");
 
             EnsureInvestorOwnsDeal(deal, investorId);
+            EnsureInvestorApproved(deal.Investor);
 
             if (deal.Status != DealStatus.Confirmed)
             {
@@ -281,6 +284,7 @@ namespace AISEP.BLL.Services.Deals
                 ?? throw new KeyNotFoundException("Deal not found.");
 
             EnsureStartupOwnsDeal(deal, startupId);
+            EnsureStartupApproved(deal.Project.Startup);
 
             if (deal.Status != DealStatus.Waiting_For_Startup_Signature)
             {
@@ -363,6 +367,7 @@ namespace AISEP.BLL.Services.Deals
                 ?? throw new KeyNotFoundException("Deal not found.");
 
             EnsureStartupOwnsDeal(deal, startupId);
+            EnsureStartupApproved(deal.Project.Startup);
 
             if (deal.Status != DealStatus.Waiting_For_Startup_Signature)
             {
@@ -969,6 +974,18 @@ namespace AISEP.BLL.Services.Deals
             {
                 throw new ForbiddenAccessException("You do not have permission to access this deal.");
             }
+        }
+
+        private static void EnsureStartupApproved(Startup startup)
+        {
+            if (startup.ApprovalStatus != ApprovalStatus.Approved)
+                throw new InvalidOperationException("Your startup profile must be approved before using this feature.");
+        }
+
+        private static void EnsureInvestorApproved(Investor investor)
+        {
+            if (investor.ApprovalStatus != ApprovalStatus.Approved)
+                throw new InvalidOperationException("Your investor profile must be approved before using this feature.");
         }
 
     }

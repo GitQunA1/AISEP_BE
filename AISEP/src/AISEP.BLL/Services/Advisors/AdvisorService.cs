@@ -19,6 +19,8 @@ namespace AISEP.BLL.Services.Advisors
 {
     public class AdvisorService : IAdvisorService
     {
+        private const int MaxAdvisorIndustries = 4;
+
         private readonly IUnitOfWork     _unitOfWork;
         private readonly ISieveProcessor _sieveProcessor;
         private readonly IMapper         _mapper;
@@ -113,6 +115,8 @@ namespace AISEP.BLL.Services.Advisors
                 throw new KeyNotFoundException("Advisor profile not found.");
             if (advisor.UserId != userId)
                 throw new ForbiddenAccessException("You do not have permission to update this advisor.");
+            if (advisor.ApprovalStatus == ApprovalStatus.Pending)
+                throw new InvalidOperationException("Your advisor profile is already pending approval.");
 
             if (dto.Bio is not null)
                 advisor.Bio = dto.Bio.Trim();
@@ -232,6 +236,7 @@ namespace AISEP.BLL.Services.Advisors
         // Kiểm tra danh sách ngành của advisor có tồn tại và đang active hay không.
         private async Task<List<IndustryOption>> ResolveIndustryOptionsAsync(IEnumerable<int>? optionIds)
         {
+            // distinct để loại bỏ trùng lặp, tránh lỗi khi advisor chọn cùng một ngành nhiều lần. Nếu optionIds là null thì trả về list rỗng.
             var ids = optionIds?
                 .Distinct()
                 .ToList() ?? [];
@@ -239,6 +244,10 @@ namespace AISEP.BLL.Services.Advisors
             if (ids.Count == 0)
             {
                 throw new InvalidOperationException("At least one industry is required.");
+            }
+            if (ids.Count > MaxAdvisorIndustries)
+            {
+                throw new InvalidOperationException($"Advisor can select up to {MaxAdvisorIndustries} industries.");
             }
 
             var options = await _unitOfWork.IndustryOptions.GetByIdsAsync(ids);
@@ -257,6 +266,10 @@ namespace AISEP.BLL.Services.Advisors
             if (requestedIds.Count == 0)
             {
                 throw new InvalidOperationException("At least one industry is required.");
+            }
+            if (requestedIds.Count > MaxAdvisorIndustries)
+            {
+                throw new InvalidOperationException($"Advisor can select up to {MaxAdvisorIndustries} industries.");
             }
 
             var toRemove = advisor.AdvisorIndustries

@@ -112,6 +112,10 @@ namespace AISEP.BLL.Services.Payouts
             {
                 throw new UnauthorizedAccessException("You do not have permission to request retry for this payout.");
             }
+            if (payout.Wallet.Advisor.ApprovalStatus != ApprovalStatus.Approved)
+            {
+                throw new InvalidOperationException("Your advisor profile must be approved before requesting payout retry.");
+            }
 
             if (payout.Status != MonthlyPayoutStatus.Rejected)
             {

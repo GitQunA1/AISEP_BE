@@ -18,6 +18,8 @@ namespace AISEP.BLL.Services.Startups
 {
     public class StartupService : IStartupService
     {
+        private const int RequiredStartupIndustries = 1;
+
         private readonly IUnitOfWork     _unitOfWork;
         private readonly ISieveProcessor _sieveProcessor;
         private readonly IMapper         _mapper;
@@ -134,6 +136,8 @@ namespace AISEP.BLL.Services.Startups
 
             if (startup.UserId != userId)
                 throw new ForbiddenAccessException("You do not have permission to update this startup.");
+            if (startup.ApprovalStatus == ApprovalStatus.Pending)
+                throw new InvalidOperationException("Your startup profile is already pending approval.");
 
             if (dto.CompanyName is not null)
                 startup.CompanyName = dto.CompanyName.Trim();
@@ -245,6 +249,10 @@ namespace AISEP.BLL.Services.Startups
             {
                 throw new InvalidOperationException("At least one industry is required.");
             }
+            if (ids.Count != RequiredStartupIndustries)
+            {
+                throw new InvalidOperationException("Startup must select exactly one industry.");
+            }
 
             var options = await _unitOfWork.IndustryOptions.GetByIdsAsync(ids);
             if (options.Count != ids.Count || options.Any(x => !x.IsActive))
@@ -262,6 +270,10 @@ namespace AISEP.BLL.Services.Startups
             if (requestedIds.Count == 0)
             {
                 throw new InvalidOperationException("At least one industry is required.");
+            }
+            if (requestedIds.Count != RequiredStartupIndustries)
+            {
+                throw new InvalidOperationException("Startup must select exactly one industry.");
             }
 
             var toRemove = startup.StartupIndustries

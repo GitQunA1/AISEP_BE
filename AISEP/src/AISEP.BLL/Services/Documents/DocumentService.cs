@@ -54,6 +54,7 @@ namespace AISEP.BLL.Services.Documents
             var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
             if (startup is null || project.StartupId != startup.StartupId)
                 throw new UnauthorizedAccessException("You do not have permission to upload documents to this project.");
+            EnsureStartupApproved(startup);
 
             if (project.Status != ProjectStatus.Draft)
                 throw new InvalidOperationException("Chỉ được phép upload tài liệu khi dự án ở trạng thái DRAFT.");
@@ -151,6 +152,7 @@ namespace AISEP.BLL.Services.Documents
                 var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
                 if (startup is null || document.Project.StartupId != startup.StartupId)
                     throw new UnauthorizedAccessException("You do not have permission to delete this document.");
+                EnsureStartupApproved(startup);
             }
 
             var lockedStatuses = new[] { ProjectStatus.Approved};
@@ -310,6 +312,12 @@ namespace AISEP.BLL.Services.Documents
             }
 
             throw new UnauthorizedAccessException("You do not have permission to access documents of this project.");
+        }
+
+        private static void EnsureStartupApproved(Startup startup)
+        {
+            if (startup.ApprovalStatus != ApprovalStatus.Approved)
+                throw new InvalidOperationException("Your startup profile must be approved before using this feature.");
         }
     }
 }

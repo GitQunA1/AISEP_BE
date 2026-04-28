@@ -47,16 +47,12 @@ namespace AISEP.BLL.Services.StageOptions
             return MapResponse(entity);
         }
 
-        public async Task<StageOptionResponse> UpdateAsync(int id, UpdateStageOptionRequest request)
+        public async Task<StageOptionResponse> SetActiveAsync(int id, bool isActive)
         {
             var entity = await _unitOfWork.StageOptions.GetByIdAsync(id)
                 ?? throw new KeyNotFoundException("Stage option not found.");
 
-            var value = NormalizeValue(request.Value);
-            await EnsureValueIsUniqueAsync(value, id);
-
-            entity.Value = value;
-            entity.IsActive = request.IsActive;
+            entity.IsActive = isActive;
             entity.UpdatedAt = DateTime.UtcNow;
 
             _unitOfWork.StageOptions.Update(entity);

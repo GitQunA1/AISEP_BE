@@ -17,6 +17,8 @@ namespace AISEP.BLL.Services.Projects
 {
     public class ProjectService : IProjectService
     {
+        private const int RequiredProjectIndustries = 1;
+
         private readonly IUnitOfWork _unitOfWork;
         private readonly ISieveProcessor _sieveProcessor;
         private readonly IMapper _mapper;
@@ -154,6 +156,7 @@ namespace AISEP.BLL.Services.Projects
             var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
             if (startup is null)
                 throw new KeyNotFoundException("Startup profile not found. Please create a startup profile first.");
+            EnsureStartupApproved(startup);
 
             var industryOptions = await ResolveIndustryOptionsAsync(dto.IndustryOptionIds);
             var stageOption = await ResolveStageOptionAsync(dto.StageOptionId, true);
@@ -193,6 +196,7 @@ namespace AISEP.BLL.Services.Projects
             var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
             if (startup is null || project.StartupId != startup.StartupId)
                 throw new ForbiddenAccessException("You do not have permission to update this project.");
+            EnsureStartupApproved(startup);
 
             if (project.Status != ProjectStatus.Draft && project.Status != ProjectStatus.Rejected)
                 throw new InvalidOperationException("Only draft projects or rejected projects can update."); 
@@ -250,6 +254,12 @@ namespace AISEP.BLL.Services.Projects
             var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
             if (project is null)
                 throw new KeyNotFoundException("Project not found.");
+            var userId = _userService.GetUserId();
+            var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId)
+                ?? throw new KeyNotFoundException("Startup profile not found for this account.");
+            if (project.StartupId != startup.StartupId)
+                throw new ForbiddenAccessException("You do not have permission to submit this project.");
+            EnsureStartupApproved(startup);
 
             if (project.Status != ProjectStatus.Draft)
                 throw new InvalidOperationException($"Only draft projects can be submitted. Current status: {project.Status}.");
@@ -443,6 +453,12 @@ namespace AISEP.BLL.Services.Projects
             return !string.IsNullOrWhiteSpace(value);
         }
 
+        private static void EnsureStartupApproved(Startup startup)
+        {
+            if (startup.ApprovalStatus != ApprovalStatus.Approved)
+                throw new InvalidOperationException("Your startup profile must be approved before using this feature.");
+        }
+
         //private static string? BuildTeaserText(string? value, int maxLength)
         //{
         //    if (string.IsNullOrWhiteSpace(value))
@@ -484,6 +500,10 @@ namespace AISEP.BLL.Services.Projects
             {
                 throw new InvalidOperationException("At least one industry is required.");
             }
+            if (ids.Count != RequiredProjectIndustries)
+            {
+                throw new InvalidOperationException("Project must select exactly one industry.");
+            }
 
             var options = await _unitOfWork.IndustryOptions.GetByIdsAsync(ids);
             if (options.Count != ids.Count || options.Any(x => !x.IsActive))
@@ -523,6 +543,10 @@ namespace AISEP.BLL.Services.Projects
             if (requestedIds.Count == 0)
             {
                 throw new InvalidOperationException("At least one industry is required.");
+            }
+            if (requestedIds.Count != RequiredProjectIndustries)
+            {
+                throw new InvalidOperationException("Project must select exactly one industry.");
             }
 
             var toRemove = project.ProjectIndustries

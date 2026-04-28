@@ -45,6 +45,8 @@ namespace AISEP.BLL.Services.UserReports
         public async Task<UserReportResponse> CreateAsync(CreateUserReportRequest request)
         {
             var reporterId = _userService.GetUserId();
+            await EnsureReporterApprovedAsync(reporterId);
+
             var booking = await _unitOfWork.Bookings.GetByIdAsync(request.BookingId)
                 ?? throw new KeyNotFoundException("Booking not found.");
             var advisorUserId = booking.Advisor?.UserId
@@ -98,6 +100,26 @@ namespace AISEP.BLL.Services.UserReports
             await NotifyReviewersReportCreatedAsync(report);
 
             return _mapper.Map<UserReportResponse>(report);
+        }
+
+        private async Task EnsureReporterApprovedAsync(int reporterId)
+        {
+            var role = _userService.GetUserRole();
+            if (string.Equals(role, "Startup", StringComparison.OrdinalIgnoreCase))
+            {
+                var startup = await _unitOfWork.Startups.GetByUserIdAsync(reporterId)
+                    ?? throw new KeyNotFoundException("Startup profile not found for this account.");
+                if (startup.ApprovalStatus != ApprovalStatus.Approved)
+                    throw new InvalidOperationException("Your startup profile must be approved before using this feature.");
+            }
+
+            if (string.Equals(role, "Investor", StringComparison.OrdinalIgnoreCase))
+            {
+                var investor = await _unitOfWork.Investors.GetByUserIdAsync(reporterId)
+                    ?? throw new KeyNotFoundException("Investor profile not found for this account.");
+                if (investor.ApprovalStatus != ApprovalStatus.Approved)
+                    throw new InvalidOperationException("Your investor profile must be approved before using this feature.");
+            }
         }
 
         public async Task<UserReportResponse> ResolveAsValidAsync(int reportId, string? resolutionNote)

@@ -45,6 +45,9 @@ namespace AISEP.BLL.Services.Bookings
             var currentRole = _currentUserService.GetUserRole();
             var advisor = await _unitOfWork.Advisors.GetByIdAsync(dto.AdvisorId)
                 ?? throw new KeyNotFoundException("Advisor not found.");
+            if (advisor.ApprovalStatus != ApprovalStatus.Approved)
+                throw new InvalidOperationException("Selected advisor profile is not approved and cannot be booked.");
+
             var project = await _unitOfWork.Projects.GetByIdAsync(dto.ProjectId)
                 ?? throw new KeyNotFoundException("Project not found.");
             var assignments = await _unitOfWork.ProjectAdvisorAssignments.GetByProjectIdAsync(dto.ProjectId);
@@ -535,6 +538,8 @@ namespace AISEP.BLL.Services.Bookings
 
             if (booking.AdvisorId != advisor.AdvisorId)
                 throw new InvalidOperationException("You are not assigned to this booking.");
+            if (advisor.ApprovalStatus != ApprovalStatus.Approved)
+                throw new InvalidOperationException("Your advisor profile must be approved before responding to bookings.");
 
             var responseDeadline = booking.CreatedAt.Add(AdvisorResponseDeadline);
             if (DateTime.UtcNow > responseDeadline
@@ -565,6 +570,10 @@ namespace AISEP.BLL.Services.Bookings
         {
             if (string.Equals(currentRole, "Investor", StringComparison.OrdinalIgnoreCase))
             {
+                var investor = await _unitOfWork.Investors.GetByUserIdAsync(currentUserId)
+                    ?? throw new KeyNotFoundException("Investor profile not found for this account.");
+                EnsureInvestorApproved(investor);
+
                 if (project.Status != ProjectStatus.Approved)
                 {
                     throw new InvalidOperationException("Investor can only select approved projects.");
@@ -577,6 +586,7 @@ namespace AISEP.BLL.Services.Bookings
             {
                 var startup = await _unitOfWork.Startups.GetByUserIdAsync(currentUserId)
                     ?? throw new KeyNotFoundException("Startup profile not found for this account.");
+                EnsureStartupApproved(startup);
                 if (project.StartupId != startup.StartupId)
                 {
                     throw new InvalidOperationException("Startup can only select its own projects.");
@@ -706,6 +716,19 @@ namespace AISEP.BLL.Services.Bookings
                 .Select(id => advisorById[id])
                 .ToList();
         }
+
+        private static void EnsureStartupApproved(Startup startup)
+        {
+            if (startup.ApprovalStatus != ApprovalStatus.Approved)
+                throw new InvalidOperationException("Your startup profile must be approved before using this feature.");
+        }
+
+        private static void EnsureInvestorApproved(Investor investor)
+        {
+            if (investor.ApprovalStatus != ApprovalStatus.Approved)
+                throw new InvalidOperationException("Your investor profile must be approved before using this feature.");
+        }
+
     }
 }
 
