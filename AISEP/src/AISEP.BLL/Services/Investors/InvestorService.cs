@@ -19,6 +19,8 @@ namespace AISEP.BLL.Services.Investors
 {
     public class InvestorService : IInvestorService
     {
+        private const int MaxInvestorIndustries = 4;
+
         private readonly IUnitOfWork _unitOfWork;
         private readonly ISieveProcessor _sieveProcessor;
         private readonly IMapper _mapper;
@@ -109,6 +111,8 @@ namespace AISEP.BLL.Services.Investors
                 throw new KeyNotFoundException("Investor profile not found.");
             if (investor.UserId != userId)
                 throw new ForbiddenAccessException("You do not have permission to update this investor.");
+            if (investor.ApprovalStatus == ApprovalStatus.Pending)
+                throw new InvalidOperationException("Your investor profile is already pending approval.");
 
             if (dto.OrganizationName is not null)
                 investor.OrganizationName = dto.OrganizationName.Trim();
@@ -249,6 +253,10 @@ namespace AISEP.BLL.Services.Investors
             {
                 throw new InvalidOperationException("At least one industry is required.");
             }
+            if (ids.Count > MaxInvestorIndustries)
+            {
+                throw new InvalidOperationException($"Investor can select up to {MaxInvestorIndustries} industries.");
+            }
 
             var options = await _unitOfWork.IndustryOptions.GetByIdsAsync(ids);
             if (options.Count != ids.Count || options.Any(x => !x.IsActive))
@@ -283,6 +291,10 @@ namespace AISEP.BLL.Services.Investors
             if (requestedIds.Count == 0)
             {
                 throw new InvalidOperationException("At least one industry is required.");
+            }
+            if (requestedIds.Count > MaxInvestorIndustries)
+            {
+                throw new InvalidOperationException($"Investor can select up to {MaxInvestorIndustries} industries.");
             }
 
             var toRemove = investor.InvestorIndustries

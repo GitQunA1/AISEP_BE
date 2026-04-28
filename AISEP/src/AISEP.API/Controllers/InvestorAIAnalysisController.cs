@@ -34,7 +34,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpPost("{projectId:int}/analyze")]
-        //[Authorize(Roles = "Investor")]
+        [Authorize(Roles = "Investor")]
         public async Task<IActionResult> Analyze(int projectId)
         {
             try

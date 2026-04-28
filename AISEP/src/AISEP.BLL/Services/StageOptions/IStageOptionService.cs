@@ -9,6 +9,6 @@ namespace AISEP.BLL.Services.StageOptions
     {
         Task<PagedResult<StageOptionResponse>> GetAllAsync(SieveModel model);
         Task<StageOptionResponse> CreateAsync(CreateStageOptionRequest request);
-        Task<StageOptionResponse> UpdateAsync(int id, UpdateStageOptionRequest request);
+        Task<StageOptionResponse> SetActiveAsync(int id, bool isActive);
     }
 }

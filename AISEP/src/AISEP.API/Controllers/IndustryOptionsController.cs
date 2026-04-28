@@ -43,15 +43,33 @@ namespace AISEP.API.Controllers
             }
         }
 
-      
-        [HttpPut("{id:int}")]
+        [HttpPatch("{id:int}/activate")]
         [Authorize(Roles = "Staff,Admin")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateIndustryOptionRequest request)
+        public async Task<IActionResult> Activate(int id)
         {
             try
             {
-                var result = await _industryOptionService.UpdateAsync(id, request);
-                return Ok(ApiResponse<object>.SuccessResponse(result, "Industry option updated successfully."));
+                var result = await _industryOptionService.SetActiveAsync(id, true);
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Industry option activated successfully."));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not Found", 404));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message, "Bad Request", 400));
+            }
+        }
+
+        [HttpPatch("{id:int}/deactivate")]
+        [Authorize(Roles = "Staff,Admin")]
+        public async Task<IActionResult> Deactivate(int id)
+        {
+            try
+            {
+                var result = await _industryOptionService.SetActiveAsync(id, false);
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Industry option deactivated successfully."));
             }
             catch (KeyNotFoundException ex)
             {

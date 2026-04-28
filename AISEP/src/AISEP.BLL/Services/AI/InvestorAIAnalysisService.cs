@@ -39,6 +39,7 @@ namespace AISEP.BLL.Services.AI
             var userId = _userService.GetUserId();
             var investor = await _unitOfWork.Investors.GetByUserIdAsync(userId)
                 ?? throw new KeyNotFoundException("Investor profile not found.");
+            EnsureInvestorApproved(investor);
 
             await ConsumeAiQuotaAsync(userId);
 
@@ -153,6 +154,12 @@ namespace AISEP.BLL.Services.AI
             subscription.UsedAiRequests += 1;
             _unitOfWork.Subscriptions.Update(subscription);
             await _unitOfWork.SaveChangesAsync();
+        }
+
+        private static void EnsureInvestorApproved(Investor investor)
+        {
+            if (investor.ApprovalStatus != ApprovalStatus.Approved)
+                throw new InvalidOperationException("Your investor profile must be approved before using this feature.");
         }
 
         private static InvestorAIAnalysisResponse MapToResponse(

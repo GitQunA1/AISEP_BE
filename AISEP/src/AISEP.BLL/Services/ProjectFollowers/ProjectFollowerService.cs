@@ -33,7 +33,7 @@ namespace AISEP.BLL.Services.ProjectFollowers
         public async Task<bool> FollowProjectAsync(int projectId)
         {
             var userId = _currentUserService.GetUserId();
-            await EnsureUserCanFollowProjectsAsync(userId);
+            await EnsureUserCanFollowProjectsAsync(userId, requireApprovedActor: true);
 
             var project = await _unitOfWork.Projects.GetByIdAsync(projectId)
                 ?? throw new KeyNotFoundException("Project not found.");
@@ -59,7 +59,7 @@ namespace AISEP.BLL.Services.ProjectFollowers
         public async Task<bool> UnfollowProjectAsync(int projectId)
         {
             var userId = _currentUserService.GetUserId();
-            await EnsureUserCanFollowProjectsAsync(userId);
+            await EnsureUserCanFollowProjectsAsync(userId, requireApprovedActor: true);
 
             var exists = await _unitOfWork.ProjectFollowers.IsFollowingAsync(userId, projectId);
             if (!exists)
@@ -94,7 +94,7 @@ namespace AISEP.BLL.Services.ProjectFollowers
                 pf => _mapper.Map<FollowedProjectResponse>(pf));
         }
 
-        private async Task EnsureUserCanFollowProjectsAsync(int userId)
+        private async Task EnsureUserCanFollowProjectsAsync(int userId, bool requireApprovedActor = false)
         {
             var user = await _unitOfWork.Users.GetByIdAsync(userId)
                 ?? throw new KeyNotFoundException("User not found.");
@@ -102,6 +102,22 @@ namespace AISEP.BLL.Services.ProjectFollowers
             if (user.Role != UserRole.Startup && user.Role != UserRole.Investor)
             {
                 throw new ForbiddenAccessException("Only Startup or Investor can follow projects.");
+            }
+
+            if (requireApprovedActor && user.Role == UserRole.Startup)
+            {
+                var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId)
+                    ?? throw new KeyNotFoundException("Startup profile not found for this account.");
+                if (startup.ApprovalStatus != ApprovalStatus.Approved)
+                    throw new InvalidOperationException("Your startup profile must be approved before using this feature.");
+            }
+
+            if (requireApprovedActor && user.Role == UserRole.Investor)
+            {
+                var investor = await _unitOfWork.Investors.GetByUserIdAsync(userId)
+                    ?? throw new KeyNotFoundException("Investor profile not found for this account.");
+                if (investor.ApprovalStatus != ApprovalStatus.Approved)
+                    throw new InvalidOperationException("Your investor profile must be approved before using this feature.");
             }
         }
     }

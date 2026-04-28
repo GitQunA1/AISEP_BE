@@ -60,7 +60,7 @@ namespace AISEP.BLL.Services.AdvisorAvailabilities
 
         public async Task<List<AdvisorAvailabilityResponse>> CreateMyAvailabilityAsync(CreateAdvisorAvailabilityRequest request)
         {
-            var advisor = await GetCurrentAdvisorAsync();
+            var advisor = await GetCurrentAdvisorAsync(requireApproved: true);
             var slotDate = request.SlotDate.Date;
             var slotsToCreate = new List<(TimeOnly Start, TimeOnly End)>();
             for (var start = request.StartTime; start < request.EndTime; start = start.AddHours(1))
@@ -106,7 +106,7 @@ namespace AISEP.BLL.Services.AdvisorAvailabilities
 
         public async Task<AdvisorAvailabilityResponse> UpdateMyAvailabilityAsync(int availabilityId, UpdateAdvisorAvailabilityRequest request)
         {
-            var advisor = await GetCurrentAdvisorAsync();
+            var advisor = await GetCurrentAdvisorAsync(requireApproved: true);
             var availability = await _unitOfWork.AdvisorAvailabilities.GetByIdAsync(availabilityId)
                 ?? throw new KeyNotFoundException("Availability slot not found.");
 
@@ -134,7 +134,7 @@ namespace AISEP.BLL.Services.AdvisorAvailabilities
 
         public async Task<bool> DeleteMyAvailabilityAsync(int availabilityId)
         {
-            var advisor = await GetCurrentAdvisorAsync();
+            var advisor = await GetCurrentAdvisorAsync(requireApproved: true);
             var availability = await _unitOfWork.AdvisorAvailabilities.GetByIdAsync(availabilityId);
             if (availability is null || availability.AdvisorId != advisor.AdvisorId)
                 return false;
@@ -147,12 +147,15 @@ namespace AISEP.BLL.Services.AdvisorAvailabilities
             return true;
         }
 
-        private async Task<Advisor> GetCurrentAdvisorAsync()
+        private async Task<Advisor> GetCurrentAdvisorAsync(bool requireApproved = false)
         {
             var userId = _userService.GetUserId();
             var advisor = await _unitOfWork.Advisors.GetByUserIdAsync(userId);
             if (advisor is null)
                 throw new KeyNotFoundException("Advisor profile not found.");
+            if (requireApproved && advisor.ApprovalStatus != ApprovalStatus.Approved)
+                throw new InvalidOperationException("Your advisor profile must be approved before using this feature.");
+
             return advisor;
         }
     }
