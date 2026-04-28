@@ -67,6 +67,21 @@ namespace AISEP.BLL.Services.Payouts
             });
 
             var now = DateTime.UtcNow;
+            await _unitOfWork.Transactions.AddAsync(new Transaction
+            {
+                UserId = payout.Wallet.Advisor.UserId,
+                Amount = payout.Amount,
+                Type = TransactionType.Withdraw,
+                Status = TransactionStatus.Completed,
+                CreatedAt = now,
+                ReferenceType = ReferenceType.Payout.ToString(),
+                ReferenceId = payout.PayoutId,
+                PaymentContent = string.IsNullOrWhiteSpace(request.Note)
+                    ? $"Payout to advisor for payout #{payout.PayoutId}"
+                    : request.Note.Trim(),
+                CompletedAt = now
+            });
+
             payout.Status = MonthlyPayoutStatus.Paid;
             payout.PaidAt = now;
             payout.PaidById = staffUserId;

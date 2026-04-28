@@ -323,6 +323,20 @@ namespace AISEP.BLL.Services.UserReports
                     CreatedAt = DateTime.UtcNow
                 });
 
+                var now = DateTime.UtcNow;
+                await _unitOfWork.Transactions.AddAsync(new Transaction
+                {
+                    UserId = bookingWithWallet.Advisor.UserId,
+                    Amount = payoutAmount,
+                    Type = TransactionType.Income,
+                    Status = TransactionStatus.Completed,
+                    CreatedAt = now,
+                    ReferenceType = ReferenceType.Booking.ToString(),
+                    ReferenceId = bookingWithWallet.BookingId,
+                    PaymentContent = $"Advisor income from accepted complaint booking #{bookingWithWallet.BookingId}",
+                    CompletedAt = now
+                });
+
                 await _notificationService.SendNotificationAsync(
                     bookingWithWallet.Advisor.UserId,
                     "Ví đã được cộng tiền từ lịch tư vấn có khiếu nại",

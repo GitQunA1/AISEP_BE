@@ -3,6 +3,7 @@ namespace AISEP.DAL.Enums
     public enum ReferenceType
     {
         Subscription,
-        Booking
+        Booking,
+        Payout
     }
 }
