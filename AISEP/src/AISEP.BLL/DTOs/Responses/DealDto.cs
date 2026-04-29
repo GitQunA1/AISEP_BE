@@ -6,20 +6,20 @@ namespace AISEP.BLL.DTOs.Responses
         public int InvestorId { get; set; }
         public string InvestorName { get; set; } = string.Empty;
         public int ProjectId { get; set; }
+        public int StartupId { get; set; }
         public string ProjectName { get; set; } = string.Empty;
         public string StartupName { get; set; } = string.Empty;
-        public decimal Amount { get; set; }
-        public bool StartupConfirmed { get; set; }
-        public bool InvestorConfirmed { get; set; }
         public string Status { get; set; } = string.Empty;
         public DateTime DealDate { get; set; }
-        public string? PaymentMethod { get; set; }
-        public decimal? EquityPercentage { get; set; }
-        public string? AdditionalTerms { get; set; }
+        public string? DocumentUrl { get; set; }
+        public string? DocumentHash { get; set; }
+        public string? BlockchainTxHash { get; set; }
+        public DateTime? BlockchainVerifiedAt { get; set; }
+        public string? BlockchainErrorMessage { get; set; }
+        public string InitiatorRole { get; set; } = string.Empty;
+        public bool StartupConfirmed { get; set; }
+        public bool InvestorConfirmed { get; set; }
         public bool IsCompleted { get; set; }
         public DateTime? CompletionDate { get; set; }
-        public DateTime? InvestorSignedAt { get; set; }
-        public DateTime? StartupSignedAt { get; set; }
-        public string? ContractPdfUrl { get; set; }
     }
 }

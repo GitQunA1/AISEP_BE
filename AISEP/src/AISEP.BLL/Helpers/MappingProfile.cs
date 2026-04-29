@@ -473,6 +473,10 @@ namespace AISEP.BLL.Helpers
             CreateMap<Deal, DealDto>()
                 .ForMember(dest => dest.Status,
                     opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.InitiatorRole,
+                    opt => opt.MapFrom(src => src.InitiatorRole.ToString()))
+                .ForMember(dest => dest.StartupId,
+                    opt => opt.MapFrom(src => src.Project != null ? src.Project.StartupId : 0))
                 .ForMember(dest => dest.InvestorName,
                     opt => opt.MapFrom(src => src.Investor != null
                         ? (!string.IsNullOrWhiteSpace(src.Investor.OrganizationName)
@@ -495,35 +499,16 @@ namespace AISEP.BLL.Helpers
                                 : string.Empty))
                         : string.Empty));
 
-            // Deal Entity -> DealContractStatusResponse
-            CreateMap<Deal, DealContractStatusResponse>()
-                .ForMember(dest => dest.Status,
-                    opt => opt.MapFrom(src => src.Status.ToString()))
-                .ForMember(dest => dest.IsInvestorSigned,
-                    opt => opt.MapFrom(src => !string.IsNullOrWhiteSpace(src.InvestorSignature)))
-                .ForMember(dest => dest.IsStartupSigned,
-                    opt => opt.MapFrom(src => !string.IsNullOrWhiteSpace(src.StartupSignature)))
-                .ForMember(dest => dest.IsContractSigned,
-                    opt => opt.MapFrom(src => src.Status == AISEP.DAL.Enums.DealStatus.Contract_Signed));
-
             // CreateDealDto -> Deal Entity
             CreateMap<CreateDealDto, Deal>()
                 .ForMember(dest => dest.DealId, opt => opt.Ignore())
                 .ForMember(dest => dest.InvestorId, opt => opt.Ignore())
-                .ForMember(dest => dest.ProjectId, opt => opt.MapFrom(src => src.ProjectId))
-                .ForMember(dest => dest.Amount, opt => opt.MapFrom(_ => 0m))
-                .ForMember(dest => dest.PaymentMethod, opt => opt.Ignore())
-                .ForMember(dest => dest.EquityPercentage, opt => opt.Ignore())
-                .ForMember(dest => dest.AdditionalTerms, opt => opt.Ignore())
                 .ForMember(dest => dest.StartupConfirmed, opt => opt.Ignore())
                 .ForMember(dest => dest.InvestorConfirmed, opt => opt.Ignore())
                 .ForMember(dest => dest.Status, opt => opt.Ignore())
                 .ForMember(dest => dest.DealDate, opt => opt.Ignore())
-                .ForMember(dest => dest.InvestorSignature, opt => opt.Ignore())
-                .ForMember(dest => dest.StartupSignature, opt => opt.Ignore())
-                .ForMember(dest => dest.InvestorSignedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.StartupSignedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.ContractPdfUrl, opt => opt.Ignore())
+                .ForMember(dest => dest.DocumentUrl, opt => opt.Ignore())
+                .ForMember(dest => dest.InitiatorRole, opt => opt.Ignore())
                 .ForMember(dest => dest.IsCompleted, opt => opt.Ignore())
                 .ForMember(dest => dest.CompletionDate, opt => opt.Ignore())
                 .ForMember(dest => dest.Investor, opt => opt.Ignore())

@@ -2,9 +2,8 @@ using Microsoft.AspNetCore.Http;
 
 namespace AISEP.BLL.DTOs.Requests
 {
-    public class CreateDealDto
+    public class ReuploadDealEvidenceDto
     {
-        public int ProjectId { get; set; }
         public IFormFile EvidenceFile { get; set; } = null!;
     }
 }
