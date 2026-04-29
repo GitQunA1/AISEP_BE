@@ -52,8 +52,10 @@ namespace AISEP.BLL.Services.Deals
                 throw new ArgumentNullException(nameof(dto));
             }
 
-            _ = await _unitOfWork.Investors.GetByIdAsync(investorId)
+            var investor = await _unitOfWork.Investors.GetByIdAsync(investorId)
                 ?? throw new KeyNotFoundException("Investor not found.");
+
+            EnsureInvestorApproved(investor);
 
             var project = await _unitOfWork.Projects.GetByIdAsync(dto.ProjectId)
                 ?? throw new KeyNotFoundException("Project not found.");
@@ -109,6 +111,11 @@ namespace AISEP.BLL.Services.Deals
             {
                 throw new ForbiddenAccessException("You do not have permission to create a deal for this project.");
             }
+
+            var startup = await _unitOfWork.Startups.GetByIdAsync(startupId)
+                ?? throw new KeyNotFoundException("Startup not found.");
+
+            EnsureStartupApproved(startup);
 
             var connection = await GetLatestAcceptedConnectionAsync(startupId, dto.ProjectId);
             var investor = connection.Investor
@@ -208,6 +215,7 @@ namespace AISEP.BLL.Services.Deals
                 ?? throw new KeyNotFoundException("Deal not found.");
 
             EnsureInvestorOwnsDeal(deal, investorId);
+            EnsureInvestorApproved(deal.Investor);
             EnsureCounterpartyRole(deal, UserRole.Investor);
             EnsureDealStatus(deal, DealStatus.PendingCounterpartyConfirmation, "Only pending deals can be verified.");
 
@@ -230,6 +238,7 @@ namespace AISEP.BLL.Services.Deals
                 ?? throw new KeyNotFoundException("Deal not found.");
 
             EnsureStartupOwnsDeal(deal, startupId);
+            EnsureStartupApproved(deal.Project.Startup);
             EnsureCounterpartyRole(deal, UserRole.Startup);
             EnsureDealStatus(deal, DealStatus.PendingCounterpartyConfirmation, "Only pending deals can be verified.");
 
@@ -303,6 +312,7 @@ namespace AISEP.BLL.Services.Deals
                 ?? throw new KeyNotFoundException("Deal not found.");
 
             EnsureInvestorOwnsDeal(deal, investorId);
+            EnsureInvestorApproved(deal.Investor);
             EnsureInitiatorRole(deal, UserRole.Investor);
             EnsureDealAllowsReupload(deal);
 
@@ -335,6 +345,7 @@ namespace AISEP.BLL.Services.Deals
                 ?? throw new KeyNotFoundException("Deal not found.");
 
             EnsureStartupOwnsDeal(deal, startupId);
+            EnsureStartupApproved(deal.Project.Startup);
             EnsureInitiatorRole(deal, UserRole.Startup);
             EnsureDealAllowsReupload(deal);
 
@@ -555,6 +566,22 @@ namespace AISEP.BLL.Services.Deals
             if (deal.Project.StartupId != startupId)
             {
                 throw new ForbiddenAccessException("You do not have permission to access this deal.");
+            }
+        }
+
+        private static void EnsureStartupApproved(Startup startup)
+        {
+            if (startup.ApprovalStatus != ApprovalStatus.Approved)
+            {
+                throw new InvalidOperationException("Your startup profile must be approved before using this feature.");
+            }
+        }
+
+        private static void EnsureInvestorApproved(Investor investor)
+        {
+            if (investor.ApprovalStatus != ApprovalStatus.Approved)
+            {
+                throw new InvalidOperationException("Your investor profile must be approved before using this feature.");
             }
         }
 
