@@ -4,6 +4,7 @@ using AISEP.BLL.Services.Deals;
 using AISEP.BLL.Services.Investors;
 using AISEP.BLL.Services.Startups;
 using AISEP.BLL.Services.Users;
+using AISEP.BLL.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sieve.Models;
@@ -75,48 +76,58 @@ namespace AISEP.API.Controllers
             throw new UnauthorizedAccessException("Role is not allowed to access deals.");
         }
 
+        [HttpGet("{id:int}")]
+        [Authorize(Roles = "Investor,Startup,Staff,Admin")]
+        public async Task<IActionResult> GetDealById(int id)
+        {
+            var userId = _userService.GetUserId();
+
+            if (User.IsInRole("Investor"))
+            {
+                var investor = await _investorService.GetMyProfileAsync()
+                    ?? throw new KeyNotFoundException("Investor profile not found.");
+
+                if (investor.UserId != userId)
+                {
+                    throw new UnauthorizedAccessException("Invalid investor context.");
+                }
+
+                var deal = await _dealService.GetDealByIdAsync(id);
+                if (deal.InvestorId != investor.InvestorId)
+                    throw new ForbiddenAccessException("You do not have permission to access this deal.");
+
+                return Ok(ApiResponse<object>.SuccessResponse(deal, "Deal retrieved successfully."));
+            }
+
+            if (User.IsInRole("Startup"))
+            {
+                var startup = await _startupService.GetMyProfileAsync()
+                    ?? throw new KeyNotFoundException("Startup profile not found.");
+
+                if (startup.UserId != userId)
+                {
+                    throw new UnauthorizedAccessException("Invalid startup context.");
+                }
+
+                var deal = await _dealService.GetDealByIdAsync(id);
+                if (deal.StartupId != startup.Id)
+                    throw new ForbiddenAccessException("You do not have permission to access this deal.");
+
+                return Ok(ApiResponse<object>.SuccessResponse(deal, "Deal retrieved successfully."));
+            }
+
+            if (User.IsInRole("Staff") || User.IsInRole("Admin"))
+            {
+                var deal = await _dealService.GetDealByIdAsync(id);
+                return Ok(ApiResponse<object>.SuccessResponse(deal, "Deal retrieved successfully."));
+            }
+
+            throw new UnauthorizedAccessException("Role is not allowed to access deals.");
+        }
+
         [HttpPost]
-        [Authorize(Roles = "Investor")]
-        public async Task<IActionResult> CreateDeal([FromBody] CreateDealDto dto)
-        {
-            var userId = _userService.GetUserId();
-            var investor = await _investorService.GetMyProfileAsync()
-                ?? throw new KeyNotFoundException("Investor profile not found.");
-
-            if (investor.UserId != userId)
-            {
-                throw new UnauthorizedAccessException("Invalid investor context.");
-            }
-
-            var result = await _dealService.CreateDealAsync(investor.InvestorId, dto);
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Deal created successfully."));
-        }
-
-        [HttpPatch("{id:int}/respond")]
-        [Authorize(Roles = "Startup")]
-        public async Task<IActionResult> RespondDeal(int id, [FromBody] RespondDealRequestDto dto)
-        {
-            var userId = _userService.GetUserId();
-            var startup = await _startupService.GetMyProfileAsync()
-                ?? throw new KeyNotFoundException("Startup profile not found.");
-
-            if (startup.UserId != userId)
-            {
-                throw new UnauthorizedAccessException("Invalid startup context.");
-            }
-
-            if (dto?.IsAccepted is null)
-            {
-                throw new InvalidOperationException("IsAccepted is required.");
-            }
-
-            var result = await _dealService.RespondDealAsync(startup.Id, id, dto.IsAccepted.Value, dto.Reason);
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Deal response submitted successfully."));
-        }
-
-        [HttpGet("{id:int}/contract-preview")]
-        [Authorize(Roles = "Investor,Startup,Staff,Admin")]
-        public async Task<IActionResult> GetContractPreview(int id)
+        [Authorize(Roles = "Investor,Startup")]
+        public async Task<IActionResult> CreateDeal([FromForm] CreateDealDto dto)
         {
             var userId = _userService.GetUserId();
 
@@ -130,8 +141,8 @@ namespace AISEP.API.Controllers
                     throw new UnauthorizedAccessException("Invalid investor context.");
                 }
 
-                var investorHtml = await _dealService.GetContractPreviewForInvestorAsync(id, investor.InvestorId);
-                return Ok(ApiResponse<object>.SuccessResponse(investorHtml, "Contract preview loaded successfully."));
+                var result = await _dealService.CreateDealForInvestorAsync(investor.InvestorId, dto);
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Deal created successfully."));
             }
 
             if (User.IsInRole("Startup"))
@@ -144,73 +155,16 @@ namespace AISEP.API.Controllers
                     throw new UnauthorizedAccessException("Invalid startup context.");
                 }
 
-                var startupHtml = await _dealService.GetContractPreviewForStartupAsync(id, startup.Id);
-                return Ok(ApiResponse<object>.SuccessResponse(startupHtml, "Contract preview loaded successfully."));
+                var result = await _dealService.CreateDealForStartupAsync(startup.Id, dto);
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Deal created successfully."));
             }
 
-            if (User.IsInRole("Staff") || User.IsInRole("Admin"))
-            {
-                var html = await _dealService.GetContractPreviewAsync(id);
-                return Ok(ApiResponse<object>.SuccessResponse(html, "Contract preview loaded successfully."));
-            }
-
-            throw new UnauthorizedAccessException("Role is not allowed to access contract preview.");
+            throw new UnauthorizedAccessException("Role is not allowed to create deals.");
         }
 
-        [HttpPost("{id:int}/investor-sign")]
-        [Authorize(Roles = "Investor")]
-        public async Task<IActionResult> InvestorSignContract(int id, [FromBody] InvestorSignContractDto request)
-        {
-            var userId = _userService.GetUserId();
-            var investor = await _investorService.GetMyProfileAsync()
-                ?? throw new KeyNotFoundException("Investor profile not found.");
-
-            if (investor.UserId != userId)
-            {
-                throw new UnauthorizedAccessException("Invalid investor context.");
-            }
-
-            var result = await _dealService.InvestorSignContractAsync(id, investor.InvestorId, request);
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Investor signed contract successfully."));
-        }
-
-        [HttpPost("{id:int}/startup-sign")]
-        [Authorize(Roles = "Startup")]
-        public async Task<IActionResult> StartupSignContract(int id, [FromBody] StartupSignContractDto request)
-        {
-            var userId = _userService.GetUserId();
-            var startup = await _startupService.GetMyProfileAsync()
-                ?? throw new KeyNotFoundException("Startup profile not found.");
-
-            if (startup.UserId != userId)
-            {
-                throw new UnauthorizedAccessException("Invalid startup context.");
-            }
-
-            var result = await _dealService.StartupSignContractAsync(id, startup.Id, request);
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Startup signed contract successfully."));
-        }
-
-        [HttpPatch("{id:int}/startup-reject")]
-        [Authorize(Roles = "Startup")]
-        public async Task<IActionResult> StartupRejectContract(int id, [FromBody] StartupRejectContractDto request)
-        {
-            var userId = _userService.GetUserId();
-            var startup = await _startupService.GetMyProfileAsync()
-                ?? throw new KeyNotFoundException("Startup profile not found.");
-
-            if (startup.UserId != userId)
-            {
-                throw new UnauthorizedAccessException("Invalid startup context.");
-            }
-
-            var result = await _dealService.StartupRejectContractAsync(id, startup.Id, request);
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Startup rejected contract successfully."));
-        }
-
-        [HttpGet("{id:int}/contract-status")]
-        [Authorize(Roles = "Investor,Startup,Staff,Admin")]
-        public async Task<IActionResult> GetContractStatus(int id)
+        [HttpPatch("{id:int}/verify")]
+        [Authorize(Roles = "Investor,Startup")]
+        public async Task<IActionResult> VerifyDeal(int id, [FromBody] VerifyDealRequestDto dto)
         {
             var userId = _userService.GetUserId();
 
@@ -224,8 +178,8 @@ namespace AISEP.API.Controllers
                     throw new UnauthorizedAccessException("Invalid investor context.");
                 }
 
-                var investorResult = await _dealService.GetContractStatusForInvestorAsync(id, investor.InvestorId);
-                return Ok(ApiResponse<object>.SuccessResponse(investorResult, "Contract status loaded successfully."));
+                var result = await _dealService.VerifyDealForInvestorAsync(investor.InvestorId, id, dto);
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Deal verification submitted successfully."));
             }
 
             if (User.IsInRole("Startup"))
@@ -238,22 +192,24 @@ namespace AISEP.API.Controllers
                     throw new UnauthorizedAccessException("Invalid startup context.");
                 }
 
-                var startupResult = await _dealService.GetContractStatusForStartupAsync(id, startup.Id);
-                return Ok(ApiResponse<object>.SuccessResponse(startupResult, "Contract status loaded successfully."));
+                var result = await _dealService.VerifyDealForStartupAsync(startup.Id, id, dto);
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Deal verification submitted successfully."));
             }
 
-            if (User.IsInRole("Staff") || User.IsInRole("Admin"))
-            {
-                var result = await _dealService.GetContractStatusAsync(id);
-                return Ok(ApiResponse<object>.SuccessResponse(result, "Contract status loaded successfully."));
-            }
-
-            throw new UnauthorizedAccessException("Role is not allowed to access contract status.");
+            throw new UnauthorizedAccessException("Role is not allowed to verify deals.");
         }
 
-        [HttpGet("{id:int}/ownership-status")]
-        [Authorize(Roles = "Investor,Startup,Staff,Admin")]
-        public async Task<IActionResult> GetOwnershipStatus(int id)
+        [HttpPut("{id:int}/staff-review")]
+        [Authorize(Roles = "Staff,Admin")]
+        public async Task<IActionResult> StaffReviewDeal(int id, [FromBody] StaffReviewDealRequestDto dto)
+        {
+            var result = await _dealService.StaffReviewDealAsync(id, dto);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Deal review submitted successfully."));
+        }
+
+        [HttpPut("{id:int}/reupload")]
+        [Authorize(Roles = "Investor,Startup")]
+        public async Task<IActionResult> ReuploadDealEvidence(int id, [FromForm] ReuploadDealEvidenceDto dto)
         {
             var userId = _userService.GetUserId();
 
@@ -267,8 +223,8 @@ namespace AISEP.API.Controllers
                     throw new UnauthorizedAccessException("Invalid investor context.");
                 }
 
-                var investorResult = await _dealService.GetOwnershipAssignmentStatusForInvestorAsync(id, investor.InvestorId);
-                return Ok(ApiResponse<object>.SuccessResponse(investorResult, "Ownership status loaded successfully."));
+                var result = await _dealService.ReuploadDealEvidenceForInvestorAsync(investor.InvestorId, id, dto);
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Deal evidence updated successfully."));
             }
 
             if (User.IsInRole("Startup"))
@@ -281,18 +237,23 @@ namespace AISEP.API.Controllers
                     throw new UnauthorizedAccessException("Invalid startup context.");
                 }
 
-                var startupResult = await _dealService.GetOwnershipAssignmentStatusForStartupAsync(id, startup.Id);
-                return Ok(ApiResponse<object>.SuccessResponse(startupResult, "Ownership status loaded successfully."));
+                var result = await _dealService.ReuploadDealEvidenceForStartupAsync(startup.Id, id, dto);
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Deal evidence updated successfully."));
             }
 
-            if (User.IsInRole("Staff") || User.IsInRole("Admin"))
-            {
-                var result = await _dealService.GetOwnershipAssignmentStatusAsync(id);
-                return Ok(ApiResponse<object>.SuccessResponse(result, "Ownership status loaded successfully."));
-            }
-
-            throw new UnauthorizedAccessException("Role is not allowed to access ownership status.");
+            throw new UnauthorizedAccessException("Role is not allowed to reupload deal evidence.");
         }
 
+        [HttpGet("{id:int}/verify-onchain")]
+        [Authorize(Roles = "Staff,Admin")]
+        public async Task<IActionResult> VerifyOnChain(int id)
+        {
+            var result = await _dealService.GetDealOnChainVerificationAsync(id);
+            var message = string.IsNullOrWhiteSpace(result.Message)
+                ? "Deal verification on-chain completed."
+                : result.Message;
+
+            return Ok(ApiResponse<object>.SuccessResponse(result, message));
+        }
     }
 }

@@ -222,9 +222,7 @@ namespace AISEP.BLL.Helpers
             mapper.Property<Deal>(d => d.ProjectId)
                 .CanFilter()
                 .CanSort();
-            mapper.Property<Deal>(d => d.Amount)
-                .CanFilter()
-                .CanSort();
+            
             mapper.Property<Deal>(d => d.Status)
                 .CanFilter()
                 .CanSort();

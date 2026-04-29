@@ -1,17 +1,20 @@
 using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.BLL.Exceptions;
+using AISEP.BLL.Services.FormValidationRules;
 using AISEP.BLL.Services.Projects;
 using AISEP.BLL.Services.Storage;
 using AISEP.BLL.Services.Users;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
+using AISEP.DAL.Repositories.IndustryOptions;
 using AISEP.DAL.Repositories.Investors;
 using AISEP.DAL.Repositories.Packages;
 using AISEP.DAL.Repositories.Projects;
 using AISEP.DAL.Repositories.Startups;
 using AISEP.DAL.Repositories.Subscriptions;
+using AISEP.DAL.Repositories.StageOptions;
 using AISEP.DAL.Repositories.UnlockedProjects;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
@@ -181,11 +184,15 @@ public class ProjectServiceGroupedTests
         Assert.NotNull(addedProject);
         Assert.Equal(220, addedProject!.StartupId);
         Assert.Equal(ProjectStatus.Draft, addedProject.Status);
-        Assert.Equal(Industry.SaaS, addedProject.Industry);
+        Assert.Equal(1, addedProject.StageOptionId);
+        Assert.Single(addedProject.ProjectIndustries);
+        Assert.Equal(2, addedProject.ProjectIndustries.First().IndustryOptionId);
         Assert.Equal("https://cdn.test/project-220.png", addedProject.ProjectImageUrl);
 
         Assert.Equal(2200, result.ProjectId);
         Assert.Equal("AISEP Growth Platform", result.ProjectName);
+        Assert.Equal("Idea", result.DevelopmentStage);
+        Assert.Contains("SaaS", result.Industries);
 
         storageService.Verify(x => x.UploadFileAsync(imageFile, "project-images"), Times.Once);
         unitOfWork.Verify(x => x.SaveChangesAsync(), Times.Once);
@@ -334,6 +341,9 @@ public class ProjectServiceGroupedTests
         var investorRepositoryMock = new Mock<IInvestorRepository>();
         var userServiceMock = new Mock<IUserService>();
         var storageServiceMock = new Mock<IStorageService>();
+        var dynamicFormValidationServiceMock = new Mock<IDynamicFormSubmissionValidationService>();
+        var industryOptionRepositoryMock = new Mock<IIndustryOptionRepository>();
+        var stageOptionRepositoryMock = new Mock<IStageOptionRepository>();
         var sieveProcessorMock = new Mock<ISieveProcessor>();
 
         var mapperConfig = new MapperConfiguration(cfg =>
@@ -343,7 +353,7 @@ public class ProjectServiceGroupedTests
                 .ForAllMembers(opt => opt.Condition((_, _, srcMember) => srcMember is not null));
             cfg.CreateMap<Project, ProjectResponse>()
                 .ForMember(d => d.DevelopmentStage, opt => opt.MapFrom(s => s.DevelopmentStage.HasValue ? s.DevelopmentStage.Value.ToString() : null))
-                .ForMember(d => d.Industry, opt => opt.MapFrom(s => s.Industry.ToString()))
+                .ForMember(d => d.Industries, opt => opt.MapFrom(s => s.ProjectIndustries.Select(pi => pi.IndustryOption.Value).ToList()))
                 .ForMember(d => d.Status, opt => opt.MapFrom(s => s.Status.ToString()));
         });
         var mapper = mapperConfig.CreateMapper();
@@ -357,6 +367,8 @@ public class ProjectServiceGroupedTests
         unitOfWorkMock.SetupGet(x => x.Packages).Returns(packageRepositoryMock.Object);
         unitOfWorkMock.SetupGet(x => x.UnlockedProjects).Returns(unlockedProjectRepositoryMock.Object);
         unitOfWorkMock.SetupGet(x => x.Investors).Returns(investorRepositoryMock.Object);
+        unitOfWorkMock.SetupGet(x => x.IndustryOptions).Returns(industryOptionRepositoryMock.Object);
+        unitOfWorkMock.SetupGet(x => x.StageOptions).Returns(stageOptionRepositoryMock.Object);
         unitOfWorkMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
 
         projectRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(defaultProject);
@@ -374,6 +386,39 @@ public class ProjectServiceGroupedTests
 
         unlockedProjectRepositoryMock.Setup(x => x.ExistsAsync(It.IsAny<int>(), It.IsAny<int>())).ReturnsAsync(true);
         unlockedProjectRepositoryMock.Setup(x => x.AddAsync(It.IsAny<UnlockedProject>())).Returns(Task.CompletedTask);
+
+        dynamicFormValidationServiceMock
+            .Setup(x => x.ValidateAsync(It.IsAny<string>(), It.IsAny<object>()))
+            .Returns(Task.CompletedTask);
+
+        industryOptionRepositoryMock.Setup(x => x.GetByIdsAsync(It.IsAny<IEnumerable<int>>()))
+            .ReturnsAsync((IEnumerable<int> ids) => ids.Select(id => new IndustryOption
+            {
+                Id = id,
+                Value = id == 2 ? "SaaS" : "Fintech",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            }).ToList());
+        industryOptionRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<int>()))
+            .ReturnsAsync((int id) => new IndustryOption
+            {
+                Id = id,
+                Value = id == 2 ? "SaaS" : "Fintech",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            });
+
+        stageOptionRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<int>()))
+            .ReturnsAsync((int id) => new StageOption
+            {
+                Id = id,
+                Value = id == 1 ? "Idea" : "Growth",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            });
 
         investorRepositoryMock
             .Setup(x => x.GetByUserIdAsync(It.IsAny<int>()))
@@ -404,7 +449,8 @@ public class ProjectServiceGroupedTests
             sieveProcessorMock.Object,
             mapper,
             userServiceMock.Object,
-            storageServiceMock.Object);
+            storageServiceMock.Object,
+            dynamicFormValidationServiceMock.Object);
 
         return (
             service,
@@ -433,12 +479,21 @@ public class ProjectServiceGroupedTests
             ProjectName = "AISEP Growth Platform",
             ProjectImageUrl = "https://cdn.test/old-image.png",
             ShortDescription = "Growth project short description",
-            DevelopmentStage = DevelopmentStage.Idea,
+            StageOptionId = 1,
+            StageOption = new StageOption { Id = 1, Value = "Idea", IsActive = true },
             ProblemStatement = "SMEs need better data visibility.",
             SolutionDescription = "Unified analytics and decision engine.",
             TargetCustomers = "SME founders",
             TeamMembers = "CEO, CTO",
-            Industry = Industry.Fintech,
+            ProjectIndustries = new List<ProjectIndustry>
+            {
+                new ProjectIndustry
+                {
+                    ProjectId = projectId,
+                    IndustryOptionId = 1,
+                    IndustryOption = new IndustryOption { Id = 1, Value = "Fintech", IsActive = true }
+                }
+            },
             Status = status,
             CreatedAt = DateTime.UtcNow.AddDays(-7)
         };
@@ -501,12 +556,12 @@ public class ProjectServiceGroupedTests
             ProjectName = "AISEP Growth Platform",
             ProjectImageFile = imageFile,
             ShortDescription = "Growth platform for startup scaling.",
-            DevelopmentStage = DevelopmentStage.Idea,
+            StageOptionId = 1,
             ProblemStatement = "Founders lack strategic clarity.",
             SolutionDescription = "Advisor-driven execution intelligence.",
             TargetCustomers = "Startup founders",
             TeamMembers = "Founder, Engineer",
-            Industry = Industry.SaaS
+            IndustryOptionIds = [2]
         };
     }
 

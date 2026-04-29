@@ -456,7 +456,15 @@ public class DocumentServiceGroupedTests
             ProjectId = projectId,
             StartupId = startupId,
             ProjectName = "AISEP Document Project",
-            Industry = Industry.SaaS,
+            ProjectIndustries = new List<ProjectIndustry>
+            {
+                new ProjectIndustry
+                {
+                    ProjectId = projectId,
+                    IndustryOptionId = 1,
+                    IndustryOption = new IndustryOption { Id = 1, Value = "SaaS", IsActive = true }
+                }
+            },
             Status = status,
             CreatedAt = DateTime.UtcNow.AddDays(-2),
             Startup = BuildStartup(startupId, startupUserId)

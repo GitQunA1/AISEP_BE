@@ -1,8 +1,8 @@
 namespace AISEP.BLL.DTOs.Requests
 {
-    public class RespondDealRequestDto
+    public class VerifyDealRequestDto
     {
-        public bool? IsAccepted { get; set; }
+        public bool? IsConfirmed { get; set; }
         public string? Reason { get; set; }
     }
 }

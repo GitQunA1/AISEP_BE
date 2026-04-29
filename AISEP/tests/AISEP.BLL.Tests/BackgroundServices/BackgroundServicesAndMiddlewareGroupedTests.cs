@@ -13,6 +13,7 @@ using AISEP.BLL.Services.ProjectAdvisorAssignments;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
+using AISEP.DAL.Repositories.Deals;
 using AISEP.DAL.Repositories.Subscriptions;
 using AISEP.DAL.Repositories.Users;
 using FluentValidation;
@@ -133,14 +134,10 @@ public class BackgroundServicesAndMiddlewareGroupedTests
     }
 
     [Fact]
-    public async Task UT239_BlockchainOwnershipAssignmentBackgroundService_ShouldAssignOwnerAndNotify_WhenWorkItemDequeued()
+    public async Task UT239_BlockchainOwnershipAssignmentBackgroundService_ShouldCompleteDeal_WhenBlockchainSucceeds()
     {
-        var workItem = new DocumentOwnerAssignmentWorkItem(
-            DealId: 701,
-            ProjectId: 801,
-            DocumentHash: "0xhash",
-            InvestorWallet: "0xwallet",
-            InvestorUserId: 901);
+        var deal = BuildDealForBlockchain(701, "https://storage.test/evidence.pdf", "0xwallet");
+        var workItem = new DocumentOwnerAssignmentWorkItem(deal.DealId);
 
         var cts = new CancellationTokenSource();
         var queue = new Mock<IBlockchainOwnershipAssignmentQueue>();
@@ -151,9 +148,19 @@ public class BackgroundServicesAndMiddlewareGroupedTests
                 return new ValueTask<DocumentOwnerAssignmentWorkItem>(workItem);
             });
 
+        var dealRepository = new Mock<IDealRepository>();
+        dealRepository.Setup(x => x.GetByIdWithDetailsAsync(deal.DealId)).ReturnsAsync(deal);
+
+        var unitOfWork = new Mock<IUnitOfWork>();
+        unitOfWork.SetupGet(x => x.Deals).Returns(dealRepository.Object);
+        unitOfWork.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
+
         var blockchainService = new Mock<IBlockchainService>();
         blockchainService
-            .Setup(x => x.AssignDocumentOwnerAsync(workItem.DocumentHash, workItem.InvestorWallet))
+            .Setup(x => x.ComputeFileHashFromUrlAsync(deal.DocumentUrl!))
+            .ReturnsAsync("0xhash");
+        blockchainService
+            .Setup(x => x.AssignDocumentOwnerAsync("0xhash", "0xwallet"))
             .ReturnsAsync("0xtx123");
 
         var notificationService = new Mock<INotificationService>();
@@ -168,6 +175,7 @@ public class BackgroundServicesAndMiddlewareGroupedTests
             .Returns(Task.CompletedTask);
 
         var provider = new ServiceCollection()
+            .AddSingleton(unitOfWork.Object)
             .AddSingleton(blockchainService.Object)
             .AddSingleton(notificationService.Object)
             .BuildServiceProvider();
@@ -183,36 +191,32 @@ public class BackgroundServicesAndMiddlewareGroupedTests
         await service.RunUntilCanceledAsync(cts.Token);
 
         blockchainService.Verify(
-            x => x.AssignDocumentOwnerAsync(workItem.DocumentHash, workItem.InvestorWallet),
+            x => x.AssignDocumentOwnerAsync("0xhash", "0xwallet"),
             Times.Once);
+
+        Assert.Equal(DealStatus.Completed, deal.Status);
+        Assert.True(deal.IsCompleted);
+        Assert.NotNull(deal.CompletionDate);
 
         notificationService.Verify(
             x => x.SendNotificationAsync(
-                workItem.InvestorUserId,
+                deal.Investor.UserId,
                 It.IsAny<string>(),
-                It.Is<string>(m => m.Contains("Deal #701") && m.Contains("0xtx123")),
+                It.Is<string>(m => m.Contains("0xtx123")),
                 NotificationType.Deal,
-                workItem.DealId,
+                deal.DealId,
                 "Deal"),
             Times.Once);
     }
 
     [Fact]
-    public async Task UT240_BlockchainOwnershipAssignmentBackgroundService_ShouldLogErrorAndContinue_WhenAssignmentFails()
+    public async Task UT240_BlockchainOwnershipAssignmentBackgroundService_ShouldContinue_WhenFirstDealInvalid()
     {
-        var failedWorkItem = new DocumentOwnerAssignmentWorkItem(
-            DealId: 1,
-            ProjectId: 10,
-            DocumentHash: "0xfail",
-            InvestorWallet: "0xwallet-fail",
-            InvestorUserId: 1001);
+        var failedDeal = BuildDealForBlockchain(1, null, "0xwallet-fail");
+        var successfulDeal = BuildDealForBlockchain(2, "https://storage.test/evidence.pdf", "0xwallet-ok");
 
-        var successfulWorkItem = new DocumentOwnerAssignmentWorkItem(
-            DealId: 2,
-            ProjectId: 20,
-            DocumentHash: "0xok",
-            InvestorWallet: "0xwallet-ok",
-            InvestorUserId: 1002);
+        var failedWorkItem = new DocumentOwnerAssignmentWorkItem(failedDeal.DealId);
+        var successfulWorkItem = new DocumentOwnerAssignmentWorkItem(successfulDeal.DealId);
 
         var cts = new CancellationTokenSource();
         var dequeueCount = 0;
@@ -229,13 +233,20 @@ public class BackgroundServicesAndMiddlewareGroupedTests
                 };
             });
 
+        var dealRepository = new Mock<IDealRepository>();
+        dealRepository.Setup(x => x.GetByIdWithDetailsAsync(failedDeal.DealId)).ReturnsAsync(failedDeal);
+        dealRepository.Setup(x => x.GetByIdWithDetailsAsync(successfulDeal.DealId)).ReturnsAsync(successfulDeal);
+
+        var unitOfWork = new Mock<IUnitOfWork>();
+        unitOfWork.SetupGet(x => x.Deals).Returns(dealRepository.Object);
+        unitOfWork.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
+
         var blockchainService = new Mock<IBlockchainService>();
         blockchainService
-            .Setup(x => x.AssignDocumentOwnerAsync(failedWorkItem.DocumentHash, failedWorkItem.InvestorWallet))
-            .ThrowsAsync(new InvalidOperationException("revert"));
-
+            .Setup(x => x.ComputeFileHashFromUrlAsync(successfulDeal.DocumentUrl!))
+            .ReturnsAsync("0xok");
         blockchainService
-            .Setup(x => x.AssignDocumentOwnerAsync(successfulWorkItem.DocumentHash, successfulWorkItem.InvestorWallet))
+            .Setup(x => x.AssignDocumentOwnerAsync("0xok", "0xwallet-ok"))
             .Callback(() => cts.Cancel())
             .ReturnsAsync("0xoktx");
 
@@ -251,6 +262,7 @@ public class BackgroundServicesAndMiddlewareGroupedTests
             .Returns(Task.CompletedTask);
 
         var provider = new ServiceCollection()
+            .AddSingleton(unitOfWork.Object)
             .AddSingleton(blockchainService.Object)
             .AddSingleton(notificationService.Object)
             .BuildServiceProvider();
@@ -266,22 +278,62 @@ public class BackgroundServicesAndMiddlewareGroupedTests
         await service.RunUntilCanceledAsync(cts.Token);
 
         blockchainService.Verify(
-            x => x.AssignDocumentOwnerAsync(failedWorkItem.DocumentHash, failedWorkItem.InvestorWallet),
+            x => x.AssignDocumentOwnerAsync("0xok", "0xwallet-ok"),
             Times.Once);
 
-        blockchainService.Verify(
-            x => x.AssignDocumentOwnerAsync(successfulWorkItem.DocumentHash, successfulWorkItem.InvestorWallet),
-            Times.Once);
+        Assert.Equal(DealStatus.BlockchainFailed, failedDeal.Status);
+        Assert.Equal(DealStatus.Completed, successfulDeal.Status);
 
         notificationService.Verify(
             x => x.SendNotificationAsync(
-                successfulWorkItem.InvestorUserId,
+                successfulDeal.Investor.UserId,
                 It.IsAny<string>(),
                 It.IsAny<string>(),
                 NotificationType.Deal,
-                successfulWorkItem.DealId,
+                successfulDeal.DealId,
                 "Deal"),
             Times.Once);
+    }
+
+    private static Deal BuildDealForBlockchain(int dealId, string? documentUrl, string? investorWallet)
+    {
+        var startupUser = new User { Id = 4001, UserName = "startup.user" };
+        var investorUser = new User { Id = 4002, UserName = "investor.user" };
+
+        var startup = new Startup
+        {
+            StartupId = 5001,
+            UserId = startupUser.Id,
+            User = startupUser,
+            CompanyName = "Startup Co"
+        };
+
+        var project = new Project
+        {
+            ProjectId = 6001,
+            StartupId = startup.StartupId,
+            Startup = startup,
+            ProjectName = "Project X"
+        };
+
+        var investor = new Investor
+        {
+            InvestorId = 7001,
+            UserId = investorUser.Id,
+            User = investorUser,
+            WalletAddress = investorWallet
+        };
+
+        return new Deal
+        {
+            DealId = dealId,
+            InvestorId = investor.InvestorId,
+            ProjectId = project.ProjectId,
+            Investor = investor,
+            Project = project,
+            DocumentUrl = documentUrl,
+            Status = DealStatus.ProcessingBlockchain
+        };
     }
 
     [Fact]

@@ -726,7 +726,15 @@ public class BookingServiceGroupedTests
             Startup = startup,
             ProjectName = "AISEP Booking Project",
             Status = status,
-            Industry = Industry.Fintech
+            ProjectIndustries = new List<ProjectIndustry>
+            {
+                new ProjectIndustry
+                {
+                    ProjectId = projectId,
+                    IndustryOptionId = 1,
+                    IndustryOption = new IndustryOption { Id = 1, Value = "Fintech", IsActive = true }
+                }
+            }
         };
     }
 
