@@ -6,7 +6,7 @@ namespace AISEP.BLL.DTOs.Responses
         public int StartupId { get; set; }
         public string ProjectName { get; set; } = string.Empty;
         public string? ShortDescription { get; set; }
-        public string? DevelopmentStage { get; set; }
+        public int? StageOptionId { get; set; }
         public string? ProblemStatement { get; set; }
         public string? SolutionDescription { get; set; }
         public string? TargetCustomers { get; set; }

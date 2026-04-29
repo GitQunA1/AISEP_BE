@@ -929,6 +929,7 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.MinValue).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.MaxValue).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.AllowedFileTypesJson).HasColumnType("text");
+                entity.Property(e => e.StageOptionIds).HasColumnType("text");
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 entity.HasIndex(e => new { e.FormKey, e.FieldKey }).IsUnique();

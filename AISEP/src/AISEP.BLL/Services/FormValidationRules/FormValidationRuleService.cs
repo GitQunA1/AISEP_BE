@@ -48,7 +48,7 @@ namespace AISEP.BLL.Services.FormValidationRules
             var normalizedFormKey = NormalizeKey(request.FormKey, nameof(request.FormKey));
             var normalizedFieldKey = NormalizeKey(request.FieldKey, nameof(request.FieldKey));
 
-            ValidateRequest(request);
+            await ValidateRequestAsync(request);
 
             var rule = await _unitOfWork.FormValidationRules.GetByFormAndFieldAsync(normalizedFormKey, normalizedFieldKey);
             if (rule is not null)
@@ -73,7 +73,7 @@ namespace AISEP.BLL.Services.FormValidationRules
         // Chỉ cập nhật một rule đã tồn tại sẵn theo id.
         public async Task<FormValidationRuleResponse> UpdateAsync(int id, UpsertFormValidationRuleRequest request)
         {
-            ValidateRequest(request);
+            await ValidateRequestAsync(request);
 
             var rule = await _unitOfWork.FormValidationRules.GetByIdAsync(id);
             if (rule is null)
@@ -89,7 +89,7 @@ namespace AISEP.BLL.Services.FormValidationRules
         }
 
         // Kiểm tra cấu hình rule trước khi lưu, tránh tạo ra dữ liệu validate mâu thuẫn hoặc không dùng được.
-        private static void ValidateRequest(UpsertFormValidationRuleRequest request)
+        private async Task ValidateRequestAsync(UpsertFormValidationRuleRequest request)
         {
             if (!string.IsNullOrWhiteSpace(request.CustomRegexPattern))
             {
@@ -123,11 +123,6 @@ namespace AISEP.BLL.Services.FormValidationRules
                 throw new InvalidOperationException("MinValue cannot be greater than MaxValue.");
             }
 
-            if (request.MaxFileSizeBytes.HasValue && request.MaxFileSizeBytes <= 0)
-            {
-                throw new InvalidOperationException("MaxFileSizeBytes must be greater than 0.");
-            }
-
             if (request.AllowedFileTypes is not null)
             {
                 var invalidTypes = request.AllowedFileTypes
@@ -137,6 +132,24 @@ namespace AISEP.BLL.Services.FormValidationRules
                 if (invalidTypes.Count != 0)
                 {
                     throw new InvalidOperationException("AllowedFileTypes cannot contain empty values.");
+                }
+            }
+
+            if (request.StageOptionIds is not null && request.StageOptionIds.Any(id => id <= 0))
+            {
+                throw new InvalidOperationException("StageOptionIds must contain positive stage option ids.");
+            }
+
+            if (request.StageOptionIds is { Count: > 0 })
+            {
+                var requestedIds = request.StageOptionIds
+                    .Distinct()
+                    .ToList();
+                var stageOptions = await _unitOfWork.StageOptions.GetByIdsAsync(requestedIds);
+
+                if (stageOptions.Count != requestedIds.Count || stageOptions.Any(x => !x.IsActive))
+                {
+                    throw new InvalidOperationException("One or more required stage options are invalid or inactive.");
                 }
             }
         }
@@ -158,7 +171,17 @@ namespace AISEP.BLL.Services.FormValidationRules
                         .ToList(),
                     JsonOptions)
                 : null;
-            rule.MaxFileSizeBytes = request.MaxFileSizeBytes;
+            rule.StageOptionIds = request.StageOptionIds is { Count: > 0 }
+                ? JsonSerializer.Serialize(
+                    request.StageOptionIds
+                        .Where(id => id > 0)
+                        .Distinct()
+                        .ToList(),
+                    JsonOptions)
+                : null;
+            rule.MaxFileSizeBytes = request.MaxFileSizeBytes > 0
+                ? request.MaxFileSizeBytes
+                : null;
             rule.UpdatedAt = DateTime.UtcNow;
         }
 
@@ -169,6 +192,12 @@ namespace AISEP.BLL.Services.FormValidationRules
             if (!string.IsNullOrWhiteSpace(rule.AllowedFileTypesJson))
             {
                 allowedFileTypes = JsonSerializer.Deserialize<List<string>>(rule.AllowedFileTypesJson, JsonOptions);
+            }
+
+            List<int>? stageOptionIds = null;
+            if (!string.IsNullOrWhiteSpace(rule.StageOptionIds))
+            {
+                stageOptionIds = JsonSerializer.Deserialize<List<int>>(rule.StageOptionIds, JsonOptions);
             }
 
             return new FormValidationRuleResponse
@@ -182,6 +211,7 @@ namespace AISEP.BLL.Services.FormValidationRules
                 MinValue = rule.MinValue,
                 MaxValue = rule.MaxValue,
                 AllowedFileTypes = allowedFileTypes,
+                StageOptionIds = stageOptionIds,
                 MaxFileSizeBytes = rule.MaxFileSizeBytes,
                 UpdatedAt = rule.UpdatedAt
             };

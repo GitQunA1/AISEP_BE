@@ -2,16 +2,15 @@ using System.Text.Json;
 using System.Linq;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.DAL.Entities;
-using AISEP.DAL.Enums;
 
 namespace AISEP.BLL.Services.AI
 {
     public static class GeminiAnalysisScoringHelper
     {
-        public static int CalculatePotentialScore(GeminiAnalysisResult result, DevelopmentStage? stage)
+        public static int CalculatePotentialScore(GeminiAnalysisResult result)
         {
             static double Normalize(double score) => NormalizeScore(score);
-            var maxPoints = GetStageMaxPointProfile(stage);
+            var maxPoints = GetMaxPointProfile();
 
             var totalPoints =
                 (Normalize(GetComponentScore(result.Team, result.TeamScore)) / 10.0) * maxPoints.Team +
@@ -123,7 +122,7 @@ namespace AISEP.BLL.Services.AI
             }
         }
 
-        public static List<ScoreBreakdownItem> BuildBreakdown(GeminiAnalysisResult? analysis, DevelopmentStage? stage)
+        public static List<ScoreBreakdownItem> BuildBreakdown(GeminiAnalysisResult? analysis)
         {
             if (analysis is null)
             {
@@ -132,7 +131,7 @@ namespace AISEP.BLL.Services.AI
 
             static double Normalize(double score) => NormalizeScore(score);
             double Score(ComponentEvaluation? component, double fallback) => Normalize(GetComponentScore(component, fallback));
-            var maxPoints = GetStageMaxPointProfile(stage);
+            var maxPoints = GetMaxPointProfile();
 
             var team = Score(analysis.Team, analysis.TeamScore);
             var opportunity = Score(analysis.Opportunity, analysis.OpportunityScore);
@@ -212,19 +211,9 @@ namespace AISEP.BLL.Services.AI
         }
 
         private static (double Team, double Opportunity, double Product, double Competition, double Marketing, double Investment, double Other)
-            GetStageMaxPointProfile(DevelopmentStage? stage)
+            GetMaxPointProfile()
         {
-            return stage switch
-            {
-                // Total must always equal 100 points.
-                // IDEA: emphasize problem/solution fit, customer pain, and early product logic.
-                DevelopmentStage.Idea => (20, 30, 35, 5, 5, 3, 2),
-                // MVP: emphasize execution readiness while still valuing market and team.
-                DevelopmentStage.MVP => (25, 20, 25, 10, 10, 5, 5),
-                // GROWTH: emphasize numbers and scaling readiness (revenue, market, scale team, funding discipline).
-                DevelopmentStage.Growth => (25, 20, 5, 10, 20, 15, 5),
-                _ => (20, 30, 35, 5, 5, 3, 2)
-            };
+            return (20, 30, 35, 5, 5, 3, 2);
         }
 
         private static double GetComponentScore(ComponentEvaluation? component, double fallbackScore)

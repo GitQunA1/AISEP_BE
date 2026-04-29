@@ -12,6 +12,7 @@ namespace AISEP.DAL.Entities
         public decimal? MinValue { get; set; }
         public decimal? MaxValue { get; set; }
         public string? AllowedFileTypesJson { get; set; }
+        public string? StageOptionIds { get; set; }
         public long? MaxFileSizeBytes { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }

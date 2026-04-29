@@ -533,6 +533,9 @@ namespace AISEP.BLL.Helpers
             mapper.Property<FormValidationRule>(r => r.AllowedFileTypesJson)
                 .CanFilter()
                 .CanSort();
+            mapper.Property<FormValidationRule>(r => r.StageOptionIds)
+                .CanFilter()
+                .CanSort();
             mapper.Property<FormValidationRule>(r => r.MaxFileSizeBytes)
                 .CanFilter()
                 .CanSort();
