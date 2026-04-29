@@ -5,14 +5,10 @@ using System.IO;
 
 namespace AISEP.BLL.Validators.Deal
 {
-    public class CreateDealDtoValidator : AbstractValidator<CreateDealDto>
+    public class ReuploadDealEvidenceDtoValidator : AbstractValidator<ReuploadDealEvidenceDto>
     {
-        public CreateDealDtoValidator()
+        public ReuploadDealEvidenceDtoValidator()
         {
-            RuleFor(x => x.ProjectId)
-                .NotEmpty().WithMessage("ProjectId is required.")
-                .GreaterThan(0).WithMessage("ProjectId must be a positive number.");
-
             RuleFor(x => x.EvidenceFile)
                 .NotNull().WithMessage("EvidenceFile is required.")
                 .Must(file => file is { Length: > 0 }).WithMessage("EvidenceFile is required.");
