@@ -46,9 +46,9 @@ namespace AISEP.BLL.Services.PostPrs
                 throw new KeyNotFoundException("Deal not found.");
             }
 
-            if (deal.Status != DealStatus.Contract_Signed)
+            if (deal.Status != DealStatus.Completed)
             {
-                throw new InvalidOperationException("Only deals with status Contract_Signed can create Post PR.");
+                throw new InvalidOperationException("Only deals with status Completed can create Post PR.");
             }
 
             var postPr = _mapper.Map<PostPr>(request);

@@ -46,10 +46,7 @@ namespace AISEP.DAL.Repositories.Deals
             return await _context.Deals.AnyAsync(d =>
                 d.InvestorId == investorId &&
                 d.ProjectId == projectId &&
-                (d.Status == DealStatus.Pending ||
-                 d.Status == DealStatus.Confirmed ||
-                 d.Status == DealStatus.Waiting_For_Startup_Signature ||
-                 d.Status == DealStatus.Contract_Signed));
+                d.Status != DealStatus.Canceled);
         }
 
         public async Task AddAsync(Deal deal)

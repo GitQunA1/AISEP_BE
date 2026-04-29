@@ -11,14 +11,9 @@ using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Logging;
-using QuestPDF.Fluent;
-using QuestPDF.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 using Sieve.Models;
 using Sieve.Services;
-using System.Globalization;
-using System.Text;
 
 namespace AISEP.BLL.Services.Deals
 {
@@ -27,38 +22,37 @@ namespace AISEP.BLL.Services.Deals
         private readonly IUnitOfWork _unitOfWork;
         private readonly INotificationService _notificationService;
         private readonly IMapper _mapper;
-        private readonly IBlockchainService _blockchainService;
         private readonly IBlockchainOwnershipAssignmentQueue _blockchainOwnershipAssignmentQueue;
+        private readonly IBlockchainService _blockchainService;
         private readonly IStorageService _storageService;
         private readonly ISieveProcessor _sieveProcessor;
-        private readonly IWebHostEnvironment _environment;
-        private readonly ILogger<DealService> _logger;
 
         public DealService(
             IUnitOfWork unitOfWork,
             INotificationService notificationService,
             IMapper mapper,
-            IBlockchainService blockchainService,
             IBlockchainOwnershipAssignmentQueue blockchainOwnershipAssignmentQueue,
+            IBlockchainService blockchainService,
             IStorageService storageService,
-            ISieveProcessor sieveProcessor,
-            IWebHostEnvironment environment,
-            ILogger<DealService> logger)
+            ISieveProcessor sieveProcessor)
         {
             _unitOfWork = unitOfWork;
             _notificationService = notificationService;
             _mapper = mapper;
-            _blockchainService = blockchainService;
             _blockchainOwnershipAssignmentQueue = blockchainOwnershipAssignmentQueue;
+            _blockchainService = blockchainService;
             _storageService = storageService;
             _sieveProcessor = sieveProcessor;
-            _environment = environment;
-            _logger = logger;
         }
 
-        public async Task<DealDto> CreateDealAsync(int investorId, CreateDealDto dto)
+        public async Task<DealDto> CreateDealForInvestorAsync(int investorId, CreateDealDto dto)
         {
-            var investor = await _unitOfWork.Investors.GetByIdAsync(investorId)
+            if (dto is null)
+            {
+                throw new ArgumentNullException(nameof(dto));
+            }
+
+            _ = await _unitOfWork.Investors.GetByIdAsync(investorId)
                 ?? throw new KeyNotFoundException("Investor not found.");
 
             var project = await _unitOfWork.Projects.GetByIdAsync(dto.ProjectId)
@@ -67,24 +61,86 @@ namespace AISEP.BLL.Services.Deals
             var hasBlockingDeal = await _unitOfWork.Deals.HasBlockingDealAsync(investorId, dto.ProjectId);
             if (hasBlockingDeal)
             {
-                throw new InvalidOperationException("You already have an active deal for this project. You can only create a new one after the previous deal is rejected.");
+                throw new InvalidOperationException("You already have an active deal for this project.");
             }
+
+            var (documentUrl, documentHash) = await UploadEvidenceAsync(dto.EvidenceFile, project.StartupId);
 
             var deal = _mapper.Map<Deal>(dto);
             deal.InvestorId = investorId;
+            deal.ProjectId = dto.ProjectId;
+            deal.DocumentUrl = documentUrl;
+            deal.InitiatorRole = UserRole.Investor;
             deal.InvestorConfirmed = true;
             deal.StartupConfirmed = false;
-            deal.Status = DealStatus.Pending;
+            deal.Status = DealStatus.PendingCounterpartyConfirmation;
             deal.DealDate = DateTime.UtcNow;
             deal.IsCompleted = false;
+            deal.DocumentHash = documentHash;
 
             await _unitOfWork.Deals.AddAsync(deal);
             await _unitOfWork.SaveChangesAsync();
 
             await _notificationService.SendNotificationAsync(
                 project.Startup.UserId,
-                "Đề xuất thỏa thuận đầu tư mới",
-                $"Có đề xuất thỏa thuận đầu tư mới cho dự án '{project.ProjectName}'.",
+                "Yêu cầu xác nhận giao dịch ký kết",
+                $"Nhà đầu tư đã khởi tạo giao dịch ký kết cho dự án '{project.ProjectName}'. Vui lòng xác nhận.",
+                NotificationType.Deal,
+                deal.DealId,
+                "Deal");
+
+            var created = await _unitOfWork.Deals.GetByIdWithDetailsAsync(deal.DealId)
+                ?? throw new KeyNotFoundException("Created deal not found.");
+
+            return _mapper.Map<DealDto>(created);
+        }
+
+        public async Task<DealDto> CreateDealForStartupAsync(int startupId, CreateDealDto dto)
+        {
+            if (dto is null)
+            {
+                throw new ArgumentNullException(nameof(dto));
+            }
+
+            var project = await _unitOfWork.Projects.GetByIdAsync(dto.ProjectId)
+                ?? throw new KeyNotFoundException("Project not found.");
+
+            if (project.StartupId != startupId)
+            {
+                throw new ForbiddenAccessException("You do not have permission to create a deal for this project.");
+            }
+
+            var connection = await GetLatestAcceptedConnectionAsync(startupId, dto.ProjectId);
+            var investor = connection.Investor
+                ?? throw new KeyNotFoundException("Investor not found.");
+
+            var hasBlockingDeal = await _unitOfWork.Deals.HasBlockingDealAsync(investor.InvestorId, dto.ProjectId);
+            if (hasBlockingDeal)
+            {
+                throw new InvalidOperationException("You already have an active deal for this project.");
+            }
+
+            var (documentUrl, documentHash) = await UploadEvidenceAsync(dto.EvidenceFile, project.StartupId);
+
+            var deal = _mapper.Map<Deal>(dto);
+            deal.InvestorId = investor.InvestorId;
+            deal.ProjectId = dto.ProjectId;
+            deal.DocumentUrl = documentUrl;
+            deal.InitiatorRole = UserRole.Startup;
+            deal.InvestorConfirmed = false;
+            deal.StartupConfirmed = true;
+            deal.Status = DealStatus.PendingCounterpartyConfirmation;
+            deal.DealDate = DateTime.UtcNow;
+            deal.IsCompleted = false;
+            deal.DocumentHash = documentHash;
+
+            await _unitOfWork.Deals.AddAsync(deal);
+            await _unitOfWork.SaveChangesAsync();
+
+            await _notificationService.SendNotificationAsync(
+                investor.UserId,
+                "Yêu cầu xác nhận giao dịch ký kết",
+                $"Startup đã khởi tạo giao dịch ký kết cho dự án '{project.ProjectName}'. Vui lòng xác nhận.",
                 NotificationType.Deal,
                 deal.DealId,
                 "Deal");
@@ -136,55 +192,217 @@ namespace AISEP.BLL.Services.Deals
                 d => _mapper.Map<DealDto>(d));
         }
 
-        public async Task<DealDto> RespondDealAsync(int startupId, int dealId, bool isAccepted, string? reason = null)
+        public async Task<DealDto> VerifyDealForInvestorAsync(int investorId, int dealId, VerifyDealRequestDto request)
         {
+            if (request is null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            if (request.IsConfirmed is null)
+            {
+                throw new InvalidOperationException("IsConfirmed is required.");
+            }
+
             var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
                 ?? throw new KeyNotFoundException("Deal not found.");
 
-            if (deal.Project.StartupId != startupId)
+            EnsureInvestorOwnsDeal(deal, investorId);
+            EnsureCounterpartyRole(deal, UserRole.Investor);
+            EnsureDealStatus(deal, DealStatus.PendingCounterpartyConfirmation, "Only pending deals can be verified.");
+
+            return await HandleCounterpartyVerificationAsync(deal, UserRole.Investor, request.IsConfirmed.Value, request.Reason);
+        }
+
+        public async Task<DealDto> VerifyDealForStartupAsync(int startupId, int dealId, VerifyDealRequestDto request)
+        {
+            if (request is null)
             {
-                throw new ForbiddenAccessException("You do not have permission to respond to this deal.");
+                throw new ArgumentNullException(nameof(request));
             }
 
-            if (deal.Status != DealStatus.Pending)
+            if (request.IsConfirmed is null)
             {
-                throw new InvalidOperationException("Only pending deals can be responded.");
+                throw new InvalidOperationException("IsConfirmed is required.");
             }
 
-            var trimmedReason = reason?.Trim();
+            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
+                ?? throw new KeyNotFoundException("Deal not found.");
 
-            string notificationTitle;
-            string notificationMessage;
+            EnsureStartupOwnsDeal(deal, startupId);
+            EnsureCounterpartyRole(deal, UserRole.Startup);
+            EnsureDealStatus(deal, DealStatus.PendingCounterpartyConfirmation, "Only pending deals can be verified.");
 
-            if (isAccepted)
+            return await HandleCounterpartyVerificationAsync(deal, UserRole.Startup, request.IsConfirmed.Value, request.Reason);
+        }
+
+        public async Task<DealDto> StaffReviewDealAsync(int dealId, StaffReviewDealRequestDto request)
+        {
+            if (request is null)
             {
-                deal.StartupConfirmed = true;
-                deal.Status = DealStatus.Confirmed;
-
-                notificationTitle = "Thỏa thuận đầu tư đã được xác nhận";
-                notificationMessage = "Thỏa thuận đầu tư của bạn đã được startup xác nhận.";
+                throw new ArgumentNullException(nameof(request));
             }
-            else
-            {
-                if (string.IsNullOrWhiteSpace(trimmedReason))
-                {
-                    throw new InvalidOperationException("Reason is required when deal is rejected.");
-                }
 
+            if (request.IsApproved is null)
+            {
+                throw new InvalidOperationException("IsApproved is required.");
+            }
+
+            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
+                ?? throw new KeyNotFoundException("Deal not found.");
+
+            EnsureDealStatus(deal, DealStatus.PendingStaffApproval, "Only deals pending staff approval can be reviewed.");
+
+            if (!request.IsApproved.Value)
+            {
+                deal.Status = DealStatus.RequireReupload;
+                ResetConfirmationForInitiator(deal);
+
+                _unitOfWork.Deals.Update(deal);
+                await _unitOfWork.SaveChangesAsync();
+
+                var reasonText = string.IsNullOrWhiteSpace(request.Reason)
+                    ? "Vui lòng tải lại minh chứng để tiếp tục."
+                    : $"Lý do: {request.Reason.Trim()}";
+
+                await _notificationService.SendNotificationAsync(
+                    GetInitiatorUserId(deal),
+                    "Yêu cầu tải lại minh chứng",
+                    $"Giao dịch cần tải lại minh chứng. {reasonText}",
+                    NotificationType.Deal,
+                    deal.DealId,
+                    "Deal");
+
+                return _mapper.Map<DealDto>(deal);
+            }
+
+            if (string.IsNullOrWhiteSpace(deal.DocumentUrl))
+            {
+                throw new InvalidOperationException("Deal evidence file is missing.");
+            }
+
+            deal.Status = DealStatus.ProcessingBlockchain;
+            _unitOfWork.Deals.Update(deal);
+            await _unitOfWork.SaveChangesAsync();
+
+            await _blockchainOwnershipAssignmentQueue.QueueAsync(new DocumentOwnerAssignmentWorkItem(deal.DealId));
+
+            await NotifyProcessingBlockchainAsync(deal);
+
+            return _mapper.Map<DealDto>(deal);
+        }
+
+        public async Task<DealDto> ReuploadDealEvidenceForInvestorAsync(int investorId, int dealId, ReuploadDealEvidenceDto request)
+        {
+            if (request is null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
+                ?? throw new KeyNotFoundException("Deal not found.");
+
+            EnsureInvestorOwnsDeal(deal, investorId);
+            EnsureInitiatorRole(deal, UserRole.Investor);
+            EnsureDealAllowsReupload(deal);
+
+            var (documentUrl, documentHash) = await UploadEvidenceAsync(request.EvidenceFile, deal.Project.StartupId);
+
+            deal.DocumentUrl = documentUrl;
+            deal.DocumentHash = documentHash;
+            deal.BlockchainTxHash = null;
+            deal.BlockchainVerifiedAt = null;
+            deal.BlockchainErrorMessage = null;
+            deal.Status = DealStatus.PendingCounterpartyConfirmation;
+            ResetConfirmationForInitiator(deal);
+
+            _unitOfWork.Deals.Update(deal);
+            await _unitOfWork.SaveChangesAsync();
+
+            await NotifyCounterpartyToVerifyAsync(deal);
+
+            return _mapper.Map<DealDto>(deal);
+        }
+
+        public async Task<DealDto> ReuploadDealEvidenceForStartupAsync(int startupId, int dealId, ReuploadDealEvidenceDto request)
+        {
+            if (request is null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
+                ?? throw new KeyNotFoundException("Deal not found.");
+
+            EnsureStartupOwnsDeal(deal, startupId);
+            EnsureInitiatorRole(deal, UserRole.Startup);
+            EnsureDealAllowsReupload(deal);
+
+            var (documentUrl, documentHash) = await UploadEvidenceAsync(request.EvidenceFile, deal.Project.StartupId);
+
+            deal.DocumentUrl = documentUrl;
+            deal.DocumentHash = documentHash;
+            deal.BlockchainTxHash = null;
+            deal.BlockchainVerifiedAt = null;
+            deal.BlockchainErrorMessage = null;
+            deal.Status = DealStatus.PendingCounterpartyConfirmation;
+            ResetConfirmationForInitiator(deal);
+
+            _unitOfWork.Deals.Update(deal);
+            await _unitOfWork.SaveChangesAsync();
+
+            await NotifyCounterpartyToVerifyAsync(deal);
+
+            return _mapper.Map<DealDto>(deal);
+        }
+
+        private async Task<DealDto> HandleCounterpartyVerificationAsync(
+            Deal deal,
+            UserRole actorRole,
+            bool isConfirmed,
+            string? reason)
+        {
+            if (isConfirmed)
+            {
+                ApplyCounterpartyConfirmation(deal, actorRole);
+                deal.Status = DealStatus.PendingStaffApproval;
+
+                _unitOfWork.Deals.Update(deal);
+                await _unitOfWork.SaveChangesAsync();
+
+                await _notificationService.SendNotificationAsync(
+                    GetInitiatorUserId(deal),
+                    "Đối tác đã xác nhận giao dịch",
+                    "Đối tác đã xác nhận giao dịch. Đang chờ nhân viên duyệt.",
+                    NotificationType.Deal,
+                    deal.DealId,
+                    "Deal");
+
+                return _mapper.Map<DealDto>(deal);
+            }
+
+            var rejectionReason = string.IsNullOrWhiteSpace(reason)
+                ? "Đối tác đã từ chối giao dịch."
+                : $"Đối tác đã từ chối giao dịch. Lý do: {reason.Trim()}";
+
+            if (actorRole == UserRole.Investor)
+            {
+                deal.InvestorConfirmed = false;
+            }
+            else if (actorRole == UserRole.Startup)
+            {
                 deal.StartupConfirmed = false;
-                deal.Status = DealStatus.Rejected;
-
-                notificationTitle = "Thỏa thuận đầu tư bị từ chối";
-                notificationMessage = $"Thỏa thuận đầu tư của bạn đã bị startup từ chối. Lý do: {trimmedReason}";
             }
+
+            deal.Status = DealStatus.Canceled;
 
             _unitOfWork.Deals.Update(deal);
             await _unitOfWork.SaveChangesAsync();
 
             await _notificationService.SendNotificationAsync(
-                deal.Investor.UserId,
-                notificationTitle,
-                notificationMessage,
+                GetInitiatorUserId(deal),
+                "Giao dịch bị từ chối",
+                rejectionReason,
                 NotificationType.Deal,
                 deal.DealId,
                 "Deal");
@@ -192,767 +410,136 @@ namespace AISEP.BLL.Services.Deals
             return _mapper.Map<DealDto>(deal);
         }
 
-        public async Task<string> GetContractPreviewForInvestorAsync(int dealId, int investorId)
+        private async Task NotifyProcessingBlockchainAsync(Deal deal)
         {
-            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
-                ?? throw new KeyNotFoundException("Deal not found.");
+            const string message = "Giao dịch đã được duyệt và đang ghi nhận lên blockchain.";
 
-            EnsureInvestorOwnsDeal(deal, investorId);
-            EnsureDealAllowsContractPreview(deal);
-
-            var templateHtml = await ReadContractTemplateAsync();
-            return BuildContractHtml(templateHtml, deal);
-        }
-
-        public async Task<string> GetContractPreviewAsync(int dealId)
-        {
-            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
-                ?? throw new KeyNotFoundException("Deal not found.");
-
-            EnsureDealAllowsContractPreview(deal);
-
-            var templateHtml = await ReadContractTemplateAsync();
-            return BuildContractHtml(templateHtml, deal);
-        }
-
-        public async Task<string> GetContractPreviewForStartupAsync(int dealId, int startupId)
-        {
-            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
-                ?? throw new KeyNotFoundException("Deal not found.");
-
-            EnsureStartupOwnsDeal(deal, startupId);
-            EnsureDealAllowsContractPreview(deal);
-
-            var templateHtml = await ReadContractTemplateAsync();
-            return BuildContractHtml(templateHtml, deal);
-        }
-
-        public async Task<DealContractStatusResponse> InvestorSignContractAsync(int dealId, int investorId, InvestorSignContractDto request)
-        {
-            if (request is null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
-
-            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
-                ?? throw new KeyNotFoundException("Deal not found.");
-
-            EnsureInvestorOwnsDeal(deal, investorId);
-
-            if (deal.Status != DealStatus.Confirmed)
-            {
-                throw new InvalidOperationException("Only confirmed deals can be signed by investor.");
-            }
-
-            var (investorSignatureDataUri, _) = NormalizeAndDecodeSignature(request.SignatureBase64, "Investor signature");
-
-            deal.Amount = request.FinalAmount;
-            deal.EquityPercentage = (decimal)request.FinalEquityPercentage;
-            deal.AdditionalTerms = request.AdditionalTerms?.Trim();
-            deal.InvestorSignature = investorSignatureDataUri;
-            deal.InvestorSignedAt = DateTime.UtcNow;
-            deal.StartupSignature = null;
-            deal.StartupSignedAt = null;
-            deal.ContractPdfUrl = null;
-            deal.Status = DealStatus.Waiting_For_Startup_Signature;
-
-            _unitOfWork.Deals.Update(deal);
-            await _unitOfWork.SaveChangesAsync();
+            await _notificationService.SendNotificationAsync(
+                deal.Investor.UserId,
+                "Đang xử lý blockchain",
+                message,
+                NotificationType.Deal,
+                deal.DealId,
+                "Deal");
 
             await _notificationService.SendNotificationAsync(
                 deal.Project.Startup.UserId,
-                "Nhà đầu tư đã ký hợp đồng",
-                "Nhà đầu tư đã ký thỏa thuận. Vui lòng xem lại và ký để hoàn tất.",
+                "Đang xử lý blockchain",
+                message,
                 NotificationType.Deal,
                 deal.DealId,
                 "Deal");
-
-            return _mapper.Map<DealContractStatusResponse>(deal);
         }
 
-        public async Task<DealContractStatusResponse> StartupSignContractAsync(int dealId, int startupId, StartupSignContractDto request)
+        private async Task NotifyCounterpartyToVerifyAsync(Deal deal)
         {
-            if (request is null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
-
-            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
-                ?? throw new KeyNotFoundException("Deal not found.");
-
-            EnsureStartupOwnsDeal(deal, startupId);
-
-            if (deal.Status != DealStatus.Waiting_For_Startup_Signature)
-            {
-                throw new InvalidOperationException("Deal is not waiting for startup signature.");
-            }
-
-            if (string.IsNullOrWhiteSpace(deal.InvestorSignature))
-            {
-                throw new InvalidOperationException("Investor must sign first.");
-            }
-
-            var (_, investorSignatureBytes) = NormalizeAndDecodeSignature(deal.InvestorSignature, "Investor signature");
-            var (startupSignatureDataUri, startupSignatureBytes) = NormalizeAndDecodeSignature(request.SignatureBase64, "Startup signature");
-
-            EnsureImageRenderableByPdfEngine(investorSignatureBytes, "Investor signature");
-            EnsureImageRenderableByPdfEngine(startupSignatureBytes, "Startup signature");
-
-            var investorWallet = GetInvestorWalletAddressOrThrow(deal);
-            var registeredDocumentHash = await GetRegisteredProjectDocumentHashAsync(deal.ProjectId);
-
-            deal.StartupSignature = startupSignatureDataUri;
-            deal.StartupSignedAt = DateTime.UtcNow;
-
-            var templateHtml = await ReadContractTemplateAsync();
-            var finalizedHtml = BuildContractHtml(templateHtml, deal);
-
-            byte[] pdfBytes;
-            try
-            {
-                pdfBytes = GenerateContractPdf(deal, investorSignatureBytes, startupSignatureBytes);
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Failed to generate contract PDF. {ex.Message}", ex);
-            }
-
-            string pdfPath;
-            try
-            {
-                pdfPath = await UploadContractPdfAsync(pdfBytes, deal.DealId);
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException("Failed to upload generated contract PDF.", ex);
-            }
-
-            deal.ContractPdfUrl = pdfPath;
-            deal.Status = DealStatus.Contract_Signed;
-
-            _unitOfWork.Deals.Update(deal);
-            await _unitOfWork.SaveChangesAsync();
+            var counterpartyUserId = GetCounterpartyUserId(deal);
+            var initiatorLabel = deal.InitiatorRole == UserRole.Investor ? "Nhà đầu tư" : "Startup";
 
             await _notificationService.SendNotificationAsync(
-                deal.Investor.UserId,
-                "Hợp đồng đã hoàn tất",
-                "Startup đã ký thỏa thuận. Hợp đồng hiện đã hoàn tất.",
+                counterpartyUserId,
+                "Yêu cầu xác nhận giao dịch ký kết",
+                $"{initiatorLabel} đã cập nhật minh chứng. Vui lòng xác nhận giao dịch.",
                 NotificationType.Deal,
                 deal.DealId,
                 "Deal");
-
-            await QueueOrExecuteDocumentOwnerAssignmentAsync(
-                deal.DealId,
-                deal.ProjectId,
-                registeredDocumentHash,
-                investorWallet,
-                deal.Investor.UserId);
-
-            _ = finalizedHtml;
-            return _mapper.Map<DealContractStatusResponse>(deal);
         }
 
-        public async Task<DealContractStatusResponse> StartupRejectContractAsync(int dealId, int startupId, StartupRejectContractDto request)
+        private async Task<(string DocumentUrl, string DocumentHash)> UploadEvidenceAsync(IFormFile file, int startupId)
         {
-            if (request is null)
+            if (file is null)
             {
-                throw new ArgumentNullException(nameof(request));
+                throw new InvalidOperationException("EvidenceFile is required.");
             }
 
-            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
-                ?? throw new KeyNotFoundException("Deal not found.");
+            var documentHash = await _blockchainService.ComputeFileHashAsync(file);
+            var documentUrl = await _storageService.UploadFileAsync(file, "deal-evidences");
 
-            EnsureStartupOwnsDeal(deal, startupId);
+            await _blockchainService.RegisterDocumentAsync(documentHash, startupId);
 
-            if (deal.Status != DealStatus.Waiting_For_Startup_Signature)
-            {
-                throw new InvalidOperationException("Only deals waiting for startup signature can be rejected at this stage.");
-            }
-
-            deal.StartupSignature = null;
-            deal.StartupSignedAt = null;
-            deal.ContractPdfUrl = null;
-            deal.Status = DealStatus.Rejected;
-
-            _unitOfWork.Deals.Update(deal);
-            await _unitOfWork.SaveChangesAsync();
-
-            var startupReason = request.Reason.Trim();
-
-            await _notificationService.SendNotificationAsync(
-                deal.Investor.UserId,
-                "Hợp đồng bị startup từ chối",
-                $"Startup đã từ chối thỏa thuận. Lý do: {startupReason}",
-                NotificationType.Deal,
-                deal.DealId,
-                "Deal");
-
-            return _mapper.Map<DealContractStatusResponse>(deal);
+            return (documentUrl, documentHash);
         }
 
-        public async Task<DealContractStatusResponse> GetContractStatusForInvestorAsync(int dealId, int investorId)
+        private async Task<ConnectionRequest> GetLatestAcceptedConnectionAsync(int startupId, int projectId)
         {
-            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
-                ?? throw new KeyNotFoundException("Deal not found.");
+            var connection = await _unitOfWork.ConnectionRequests.GetByStartupQuery(startupId)
+                .Where(cr => cr.ProjectId == projectId && cr.Status == ConnectionRequestStatus.Accepted)
+                .OrderByDescending(cr => cr.ResponseDate ?? DateTime.MinValue)
+                .FirstOrDefaultAsync();
 
-            EnsureInvestorOwnsDeal(deal, investorId);
-            return _mapper.Map<DealContractStatusResponse>(deal);
+            return connection ?? throw new InvalidOperationException("No accepted connection found for this project.");
         }
 
-        public async Task<DealContractStatusResponse> GetContractStatusForStartupAsync(int dealId, int startupId)
+        private static void EnsureCounterpartyRole(Deal deal, UserRole actorRole)
         {
-            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
-                ?? throw new KeyNotFoundException("Deal not found.");
-
-            EnsureStartupOwnsDeal(deal, startupId);
-            return _mapper.Map<DealContractStatusResponse>(deal);
-        }
-
-        public async Task<DealContractStatusResponse> GetContractStatusAsync(int dealId)
-        {
-            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
-                ?? throw new KeyNotFoundException("Deal not found.");
-
-            return _mapper.Map<DealContractStatusResponse>(deal);
-        }
-
-        public async Task<DealOwnershipAssignmentStatusResponse> GetOwnershipAssignmentStatusForInvestorAsync(int dealId, int investorId)
-        {
-            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
-                ?? throw new KeyNotFoundException("Deal not found.");
-
-            EnsureInvestorOwnsDeal(deal, investorId);
-            return await BuildOwnershipAssignmentStatusAsync(deal);
-        }
-
-        public async Task<DealOwnershipAssignmentStatusResponse> GetOwnershipAssignmentStatusForStartupAsync(int dealId, int startupId)
-        {
-            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
-                ?? throw new KeyNotFoundException("Deal not found.");
-
-            EnsureStartupOwnsDeal(deal, startupId);
-            return await BuildOwnershipAssignmentStatusAsync(deal);
-        }
-
-        public async Task<DealOwnershipAssignmentStatusResponse> GetOwnershipAssignmentStatusAsync(int dealId)
-        {
-            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
-                ?? throw new KeyNotFoundException("Deal not found.");
-
-            return await BuildOwnershipAssignmentStatusAsync(deal);
-        }
-
-        private async Task<DealOwnershipAssignmentStatusResponse> BuildOwnershipAssignmentStatusAsync(Deal deal)
-        {
-            var investorWallet = GetInvestorWalletAddressOrThrow(deal);
-
-            var projectDocuments = await _unitOfWork.Documents.GetByProjectIdAsync(deal.ProjectId);
-            var registeredDocument = projectDocuments
-                .Where(d => !string.IsNullOrWhiteSpace(d.FileHash))
-                .FirstOrDefault(d => !string.IsNullOrWhiteSpace(d.BlockchainTxHash));
-
-            if (registeredDocument is null)
+            if (deal.InitiatorRole == actorRole)
             {
-                throw new InvalidOperationException("No registered project document hash found on blockchain for this deal.");
-            }
-
-            var documentHash = registeredDocument.FileHash!;
-            var (startupIdOnChain, timestampOnChain, owners) = await _blockchainService.VerifyDocumentAsync(documentHash);
-
-            var ownerList = owners.ToList();
-            var isOwnerAssignedOnChain = ownerList.Any(owner =>
-                string.Equals(owner, investorWallet, StringComparison.OrdinalIgnoreCase));
-
-            return new DealOwnershipAssignmentStatusResponse
-            {
-                DealId = deal.DealId,
-                ProjectId = deal.ProjectId,
-                DocumentHash = documentHash,
-                InvestorWallet = investorWallet,
-                IsOwnerAssignedOnChain = isOwnerAssignedOnChain,
-                RegisterDocumentTxHash = registeredDocument.BlockchainTxHash ?? string.Empty,
-                TimestampOnBlockchain = timestampOnChain > 0
-                    ? DateTimeOffset.FromUnixTimeSeconds(timestampOnChain).UtcDateTime.ToString("yyyy-MM-dd HH:mm:ss UTC", CultureInfo.InvariantCulture)
-                    : string.Empty,
-                OnChainOwners = ownerList,
-                Message = BuildOwnershipStatusMessage(isOwnerAssignedOnChain, startupIdOnChain, deal.ProjectId, timestampOnChain)
-            };
-        }
-
-        private static string BuildOwnershipStatusMessage(
-            bool isOwnerAssignedOnChain,
-            int startupIdOnChain,
-            int expectedProjectId,
-            long timestampOnChain)
-        {
-            if (timestampOnChain <= 0)
-            {
-                return "Document hash is not registered on current contract. If this project/document was approved before changing ContractAddress, you need to register this hash again on the current contract.";
-            }
-
-            if (startupIdOnChain != expectedProjectId)
-            {
-                return "Blockchain document exists but startup/project id does not match this deal.";
-            }
-
-            return isOwnerAssignedOnChain
-                ? "Investor wallet has been assigned as document owner on blockchain."
-                : "Investor wallet is not in current on-chain owner list yet.";
-        }
-
-        private async Task<string> ReadContractTemplateAsync()
-        {
-            var templatePath = Path.Combine(_environment.ContentRootPath, "Templates", "ContractTemplate.html");
-            if (!File.Exists(templatePath))
-            {
-                throw new FileNotFoundException("Contract template was not found.", templatePath);
-            }
-
-            return await File.ReadAllTextAsync(templatePath);
-        }
-
-        private static string BuildContractHtml(string templateHtml, Deal deal)
-        {
-            var hasInvestorSignature = !string.IsNullOrWhiteSpace(deal.InvestorSignature);
-            var hasStartupSignature = !string.IsNullOrWhiteSpace(deal.StartupSignature);
-
-            var investorName = GetInvestorDisplayName(deal);
-            var startupRepName = GetStartupRepresentativeName(deal);
-            var investorEmail = deal.Investor.User?.Email ?? string.Empty;
-            var startupEmail = deal.Project.Startup.User?.Email
-                ?? deal.Project.Startup.Email
-                ?? string.Empty;
-
-            var finalAmountText = deal.Amount.ToString("F2", CultureInfo.InvariantCulture);
-            var finalEquityText = deal.EquityPercentage?.ToString("F2", CultureInfo.InvariantCulture) ?? ".......";
-
-            var investmentTermsBlock = hasInvestorSignature
-                ? $"<h3>2. Investment Terms</h3><p><span class=\"label\">Final Amount (VND):</span> {finalAmountText}</p><p><span class=\"label\">Final Equity (%):</span> {finalEquityText}</p>"
-                : "<h3>2. Investment Terms</h3><p><i>[Will be updated after investor finalizes amount and equity percentage]</i></p>";
-
-            var additionalTermsBlock = hasInvestorSignature && !string.IsNullOrWhiteSpace(deal.AdditionalTerms)
-                ? $"<h3>3. Additional Terms</h3><div class=\"box\">{deal.AdditionalTerms.Trim()}</div>"
-                : "<h3>3. Additional Terms</h3><p><i>[No additional terms yet]</i></p>";
-
-            var investorSignatureSection = BuildSignatureSection(
-                "Investor Signature",
-                investorName,
-                hasInvestorSignature ? NormalizeSignatureDataUri(deal.InvestorSignature!) : null,
-                deal.InvestorSignedAt);
-
-            var startupSignatureSection = BuildSignatureSection(
-                "Startup Representative",
-                startupRepName,
-                hasStartupSignature ? NormalizeSignatureDataUri(deal.StartupSignature!) : null,
-                deal.StartupSignedAt);
-
-            var replacements = new Dictionary<string, string>
-            {
-                ["{{DealId}}"] = deal.DealId.ToString(CultureInfo.InvariantCulture),
-                ["{{ContractDate}}"] = deal.DealDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-                ["{{InvestorName}}"] = investorName,
-                ["{{InvestorEmail}}"] = investorEmail,
-                ["{{ProjectName}}"] = deal.Project.ProjectName,
-                ["{{StartupRepName}}"] = startupRepName,
-                ["{{StartupEmail}}"] = startupEmail,
-                ["{{InvestmentTermsBlock}}"] = investmentTermsBlock,
-                ["{{AdditionalTermsBlock}}"] = additionalTermsBlock,
-                ["{{InvestorSignatureSection}}"] = investorSignatureSection,
-                ["{{StartupSignatureSection}}"] = startupSignatureSection
-            };
-
-            var html = templateHtml;
-            foreach (var item in replacements)
-            {
-                html = html.Replace(item.Key, item.Value, StringComparison.OrdinalIgnoreCase);
-            }
-
-            return html;
-        }
-
-        private static string BuildSignatureSection(string sectionLabel, string signerName, string? signatureDataUri, DateTime? signedAt)
-        {
-            if (string.IsNullOrWhiteSpace(signatureDataUri))
-            {
-                return $"<div class=\"line\">{signerName}</div>";
-            }
-
-            var signedAtRow = signedAt.HasValue
-                ? $"<p>Signed At: {FormatSignedAt(signedAt)}</p>"
-                : string.Empty;
-
-            return $"<div class=\"label\">{sectionLabel}</div><div class=\"box\"><img class=\"signature-img\" src=\"{signatureDataUri}\" alt=\"{sectionLabel}\" /></div>{signedAtRow}<div class=\"line\">{signerName}</div>";
-        }
-
-        private static string NormalizeSignatureDataUri(string signatureBase64)
-        {
-            if (string.IsNullOrWhiteSpace(signatureBase64))
-            {
-                return string.Empty;
-            }
-
-            if (signatureBase64.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
-            {
-                return signatureBase64;
-            }
-
-            if (signatureBase64.StartsWith("data:image", StringComparison.OrdinalIgnoreCase))
-            {
-                return signatureBase64;
-            }
-
-            return $"data:image/png;base64,{signatureBase64}";
-        }
-
-        private static byte[]? TryExtractSignatureImageBytes(string signatureDataUri)
-        {
-            if (string.IsNullOrWhiteSpace(signatureDataUri))
-            {
-                return null;
-            }
-
-            var commaIndex = signatureDataUri.IndexOf(',');
-            var base64 = commaIndex >= 0
-                ? signatureDataUri[(commaIndex + 1)..]
-                : signatureDataUri;
-
-            base64 = NormalizeBase64Payload(base64);
-
-            try
-            {
-                return Convert.FromBase64String(base64);
-            }
-            catch
-            {
-                return null;
+                throw new ForbiddenAccessException("You do not have permission to verify this deal.");
             }
         }
 
-        private static string NormalizeBase64Payload(string value)
+        private static void EnsureInitiatorRole(Deal deal, UserRole actorRole)
         {
-            if (string.IsNullOrWhiteSpace(value))
+            if (deal.InitiatorRole != actorRole)
             {
-                return string.Empty;
-            }
-
-            var builder = new StringBuilder(value.Length);
-            foreach (var c in value)
-            {
-                if (!char.IsWhiteSpace(c))
-                {
-                    builder.Append(c);
-                }
-            }
-
-            return builder.ToString();
-        }
-
-        private static (string DataUri, byte[] Bytes) NormalizeAndDecodeSignature(string? signatureBase64, string fieldName)
-        {
-            if (string.IsNullOrWhiteSpace(signatureBase64))
-            {
-                throw new InvalidOperationException($"{fieldName} is required.");
-            }
-
-            var dataUri = NormalizeSignatureDataUri(signatureBase64.Trim());
-            if (!dataUri.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase))
-            {
-                throw new InvalidOperationException($"{fieldName} must be an image in base64 format.");
-            }
-
-            var imageBytes = TryExtractSignatureImageBytes(dataUri)
-                ?? throw new InvalidOperationException($"{fieldName} format is invalid.");
-
-            if (!IsSupportedSignatureImage(imageBytes))
-            {
-                throw new InvalidOperationException($"{fieldName} must be PNG, JPEG, or WEBP.");
-            }
-
-            return (dataUri, imageBytes);
-        }
-
-        private static bool IsSupportedSignatureImage(byte[] bytes)
-        {
-            if (bytes.Length >= 8
-                && bytes[0] == 0x89
-                && bytes[1] == 0x50
-                && bytes[2] == 0x4E
-                && bytes[3] == 0x47
-                && bytes[4] == 0x0D
-                && bytes[5] == 0x0A
-                && bytes[6] == 0x1A
-                && bytes[7] == 0x0A)
-            {
-                return true;
-            }
-
-            if (bytes.Length >= 3
-                && bytes[0] == 0xFF
-                && bytes[1] == 0xD8
-                && bytes[2] == 0xFF)
-            {
-                return true;
-            }
-
-            if (bytes.Length >= 12
-                && bytes[0] == (byte)'R'
-                && bytes[1] == (byte)'I'
-                && bytes[2] == (byte)'F'
-                && bytes[3] == (byte)'F'
-                && bytes[8] == (byte)'W'
-                && bytes[9] == (byte)'E'
-                && bytes[10] == (byte)'B'
-                && bytes[11] == (byte)'P')
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        private static void EnsureImageRenderableByPdfEngine(byte[] imageBytes, string fieldName)
-        {
-            try
-            {
-                var probeDocument = QuestPDF.Fluent.Document.Create(container =>
-                {
-                    container.Page(page =>
-                    {
-                        page.Margin(10);
-                        page.Content().Image(imageBytes);
-                    });
-                });
-
-                _ = probeDocument.GeneratePdf();
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"{fieldName} is not renderable by PDF engine. Please send a plain PNG/JPEG signature image. {ex.Message}", ex);
+                throw new ForbiddenAccessException("You do not have permission to update this deal.");
             }
         }
 
-        private byte[] GenerateContractPdf(
-            Deal deal,
-            byte[] investorSignatureBytes,
-            byte[] startupSignatureBytes)
+        private static void EnsureDealStatus(Deal deal, DealStatus expectedStatus, string message)
         {
-            QuestPDF.Settings.License = LicenseType.Community;
-
-            var investorName = GetInvestorDisplayName(deal);
-            var startupRepName = GetStartupRepresentativeName(deal);
-            var investorEmail = deal.Investor.User?.Email ?? string.Empty;
-            var startupEmail = deal.Project.Startup.User?.Email
-                ?? deal.Project.Startup.Email
-                ?? string.Empty;
-
-            var contractDate = deal.DealDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-            var amountText = deal.Amount.ToString("F2", CultureInfo.InvariantCulture);
-            var equityText = (deal.EquityPercentage ?? 0m).ToString("F2", CultureInfo.InvariantCulture);
-            var termsText = string.IsNullOrWhiteSpace(deal.AdditionalTerms) ? "N/A" : deal.AdditionalTerms.Trim();
-
-            var document = QuestPDF.Fluent.Document.Create(container =>
+            if (deal.Status != expectedStatus)
             {
-                container.Page(page =>
-                {
-                    page.Margin(30);
-
-                    page.Content().Column(column =>
-                    {
-                        column.Spacing(8);
-
-                        column.Item().Text("AISEP Investment Contract").FontSize(20).SemiBold();
-                        column.Item().Text($"Contract No: DEAL-{deal.DealId}").FontSize(11);
-                        column.Item().Text($"Date: {contractDate}").FontSize(11);
-
-                        column.Item().PaddingTop(8).Text("1. Parties").SemiBold();
-                        column.Item().Text($"Investor: {investorName} (Email: {investorEmail})");
-                        column.Item().Text($"Startup/Project: {deal.Project.ProjectName} - Rep: {startupRepName} (Email: {startupEmail})");
-
-                        column.Item().PaddingTop(8).Text("2. Investment Terms").SemiBold();
-                        column.Item().Text($"Final Amount (VND): {amountText}");
-                        column.Item().Text($"Final Equity (%): {equityText}");
-
-                        column.Item().PaddingTop(8).Text("3. Additional Terms").SemiBold();
-                        column.Item().Border(1).Padding(8).Text(termsText);
-
-                        column.Item().PaddingTop(12).Row(row =>
-                        {
-                            row.Spacing(20);
-
-                            row.RelativeItem().Column(signColumn =>
-                            {
-                                signColumn.Spacing(4);
-                                signColumn.Item().Text("Investor Signature").SemiBold();
-                                signColumn.Item().Border(1).Padding(8).MinHeight(90).MaxHeight(120).AlignMiddle().AlignCenter().Image(investorSignatureBytes).FitArea();
-                                signColumn.Item().Text($"Signed At: {FormatSignedAt(deal.InvestorSignedAt)}").FontSize(10);
-                                signColumn.Item().Text(investorName).FontSize(10);
-                            });
-
-                            row.RelativeItem().Column(signColumn =>
-                            {
-                                signColumn.Spacing(4);
-                                signColumn.Item().Text("Startup Representative").SemiBold();
-                                signColumn.Item().Border(1).Padding(8).MinHeight(90).MaxHeight(120).AlignMiddle().AlignCenter().Image(startupSignatureBytes).FitArea();
-                                signColumn.Item().Text($"Signed At: {FormatSignedAt(deal.StartupSignedAt)}").FontSize(10);
-                                signColumn.Item().Text(startupRepName).FontSize(10);
-                            });
-                        });
-                    });
-                });
-            });
-
-            return document.GeneratePdf();
-        }
-
-        private async Task<string> UploadContractPdfAsync(byte[] pdfBytes, int dealId)
-        {
-            await using var stream = new MemoryStream(pdfBytes);
-            IFormFile contractFile = new FormFile(stream, 0, stream.Length, $"deal_{dealId}", $"deal-{dealId}-contract.pdf")
-            {
-                Headers = new HeaderDictionary(),
-                ContentType = "application/pdf"
-            };
-
-            return await _storageService.UploadFileAsync(contractFile, "deal-contracts");
-        }
-
-        private static string GetInvestorWalletAddressOrThrow(Deal deal)
-        {
-            var walletAddress = deal.Investor.WalletAddress?.Trim();
-            if (string.IsNullOrWhiteSpace(walletAddress))
-            {
-                throw new InvalidOperationException(
-                    "Investor wallet address is missing. Please update investor wallet before completing contract signing.");
-            }
-
-            return walletAddress;
-        }
-
-        private async Task<string> GetRegisteredProjectDocumentHashAsync(int projectId)
-        {
-            var projectDocuments = await _unitOfWork.Documents.GetByProjectIdAsync(projectId);
-
-            var registeredDocument = projectDocuments
-                .Where(d => !string.IsNullOrWhiteSpace(d.FileHash))
-                .FirstOrDefault(d => !string.IsNullOrWhiteSpace(d.BlockchainTxHash));
-
-            if (registeredDocument is null)
-            {
-                throw new InvalidOperationException(
-                    "No registered project document hash found on blockchain for this deal.");
-            }
-
-            return registeredDocument.FileHash!;
-        }
-
-        private async Task QueueOrExecuteDocumentOwnerAssignmentAsync(
-            int dealId,
-            int projectId,
-            string documentHash,
-            string investorWallet,
-            int investorUserId)
-        {
-            var workItem = new DocumentOwnerAssignmentWorkItem(
-                dealId,
-                projectId,
-                documentHash,
-                investorWallet,
-                investorUserId);
-
-            try
-            {
-                await _blockchainOwnershipAssignmentQueue.QueueAsync(workItem);
-            }
-            catch (Exception queueEx)
-            {
-                _logger.LogWarning(
-                    queueEx,
-                    "Failed to enqueue blockchain owner assignment for DealId {DealId}. Fallback to direct call.",
-                    dealId);
-
-                try
-                {
-                    var txHash = await _blockchainService.AssignDocumentOwnerAsync(documentHash, investorWallet);
-
-                    await _notificationService.SendNotificationAsync(
-                        investorUserId,
-                        "Đã chuyển giao quyền sở hữu tài liệu",
-                        $"Thỏa thuận #{dealId} đã được ghi nhận chuyển giao quyền sở hữu tài liệu trên Blockchain cho ví {investorWallet}. Mã giao dịch: {txHash}",
-                        NotificationType.Deal,
-                        dealId,
-                        "Deal");
-
-                    _logger.LogInformation(
-                        "Fallback blockchain owner assignment succeeded for DealId {DealId}. TxHash: {TxHash}",
-                        dealId,
-                        txHash);
-                }
-                catch (Exception fallbackEx)
-                {
-                    _logger.LogError(
-                        fallbackEx,
-                        "Fallback blockchain owner assignment failed for DealId {DealId}, ProjectId {ProjectId}.",
-                        dealId,
-                        projectId);
-                }
+                throw new InvalidOperationException(message);
             }
         }
 
-        private static void EnsureDealAllowsContractPreview(Deal deal)
+        private static void EnsureDealAllowsReupload(Deal deal)
         {
-            if (deal.Status != DealStatus.Confirmed
-                && deal.Status != DealStatus.Waiting_For_Startup_Signature
-                && deal.Status != DealStatus.Contract_Signed)
+            if (deal.Status != DealStatus.RequireReupload && deal.Status != DealStatus.PendingCounterpartyConfirmation)
             {
-                throw new InvalidOperationException("Contract preview is only available for deals in signing flow.");
+                throw new InvalidOperationException("Deal is not allowed to reupload evidence in current status.");
             }
         }
 
-        private static string GetInvestorDisplayName(Deal deal)
+        private static void ResetConfirmationForInitiator(Deal deal)
         {
-            if (!string.IsNullOrWhiteSpace(deal.Investor.OrganizationName))
+            if (deal.InitiatorRole == UserRole.Investor)
             {
-                return deal.Investor.OrganizationName;
+                deal.InvestorConfirmed = true;
+                deal.StartupConfirmed = false;
             }
-
-            if (!string.IsNullOrWhiteSpace(deal.Investor.User?.FullName))
+            else if (deal.InitiatorRole == UserRole.Startup)
             {
-                return deal.Investor.User.FullName;
+                deal.InvestorConfirmed = false;
+                deal.StartupConfirmed = true;
             }
-
-            if (!string.IsNullOrWhiteSpace(deal.Investor.User?.UserName))
-            {
-                return deal.Investor.User.UserName;
-            }
-
-            return $"Investor #{deal.InvestorId}";
         }
 
-        private static string GetStartupRepresentativeName(Deal deal)
+        private static void ApplyCounterpartyConfirmation(Deal deal, UserRole actorRole)
         {
-            if (!string.IsNullOrWhiteSpace(deal.Project.Startup.User?.FullName))
+            if (actorRole == UserRole.Investor)
             {
-                return deal.Project.Startup.User.FullName;
+                deal.InvestorConfirmed = true;
             }
-
-            if (!string.IsNullOrWhiteSpace(deal.Project.Startup.User?.UserName))
+            else if (actorRole == UserRole.Startup)
             {
-                return deal.Project.Startup.User.UserName;
+                deal.StartupConfirmed = true;
             }
-
-            if (!string.IsNullOrWhiteSpace(deal.Project.Startup.CompanyName))
-            {
-                return deal.Project.Startup.CompanyName;
-            }
-
-            return $"Startup #{deal.Project.StartupId}";
         }
 
-        private static string FormatSignedAt(DateTime? signedAt)
+        private static int GetInitiatorUserId(Deal deal)
         {
-            return signedAt.HasValue
-                ? signedAt.Value.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture)
-                : string.Empty;
+            return deal.InitiatorRole == UserRole.Investor
+                ? deal.Investor.UserId
+                : deal.Project.Startup.UserId;
+        }
+
+        private static int GetCounterpartyUserId(Deal deal)
+        {
+            return deal.InitiatorRole == UserRole.Investor
+                ? deal.Project.Startup.UserId
+                : deal.Investor.UserId;
         }
 
         private static void EnsureInvestorOwnsDeal(Deal deal, int investorId)
@@ -971,6 +558,84 @@ namespace AISEP.BLL.Services.Deals
             }
         }
 
-    }
+        public async Task<DealDto> GetDealByIdAsync(int dealId)
+        {
+            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
+                ?? throw new KeyNotFoundException("Deal not found.");
+
+            return _mapper.Map<DealDto>(deal);
+        }
+
+        public async Task<DealBlockchainVerificationResponse> GetDealOnChainVerificationAsync(int dealId)
+        {
+            var deal = await _unitOfWork.Deals.GetByIdWithDetailsAsync(dealId)
+                ?? throw new KeyNotFoundException("Deal not found.");
+
+            if (deal.Status == DealStatus.ProcessingBlockchain)
+            {
+                return new DealBlockchainVerificationResponse
+                {
+                    DealId = deal.DealId,
+                    DocumentHash = deal.DocumentHash ?? string.Empty,
+                    InvestorWallet = deal.Investor.WalletAddress?.Trim() ?? string.Empty,
+                    StartupId = deal.Project.StartupId,
+                    IsVerified = false,
+                    Message = "Giao dịch đang được ghi nhận lên blockchain. Vui lòng chờ hoàn tất."
+                };
+            }
+
+            if (deal.Status == DealStatus.BlockchainFailed)
+            {
+                var errorMessage = string.IsNullOrWhiteSpace(deal.BlockchainErrorMessage)
+                    ? "Ghi nhận blockchain thất bại. Vui lòng thử lại sau."
+                    : deal.BlockchainErrorMessage.Trim();
+
+                return new DealBlockchainVerificationResponse
+                {
+                    DealId = deal.DealId,
+                    DocumentHash = deal.DocumentHash ?? string.Empty,
+                    InvestorWallet = deal.Investor.WalletAddress?.Trim() ?? string.Empty,
+                    StartupId = deal.Project.StartupId,
+                    IsVerified = false,
+                    Message = errorMessage
+                };
+            }
+
+            if (string.IsNullOrWhiteSpace(deal.DocumentUrl))
+            {
+                throw new InvalidOperationException("Deal evidence file is missing.");
+            }
+
+            var investorWallet = deal.Investor.WalletAddress?.Trim();
+            if (string.IsNullOrWhiteSpace(investorWallet))
+            {
+                throw new InvalidOperationException("Investor wallet is missing.");
+            }
+
+            var fileHash = await _blockchainService.ComputeFileHashFromUrlAsync(deal.DocumentUrl);
+            var (startupId, timestamp, owners) = await _blockchainService.VerifyDocumentAsync(fileHash);
+
+            var ownerFound = owners?.Any(o => string.Equals(o?.Trim(), investorWallet, StringComparison.OrdinalIgnoreCase)) ?? false;
+
+            var timestampText = timestamp > 0
+                ? DateTimeOffset.FromUnixTimeSeconds(timestamp).UtcDateTime.ToString("yyyy-MM-dd HH:mm:ss UTC")
+                : string.Empty;
+
+            return new DealBlockchainVerificationResponse
+            {
+                DealId = deal.DealId,
+                Message = ownerFound
+                    ? "Giao dịch đã được xác minh trên blockchain."
+                    : "Hệ thống không tìm thấy ghi nhận trên blockchain cho giao dịch này.",
+                DocumentHash = fileHash,
+                InvestorWallet = investorWallet,
+                StartupId = startupId,
+                TimestampOnBlockchain = timestampText,
+                Owners = owners ?? Array.Empty<string>(),
+                IsVerified = ownerFound
+            };
+        }
+}
+
 }
 

@@ -167,7 +167,8 @@ namespace AISEP.BLL.Services.Projects
             project.ProjectIndustries = industryOptions
                 .Select(option => new ProjectIndustry
                 {
-                    IndustryOptionId = option.Id
+                    IndustryOptionId = option.Id,
+                    IndustryOption = option
                 })
                 .ToList();
             // Rule theo stage vẫn giữ trong code vì đây là business rule phụ thuộc nhiều field cùng lúc.
@@ -209,7 +210,7 @@ namespace AISEP.BLL.Services.Projects
             if (dto.IndustryOptionIds is not null)
             {
                 var industryOptions = await ResolveIndustryOptionsAsync(dto.IndustryOptionIds);
-                SyncProjectIndustries(project, industryOptions.Select(x => x.Id));
+                SyncProjectIndustries(project, industryOptions);
             }
             if (dto.ProjectImageFile is not null)
                 project.ProjectImageUrl = await _storage.UploadFileAsync(dto.ProjectImageFile, "project-images");
@@ -517,9 +518,10 @@ namespace AISEP.BLL.Services.Projects
         }
 
         // Đồng bộ bảng project_industries với danh sách ngành mới nhất.
-        private static void SyncProjectIndustries(Project project, IEnumerable<int> industryOptionIds)
+        private static void SyncProjectIndustries(Project project, IEnumerable<IndustryOption> industryOptions)
         {
-            var requestedIds = industryOptionIds.ToHashSet();
+            var requestedOptions = industryOptions.ToList();
+            var requestedIds = requestedOptions.Select(x => x.Id).ToHashSet();
             if (requestedIds.Count == 0)
             {
                 throw new InvalidOperationException("At least one industry is required.");
@@ -538,12 +540,13 @@ namespace AISEP.BLL.Services.Projects
                 .Select(x => x.IndustryOptionId)
                 .ToHashSet();
 
-            foreach (var id in requestedIds.Where(x => !currentIds.Contains(x)))
+            foreach (var option in requestedOptions.Where(x => !currentIds.Contains(x.Id)))
             {
                 project.ProjectIndustries.Add(new ProjectIndustry
                 {
                     ProjectId = project.ProjectId,
-                    IndustryOptionId = id
+                    IndustryOptionId = option.Id,
+                    IndustryOption = option
                 });
             }
         }
