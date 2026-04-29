@@ -51,6 +51,7 @@ namespace AISEP.BLL.Services.Connections
         {
             var investor = await _unitOfWork.Investors.GetByIdAsync(investorId)
                 ?? throw new KeyNotFoundException("Investor not found.");
+            EnsureInvestorApproved(investor);
 
             var project = await _unitOfWork.Projects.GetByIdAsync(dto.ProjectId)
                 ?? throw new KeyNotFoundException("Project not found.");
@@ -95,6 +96,7 @@ namespace AISEP.BLL.Services.Connections
             {
                 throw new ForbiddenAccessException("You do not have permission to respond to this request.");
             }
+            EnsureStartupApproved(request.Project.Startup);
 
             if (request.Status != ConnectionRequestStatus.Pending)
             {
@@ -143,8 +145,18 @@ namespace AISEP.BLL.Services.Connections
             return result;
         }
 
+        private static void EnsureStartupApproved(Startup startup)
+        {
+            if (startup.ApprovalStatus != ApprovalStatus.Approved)
+                throw new InvalidOperationException("Your startup profile must be approved before using this feature.");
+        }
+
         public async Task<ContactInfoDto> GetFounderContactAsync(int investorId, int projectId)
         {
+            var investor = await _unitOfWork.Investors.GetByIdAsync(investorId)
+                ?? throw new KeyNotFoundException("Investor not found.");
+            EnsureInvestorApproved(investor);
+
             var hasPermission = await _unitOfWork.ConnectionRequests.ExistsAcceptedAsync(investorId, projectId);
             if (!hasPermission)
             {
@@ -190,6 +202,12 @@ namespace AISEP.BLL.Services.Connections
             }
 
             return parsedStatus;
+        }
+
+        private static void EnsureInvestorApproved(Investor investor)
+        {
+            if (investor.ApprovalStatus != ApprovalStatus.Approved)
+                throw new InvalidOperationException("Your investor profile must be approved before using this feature.");
         }
     }
 }

@@ -31,7 +31,7 @@ namespace AISEP.BLL.Services.AI
 
         public async Task<StartupAIAnalysisResponse> AnalyzeProjectAsync(int projectId)
         {
-            var project = await EnsureProjectBelongsToCurrentStartupAsync(projectId);
+            var project = await EnsureProjectBelongsToCurrentStartupAsync(projectId, requireApprovedStartup: true);
             if (project.Status != ProjectStatus.Draft)
             {
                 throw new InvalidOperationException("AI analysis is only available when project status is Draft.");
@@ -155,11 +155,15 @@ namespace AISEP.BLL.Services.AI
             };
         }
 
-        private async Task<Project> EnsureProjectBelongsToCurrentStartupAsync(int projectId)
+        private async Task<Project> EnsureProjectBelongsToCurrentStartupAsync(int projectId, bool requireApprovedStartup = false)
         {
             var userId = _userService.GetUserId();
             var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId)
                 ?? throw new KeyNotFoundException("Startup profile not found for this account.");
+            if (requireApprovedStartup)
+            {
+                EnsureStartupApproved(startup);
+            }
 
             var project = await _unitOfWork.Projects.GetByIdAsync(projectId)
                 ?? throw new KeyNotFoundException($"Project {projectId} not found.");
@@ -170,6 +174,12 @@ namespace AISEP.BLL.Services.AI
             }
 
             return project;
+        }
+
+        private static void EnsureStartupApproved(Startup startup)
+        {
+            if (startup.ApprovalStatus != ApprovalStatus.Approved)
+                throw new InvalidOperationException("Your startup profile must be approved before using this feature.");
         }
 
         private async Task ConsumeAiQuotaAsync(int startupId)

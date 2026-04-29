@@ -46,6 +46,8 @@ namespace AISEP.BLL.Services.ConsultingReports
             var userId = _userService.GetUserId();
             var advisor = await _unitOfWork.Advisors.GetByUserIdAsync(userId)
                 ?? throw new ForbiddenAccessException("Only advisor can submit consulting report.");
+            if (advisor.ApprovalStatus != ApprovalStatus.Approved)
+                throw new InvalidOperationException("Your advisor profile must be approved before submitting consulting reports.");
 
             var booking = await _unitOfWork.Bookings.GetByIdAsync(request.BookingId)
                 ?? throw new KeyNotFoundException("Booking not found.");
@@ -146,6 +148,7 @@ namespace AISEP.BLL.Services.ConsultingReports
                 ?? throw new KeyNotFoundException("Consulting report not found.");
 
             EnsureCurrentUserIsBookingCustomer(report.Booking);
+            await EnsureCurrentStartupCustomerApprovedAsync();
 
             if (report.Status != ConsultingReportStatus.Submitted)
                 throw new InvalidOperationException("Only submitted report can be approved.");
@@ -171,6 +174,7 @@ namespace AISEP.BLL.Services.ConsultingReports
                 ?? throw new KeyNotFoundException("Consulting report not found.");
 
             EnsureCurrentUserIsBookingCustomer(report.Booking);
+            await EnsureCurrentStartupCustomerApprovedAsync();
 
             if (report.Status != ConsultingReportStatus.Submitted)
                 throw new InvalidOperationException("Only submitted report can be requested for revision.");
@@ -279,6 +283,21 @@ namespace AISEP.BLL.Services.ConsultingReports
                     Status = WalletTransactionStatus.Completed,
                     CreatedAt = DateTime.UtcNow
                 });
+
+                var now = DateTime.UtcNow;
+                await _unitOfWork.Transactions.AddAsync(new Transaction
+                {
+                    UserId = bookingWithWallet.Advisor.UserId,
+                    Amount = payoutAmount,
+                    Type = TransactionType.Income,
+                    Status = TransactionStatus.Completed,
+                    CreatedAt = now,
+                    ReferenceType = ReferenceType.Booking.ToString(),
+                    ReferenceId = bookingWithWallet.BookingId,
+                    PaymentContent = $"Advisor income from completed booking #{bookingWithWallet.BookingId}",
+                    CompletedAt = now
+                });
+
                 await _notificationService.SendNotificationAsync(
                     bookingWithWallet.Advisor.UserId,
                     "Ví đã được cộng tiền từ lịch tư vấn hoàn tất",
@@ -317,6 +336,21 @@ namespace AISEP.BLL.Services.ConsultingReports
             var userId = _userService.GetUserId();
             if (booking.CustomerId != userId)
                 throw new ForbiddenAccessException("Only booking customer can review this report.");
+        }
+
+        private async Task EnsureCurrentStartupCustomerApprovedAsync()
+        {
+            var role = _userService.GetUserRole();
+            if (!string.Equals(role, "Startup", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            var userId = _userService.GetUserId();
+            var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId)
+                ?? throw new KeyNotFoundException("Startup profile not found for this account.");
+            if (startup.ApprovalStatus != ApprovalStatus.Approved)
+                throw new InvalidOperationException("Your startup profile must be approved before using this feature.");
         }
 
         private static void MarkBookingCompletedAndCloseChat(Booking booking, BookingStatus finalStatus)

@@ -8,6 +8,6 @@ namespace AISEP.BLL.Services.IndustryOptions
     {
         Task<PagedResult<IndustryOptionResponse>> GetAllAsync(SieveModel model);
         Task<IndustryOptionResponse> CreateAsync(CreateIndustryOptionRequest request);
-        Task<IndustryOptionResponse> UpdateAsync(int id, UpdateIndustryOptionRequest request);
+        Task<IndustryOptionResponse> SetActiveAsync(int id, bool isActive);
     }
 }

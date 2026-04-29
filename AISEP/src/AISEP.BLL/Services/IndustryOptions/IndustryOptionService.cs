@@ -54,16 +54,12 @@ namespace AISEP.BLL.Services.IndustryOptions
         }
 
         // Cập nhật option ngành hiện có theo id.
-        public async Task<IndustryOptionResponse> UpdateAsync(int id, UpdateIndustryOptionRequest request)
+        public async Task<IndustryOptionResponse> SetActiveAsync(int id, bool isActive)
         {
             var entity = await _unitOfWork.IndustryOptions.GetByIdAsync(id)
                 ?? throw new KeyNotFoundException("Industry option not found.");
 
-            var value = NormalizeValue(request.Value);
-            await EnsureValueIsUniqueAsync(value, id);
-
-            entity.Value = value;
-            entity.IsActive = request.IsActive;
+            entity.IsActive = isActive;
             entity.UpdatedAt = DateTime.UtcNow;
 
             _unitOfWork.IndustryOptions.Update(entity);
