@@ -2,7 +2,6 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using AISEP.DAL.Entities;
-using AISEP.DAL.Enums;
 using AISEP.BLL.Settings;
 using Microsoft.Extensions.Options;
 
@@ -92,7 +91,6 @@ namespace AISEP.BLL.Services.AI
             var readable = documents.Where(d => GetMimeType(d.FileName) is not null).ToList();
             var skipped  = documents.Where(d => GetMimeType(d.FileName) is null).ToList();
             var docCount = readable.Count;
-            var stageFocus = GetStageFocusGuidance(project.DevelopmentStage);
 
             var docSummary = docCount > 0
                 ? string.Join(", ", readable.Select(d => $"{d.DocumentType} ({d.FileName})"))
@@ -111,7 +109,7 @@ namespace AISEP.BLL.Services.AI
                 --- DỮ LIỆU DỰ ÁN ---
                 Tên dự án: {{project.ProjectName}}
                 Mô tả ngắn: {{project.ShortDescription ?? "N/A"}}
-                Giai đoạn phát triển: {{project.DevelopmentStage?.ToString() ?? "N/A"}}
+                StageOptionId: {{project.StageOptionId?.ToString() ?? "N/A"}}
                 Bài toán: {{project.ProblemStatement ?? "N/A"}}
                 Giải pháp: {{project.SolutionDescription ?? "N/A"}}
                 Khách hàng mục tiêu: {{project.TargetCustomers ?? "N/A"}}
@@ -136,14 +134,14 @@ namespace AISEP.BLL.Services.AI
                 7 thành phần:
                 1) Team: TeamMembers, KeySkills, TeamExperience
                 2) Opportunity: TargetCustomers, MarketSize
-                3) Product: SolutionDescription, DevelopmentStage
+                3) Product: SolutionDescription, StageOptionId
                 4) Competition: Competitors, UniqueValueProposition
                 5) Marketing: BusinessModel, Revenue
                 6) Investment: độ rõ ràng nhu cầu vốn và sử dụng vốn
                 7) Other: chất lượng tài liệu, tính nhất quán tổng thể
 
-                --- ƯU TIÊN THEO GIAI ĐOẠN ---
-                {{stageFocus}}
+                --- GIAI ĐOẠN PHÁT TRIỂN ---
+                Stage là option động từ hệ thống. Chỉ dùng giá trị được cung cấp như ngữ cảnh đánh giá, không giả định danh sách stage cố định.
 
                 --- RUBRIC (NGHIÊM NGẶT) ---
                 - 0.0-2.0: Thiếu dữ liệu hoặc dữ liệu không liên quan.
@@ -229,7 +227,6 @@ namespace AISEP.BLL.Services.AI
             var readable = documents.Where(d => GetMimeType(d.FileName) is not null).ToList();
             var skipped = documents.Where(d => GetMimeType(d.FileName) is null).ToList();
             var docCount = readable.Count;
-            var stageFocus = GetStageFocusGuidance(project.DevelopmentStage);
 
             var docSummary = docCount > 0
                 ? string.Join(", ", readable.Select(d => $"{d.DocumentType} ({d.FileName})"))
@@ -248,7 +245,7 @@ namespace AISEP.BLL.Services.AI
                 --- DỮ LIỆU DỰ ÁN ---
                 Tên dự án: {{project.ProjectName}}
                 Mô tả ngắn: {{project.ShortDescription ?? "N/A"}}
-                Giai đoạn phát triển: {{project.DevelopmentStage?.ToString() ?? "N/A"}}
+                StageOptionId: {{project.StageOptionId?.ToString() ?? "N/A"}}
                 Bài toán: {{project.ProblemStatement ?? "N/A"}}
                 Giải pháp: {{project.SolutionDescription ?? "N/A"}}
                 Khách hàng mục tiêu: {{project.TargetCustomers ?? "N/A"}}
@@ -267,8 +264,8 @@ namespace AISEP.BLL.Services.AI
                 Chấm tuyệt đối 0.0-10.0 cho 7 thành phần.
                 Không tự gán trọng số cố định, backend sẽ tổng hợp điểm theo trọng số từng giai đoạn.
 
-                --- ƯU TIÊN THEO GIAI ĐOẠN ---
-                {{stageFocus}}
+                --- GIAI ĐOẠN PHÁT TRIỂN ---
+                Stage là option động từ hệ thống. Chỉ dùng giá trị được cung cấp như ngữ cảnh đánh giá, không giả định danh sách stage cố định.
 
                 Mốc tham chiếu:
                 - 5.0 = trung bình thị trường
@@ -363,7 +360,7 @@ namespace AISEP.BLL.Services.AI
                 --- PROJECT DATA ---
                 Name: {{project.ProjectName}}
                 Short Description: {{project.ShortDescription ?? "N/A"}}
-                Development Stage: {{project.DevelopmentStage?.ToString() ?? "N/A"}}
+                StageOptionId: {{project.StageOptionId?.ToString() ?? "N/A"}}
                 Problem Statement: {{project.ProblemStatement ?? "N/A"}}
                 Solution: {{project.SolutionDescription ?? "N/A"}}
                 Target Customers: {{project.TargetCustomers ?? "N/A"}}
@@ -384,27 +381,6 @@ namespace AISEP.BLL.Services.AI
                   "eligibility_reason": "<string tiếng Việt tối đa 3 câu>"
                 }
                 """;
-        }
-
-        private static string GetStageFocusGuidance(DevelopmentStage? stage)
-        {
-            return stage switch
-            {
-                DevelopmentStage.Idea =>
-                    "Giai đoạn IDEA: ưu tiên đánh giá ProblemStatement, SolutionDescription, TargetCustomers và TeamMembers. " +
-                    "Không phạt quá nặng khi thiếu Revenue hoặc TeamExperience chi tiết ở giai đoạn sớm, nhưng vẫn phải nghiêm về chất lượng bằng chứng hiện có. " +
-                    "Điểm tối đa theo thành phần: Team=20, Opportunity=30, Product=35, Competition=5, Marketing=5, Investment=3, Other=2.",
-                DevelopmentStage.MVP =>
-                    "Giai đoạn MVP: bao gồm toàn bộ kỳ vọng của IDEA và nhấn mạnh mức độ sẵn sàng triển khai qua " +
-                    "UniqueValueProposition, BusinessModel, KeySkills, Competitors và mức độ liên quan của tài liệu demo/pitch. Nghiêm ngặt hơn IDEA. " +
-                    "Điểm tối đa theo thành phần: Team=25, Opportunity=20, Product=25, Competition=10, Marketing=10, Investment=5, Other=5.",
-                DevelopmentStage.Growth =>
-                    "Giai đoạn GROWTH: bao gồm kỳ vọng của IDEA + MVP và nhấn mạnh mạnh vào hiệu quả Revenue, " +
-                    "cơ sở MarketSize, TeamExperience phục vụ mở rộng quy mô, và tài liệu bằng chứng chuyên nghiệp. Đây là giai đoạn cần đánh giá nghiêm nhất. " +
-                    "Điểm tối đa theo thành phần: Team=25, Opportunity=20, Product=5, Competition=10, Marketing=20, Investment=15, Other=5.",
-                _ =>
-                    "Không xác định giai đoạn: chấm điểm theo hướng bảo thủ, ưu tiên chất lượng bằng chứng và liệt kê rõ dữ liệu trọng yếu còn thiếu."
-            };
         }
 
         private async Task<string> CallGeminiAsync(string prompt, List<object> inlineParts)

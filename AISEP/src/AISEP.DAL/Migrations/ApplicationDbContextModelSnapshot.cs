@@ -684,6 +684,9 @@ namespace AISEP.Migrations
                     b.Property<decimal?>("MinValue")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("StageOptionIds")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")

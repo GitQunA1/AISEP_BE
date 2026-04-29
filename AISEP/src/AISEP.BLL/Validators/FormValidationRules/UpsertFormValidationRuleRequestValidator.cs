@@ -24,10 +24,6 @@ namespace AISEP.BLL.Validators.FormValidationRules
                 .Must(x => !x.MinValue.HasValue || !x.MaxValue.HasValue || x.MinValue <= x.MaxValue)
                 .WithMessage("MinValue cannot be greater than MaxValue.");
 
-            RuleFor(x => x.MaxFileSizeBytes)
-                .GreaterThan(0)
-                .When(x => x.MaxFileSizeBytes.HasValue);
-
             RuleFor(x => x.CustomRegexPattern)
                 .Must(BeValidRegex)
                 .When(x => !string.IsNullOrWhiteSpace(x.CustomRegexPattern))

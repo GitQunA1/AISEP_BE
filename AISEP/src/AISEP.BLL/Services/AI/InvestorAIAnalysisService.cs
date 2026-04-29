@@ -53,7 +53,7 @@ namespace AISEP.BLL.Services.AI
             var documents = (await _unitOfWork.Documents.GetByProjectIdAsync(projectId)).ToList();
             var result = await _geminiAiService.AnalyzeProjectForInvestorAsync(project, documents);
             GeminiAnalysisScoringHelper.NormalizeAnalysisResult(result, includeInvestorFields: true);
-            result.PotentialScore = GeminiAnalysisScoringHelper.CalculatePotentialScore(result, project.DevelopmentStage);
+            result.PotentialScore = GeminiAnalysisScoringHelper.CalculatePotentialScore(result);
             result.PotentialScore = GeminiAnalysisScoringHelper.ApplyDataQualitySanityCap(result.PotentialScore, result, project);
 
             var analysisJson = JsonSerializer.Serialize(result);
@@ -79,7 +79,7 @@ namespace AISEP.BLL.Services.AI
             }
 
             await _unitOfWork.SaveChangesAsync();
-            return MapToResponse(existing, _mapper, project.DevelopmentStage);
+            return MapToResponse(existing, _mapper);
         }
 
         public async Task<InvestorAIAnalysisResponse?> GetAnalysisAsync(int projectId)
@@ -108,7 +108,7 @@ namespace AISEP.BLL.Services.AI
                 throw new ForbiddenAccessException("You do not have permission to access investor AI analysis.");
             }
 
-            return analysis is null ? null : MapToResponse(analysis, _mapper, project.DevelopmentStage);
+            return analysis is null ? null : MapToResponse(analysis, _mapper);
         }
 
         public async Task<PagedResult<InvestorAIAnalysisResponse>> GetAllAnalysesAsync(SieveModel model)
@@ -138,7 +138,7 @@ namespace AISEP.BLL.Services.AI
                 query,
                 model,
                 _sieveProcessor,
-                x => MapToResponse(x, _mapper, x.Project?.DevelopmentStage));
+                x => MapToResponse(x, _mapper));
         }
 
         private async Task ConsumeAiQuotaAsync(int userId)
@@ -164,14 +164,13 @@ namespace AISEP.BLL.Services.AI
 
         private static InvestorAIAnalysisResponse MapToResponse(
             InvestorAIAnalysis analysis,
-            IMapper mapper,
-            DevelopmentStage? stage)
+            IMapper mapper)
         {
             var parsed = GeminiAnalysisScoringHelper.DeserializeAnalysisJson(analysis.AnalysisJson);
             var response = mapper.Map<InvestorAIAnalysisResponse>(analysis);
             response.Analysis = parsed;
             response.PotentialScore = parsed?.PotentialScore;
-            response.ScoreBreakdown = GeminiAnalysisScoringHelper.BuildBreakdown(parsed, stage);
+            response.ScoreBreakdown = GeminiAnalysisScoringHelper.BuildBreakdown(parsed);
 
             var normalizedVerdict = NormalizeInvestmentVerdict(parsed?.InvestmentVerdict);
             response.InvestmentVerdict = normalizedVerdict;

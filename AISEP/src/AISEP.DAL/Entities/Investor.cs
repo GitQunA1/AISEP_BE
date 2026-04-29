@@ -1,5 +1,4 @@
 using AISEP.DAL.Enums;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AISEP.DAL.Entities
 {
@@ -24,22 +23,6 @@ namespace AISEP.DAL.Entities
         public int? RejectedById { get; set; }
         public DateTime? RejectedAt { get; set; }
         public string? RejectionReason { get; set; }
-
-        [NotMapped]
-        public PreferredStage? PreferredStage
-        {
-            get
-            {
-                if (PreferredStageOption is null)
-                {
-                    return null;
-                }
-
-                return Enum.TryParse<PreferredStage>(PreferredStageOption.Value, true, out var parsed)
-                    ? parsed
-                    : null;
-            }
-        }
 
         // Navigation properties
         public User User { get; set; } = null!;

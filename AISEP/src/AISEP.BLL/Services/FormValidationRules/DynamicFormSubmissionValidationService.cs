@@ -46,7 +46,7 @@ namespace AISEP.BLL.Services.FormValidationRules
                 }
 
                 var value = property.GetValue(request);
-                ValidateRequired(rule, value, failures);
+                ValidateRequired(rule, value, failures, IsRequired(rule, request, propertyMap));
 
                 if (value is null || IsWhitespaceString(value))
                 {
@@ -93,9 +93,9 @@ namespace AISEP.BLL.Services.FormValidationRules
         }
 
         // Kiem tra rule bat buoc cho tung field.
-        private static void ValidateRequired(FormValidationRule rule, object? value, List<ValidationFailure> failures)
+        private static void ValidateRequired(FormValidationRule rule, object? value, List<ValidationFailure> failures, bool isRequired)
         {
-            if (!rule.IsRequired)
+            if (!isRequired)
             {
                 return;
             }
@@ -116,6 +116,37 @@ namespace AISEP.BLL.Services.FormValidationRules
             {
                 failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} is required."));
             }
+        }
+
+        private static bool IsRequired(
+            FormValidationRule rule,
+            object request,
+            Dictionary<string, PropertyInfo> propertyMap)
+        {
+            if (string.IsNullOrWhiteSpace(rule.StageOptionIds))
+            {
+                return rule.IsRequired;
+            }
+
+            var stageOptionIds = JsonSerializer.Deserialize<List<int>>(rule.StageOptionIds, JsonOptions) ?? [];
+            if (stageOptionIds.Count == 0)
+            {
+                return rule.IsRequired;
+            }
+
+            if (!propertyMap.TryGetValue("stageOptionId", out var stageOptionProperty))
+            {
+                return false;
+            }
+
+            var stageOptionId = stageOptionProperty.GetValue(request);
+            if (!TryConvertToInt(stageOptionId, out var selectedStageOptionId))
+            {
+                return false;
+            }
+
+            var stageIsInList = stageOptionIds.Contains(selectedStageOptionId);
+            return stageIsInList ? rule.IsRequired : !rule.IsRequired;
         }
 
         // Validate field kieu text: do dai va regex custom.
@@ -245,6 +276,19 @@ namespace AISEP.BLL.Services.FormValidationRules
                     return true;
                 default:
                     decimalValue = default;
+                    return false;
+            }
+        }
+
+        private static bool TryConvertToInt(object? value, out int intValue)
+        {
+            switch (value)
+            {
+                case int i:
+                    intValue = i;
+                    return true;
+                default:
+                    intValue = default;
                     return false;
             }
         }

@@ -146,7 +146,7 @@ namespace AISEP.BLL.Services.Projects
             return await PaginationHelper.PaginateAsync(_unitOfWork.Projects.GetByStatusQuery(ProjectStatus.Draft), model, _sieveProcessor, p => _mapper.Map<ProjectResponse>(p));
         }
 
-        // Tạo project mới: validate field-level từ DB rồi validate thêm business rule theo stage.
+        // Tạo project mới: validate field-level từ DB rồi xử lý các quan hệ động.
         public async Task<ProjectResponse> CreateProjectAsync( CreateProjectRequest dto)
         {
             // Trước hết validate field-level theo rule trong DB.
@@ -174,16 +174,13 @@ namespace AISEP.BLL.Services.Projects
                     IndustryOption = option
                 })
                 .ToList();
-            // Rule theo stage vẫn giữ trong code vì đây là business rule phụ thuộc nhiều field cùng lúc.
-            ValidateByStageLikeCreate(project);
-
             await _unitOfWork.Projects.AddAsync(project);
             await _unitOfWork.SaveChangesAsync();
 
             return _mapper.Map<ProjectResponse>(project);
         }
 
-        // Cập nhật project: validate field-level từ DB, patch entity, rồi validate lại business rule theo stage.
+        // Cập nhật project: validate field-level từ DB rồi patch entity.
         public async Task<ProjectResponse> UpdateProjectAsync(int projectId, UpdateProjectRequest dto)
         {
             // project.update cũng validate field-level từ DB trước khi patch dữ liệu vào entity.
@@ -240,8 +237,6 @@ namespace AISEP.BLL.Services.Projects
                 project.KeySkills = dto.KeySkills.Trim();
             if (dto.TeamExperience is not null)
                 project.TeamExperience = dto.TeamExperience.Trim();
-
-            ValidateByStageLikeCreate(project);
 
             _unitOfWork.Projects.Update(project);
             await _unitOfWork.SaveChangesAsync();
@@ -407,51 +402,6 @@ namespace AISEP.BLL.Services.Projects
             }
 
             return _mapper.Map<NonPremiumProjectResponse>(project);
-        }
-
-        // Rule business theo stage của project, áp dụng cho cả create lẫn update sau khi entity đã có dữ liệu cuối cùng.
-        private static void ValidateByStageLikeCreate(Project project)
-        {
-            if (!HasValue(project.ProjectName))
-                throw new InvalidOperationException("Project name is required.");
-            if (!HasValue(project.ShortDescription))
-                throw new InvalidOperationException("Short description is required.");
-            if (!HasValue(project.ProblemStatement))
-                throw new InvalidOperationException("Problem statement is required.");
-            if (!HasValue(project.SolutionDescription))
-                throw new InvalidOperationException("Solution description is required.");
-            if (!HasValue(project.TargetCustomers))
-                throw new InvalidOperationException("Target customers is required.");
-            if (!HasValue(project.TeamMembers))
-                throw new InvalidOperationException("Team members is required.");
-
-            if (project.DevelopmentStage is DevelopmentStage.MVP or DevelopmentStage.Growth)
-            {
-                if (!HasValue(project.UniqueValueProposition))
-                    throw new InvalidOperationException("Unique value proposition is required for MVP and Growth stages.");
-                if (!HasValue(project.BusinessModel))
-                    throw new InvalidOperationException("Business model is required for MVP and Growth stages.");
-                if (!HasValue(project.KeySkills))
-                    throw new InvalidOperationException("Key skills are required for MVP and Growth stages.");
-                if (!HasValue(project.Competitors))
-                    throw new InvalidOperationException("Competitors are required for MVP and Growth stages.");
-            }
-
-            if (project.DevelopmentStage == DevelopmentStage.Growth)
-            {
-                if (project.Revenue is null || project.Revenue <= 0)
-                    throw new InvalidOperationException("Revenue must be greater than 0 for Growth stage.");
-                if (project.MarketSize is null || project.MarketSize <= 0)
-                    throw new InvalidOperationException("Market size must be greater than 0 for Growth stage.");
-                if (!HasValue(project.TeamExperience))
-                    throw new InvalidOperationException("Team experience is required for Growth stage.");
-            }
-        }
-
-        // Hỗ trợ check string có dữ liệu thực hay không.
-        private static bool HasValue(string? value)
-        {
-            return !string.IsNullOrWhiteSpace(value);
         }
 
         private static void EnsureStartupApproved(Startup startup)

@@ -178,8 +178,8 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.User != null ? src.User.Email : null))
                 .ForMember(dest => dest.Industries,
                     opt => opt.MapFrom(src => src.InvestorIndustries.Select(ii => ii.IndustryOption.Value).ToList()))
-                .ForMember(dest => dest.PreferredStage,
-                    opt => opt.MapFrom(src => src.PreferredStageOption != null ? src.PreferredStageOption.Value : null))
+                .ForMember(dest => dest.PreferredStageOptionId,
+                    opt => opt.MapFrom(src => src.PreferredStageOptionId))
                 .ForMember(dest => dest.Status,
                     opt => opt.MapFrom(src => src.ApprovalStatus.ToString()));
 
@@ -293,8 +293,8 @@ namespace AISEP.BLL.Helpers
 
             // Project Entity ? ProjectResponse
             CreateMap<Project, ProjectResponse>()
-                .ForMember(dest => dest.DevelopmentStage,
-                    opt => opt.MapFrom(src => src.StageOption != null ? src.StageOption.Value : null))
+                .ForMember(dest => dest.StageOptionId,
+                    opt => opt.MapFrom(src => src.StageOptionId))
                 .ForMember(dest => dest.Industries,
                     opt => opt.MapFrom(src => src.ProjectIndustries.Select(pi => pi.IndustryOption.Value).ToList()))
                 .ForMember(dest => dest.StartupPotentialScore,
@@ -352,8 +352,8 @@ namespace AISEP.BLL.Helpers
             CreateMap<Project, NonPremiumProjectResponse>()
                 .ForMember(dest => dest.StartupId,
                     opt => opt.MapFrom(src => src.StartupId))
-                .ForMember(dest => dest.DevelopmentStage,
-                    opt => opt.MapFrom(src => src.StageOption != null ? src.StageOption.Value : null))
+                .ForMember(dest => dest.StageOptionId,
+                    opt => opt.MapFrom(src => src.StageOptionId))
                 .ForMember(dest => dest.Industries,
                     opt => opt.MapFrom(src => src.ProjectIndustries.Select(pi => pi.IndustryOption.Value).ToList()))
                 .ForMember(dest => dest.Status,
@@ -404,6 +404,28 @@ namespace AISEP.BLL.Helpers
 
             // CreateProjectRequest -> Project Entity
             CreateMap<CreateProjectRequest, Project>()
+                .ForMember(dest => dest.ProjectName,
+                    opt => opt.MapFrom(src => src.ProjectName == null ? string.Empty : src.ProjectName.Trim()))
+                .ForMember(dest => dest.ShortDescription,
+                    opt => opt.MapFrom(src => src.ShortDescription == null ? null : src.ShortDescription.Trim()))
+                .ForMember(dest => dest.ProblemStatement,
+                    opt => opt.MapFrom(src => src.ProblemStatement == null ? null : src.ProblemStatement.Trim()))
+                .ForMember(dest => dest.SolutionDescription,
+                    opt => opt.MapFrom(src => src.SolutionDescription == null ? null : src.SolutionDescription.Trim()))
+                .ForMember(dest => dest.TargetCustomers,
+                    opt => opt.MapFrom(src => src.TargetCustomers == null ? null : src.TargetCustomers.Trim()))
+                .ForMember(dest => dest.UniqueValueProposition,
+                    opt => opt.MapFrom(src => src.UniqueValueProposition == null ? null : src.UniqueValueProposition.Trim()))
+                .ForMember(dest => dest.BusinessModel,
+                    opt => opt.MapFrom(src => src.BusinessModel == null ? null : src.BusinessModel.Trim()))
+                .ForMember(dest => dest.Competitors,
+                    opt => opt.MapFrom(src => src.Competitors == null ? null : src.Competitors.Trim()))
+                .ForMember(dest => dest.TeamMembers,
+                    opt => opt.MapFrom(src => src.TeamMembers == null ? null : src.TeamMembers.Trim()))
+                .ForMember(dest => dest.KeySkills,
+                    opt => opt.MapFrom(src => src.KeySkills == null ? null : src.KeySkills.Trim()))
+                .ForMember(dest => dest.TeamExperience,
+                    opt => opt.MapFrom(src => src.TeamExperience == null ? null : src.TeamExperience.Trim()))
                 .ForMember(dest => dest.ProjectId, opt => opt.Ignore())
                 .ForMember(dest => dest.StartupId, opt => opt.Ignore())
                 .ForMember(dest => dest.ViewCount, opt => opt.Ignore())
