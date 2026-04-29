@@ -2,11 +2,12 @@
 {
     public enum DealStatus
     {
-        Pending,
-        Confirmed,
-        Waiting_For_Startup_Signature,
-        Contract_Signed,
-        Rejected,
-        Failed
+        PendingCounterpartyConfirmation,
+        PendingStaffApproval,
+        RequireReupload,
+        ProcessingBlockchain,
+        Completed,
+        Canceled,
+        BlockchainFailed
     }
 }

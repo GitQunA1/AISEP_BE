@@ -41,13 +41,7 @@ namespace AISEP.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<string>("Reason")
-                        .HasColumnType("text");
-
-                    b.Property<int?>("TargetId")
-                        .HasColumnType("integer");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");                    
 
                     b.HasKey("ActionLogId");
 
@@ -531,26 +525,38 @@ namespace AISEP.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DealId"));
 
-                    b.Property<string>("AdditionalTerms")
-                        .HasColumnType("text");
+                    b.Property<string>("DocumentUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<string>("DocumentHash")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("BlockchainTxHash")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime?>("BlockchainVerifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("BlockchainErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("InitiatorRole")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("Investor");
 
                     b.Property<DateTime?>("CompletionDate")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ContractPdfUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
 
                     b.Property<DateTime>("DealDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<decimal?>("EquityPercentage")
-                        .HasColumnType("decimal(5,2)");
 
                     b.Property<bool>("InvestorConfirmed")
                         .HasColumnType("boolean");
@@ -558,18 +564,10 @@ namespace AISEP.Migrations
                     b.Property<int>("InvestorId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("InvestorSignature")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("InvestorSignedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsCompleted")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("PaymentMethod")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
 
                     b.Property<int>("ProjectId")
                         .HasColumnType("integer");
@@ -577,11 +575,6 @@ namespace AISEP.Migrations
                     b.Property<bool>("StartupConfirmed")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("StartupSignature")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("StartupSignedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Status")
                         .IsRequired()

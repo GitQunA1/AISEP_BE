@@ -407,15 +407,13 @@ namespace AISEP.DAL.Data
             {
                 entity.ToTable("deals");
                 entity.HasKey(e => e.DealId);
-                entity.Property(e => e.Amount).HasColumnType("decimal(18,2)").IsRequired();
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
-                entity.Property(e => e.PaymentMethod).HasMaxLength(50);
-                entity.Property(e => e.EquityPercentage).HasColumnType("decimal(5,2)");
-                entity.Property(e => e.AdditionalTerms).HasColumnType("text");
-                entity.Property(e => e.InvestorSignature).HasColumnType("text");
-                entity.Property(e => e.StartupSignature).HasColumnType("text");
+                entity.Property(e => e.DocumentUrl).HasMaxLength(1000);
+                entity.Property(e => e.DocumentHash).HasMaxLength(255);
+                entity.Property(e => e.BlockchainTxHash).HasMaxLength(255);
+                entity.Property(e => e.BlockchainErrorMessage).HasMaxLength(2000);
+                entity.Property(e => e.InitiatorRole).HasConversion<string>().HasMaxLength(50).IsRequired().HasDefaultValue(UserRole.Investor);
                 entity.Property(e => e.DealDate).HasDefaultValueSql("CURRENT_TIMESTAMP");
-                entity.Property(e => e.ContractPdfUrl).HasMaxLength(500);
 
                 entity.HasOne(d => d.Investor)
                     .WithMany(i => i.Deals)
