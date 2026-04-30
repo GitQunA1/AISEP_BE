@@ -48,11 +48,35 @@ namespace AISEP.BLL.Services.Reviews
                 CreatedAt = DateTime.UtcNow
             };
             await _unitOfWork.Reviews.AddAsync(review);
+
             await _unitOfWork.SaveChangesAsync();
 
+            await RefreshAdvisorRatingAsync(booking.AdvisorId);
 
             var created = await _unitOfWork.Reviews.GetByIdAsync(review.ReviewId);
             return MapToResponseDto(created);
+        }
+
+        public async Task<ReviewResponse?> UpdateReviewAsync(int id, UpdateReviewRequest dto)
+        {
+            var review = await _unitOfWork.Reviews.GetByIdAsync(id);
+            if (review is null)
+            {
+                return null;
+            }
+
+            var userId = _currentUserService.GetUserId();
+            if (review.ReviewerId != userId)
+                throw new UnauthorizedAccessException("You can only update your own review.");
+
+            review.Rating = dto.Rating;
+            review.ReviewContent = dto.ReviewContent?.Trim();
+
+            await _unitOfWork.SaveChangesAsync();
+            await RefreshAdvisorRatingAsync(review.Booking.AdvisorId);
+
+            var updated = await _unitOfWork.Reviews.GetByIdAsync(id);
+            return MapToResponseDto(updated);
         }
 
         public async Task<PagedResult<ReviewResponse>> GetAllReviewsAsync(SieveModel model)
@@ -83,20 +107,17 @@ namespace AISEP.BLL.Services.Reviews
             return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, MapToResponseDto);
         }
 
-        public async Task<bool> DeleteReviewAsync(int id)
+        private async Task RefreshAdvisorRatingAsync(int advisorId)
         {
-            var review = await _unitOfWork.Reviews.GetByIdAsync(id);
-            if (review == null) return false;
+            var advisor = await _unitOfWork.Advisors.GetByIdAsync(advisorId);
+            if (advisor is null)
+            {
+                return;
+            }
 
-            var userId = _currentUserService.GetUserId();
-
-            // Ch? ch? review m?i du?c x�a
-            if (review.ReviewerId != userId)
-                throw new UnauthorizedAccessException("You can only delete your own review");
-
-            await _unitOfWork.Reviews.DeleteAsync(id);
+            advisor.Rating = await _unitOfWork.Reviews.GetAverageRatingByAdvisorIdAsync(advisorId);
+            _unitOfWork.Advisors.Update(advisor);
             await _unitOfWork.SaveChangesAsync();
-            return true;
         }
 
         private ReviewResponse MapToResponseDto(Review? review)

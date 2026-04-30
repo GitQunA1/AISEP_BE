@@ -6,7 +6,7 @@ namespace AISEP.DAL.Repositories.Reviews
     {
         Task<Review?> GetByIdAsync(int id);
         Task AddAsync(Review review);
-        Task DeleteAsync(int id);
+        Task<decimal?> GetAverageRatingByAdvisorIdAsync(int advisorId);
         IQueryable<Review> GetReviewQuery();
     }
 }

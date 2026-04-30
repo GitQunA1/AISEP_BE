@@ -14,10 +14,14 @@ namespace AISEP.DAL.Repositories.FormValidationRules
         }
 
         public IQueryable<FormValidationRule> GetAllQuery()
-            => _context.FormValidationRules.OrderBy(x => x.FieldKey).AsQueryable();
+            => _context.FormValidationRules
+                .Include(x => x.StageOptions)
+                .OrderBy(x => x.FieldKey)
+                .AsQueryable();
 
         public async Task<List<FormValidationRule>> GetByFormKeyAsync(string formKey)
             => await _context.FormValidationRules
+                .Include(x => x.StageOptions)
                 .Where(x => x.FormKey == formKey)
                 .OrderBy(x => x.FieldKey)
                 .AsNoTracking()
@@ -25,10 +29,12 @@ namespace AISEP.DAL.Repositories.FormValidationRules
 
         public async Task<FormValidationRule?> GetByFormAndFieldAsync(string formKey, string fieldKey)
             => await _context.FormValidationRules
+                .Include(x => x.StageOptions)
                 .FirstOrDefaultAsync(x => x.FormKey == formKey && x.FieldKey == fieldKey);
 
         public async Task<FormValidationRule?> GetByIdAsync(int id)
             => await _context.FormValidationRules
+                .Include(x => x.StageOptions)
                 .FirstOrDefaultAsync(x => x.Id == id);
 
         public async Task AddAsync(FormValidationRule rule)
