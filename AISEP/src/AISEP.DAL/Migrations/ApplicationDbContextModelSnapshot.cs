@@ -41,7 +41,13 @@ namespace AISEP.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");                    
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("TargetId")
+                        .HasColumnType("integer");
 
                     b.HasKey("ActionLogId");
 
@@ -225,11 +231,12 @@ namespace AISEP.Migrations
                     b.Property<int>("AdvisorId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Industry")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                    b.Property<int>("IndustryOptionId")
+                        .HasColumnType("integer");
 
-                    b.HasKey("AdvisorId", "Industry");
+                    b.HasKey("AdvisorId", "IndustryOptionId");
+
+                    b.HasIndex("IndustryOptionId");
 
                     b.ToTable("advisor_industries", (string)null);
                 });
@@ -525,13 +532,9 @@ namespace AISEP.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DealId"));
 
-                    b.Property<string>("DocumentUrl")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<string>("DocumentHash")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                    b.Property<string>("BlockchainErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
 
                     b.Property<string>("BlockchainTxHash")
                         .HasMaxLength(255)
@@ -539,16 +542,6 @@ namespace AISEP.Migrations
 
                     b.Property<DateTime?>("BlockchainVerifiedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("BlockchainErrorMessage")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<string>("InitiatorRole")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasDefaultValue("Investor");
 
                     b.Property<DateTime?>("CompletionDate")
                         .HasColumnType("timestamp with time zone");
@@ -558,23 +551,35 @@ namespace AISEP.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<string>("DocumentHash")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("DocumentUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("InitiatorRole")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("Investor");
+
                     b.Property<bool>("InvestorConfirmed")
                         .HasColumnType("boolean");
 
                     b.Property<int>("InvestorId")
                         .HasColumnType("integer");
 
-
                     b.Property<bool>("IsCompleted")
                         .HasColumnType("boolean");
-
 
                     b.Property<int>("ProjectId")
                         .HasColumnType("integer");
 
                     b.Property<bool>("StartupConfirmed")
                         .HasColumnType("boolean");
-
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -684,9 +689,6 @@ namespace AISEP.Migrations
                     b.Property<decimal?>("MinValue")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("StageOptionIds")
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -698,6 +700,57 @@ namespace AISEP.Migrations
                         .IsUnique();
 
                     b.ToTable("form_validation_rules", (string)null);
+                });
+
+            modelBuilder.Entity("AISEP.DAL.Entities.FormValidationRuleStageOption", b =>
+                {
+                    b.Property<int>("FormValidationRuleId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("StageOptionId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("FormValidationRuleId", "StageOptionId");
+
+                    b.HasIndex("StageOptionId");
+
+                    b.ToTable("form_validation_rule_stage_options", (string)null);
+                });
+
+            modelBuilder.Entity("AISEP.DAL.Entities.IndustryOption", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Value")
+                        .IsUnique();
+
+                    b.ToTable("industry_options", (string)null);
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.Investor", b =>
@@ -718,9 +771,6 @@ namespace AISEP.Migrations
 
                     b.Property<int?>("ApprovedById")
                         .HasColumnType("integer");
-
-                    b.Property<string>("FocusIndustry")
-                        .HasColumnType("text");
 
                     b.Property<string>("IdentityDocumentUrl")
                         .HasMaxLength(255)
@@ -744,16 +794,15 @@ namespace AISEP.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<string>("ProfileImageUrl")
-                        .HasColumnType("text");
-
-                    b.Property<string>("PreferredStage")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                    b.Property<int?>("PreferredStageOptionId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("PreviousInvestments")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<string>("ProfileImageUrl")
+                        .HasColumnType("text");
 
                     b.Property<DateTime?>("RejectedAt")
                         .HasColumnType("timestamp with time zone");
@@ -779,6 +828,8 @@ namespace AISEP.Migrations
                     b.HasKey("InvestorId");
 
                     b.HasIndex("ApprovedById");
+
+                    b.HasIndex("PreferredStageOptionId");
 
                     b.HasIndex("RejectedById");
 
@@ -817,6 +868,21 @@ namespace AISEP.Migrations
                     b.HasIndex("ProjectId");
 
                     b.ToTable("investor_ai_analyses", (string)null);
+                });
+
+            modelBuilder.Entity("AISEP.DAL.Entities.InvestorIndustry", b =>
+                {
+                    b.Property<int>("InvestorId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("IndustryOptionId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("InvestorId", "IndustryOptionId");
+
+                    b.HasIndex("IndustryOptionId");
+
+                    b.ToTable("investor_industries", (string)null);
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.Notification", b =>
@@ -1163,15 +1229,6 @@ namespace AISEP.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<string>("DevelopmentStage")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("Industry")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
                     b.Property<string>("KeySkills")
                         .HasColumnType("text");
 
@@ -1208,6 +1265,9 @@ namespace AISEP.Migrations
                     b.Property<string>("SolutionDescription")
                         .HasColumnType("text");
 
+                    b.Property<int?>("StageOptionId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("StartupId")
                         .HasColumnType("integer");
 
@@ -1236,6 +1296,8 @@ namespace AISEP.Migrations
                     b.HasIndex("ApprovedById");
 
                     b.HasIndex("RejectedById");
+
+                    b.HasIndex("StageOptionId");
 
                     b.HasIndex("StartupId");
 
@@ -1290,6 +1352,21 @@ namespace AISEP.Migrations
                     b.HasIndex("ProjectId");
 
                     b.ToTable("project_followers", (string)null);
+                });
+
+            modelBuilder.Entity("AISEP.DAL.Entities.ProjectIndustry", b =>
+                {
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("IndustryOptionId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ProjectId", "IndustryOptionId");
+
+                    b.HasIndex("IndustryOptionId");
+
+                    b.ToTable("project_industries", (string)null);
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.RefreshToken", b =>
@@ -1370,6 +1447,42 @@ namespace AISEP.Migrations
                     b.ToTable("reviews", (string)null);
                 });
 
+            modelBuilder.Entity("AISEP.DAL.Entities.StageOption", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Value")
+                        .IsUnique();
+
+                    b.ToTable("stage_options", (string)null);
+                });
+
             modelBuilder.Entity("AISEP.DAL.Entities.Startup", b =>
                 {
                     b.Property<int>("StartupId")
@@ -1413,9 +1526,6 @@ namespace AISEP.Migrations
                     b.Property<string>("Founder")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
-
-                    b.Property<string>("Industry")
-                        .HasColumnType("text");
 
                     b.Property<string>("LogoUrl")
                         .HasMaxLength(255)
@@ -1488,6 +1598,21 @@ namespace AISEP.Migrations
                         .IsUnique();
 
                     b.ToTable("project_ai_evaluations", (string)null);
+                });
+
+            modelBuilder.Entity("AISEP.DAL.Entities.StartupIndustry", b =>
+                {
+                    b.Property<int>("StartupId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("IndustryOptionId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("StartupId", "IndustryOptionId");
+
+                    b.HasIndex("IndustryOptionId");
+
+                    b.ToTable("startup_industries", (string)null);
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.Subscription", b =>
@@ -2145,7 +2270,34 @@ namespace AISEP.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("AISEP.DAL.Entities.IndustryOption", "IndustryOption")
+                        .WithMany("AdvisorIndustries")
+                        .HasForeignKey("IndustryOptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Advisor");
+
+                    b.Navigation("IndustryOption");
+                });
+
+            modelBuilder.Entity("AISEP.DAL.Entities.FormValidationRuleStageOption", b =>
+                {
+                    b.HasOne("AISEP.DAL.Entities.FormValidationRule", "FormValidationRule")
+                        .WithMany("StageOptions")
+                        .HasForeignKey("FormValidationRuleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AISEP.DAL.Entities.StageOption", "StageOption")
+                        .WithMany("FormValidationRuleStageOptions")
+                        .HasForeignKey("StageOptionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FormValidationRule");
+
+                    b.Navigation("StageOption");
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.Booking", b =>
@@ -2310,6 +2462,11 @@ namespace AISEP.Migrations
                         .HasForeignKey("ApprovedById")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("AISEP.DAL.Entities.StageOption", "PreferredStageOption")
+                        .WithMany("Investors")
+                        .HasForeignKey("PreferredStageOptionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("AISEP.DAL.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("RejectedById")
@@ -2320,6 +2477,8 @@ namespace AISEP.Migrations
                         .HasForeignKey("AISEP.DAL.Entities.Investor", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("PreferredStageOption");
 
                     b.Navigation("User");
                 });
@@ -2341,6 +2500,25 @@ namespace AISEP.Migrations
                     b.Navigation("Investor");
 
                     b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("AISEP.DAL.Entities.InvestorIndustry", b =>
+                {
+                    b.HasOne("AISEP.DAL.Entities.IndustryOption", "IndustryOption")
+                        .WithMany("InvestorIndustries")
+                        .HasForeignKey("IndustryOptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AISEP.DAL.Entities.Investor", "Investor")
+                        .WithMany("InvestorIndustries")
+                        .HasForeignKey("InvestorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("IndustryOption");
+
+                    b.Navigation("Investor");
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.Notification", b =>
@@ -2436,11 +2614,18 @@ namespace AISEP.Migrations
                         .HasForeignKey("RejectedById")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("AISEP.DAL.Entities.StageOption", "StageOption")
+                        .WithMany("Projects")
+                        .HasForeignKey("StageOptionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("AISEP.DAL.Entities.Startup", "Startup")
                         .WithMany("Projects")
                         .HasForeignKey("StartupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("StageOption");
 
                     b.Navigation("Startup");
                 });
@@ -2481,6 +2666,25 @@ namespace AISEP.Migrations
                     b.Navigation("Project");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("AISEP.DAL.Entities.ProjectIndustry", b =>
+                {
+                    b.HasOne("AISEP.DAL.Entities.IndustryOption", "IndustryOption")
+                        .WithMany("ProjectIndustries")
+                        .HasForeignKey("IndustryOptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AISEP.DAL.Entities.Project", "Project")
+                        .WithMany("ProjectIndustries")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("IndustryOption");
+
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.RefreshToken", b =>
@@ -2543,6 +2747,25 @@ namespace AISEP.Migrations
                         .IsRequired();
 
                     b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("AISEP.DAL.Entities.StartupIndustry", b =>
+                {
+                    b.HasOne("AISEP.DAL.Entities.IndustryOption", "IndustryOption")
+                        .WithMany("StartupIndustries")
+                        .HasForeignKey("IndustryOptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AISEP.DAL.Entities.Startup", "Startup")
+                        .WithMany("StartupIndustries")
+                        .HasForeignKey("StartupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("IndustryOption");
+
+                    b.Navigation("Startup");
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.Subscription", b =>
@@ -2755,6 +2978,22 @@ namespace AISEP.Migrations
                     b.Navigation("ChatSession");
                 });
 
+            modelBuilder.Entity("AISEP.DAL.Entities.FormValidationRule", b =>
+                {
+                    b.Navigation("StageOptions");
+                });
+
+            modelBuilder.Entity("AISEP.DAL.Entities.IndustryOption", b =>
+                {
+                    b.Navigation("AdvisorIndustries");
+
+                    b.Navigation("InvestorIndustries");
+
+                    b.Navigation("ProjectIndustries");
+
+                    b.Navigation("StartupIndustries");
+                });
+
             modelBuilder.Entity("AISEP.DAL.Entities.Investor", b =>
                 {
                     b.Navigation("ConnectionRequests");
@@ -2762,6 +3001,8 @@ namespace AISEP.Migrations
                     b.Navigation("Deals");
 
                     b.Navigation("InvestorAIAnalyses");
+
+                    b.Navigation("InvestorIndustries");
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.Package", b =>
@@ -2795,14 +3036,27 @@ namespace AISEP.Migrations
 
                     b.Navigation("ProjectAdvisorAssignments");
 
+                    b.Navigation("ProjectIndustries");
+
                     b.Navigation("StartupAIAnalysis");
 
                     b.Navigation("UnlockedProjects");
                 });
 
+            modelBuilder.Entity("AISEP.DAL.Entities.StageOption", b =>
+                {
+                    b.Navigation("FormValidationRuleStageOptions");
+
+                    b.Navigation("Investors");
+
+                    b.Navigation("Projects");
+                });
+
             modelBuilder.Entity("AISEP.DAL.Entities.Startup", b =>
                 {
                     b.Navigation("Projects");
+
+                    b.Navigation("StartupIndustries");
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.SystemCommissionConfig", b =>

@@ -56,6 +56,7 @@ namespace AISEP.DAL.Data
         public DbSet<AdvisorAvailability> AdvisorAvailabilities { get; set; }
         public DbSet<BookingSlot> BookingSlots { get; set; }
         public DbSet<FormValidationRule> FormValidationRules { get; set; }
+        public DbSet<FormValidationRuleStageOption> FormValidationRuleStageOptions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -927,10 +928,25 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.MinValue).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.MaxValue).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.AllowedFileTypesJson).HasColumnType("text");
-                entity.Property(e => e.StageOptionIds).HasColumnType("text");
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 entity.HasIndex(e => new { e.FormKey, e.FieldKey }).IsUnique();
+            });
+
+            modelBuilder.Entity<FormValidationRuleStageOption>(entity =>
+            {
+                entity.ToTable("form_validation_rule_stage_options");
+                entity.HasKey(e => new { e.FormValidationRuleId, e.StageOptionId });
+
+                entity.HasOne(e => e.FormValidationRule)
+                    .WithMany(e => e.StageOptions)
+                    .HasForeignKey(e => e.FormValidationRuleId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.StageOption)
+                    .WithMany(e => e.FormValidationRuleStageOptions)
+                    .HasForeignKey(e => e.StageOptionId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
         }
     }

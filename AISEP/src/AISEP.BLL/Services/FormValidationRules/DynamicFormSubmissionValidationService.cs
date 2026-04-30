@@ -123,12 +123,10 @@ namespace AISEP.BLL.Services.FormValidationRules
             object request,
             Dictionary<string, PropertyInfo> propertyMap)
         {
-            if (string.IsNullOrWhiteSpace(rule.StageOptionIds))
-            {
-                return rule.IsRequired;
-            }
+            var stageOptionIds = rule.StageOptions
+                .Select(x => x.StageOptionId)
+                .ToList();
 
-            var stageOptionIds = JsonSerializer.Deserialize<List<int>>(rule.StageOptionIds, JsonOptions) ?? [];
             if (stageOptionIds.Count == 0)
             {
                 return rule.IsRequired;

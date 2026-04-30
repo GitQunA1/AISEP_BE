@@ -10,5 +10,6 @@ namespace AISEP.DAL.Entities
 
         public ICollection<Project> Projects { get; set; } = new List<Project>();
         public ICollection<Investor> Investors { get; set; } = new List<Investor>();
+        public ICollection<FormValidationRuleStageOption> FormValidationRuleStageOptions { get; set; } = new List<FormValidationRuleStageOption>();
     }
 }
