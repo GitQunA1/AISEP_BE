@@ -245,7 +245,7 @@ namespace AISEP.API.Controllers
         }
 
         [HttpGet("{id:int}/verify-onchain")]
-        [Authorize(Roles = "Staff,Admin")]
+        [Authorize(Roles = "Staff,Admin, Investor,Startup, Advisor")]
         public async Task<IActionResult> VerifyOnChain(int id)
         {
             var result = await _dealService.GetDealOnChainVerificationAsync(id);
