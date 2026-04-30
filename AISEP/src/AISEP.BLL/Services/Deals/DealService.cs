@@ -604,6 +604,7 @@ namespace AISEP.BLL.Services.Deals
                 {
                     DealId = deal.DealId,
                     DocumentHash = deal.DocumentHash ?? string.Empty,
+                    BlockchainTxHash = deal.BlockchainTxHash,
                     InvestorWallet = deal.Investor.WalletAddress?.Trim() ?? string.Empty,
                     StartupId = deal.Project.StartupId,
                     IsVerified = false,
@@ -621,6 +622,7 @@ namespace AISEP.BLL.Services.Deals
                 {
                     DealId = deal.DealId,
                     DocumentHash = deal.DocumentHash ?? string.Empty,
+                    BlockchainTxHash = deal.BlockchainTxHash,
                     InvestorWallet = deal.Investor.WalletAddress?.Trim() ?? string.Empty,
                     StartupId = deal.Project.StartupId,
                     IsVerified = false,
@@ -655,6 +657,7 @@ namespace AISEP.BLL.Services.Deals
                     ? "Giao dịch đã được xác minh trên blockchain."
                     : "Hệ thống không tìm thấy ghi nhận trên blockchain cho giao dịch này.",
                 DocumentHash = fileHash,
+                BlockchainTxHash = deal.BlockchainTxHash,
                 InvestorWallet = investorWallet,
                 StartupId = startupId,
                 TimestampOnBlockchain = timestampText,
