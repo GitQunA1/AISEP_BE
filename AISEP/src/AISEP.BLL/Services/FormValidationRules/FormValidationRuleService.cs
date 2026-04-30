@@ -171,14 +171,18 @@ namespace AISEP.BLL.Services.FormValidationRules
                         .ToList(),
                     JsonOptions)
                 : null;
-            rule.StageOptionIds = request.StageOptionIds is { Count: > 0 }
-                ? JsonSerializer.Serialize(
-                    request.StageOptionIds
-                        .Where(id => id > 0)
-                        .Distinct()
-                        .ToList(),
-                    JsonOptions)
-                : null;
+            rule.StageOptions.Clear();
+            if (request.StageOptionIds is { Count: > 0 })
+            {
+                foreach (var stageOptionId in request.StageOptionIds.Where(id => id > 0).Distinct())
+                {
+                    rule.StageOptions.Add(new FormValidationRuleStageOption
+                    {
+                        StageOptionId = stageOptionId
+                    });
+                }
+            }
+
             rule.MaxFileSizeBytes = request.MaxFileSizeBytes > 0
                 ? request.MaxFileSizeBytes
                 : null;
@@ -194,11 +198,10 @@ namespace AISEP.BLL.Services.FormValidationRules
                 allowedFileTypes = JsonSerializer.Deserialize<List<string>>(rule.AllowedFileTypesJson, JsonOptions);
             }
 
-            List<int>? stageOptionIds = null;
-            if (!string.IsNullOrWhiteSpace(rule.StageOptionIds))
-            {
-                stageOptionIds = JsonSerializer.Deserialize<List<int>>(rule.StageOptionIds, JsonOptions);
-            }
+            var stageOptionIds = rule.StageOptions
+                .Select(x => x.StageOptionId)
+                .OrderBy(id => id)
+                .ToList();
 
             return new FormValidationRuleResponse
             {
@@ -211,7 +214,7 @@ namespace AISEP.BLL.Services.FormValidationRules
                 MinValue = rule.MinValue,
                 MaxValue = rule.MaxValue,
                 AllowedFileTypes = allowedFileTypes,
-                StageOptionIds = stageOptionIds,
+                StageOptionIds = stageOptionIds.Count > 0 ? stageOptionIds : null,
                 MaxFileSizeBytes = rule.MaxFileSizeBytes,
                 UpdatedAt = rule.UpdatedAt
             };

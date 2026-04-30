@@ -24,11 +24,15 @@ namespace AISEP.DAL.Repositories.Reviews
                 .FirstOrDefaultAsync(r => r.ReviewId == id);
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task<decimal?> GetAverageRatingByAdvisorIdAsync(int advisorId)
         {
-            var review = await _context.Reviews.FindAsync(id);
-            if (review != null)
-                _context.Reviews.Remove(review);
+            var averageRating = await _context.Reviews
+                .Where(r => r.Booking.AdvisorId == advisorId)
+                .AverageAsync(r => (decimal?)r.Rating);
+
+            return averageRating.HasValue
+                ? Math.Round(averageRating.Value, 2, MidpointRounding.AwayFromZero)
+                : null;
         }
 
         public IQueryable<Review> GetReviewQuery()

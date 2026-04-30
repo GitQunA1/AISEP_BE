@@ -33,6 +33,19 @@ namespace AISEP.API.Controllers
                 ApiResponse<object>.SuccessResponse(result, "Review created successfully", 201));
         }
 
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> UpdateReview(int id, [FromBody] UpdateReviewRequest dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ApiResponse<object>.ErrorResponse("Invalid request data.", "Validation failed"));
+
+            var result = await _reviewService.UpdateReviewAsync(id, dto);
+            if (result is null)
+                return NotFound(ApiResponse<object>.ErrorResponse("Review not found.", "Not found", 404));
+
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Review updated successfully"));
+        }
+
         [HttpGet("{id:int}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetReviewById(int id)
@@ -66,5 +79,6 @@ namespace AISEP.API.Controllers
             var reviews = await _reviewService.GetMyReviewsAsync(model);
             return Ok(ApiResponse<object>.SuccessResponse(reviews, "Success"));
         }
+
     }
 }
