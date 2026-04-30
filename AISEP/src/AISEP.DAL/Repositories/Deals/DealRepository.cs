@@ -46,7 +46,8 @@ namespace AISEP.DAL.Repositories.Deals
             return await _context.Deals.AnyAsync(d =>
                 d.InvestorId == investorId &&
                 d.ProjectId == projectId &&
-                d.Status != DealStatus.Canceled);
+                d.Status != DealStatus.Canceled &&
+                d.Status != DealStatus.BlockchainFailed);
         }
 
         public async Task AddAsync(Deal deal)
