@@ -20,7 +20,6 @@
         public string? KeySkills { get; set; }
         public string? TeamExperience { get; set; }
         public List<string> Industries { get; set; } = [];
-        public int ViewCount { get; set; }
         public string Status { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         //public DateTime? PublishedAt { get; set; }
