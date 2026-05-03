@@ -22,9 +22,10 @@ namespace AISEP.DAL.Data
         public DbSet<IndustryOption> IndustryOptions { get; set; }
         public DbSet<StageOption> StageOptions { get; set; }
         public DbSet<StartupIndustry> StartupIndustries { get; set; }
-        public DbSet<ProjectIndustry> ProjectIndustries { get; set; }
         public DbSet<InvestorIndustry> InvestorIndustries { get; set; }
         public DbSet<Project> Projects { get; set; }
+        public DbSet<ProjectScorecard> ProjectScorecards { get; set; }
+        public DbSet<ScorecardWeightConfig> ScorecardWeightConfigs { get; set; }
         public DbSet<ProjectAdvisorAssignment> ProjectAdvisorAssignments { get; set; }
         public DbSet<ProjectFollower> ProjectFollowers { get; set; }
         public DbSet<Document> Documents { get; set; }
@@ -256,22 +257,6 @@ namespace AISEP.DAL.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            modelBuilder.Entity<ProjectIndustry>(entity =>
-            {
-                entity.ToTable("project_industries");
-                entity.HasKey(x => new { x.ProjectId, x.IndustryOptionId });
-
-                entity.HasOne(x => x.Project)
-                    .WithMany(p => p.ProjectIndustries)
-                    .HasForeignKey(x => x.ProjectId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(x => x.IndustryOption)
-                    .WithMany(i => i.ProjectIndustries)
-                    .HasForeignKey(x => x.IndustryOptionId)
-                    .OnDelete(DeleteBehavior.Cascade);
-            });
-
             modelBuilder.Entity<InvestorIndustry>(entity =>
             {
                 entity.ToTable("investor_industries");
@@ -288,15 +273,14 @@ namespace AISEP.DAL.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // ?? MODULE 2: PROJECTS & DOCUMENTS ????????????????????????????
+            // MODULE 2: PROJECTS & DOCUMENTS
             modelBuilder.Entity<Project>(entity =>
             {
                 entity.ToTable("projects");
                 entity.HasKey(e => e.ProjectId);
                 entity.Property(e => e.ProjectName).HasMaxLength(255).IsRequired();
                 entity.Property(e => e.ProjectImageUrl).HasMaxLength(500);
-                entity.Property(e => e.MarketSize).HasColumnType("decimal(18,2)");
-                entity.Property(e => e.Revenue).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.ShortDescription).HasMaxLength(500);
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
@@ -319,6 +303,64 @@ namespace AISEP.DAL.Data
                     .WithMany(s => s.Projects)
                     .HasForeignKey(p => p.StageOptionId)
                     .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(p => p.IndustryOption)
+                    .WithMany(i => i.Projects)
+                    .HasForeignKey(p => p.IndustryOptionId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(p => p.Scorecard)
+                    .WithOne(s => s.Project)
+                    .HasForeignKey<ProjectScorecard>(s => s.ProjectId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ProjectScorecard>(entity =>
+            {
+                entity.ToTable("project_scorecards");
+                entity.HasKey(e => e.ProjectId);
+                entity.Property(e => e.CalculatedScore).HasColumnType("decimal(6,2)");
+            });
+
+            modelBuilder.Entity<ScorecardWeightConfig>(entity =>
+            {
+                entity.ToTable("scorecard_weight_configs");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.ConfigName).HasMaxLength(255).IsRequired();
+                entity.Property(e => e.TeamWeight).HasColumnType("decimal(5,2)");
+                entity.Property(e => e.MarketWeight).HasColumnType("decimal(5,2)");
+                entity.Property(e => e.ProductWeight).HasColumnType("decimal(5,2)");
+                entity.Property(e => e.CompetitionWeight).HasColumnType("decimal(5,2)");
+                entity.Property(e => e.TractionWeight).HasColumnType("decimal(5,2)");
+                entity.Property(e => e.InvestmentNeedWeight).HasColumnType("decimal(5,2)");
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                entity.HasOne(e => e.IndustryOption)
+                    .WithMany()
+                    .HasForeignKey(e => e.IndustryId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.StageOption)
+                    .WithMany()
+                    .HasForeignKey(e => e.StageId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasData(new ScorecardWeightConfig
+                {
+                    Id = 1,
+                    IndustryId = null,
+                    StageId = null,
+                    ConfigName = "Default Bill Payne Method",
+                    TeamWeight = 30.0m,
+                    MarketWeight = 25.0m,
+                    ProductWeight = 15.0m,
+                    CompetitionWeight = 10.0m,
+                    TractionWeight = 10.0m,
+                    InvestmentNeedWeight = 10.0m,
+                    CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                    UpdatedAt = null
+                });
             });
 
             modelBuilder.Entity<ProjectAdvisorAssignment>(entity =>
@@ -356,7 +398,7 @@ namespace AISEP.DAL.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // ?? MODULE 3: AI ANALYSES ??????????????????????????????????????
+            // MODULE 3: AI ANALYSES
             modelBuilder.Entity<StartupAIAnalysis>(entity =>
             {
                 entity.ToTable("project_ai_evaluations");
@@ -386,7 +428,7 @@ namespace AISEP.DAL.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // ?? MODULE 4: CONNECTIONS & DEALS ?????????????????????????????
+            // MODULE 4: CONNECTIONS & DEALS
             modelBuilder.Entity<ConnectionRequest>(entity =>
             {
                 entity.ToTable("connection_requests");
@@ -627,7 +669,7 @@ namespace AISEP.DAL.Data
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // ?? MODULE 6: FINANCE & SUBSCRIPTIONS ?????????????????????????
+            // MODULE 6: FINANCE & SUBSCRIPTIONS
             modelBuilder.Entity<Package>(entity =>
             {
                 entity.ToTable("packages");
@@ -818,7 +860,7 @@ namespace AISEP.DAL.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // ?? MODULE 7: SYSTEM, LOGS & UTILS ????????????????????????????
+            // MODULE 7: SYSTEM, LOGS & UTILS
             modelBuilder.Entity<Notification>(entity =>
             {
                 entity.ToTable("notifications");
@@ -951,8 +993,3 @@ namespace AISEP.DAL.Data
         }
     }
 }
-
-
-
-
-

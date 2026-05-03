@@ -636,9 +636,12 @@ namespace AISEP.BLL.Services.Bookings
                 return [];
             }
 
-            var projectIndustryIds = project.ProjectIndustries
-                .Select(pi => pi.IndustryOptionId)
-                .ToHashSet();
+            if (project.IndustryOptionId <= 0)
+            {
+                return [];
+            }
+
+            var projectIndustryIds = new HashSet<int> { project.IndustryOptionId };
 
             var advisors = await _unitOfWork.Advisors.GetAllQuery()
                 .Where(a => a.ApprovalStatus == ApprovalStatus.Approved

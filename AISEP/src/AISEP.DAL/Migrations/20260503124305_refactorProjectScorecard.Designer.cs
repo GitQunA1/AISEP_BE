@@ -3,17 +3,20 @@ using System;
 using AISEP.DAL.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace AISEP.Migrations
+namespace AISEP.DAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260503124305_refactorProjectScorecard")]
+    partial class refactorProjectScorecard
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1277,6 +1280,11 @@ namespace AISEP.Migrations
                     b.Property<string>("UniqueValueProposition")
                         .HasColumnType("text");
 
+                    b.Property<int>("ViewCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
                     b.HasKey("ProjectId");
 
                     b.HasIndex("ApprovedById");
@@ -1517,20 +1525,6 @@ namespace AISEP.Migrations
                     b.HasIndex("StageId");
 
                     b.ToTable("scorecard_weight_configs", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CompetitionWeight = 10.0m,
-                            ConfigName = "Default Bill Payne Method",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            InvestmentNeedWeight = 10.0m,
-                            MarketWeight = 25.0m,
-                            ProductWeight = 15.0m,
-                            TeamWeight = 30.0m,
-                            TractionWeight = 10.0m
-                        });
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.StageOption", b =>

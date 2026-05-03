@@ -229,8 +229,7 @@ namespace AISEP.BLL.Services.AI
                 project.ShortDescription,
                 project.ProblemStatement,
                 project.SolutionDescription,
-                project.TargetCustomers,
-                project.TeamMembers
+                project.TargetCustomers
             };
 
             return core.Count(IsWeakFieldValue);

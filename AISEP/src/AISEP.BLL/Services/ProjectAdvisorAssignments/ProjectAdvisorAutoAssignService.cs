@@ -53,9 +53,12 @@ namespace AISEP.BLL.Services.ProjectAdvisorAssignments
                 return false;
             }
 
-            var projectIndustryIds = project.ProjectIndustries
-                .Select(pi => pi.IndustryOptionId)
-                .ToHashSet();
+            if (project.IndustryOptionId <= 0)
+            {
+                return false;
+            }
+
+            var projectIndustryIds = new HashSet<int> { project.IndustryOptionId };
 
             var advisorCandidates = await _unitOfWork.Advisors.GetAllQuery()
                 .Where(a => a.ApprovalStatus == ApprovalStatus.Approved

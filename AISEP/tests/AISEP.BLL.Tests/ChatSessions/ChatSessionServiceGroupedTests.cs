@@ -303,15 +303,8 @@ public class ChatSessionServiceGroupedTests
             StartupId = startup.StartupId,
             ProjectName = $"Project-{requestId}",
             Startup = startup,
-            ProjectIndustries = new List<ProjectIndustry>
-            {
-                new ProjectIndustry
-                {
-                    ProjectId = requestId + 100,
-                    IndustryOptionId = 1,
-                    IndustryOption = new IndustryOption { Id = 1, Value = "SaaS", IsActive = true }
-                }
-            },
+            IndustryOptionId = 1,
+            IndustryOption = new IndustryOption { Id = 1, Value = "SaaS", IsActive = true },
             Status = ProjectStatus.Approved,
             CreatedAt = DateTime.UtcNow.AddDays(-2)
         };

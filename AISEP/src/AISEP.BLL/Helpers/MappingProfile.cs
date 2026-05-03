@@ -272,7 +272,9 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.ProjectImageUrl,
                     opt => opt.MapFrom(src => src.Project != null ? src.Project.ProjectImageUrl : null))
                 .ForMember(dest => dest.Industries,
-                    opt => opt.MapFrom(src => src.Project.ProjectIndustries.Select(pi => pi.IndustryOption.Value).ToList()))
+                    opt => opt.MapFrom(src => src.Project != null && src.Project.IndustryOption != null
+                        ? new List<string> { src.Project.IndustryOption.Value }
+                        : new List<string>()))
                 .ForMember(dest => dest.FollowedAt,
                     opt => opt.MapFrom(src => src.CreatedAt));
 
@@ -296,7 +298,9 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.StageOptionId,
                     opt => opt.MapFrom(src => src.StageOptionId))
                 .ForMember(dest => dest.Industries,
-                    opt => opt.MapFrom(src => src.ProjectIndustries.Select(pi => pi.IndustryOption.Value).ToList()))
+                    opt => opt.MapFrom(src => src.IndustryOption != null
+                        ? new List<string> { src.IndustryOption.Value }
+                        : new List<string>()))
                 .ForMember(dest => dest.StartupPotentialScore,
                     opt => opt.MapFrom(src => src.StartupAIAnalysis != null ? src.StartupAIAnalysis.PotentialScore : null))
                 .ForMember(dest => dest.Status,
@@ -355,7 +359,9 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.StageOptionId,
                     opt => opt.MapFrom(src => src.StageOptionId))
                 .ForMember(dest => dest.Industries,
-                    opt => opt.MapFrom(src => src.ProjectIndustries.Select(pi => pi.IndustryOption.Value).ToList()))
+                    opt => opt.MapFrom(src => src.IndustryOption != null
+                        ? new List<string> { src.IndustryOption.Value }
+                        : new List<string>()))
                 .ForMember(dest => dest.Status,
                     opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.StartupPotentialScore,
@@ -420,12 +426,6 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.BusinessModel == null ? null : src.BusinessModel.Trim()))
                 .ForMember(dest => dest.Competitors,
                     opt => opt.MapFrom(src => src.Competitors == null ? null : src.Competitors.Trim()))
-                .ForMember(dest => dest.TeamMembers,
-                    opt => opt.MapFrom(src => src.TeamMembers == null ? null : src.TeamMembers.Trim()))
-                .ForMember(dest => dest.KeySkills,
-                    opt => opt.MapFrom(src => src.KeySkills == null ? null : src.KeySkills.Trim()))
-                .ForMember(dest => dest.TeamExperience,
-                    opt => opt.MapFrom(src => src.TeamExperience == null ? null : src.TeamExperience.Trim()))
                 .ForMember(dest => dest.ProjectId, opt => opt.Ignore())
                 .ForMember(dest => dest.StartupId, opt => opt.Ignore())
                 .ForMember(dest => dest.Status, opt => opt.Ignore())
@@ -440,7 +440,8 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.StartupAIAnalysis, opt => opt.Ignore())
                 .ForMember(dest => dest.InvestorAIAnalyses, opt => opt.Ignore())
                 .ForMember(dest => dest.StageOption, opt => opt.Ignore())
-                .ForMember(dest => dest.ProjectIndustries, opt => opt.Ignore())
+                .ForMember(dest => dest.IndustryOption, opt => opt.Ignore())
+                .ForMember(dest => dest.Scorecard, opt => opt.Ignore())
                 .ForMember(dest => dest.UnlockedProjects, opt => opt.Ignore())
                 .ForMember(dest => dest.ConnectionRequests, opt => opt.Ignore())
                 .ForMember(dest => dest.Deals, opt => opt.Ignore());
@@ -461,7 +462,8 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.StartupAIAnalysis, opt => opt.Ignore())
                 .ForMember(dest => dest.InvestorAIAnalyses, opt => opt.Ignore())
                 .ForMember(dest => dest.StageOption, opt => opt.Ignore())
-                .ForMember(dest => dest.ProjectIndustries, opt => opt.Ignore())
+                .ForMember(dest => dest.IndustryOption, opt => opt.Ignore())
+                .ForMember(dest => dest.Scorecard, opt => opt.Ignore())
                 .ForMember(dest => dest.UnlockedProjects, opt => opt.Ignore())
                 .ForMember(dest => dest.ConnectionRequests, opt => opt.Ignore())
                 .ForMember(dest => dest.Deals, opt => opt.Ignore());
