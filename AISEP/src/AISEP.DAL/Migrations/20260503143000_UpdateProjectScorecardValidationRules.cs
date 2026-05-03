@@ -19,6 +19,12 @@ namespace AISEP.DAL.Migrations
                 WHERE "FormKey" IN ('project.create', 'project.update')
                   AND "FieldKey" IN ('marketSize', 'revenue', 'teamMembers', 'keySkills', 'teamExperience');
 
+                SELECT setval(
+                    pg_get_serial_sequence('form_validation_rules', 'Id'),
+                    COALESCE((SELECT MAX("Id") FROM form_validation_rules), 1),
+                    true
+                );
+
                 INSERT INTO form_validation_rules
                     ("FormKey", "FieldKey", "IsRequired", "MinLength", "MaxLength", "CustomRegexPattern", "MinValue", "MaxValue", "AllowedFileTypesJson", "MaxFileSizeBytes", "CreatedAt", "UpdatedAt")
                 VALUES
@@ -73,6 +79,12 @@ namespace AISEP.DAL.Migrations
                       'currentTraction',
                       'runwayMonths'
                   );
+
+                SELECT setval(
+                    pg_get_serial_sequence('form_validation_rules', 'Id'),
+                    COALESCE((SELECT MAX("Id") FROM form_validation_rules), 1),
+                    true
+                );
 
                 INSERT INTO form_validation_rules
                     ("FormKey", "FieldKey", "IsRequired", "MinLength", "MaxLength", "CustomRegexPattern", "MinValue", "MaxValue", "AllowedFileTypesJson", "MaxFileSizeBytes", "CreatedAt", "UpdatedAt")
