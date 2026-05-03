@@ -47,6 +47,7 @@ namespace AISEP.DAL.Repositories.ProjectFollowers
             return _context.ProjectFollowers
                 .Include(pf => pf.User)
                 .Include(pf => pf.Project)
+                .ThenInclude(p => p.IndustryOption)
                 .AsNoTracking();
         }
     }

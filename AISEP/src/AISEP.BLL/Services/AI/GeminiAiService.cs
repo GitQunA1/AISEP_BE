@@ -114,13 +114,8 @@ namespace AISEP.BLL.Services.AI
                 Giải pháp: {{project.SolutionDescription ?? "N/A"}}
                 Khách hàng mục tiêu: {{project.TargetCustomers ?? "N/A"}}
                 Giá trị khác biệt: {{project.UniqueValueProposition ?? "N/A"}}
-                Quy mô thị trường: {{(project.MarketSize.HasValue ? project.MarketSize.Value.ToString("N0") + " USD" : "N/A")}}
                 Mô hình kinh doanh: {{project.BusinessModel ?? "N/A"}}
-                Doanh thu: {{(project.Revenue.HasValue ? project.Revenue.Value.ToString("N0") + " USD" : "N/A")}}
                 Đối thủ cạnh tranh: {{project.Competitors ?? "N/A"}}
-                Thành viên đội ngũ: {{project.TeamMembers ?? "N/A"}}
-                Kỹ năng chính: {{project.KeySkills ?? "N/A"}}
-                Kinh nghiệm đội ngũ: {{project.TeamExperience ?? "N/A"}}
                 Tài liệu tải lên ({{docCount}} tài liệu đọc được){{skippedSummary}}:
                 {{docSummary}}
 
@@ -132,11 +127,11 @@ namespace AISEP.BLL.Services.AI
                 - dưới 4.0 = yếu
 
                 7 thành phần:
-                1) Team: TeamMembers, KeySkills, TeamExperience
-                2) Opportunity: TargetCustomers, MarketSize
+                1) Team: thong tin doi ngu (neu co)
+                2) Opportunity: TargetCustomers
                 3) Product: SolutionDescription, StageOptionId
                 4) Competition: Competitors, UniqueValueProposition
-                5) Marketing: BusinessModel, Revenue
+                5) Marketing: BusinessModel
                 6) Investment: độ rõ ràng nhu cầu vốn và sử dụng vốn
                 7) Other: chất lượng tài liệu, tính nhất quán tổng thể
 
@@ -250,13 +245,8 @@ namespace AISEP.BLL.Services.AI
                 Giải pháp: {{project.SolutionDescription ?? "N/A"}}
                 Khách hàng mục tiêu: {{project.TargetCustomers ?? "N/A"}}
                 Giá trị khác biệt: {{project.UniqueValueProposition ?? "N/A"}}
-                Quy mô thị trường: {{(project.MarketSize.HasValue ? project.MarketSize.Value.ToString("N0") + " USD" : "N/A")}}
                 Mô hình kinh doanh: {{project.BusinessModel ?? "N/A"}}
-                Doanh thu: {{(project.Revenue.HasValue ? project.Revenue.Value.ToString("N0") + " USD" : "N/A")}}
                 Đối thủ cạnh tranh: {{project.Competitors ?? "N/A"}}
-                Thành viên đội ngũ: {{project.TeamMembers ?? "N/A"}}
-                Kỹ năng chính: {{project.KeySkills ?? "N/A"}}
-                Kinh nghiệm đội ngũ: {{project.TeamExperience ?? "N/A"}}
                 Tài liệu tải lên ({{docCount}} tài liệu đọc được){{skippedSummary}}:
                 {{docSummary}}
 
@@ -365,13 +355,8 @@ namespace AISEP.BLL.Services.AI
                 Solution: {{project.SolutionDescription ?? "N/A"}}
                 Target Customers: {{project.TargetCustomers ?? "N/A"}}
                 Unique Value Proposition: {{project.UniqueValueProposition ?? "N/A"}}
-                Market Size: {{(project.MarketSize.HasValue ? project.MarketSize.Value.ToString("N0") + " USD" : "N/A")}}
                 Business Model: {{project.BusinessModel ?? "N/A"}}
-                Revenue: {{(project.Revenue.HasValue ? project.Revenue.Value.ToString("N0") + " USD" : "N/A")}}
                 Competitors: {{project.Competitors ?? "N/A"}}
-                Team Members: {{project.TeamMembers ?? "N/A"}}
-                Key Skills: {{project.KeySkills ?? "N/A"}}
-                Team Experience: {{project.TeamExperience ?? "N/A"}}
                 Uploaded Documents ({{docCount}} tài liệu đọc được){{skippedSummary}}:
                 {{docSummary}}
 

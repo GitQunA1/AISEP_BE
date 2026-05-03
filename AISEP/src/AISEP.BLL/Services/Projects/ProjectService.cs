@@ -158,22 +158,17 @@ namespace AISEP.BLL.Services.Projects
                 throw new KeyNotFoundException("Startup profile not found. Please create a startup profile first.");
             EnsureStartupApproved(startup);
 
-            var industryOptions = await ResolveIndustryOptionsAsync(dto.IndustryOptionIds);
+            var industryOption = await ResolveIndustryOptionAsync(dto.IndustryOptionIds);
             var stageOption = await ResolveStageOptionAsync(dto.StageOptionId, true);
             var project = _mapper.Map<Project>(dto);
             project.StartupId = startup.StartupId;
             project.StageOptionId = stageOption!.Id;
             project.StageOption = stageOption;
+            project.IndustryOptionId = industryOption.Id;
+            project.IndustryOption = industryOption;
             project.Status = ProjectStatus.Draft;
             project.CreatedAt = DateTime.UtcNow;
             project.ProjectImageUrl = await UploadIfPresent(dto.ProjectImageFile, "project-images");
-            project.ProjectIndustries = industryOptions
-                .Select(option => new ProjectIndustry
-                {
-                    IndustryOptionId = option.Id,
-                    IndustryOption = option
-                })
-                .ToList();
             await _unitOfWork.Projects.AddAsync(project);
             await _unitOfWork.SaveChangesAsync();
 
@@ -210,8 +205,9 @@ namespace AISEP.BLL.Services.Projects
             }
             if (dto.IndustryOptionIds is not null)
             {
-                var industryOptions = await ResolveIndustryOptionsAsync(dto.IndustryOptionIds);
-                SyncProjectIndustries(project, industryOptions);
+                var industryOption = await ResolveIndustryOptionAsync(dto.IndustryOptionIds);
+                project.IndustryOptionId = industryOption.Id;
+                project.IndustryOption = industryOption;
             }
             if (dto.ProjectImageFile is not null)
                 project.ProjectImageUrl = await _storage.UploadFileAsync(dto.ProjectImageFile, "project-images");
@@ -231,12 +227,6 @@ namespace AISEP.BLL.Services.Projects
                 project.BusinessModel = dto.BusinessModel.Trim();
             if (dto.Competitors is not null)
                 project.Competitors = dto.Competitors.Trim();
-            if (dto.TeamMembers is not null)
-                project.TeamMembers = dto.TeamMembers.Trim();
-            if (dto.KeySkills is not null)
-                project.KeySkills = dto.KeySkills.Trim();
-            if (dto.TeamExperience is not null)
-                project.TeamExperience = dto.TeamExperience.Trim();
 
             _unitOfWork.Projects.Update(project);
             await _unitOfWork.SaveChangesAsync();
@@ -441,7 +431,7 @@ namespace AISEP.BLL.Services.Projects
             => file is not null ? await _storage.UploadFileAsync(file, folder) : null;
 
         // Kiểm tra danh sách ngành của project có tồn tại và đang active hay không.
-        private async Task<List<IndustryOption>> ResolveIndustryOptionsAsync(IEnumerable<int>? optionIds)
+        private async Task<IndustryOption> ResolveIndustryOptionAsync(IEnumerable<int>? optionIds)
         {
             var ids = optionIds?
                 .Distinct()
@@ -462,7 +452,7 @@ namespace AISEP.BLL.Services.Projects
                 throw new InvalidOperationException("One or more selected industries are invalid or inactive.");
             }
 
-            return options;
+            return options.First();
         }
 
         // Kiểm tra stage của project có tồn tại và đang active hay không.
@@ -485,44 +475,6 @@ namespace AISEP.BLL.Services.Projects
             }
 
             return option;
-        }
-
-        // Đồng bộ bảng project_industries với danh sách ngành mới nhất.
-        private static void SyncProjectIndustries(Project project, IEnumerable<IndustryOption> industryOptions)
-        {
-            var requestedOptions = industryOptions.ToList();
-            var requestedIds = requestedOptions.Select(x => x.Id).ToHashSet();
-            if (requestedIds.Count == 0)
-            {
-                throw new InvalidOperationException("At least one industry is required.");
-            }
-            if (requestedIds.Count != RequiredProjectIndustries)
-            {
-                throw new InvalidOperationException("Project must select exactly one industry.");
-            }
-
-            var toRemove = project.ProjectIndustries
-                .Where(x => !requestedIds.Contains(x.IndustryOptionId))
-                .ToList();
-
-            foreach (var item in toRemove)
-            {
-                project.ProjectIndustries.Remove(item);
-            }
-
-            var currentIds = project.ProjectIndustries
-                .Select(x => x.IndustryOptionId)
-                .ToHashSet();
-
-            foreach (var option in requestedOptions.Where(x => !currentIds.Contains(x.Id)))
-            {
-                project.ProjectIndustries.Add(new ProjectIndustry
-                {
-                    ProjectId = project.ProjectId,
-                    IndustryOptionId = option.Id,
-                    IndustryOption = option
-                });
-            }
         }
     }
 }

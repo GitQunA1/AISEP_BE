@@ -9,7 +9,7 @@ namespace AISEP.DAL.Entities
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         public ICollection<StartupIndustry> StartupIndustries { get; set; } = new List<StartupIndustry>();
-        public ICollection<ProjectIndustry> ProjectIndustries { get; set; } = new List<ProjectIndustry>();
+        public ICollection<Project> Projects { get; set; } = new List<Project>();
         public ICollection<InvestorIndustry> InvestorIndustries { get; set; } = new List<InvestorIndustry>();
         public ICollection<AdvisorIndustry> AdvisorIndustries { get; set; } = new List<AdvisorIndustry>();
     }

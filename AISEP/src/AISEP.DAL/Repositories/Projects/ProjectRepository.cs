@@ -19,8 +19,7 @@ namespace AISEP.DAL.Repositories.Projects
             return _context.Projects
                 .Include(p => p.Startup)
                 .Include(p => p.StageOption)
-                .Include(p => p.ProjectIndustries)
-                    .ThenInclude(pi => pi.IndustryOption)
+                .Include(p => p.IndustryOption)
                 .Include(p => p.StartupAIAnalysis)
                 .Include(p => p.Followers)
                 .Include(p => p.ConnectionRequests)
@@ -40,8 +39,7 @@ namespace AISEP.DAL.Repositories.Projects
             return _context.Projects
                 .Include(p => p.Startup)
                 .Include(p => p.StageOption)
-                .Include(p => p.ProjectIndustries)
-                    .ThenInclude(pi => pi.IndustryOption)
+                .Include(p => p.IndustryOption)
                 .Include(p => p.StartupAIAnalysis)
                 .Include(p => p.Followers)
                 .Include(p => p.ConnectionRequests)
@@ -62,8 +60,7 @@ namespace AISEP.DAL.Repositories.Projects
             return _context.Projects
                 .Include(p => p.Startup)
                 .Include(p => p.StageOption)
-                .Include(p => p.ProjectIndustries)
-                    .ThenInclude(pi => pi.IndustryOption)
+                .Include(p => p.IndustryOption)
                 .Include(p => p.StartupAIAnalysis)
                 .Include(p => p.Followers)
                 .Include(p => p.ConnectionRequests)
@@ -84,8 +81,7 @@ namespace AISEP.DAL.Repositories.Projects
             return await _context.Projects
                 .Include(p => p.Startup)
                 .Include(p => p.StageOption)
-                .Include(p => p.ProjectIndustries)
-                    .ThenInclude(pi => pi.IndustryOption)
+                .Include(p => p.IndustryOption)
                 .Include(p => p.StartupAIAnalysis)
                 .Include(p => p.Followers)
                 .Include(p => p.ConnectionRequests)
@@ -104,8 +100,7 @@ namespace AISEP.DAL.Repositories.Projects
             return await _context.Projects
                 .Include(p => p.Startup)
                 .Include(p => p.StageOption)
-                .Include(p => p.ProjectIndustries)
-                    .ThenInclude(pi => pi.IndustryOption)
+                .Include(p => p.IndustryOption)
                 .Include(p => p.Documents)
                 .FirstOrDefaultAsync(p => p.ProjectId == id);
         }
