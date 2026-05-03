@@ -185,13 +185,12 @@ public class ProjectServiceGroupedTests
         Assert.Equal(220, addedProject!.StartupId);
         Assert.Equal(ProjectStatus.Draft, addedProject.Status);
         Assert.Equal(1, addedProject.StageOptionId);
-        Assert.Single(addedProject.ProjectIndustries);
-        Assert.Equal(2, addedProject.ProjectIndustries.First().IndustryOptionId);
+        Assert.Equal(2, addedProject.IndustryOptionId);
         Assert.Equal("https://cdn.test/project-220.png", addedProject.ProjectImageUrl);
 
         Assert.Equal(2200, result.ProjectId);
         Assert.Equal("AISEP Growth Platform", result.ProjectName);
-        Assert.Equal("Idea", result.DevelopmentStage);
+        Assert.Equal(1, result.StageOptionId);
         Assert.Contains("SaaS", result.Industries);
 
         storageService.Verify(x => x.UploadFileAsync(imageFile, "project-images"), Times.Once);
@@ -352,8 +351,9 @@ public class ProjectServiceGroupedTests
             cfg.CreateMap<UpdateProjectRequest, Project>()
                 .ForAllMembers(opt => opt.Condition((_, _, srcMember) => srcMember is not null));
             cfg.CreateMap<Project, ProjectResponse>()
-                .ForMember(d => d.DevelopmentStage, opt => opt.MapFrom(s => s.DevelopmentStage.HasValue ? s.DevelopmentStage.Value.ToString() : null))
-                .ForMember(d => d.Industries, opt => opt.MapFrom(s => s.ProjectIndustries.Select(pi => pi.IndustryOption.Value).ToList()))
+                .ForMember(d => d.Industries, opt => opt.MapFrom(s => s.IndustryOption != null
+                    ? new List<string> { s.IndustryOption.Value }
+                    : new List<string>()))
                 .ForMember(d => d.Status, opt => opt.MapFrom(s => s.Status.ToString()));
         });
         var mapper = mapperConfig.CreateMapper();
@@ -484,16 +484,8 @@ public class ProjectServiceGroupedTests
             ProblemStatement = "SMEs need better data visibility.",
             SolutionDescription = "Unified analytics and decision engine.",
             TargetCustomers = "SME founders",
-            TeamMembers = "CEO, CTO",
-            ProjectIndustries = new List<ProjectIndustry>
-            {
-                new ProjectIndustry
-                {
-                    ProjectId = projectId,
-                    IndustryOptionId = 1,
-                    IndustryOption = new IndustryOption { Id = 1, Value = "Fintech", IsActive = true }
-                }
-            },
+            IndustryOptionId = 1,
+            IndustryOption = new IndustryOption { Id = 1, Value = "Fintech", IsActive = true },
             Status = status,
             CreatedAt = DateTime.UtcNow.AddDays(-7)
         };
