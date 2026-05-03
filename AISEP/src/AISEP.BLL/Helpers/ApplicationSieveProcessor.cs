@@ -169,10 +169,19 @@ namespace AISEP.BLL.Helpers
                 .CanSort();
 
             // Project
+            mapper.Property<Project>(p => p.ProjectId)
+                .CanFilter()
+                .CanSort();
             mapper.Property<Project>(p => p.ProjectName)
                 .CanFilter()
                 .CanSort();
             mapper.Property<Project>(p => p.Status)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Project>(p => p.StageOptionId)
+                .CanFilter()
+                .CanSort();
+            mapper.Property<Project>(p => p.IndustryOptionId)
                 .CanFilter()
                 .CanSort();
             mapper.Property<Project>(p => p.StageOption!.Value)
