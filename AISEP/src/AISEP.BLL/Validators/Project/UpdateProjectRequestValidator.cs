@@ -22,14 +22,19 @@ namespace AISEP.BLL.Validators.Project
                 || request.SolutionDescription is not null
                 || request.TargetCustomers is not null
                 || request.UniqueValueProposition is not null
-                || request.MarketSize.HasValue
                 || request.BusinessModel is not null
-                || request.Revenue.HasValue
                 || request.Competitors is not null
-                || request.TeamMembers is not null
-                || request.KeySkills is not null
-                || request.TeamExperience is not null
-                || request.IndustryOptionIds is not null;
+                || request.IndustryOptionIds is not null
+                || request.TeamSize.HasValue
+                || request.TeamExperience.HasValue
+                || request.HasTechnicalCofounder.HasValue
+                || request.TargetMarketSize.HasValue
+                || request.MarketGrowth.HasValue
+                || request.ProductReadiness.HasValue
+                || request.IPProtection.HasValue
+                || request.BarrierToEntry.HasValue
+                || request.CurrentTraction.HasValue
+                || request.RunwayMonths.HasValue;
         }
     }
 }

@@ -293,10 +293,14 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.AssignedAt,
                     opt => opt.MapFrom(src => src.AssignedAt));
 
+            CreateMap<ProjectScorecard, ProjectScorecardDto>();
+
             // Project Entity ? ProjectResponse
             CreateMap<Project, ProjectResponse>()
                 .ForMember(dest => dest.StageOptionId,
                     opt => opt.MapFrom(src => src.StageOptionId))
+                .ForMember(dest => dest.ProjectScorecard,
+                    opt => opt.MapFrom(src => src.Scorecard))
                 .ForMember(dest => dest.Industries,
                     opt => opt.MapFrom(src => src.IndustryOption != null
                         ? new List<string> { src.IndustryOption.Value }
@@ -358,6 +362,8 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.StartupId))
                 .ForMember(dest => dest.StageOptionId,
                     opt => opt.MapFrom(src => src.StageOptionId))
+                .ForMember(dest => dest.ProjectScorecard,
+                    opt => opt.MapFrom(src => src.Scorecard))
                 .ForMember(dest => dest.Industries,
                     opt => opt.MapFrom(src => src.IndustryOption != null
                         ? new List<string> { src.IndustryOption.Value }
@@ -441,10 +447,26 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.InvestorAIAnalyses, opt => opt.Ignore())
                 .ForMember(dest => dest.StageOption, opt => opt.Ignore())
                 .ForMember(dest => dest.IndustryOption, opt => opt.Ignore())
-                .ForMember(dest => dest.Scorecard, opt => opt.Ignore())
+                .ForMember(dest => dest.Scorecard,
+                    opt => opt.MapFrom(src => new ProjectScorecard
+                    {
+                        TeamSize = src.TeamSize,
+                        TeamExperience = src.TeamExperience,
+                        HasTechnicalCofounder = src.HasTechnicalCofounder,
+                        TargetMarketSize = src.TargetMarketSize,
+                        MarketGrowth = src.MarketGrowth,
+                        ProductReadiness = src.ProductReadiness,
+                        IPProtection = src.IPProtection,
+                        BarrierToEntry = src.BarrierToEntry,
+                        CurrentTraction = src.CurrentTraction,
+                        RunwayMonths = src.RunwayMonths
+                    }))
+                .ForMember(dest => dest.Followers, opt => opt.Ignore())
                 .ForMember(dest => dest.UnlockedProjects, opt => opt.Ignore())
                 .ForMember(dest => dest.ConnectionRequests, opt => opt.Ignore())
-                .ForMember(dest => dest.Deals, opt => opt.Ignore());
+                .ForMember(dest => dest.Deals, opt => opt.Ignore())
+                .ForMember(dest => dest.Bookings, opt => opt.Ignore())
+                .ForMember(dest => dest.ProjectAdvisorAssignments, opt => opt.Ignore());
 
             // UpdateProjectRequest -> Project Entity
             var updateProjectMap = CreateMap<UpdateProjectRequest, Project>()
@@ -464,9 +486,22 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.StageOption, opt => opt.Ignore())
                 .ForMember(dest => dest.IndustryOption, opt => opt.Ignore())
                 .ForMember(dest => dest.Scorecard, opt => opt.Ignore())
+                .ForMember(dest => dest.Followers, opt => opt.Ignore())
                 .ForMember(dest => dest.UnlockedProjects, opt => opt.Ignore())
                 .ForMember(dest => dest.ConnectionRequests, opt => opt.Ignore())
-                .ForMember(dest => dest.Deals, opt => opt.Ignore());
+                .ForMember(dest => dest.Deals, opt => opt.Ignore())
+                .ForMember(dest => dest.Bookings, opt => opt.Ignore())
+                .ForMember(dest => dest.ProjectAdvisorAssignments, opt => opt.Ignore())
+                .AfterMap((src, dest) =>
+                {
+                    if (!HasScorecardUpdate(src))
+                    {
+                        return;
+                    }
+
+                    dest.Scorecard ??= new ProjectScorecard();
+                    ApplyScorecardUpdate(src, dest.Scorecard);
+                });
 
             updateProjectMap.ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
@@ -710,6 +745,44 @@ namespace AISEP.BLL.Helpers
             return string.IsNullOrWhiteSpace(legacyEvidenceUrl)
                 ? []
                 : [legacyEvidenceUrl];
+        }
+
+        private static bool HasScorecardUpdate(UpdateProjectRequest request)
+        {
+            return request.TeamSize.HasValue
+                || request.TeamExperience.HasValue
+                || request.HasTechnicalCofounder.HasValue
+                || request.TargetMarketSize.HasValue
+                || request.MarketGrowth.HasValue
+                || request.ProductReadiness.HasValue
+                || request.IPProtection.HasValue
+                || request.BarrierToEntry.HasValue
+                || request.CurrentTraction.HasValue
+                || request.RunwayMonths.HasValue;
+        }
+
+        private static void ApplyScorecardUpdate(UpdateProjectRequest request, ProjectScorecard scorecard)
+        {
+            if (request.TeamSize.HasValue)
+                scorecard.TeamSize = request.TeamSize.Value;
+            if (request.TeamExperience.HasValue)
+                scorecard.TeamExperience = request.TeamExperience.Value;
+            if (request.HasTechnicalCofounder.HasValue)
+                scorecard.HasTechnicalCofounder = request.HasTechnicalCofounder.Value;
+            if (request.TargetMarketSize.HasValue)
+                scorecard.TargetMarketSize = request.TargetMarketSize.Value;
+            if (request.MarketGrowth.HasValue)
+                scorecard.MarketGrowth = request.MarketGrowth.Value;
+            if (request.ProductReadiness.HasValue)
+                scorecard.ProductReadiness = request.ProductReadiness.Value;
+            if (request.IPProtection.HasValue)
+                scorecard.IPProtection = request.IPProtection.Value;
+            if (request.BarrierToEntry.HasValue)
+                scorecard.BarrierToEntry = request.BarrierToEntry.Value;
+            if (request.CurrentTraction.HasValue)
+                scorecard.CurrentTraction = request.CurrentTraction.Value;
+            if (request.RunwayMonths.HasValue)
+                scorecard.RunwayMonths = request.RunwayMonths.Value;
         }
     }
 }

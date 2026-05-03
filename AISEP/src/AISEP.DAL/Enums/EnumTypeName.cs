@@ -22,7 +22,16 @@ namespace AISEP.DAL.Enums
         WalletTransactionType,
         UserRole,
         UserReportCategory,
-        UserReportStatus
+        UserReportStatus,
+        TeamSizeEnum,
+        TeamExperienceEnum,
+        TargetMarketSizeEnum,
+        MarketGrowthEnum,
+        ProductReadinessEnum,
+        IPProtectionEnum,
+        BarrierToEntryEnum,
+        CurrentTractionEnum,
+        RunwayMonthsEnum
 
     }
 }

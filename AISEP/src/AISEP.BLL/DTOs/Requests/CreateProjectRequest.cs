@@ -1,3 +1,5 @@
+using AISEP.DAL.Enums;
+
 namespace AISEP.BLL.DTOs.Requests
 {
     public class CreateProjectRequest
@@ -10,13 +12,18 @@ namespace AISEP.BLL.DTOs.Requests
         public string?    SolutionDescription    { get; set; }
         public string?    TargetCustomers        { get; set; }
         public string?    UniqueValueProposition { get; set; }
-        public decimal?   MarketSize             { get; set; }
         public string?    BusinessModel          { get; set; }
-        public decimal?   Revenue                { get; set; }
         public string?    Competitors            { get; set; }
-        public string?    TeamMembers            { get; set; }
-        public string?    KeySkills              { get; set; }
-        public string?    TeamExperience         { get; set; }
         public List<int>? IndustryOptionIds      { get; set; }
+        public TeamSizeEnum TeamSize { get; set; }
+        public TeamExperienceEnum TeamExperience { get; set; }
+        public bool HasTechnicalCofounder { get; set; }
+        public TargetMarketSizeEnum TargetMarketSize { get; set; }
+        public MarketGrowthEnum MarketGrowth { get; set; }
+        public ProductReadinessEnum ProductReadiness { get; set; }
+        public IPProtectionEnum IPProtection { get; set; }
+        public BarrierToEntryEnum BarrierToEntry { get; set; }
+        public CurrentTractionEnum CurrentTraction { get; set; }
+        public RunwayMonthsEnum RunwayMonths { get; set; }
     }
 }

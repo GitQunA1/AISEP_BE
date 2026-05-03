@@ -187,11 +187,15 @@ public class ProjectServiceGroupedTests
         Assert.Equal(1, addedProject.StageOptionId);
         Assert.Equal(2, addedProject.IndustryOptionId);
         Assert.Equal("https://cdn.test/project-220.png", addedProject.ProjectImageUrl);
+        Assert.NotNull(addedProject.Scorecard);
+        Assert.Equal(TeamSizeEnum.TwoFounders, addedProject.Scorecard!.TeamSize);
+        Assert.Equal(TargetMarketSizeEnum.Large, addedProject.Scorecard.TargetMarketSize);
 
         Assert.Equal(2200, result.ProjectId);
         Assert.Equal("AISEP Growth Platform", result.ProjectName);
         Assert.Equal(1, result.StageOptionId);
         Assert.Contains("SaaS", result.Industries);
+        Assert.NotNull(result.ProjectScorecard);
 
         storageService.Verify(x => x.UploadFileAsync(imageFile, "project-images"), Times.Once);
         unitOfWork.Verify(x => x.SaveChangesAsync(), Times.Once);
@@ -347,10 +351,25 @@ public class ProjectServiceGroupedTests
 
         var mapperConfig = new MapperConfiguration(cfg =>
         {
-            cfg.CreateMap<CreateProjectRequest, Project>();
+            cfg.CreateMap<CreateProjectRequest, Project>()
+                .ForMember(dest => dest.Scorecard, opt => opt.MapFrom(src => new ProjectScorecard
+                {
+                    TeamSize = src.TeamSize,
+                    TeamExperience = src.TeamExperience,
+                    HasTechnicalCofounder = src.HasTechnicalCofounder,
+                    TargetMarketSize = src.TargetMarketSize,
+                    MarketGrowth = src.MarketGrowth,
+                    ProductReadiness = src.ProductReadiness,
+                    IPProtection = src.IPProtection,
+                    BarrierToEntry = src.BarrierToEntry,
+                    CurrentTraction = src.CurrentTraction,
+                    RunwayMonths = src.RunwayMonths
+                }));
             cfg.CreateMap<UpdateProjectRequest, Project>()
                 .ForAllMembers(opt => opt.Condition((_, _, srcMember) => srcMember is not null));
+            cfg.CreateMap<ProjectScorecard, ProjectScorecardDto>();
             cfg.CreateMap<Project, ProjectResponse>()
+                .ForMember(d => d.ProjectScorecard, opt => opt.MapFrom(s => s.Scorecard))
                 .ForMember(d => d.Industries, opt => opt.MapFrom(s => s.IndustryOption != null
                     ? new List<string> { s.IndustryOption.Value }
                     : new List<string>()))
@@ -484,6 +503,19 @@ public class ProjectServiceGroupedTests
             ProblemStatement = "SMEs need better data visibility.",
             SolutionDescription = "Unified analytics and decision engine.",
             TargetCustomers = "SME founders",
+            Scorecard = new ProjectScorecard
+            {
+                TeamSize = TeamSizeEnum.TwoFounders,
+                TeamExperience = TeamExperienceEnum.IndustryExpert,
+                HasTechnicalCofounder = true,
+                TargetMarketSize = TargetMarketSizeEnum.Large,
+                MarketGrowth = MarketGrowthEnum.Fast,
+                ProductReadiness = ProductReadinessEnum.MVP,
+                IPProtection = IPProtectionEnum.Defensible,
+                BarrierToEntry = BarrierToEntryEnum.Medium,
+                CurrentTraction = CurrentTractionEnum.UserAcquisition,
+                RunwayMonths = RunwayMonthsEnum.SixToTwelveMonths
+            },
             IndustryOptionId = 1,
             IndustryOption = new IndustryOption { Id = 1, Value = "Fintech", IsActive = true },
             Status = status,
@@ -552,8 +584,17 @@ public class ProjectServiceGroupedTests
             ProblemStatement = "Founders lack strategic clarity.",
             SolutionDescription = "Advisor-driven execution intelligence.",
             TargetCustomers = "Startup founders",
-            TeamMembers = "Founder, Engineer",
-            IndustryOptionIds = [2]
+            IndustryOptionIds = [2],
+            TeamSize = TeamSizeEnum.TwoFounders,
+            TeamExperience = TeamExperienceEnum.IndustryExpert,
+            HasTechnicalCofounder = true,
+            TargetMarketSize = TargetMarketSizeEnum.Large,
+            MarketGrowth = MarketGrowthEnum.Fast,
+            ProductReadiness = ProductReadinessEnum.MVP,
+            IPProtection = IPProtectionEnum.Defensible,
+            BarrierToEntry = BarrierToEntryEnum.Medium,
+            CurrentTraction = CurrentTractionEnum.UserAcquisition,
+            RunwayMonths = RunwayMonthsEnum.SixToTwelveMonths
         };
     }
 
