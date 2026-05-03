@@ -42,7 +42,7 @@ namespace AISEP.BLL.Services.Projects
             _dynamicFormValidationService = dynamicFormValidationService;
         }
 
-        // Lấy toàn bộ project, có bổ sung ngữ cảnh user hiện tại để map response phù hợp.
+        // lấy danh sách project cho tk bth
         public async Task<PagedResult<ProjectResponse>> GetAllProjectsAsync(SieveModel model)
         {
             var currentUserId = GetCurrentUserIdOrNull();
@@ -55,7 +55,7 @@ namespace AISEP.BLL.Services.Projects
                 p => MapProjectResponseWithCurrentUser(p, currentUserId, currentInvestorId));
         }
 
-        // Lấy project cho non-premium và tính thêm trạng thái unlock của user hiện tại.
+       // lấy danh sách project cho tk non-premium
         public async Task<PagedResult<NonPremiumProjectResponse>> GetAllProjectsForNonPremiumAsync(SieveModel model)
         {
             var currentUserId = GetCurrentUserIdOrNull();
@@ -71,7 +71,7 @@ namespace AISEP.BLL.Services.Projects
             {
                 return pagedResult;
             }
-
+            //kiểm tra từng project trong danh sách hiện tại xem project đó có được user này unlock chưa
             var items = pagedResult.Items.ToList();
             foreach (var item in items)
             {
@@ -82,7 +82,7 @@ namespace AISEP.BLL.Services.Projects
             return pagedResult;
         }
 
-        // Lấy một project cho non-premium theo id.
+       
         public async Task<NonPremiumProjectResponse?> GetProjectForNonPremiumByIdAsync(int id)
         {
             var project = await _unitOfWork.Projects.GetByIdAsync(id);
@@ -109,16 +109,20 @@ namespace AISEP.BLL.Services.Projects
             var userId = _userService.GetUserId();
             var role = _userService.GetUserRole();
             var currentInvestorId = await GetCurrentInvestorIdOrNullAsync(userId);
-
+            //Check xem user này có được bỏ qua giới hạn lượt xem không
+            //Nếu được bypass thì trả project luôn, không trừ quota, không cần unlock.
             if (CanBypassViewQuota(project, userId, role))
             {
                 return MapProjectResponseWithCurrentUser(project, userId, currentInvestorId);
             }
-
+            //Check role này có cần áp dụng quota xem project không.
             if (!RequiresViewQuota(role))
             {
                 return MapProjectResponseWithCurrentUser(project, userId, currentInvestorId);
             }
+            //check đã unclock project này chưa
+            //Trừ quota/lượt xem của user
+            //Sau đó unlock project này cho user
 
             var isUnlocked = await _unitOfWork.UnlockedProjects.ExistsAsync(userId, id);
             if (!isUnlocked)
@@ -140,23 +144,18 @@ namespace AISEP.BLL.Services.Projects
             return await PaginationHelper.PaginateAsync(_unitOfWork.Projects.GetByStartupIdQuery(startup.StartupId), model, _sieveProcessor, p => _mapper.Map<ProjectResponse>(p));
         }
 
-        // Lấy danh sách project đang ở trạng thái Draft.
-        public async Task<PagedResult<ProjectResponse>> GetDraftProjectsAsync(SieveModel model)
-        {
-            return await PaginationHelper.PaginateAsync(_unitOfWork.Projects.GetByStatusQuery(ProjectStatus.Draft), model, _sieveProcessor, p => _mapper.Map<ProjectResponse>(p));
-        }
-
-        // Tạo project mới: validate field-level từ DB rồi xử lý các quan hệ động.
+        // Tạo project mới
         public async Task<ProjectResponse> CreateProjectAsync( CreateProjectRequest dto)
         {
-            // Trước hết validate field-level theo rule trong DB.
+            // validate theo rule trong DB.
             await _dynamicFormValidationService.ValidateAsync("project.create", dto);
 
             var userId = _userService.GetUserId();
             var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
             if (startup is null)
                 throw new KeyNotFoundException("Startup profile not found. Please create a startup profile first.");
-            EnsureStartupApproved(startup);
+            if (startup.ApprovalStatus != ApprovalStatus.Approved)
+                throw new InvalidOperationException("Your startup profile must be approved before using this feature.");
 
             var industryOptions = await ResolveIndustryOptionsAsync(dto.IndustryOptionIds);
             var stageOption = await ResolveStageOptionAsync(dto.StageOptionId, true);
@@ -180,7 +179,7 @@ namespace AISEP.BLL.Services.Projects
             return _mapper.Map<ProjectResponse>(project);
         }
 
-        // Cập nhật project: validate field-level từ DB rồi patch entity.
+        // Cập nhật project
         public async Task<ProjectResponse> UpdateProjectAsync(int projectId, UpdateProjectRequest dto)
         {
             // project.update cũng validate field-level từ DB trước khi patch dữ liệu vào entity.
@@ -194,7 +193,8 @@ namespace AISEP.BLL.Services.Projects
             var startup = await _unitOfWork.Startups.GetByUserIdAsync(userId);
             if (startup is null || project.StartupId != startup.StartupId)
                 throw new ForbiddenAccessException("You do not have permission to update this project.");
-            EnsureStartupApproved(startup);
+            if (startup.ApprovalStatus != ApprovalStatus.Approved)
+                throw new InvalidOperationException("Your startup profile must be approved before using this feature.");
 
             if (project.Status != ProjectStatus.Draft && project.Status != ProjectStatus.Rejected)
                 throw new InvalidOperationException("Only draft projects or rejected projects can update."); 
@@ -255,7 +255,8 @@ namespace AISEP.BLL.Services.Projects
                 ?? throw new KeyNotFoundException("Startup profile not found for this account.");
             if (project.StartupId != startup.StartupId)
                 throw new ForbiddenAccessException("You do not have permission to submit this project.");
-            EnsureStartupApproved(startup);
+            if (startup.ApprovalStatus != ApprovalStatus.Approved)
+                throw new InvalidOperationException("Your startup profile must be approved before using this feature.");
 
             if (project.Status != ProjectStatus.Draft)
                 throw new InvalidOperationException($"Only draft projects can be submitted. Current status: {project.Status}.");
@@ -287,12 +288,14 @@ namespace AISEP.BLL.Services.Projects
         // Xác định user hiện tại có được bypass quota xem project hay không.
         private static bool CanBypassViewQuota(Project project, int userId, string? role)
         {
+            // Bypass nếu user có role Staff/Admin/Advisor.
             if (string.Equals(role, "Staff", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+                || string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(role, "Advisor", StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
-
+            // Bypass nếu user là chủ sở hữu của project đó.
             return project.Startup.UserId == userId;
         }
 
@@ -300,8 +303,8 @@ namespace AISEP.BLL.Services.Projects
         private static bool RequiresViewQuota(string? role)
         {
             return string.Equals(role, "Investor", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(role, "Startup", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(role, "User", StringComparison.OrdinalIgnoreCase);
+                || string.Equals(role, "Startup", StringComparison.OrdinalIgnoreCase);
+                
         }
 
         // Trừ quota xem project và tạo bản ghi unlock cho user hiện tại.
@@ -342,7 +345,7 @@ namespace AISEP.BLL.Services.Projects
             return _userService.GetUserId();
         }
 
-        // Nếu user hiện tại là investor thì lấy investor id tương ứng, ngược lại trả null.
+       
         private async Task<int?> GetCurrentInvestorIdOrNullAsync(int? currentUserId)
         {
             if (!currentUserId.HasValue)
@@ -350,17 +353,17 @@ namespace AISEP.BLL.Services.Projects
                 return null;
             }
 
-            var currentRole = _userService.GetUserRole();
-            if (!string.Equals(currentRole, "Investor", StringComparison.OrdinalIgnoreCase))
-            {
-                return null;
-            }
+            //var currentRole = _userService.GetUserRole();
+            //if (!string.Equals(currentRole, "Investor", StringComparison.OrdinalIgnoreCase))
+            //{
+            //    return null;
+            //}
 
             var investor = await _unitOfWork.Investors.GetByUserIdAsync(currentUserId.Value);
             return investor?.InvestorId;
         }
 
-        // Map Project sang response đầy đủ, có bơm thêm current user context cho AutoMapper khi cần.
+        // Map Project sang response 
         private ProjectResponse MapProjectResponseWithCurrentUser(Project project, int? currentUserId, int? currentInvestorId)
         {
             if (currentUserId.HasValue || currentInvestorId.HasValue)
@@ -382,7 +385,7 @@ namespace AISEP.BLL.Services.Projects
             return _mapper.Map<ProjectResponse>(project);
         }
 
-        // Map Project sang response non-premium, có bơm thêm current user context cho AutoMapper khi cần.
+        // Map Project sang response non-premium
         private NonPremiumProjectResponse MapNonPremiumProjectResponseWithCurrentUser(Project project, int? currentUserId, int? currentInvestorId)
         {
             if (currentUserId.HasValue || currentInvestorId.HasValue)
@@ -404,37 +407,7 @@ namespace AISEP.BLL.Services.Projects
             return _mapper.Map<NonPremiumProjectResponse>(project);
         }
 
-        private static void EnsureStartupApproved(Startup startup)
-        {
-            if (startup.ApprovalStatus != ApprovalStatus.Approved)
-                throw new InvalidOperationException("Your startup profile must be approved before using this feature.");
-        }
-
-        //private static string? BuildTeaserText(string? value, int maxLength)
-        //{
-        //    if (string.IsNullOrWhiteSpace(value))
-        //    {
-        //        return null;
-        //    }
-
-        //    var normalized = System.Text.RegularExpressions.Regex.Replace(value.Trim(), @"\s+", " ");
-        //    if (normalized.Length <= maxLength)
-        //    {
-        //        return normalized;
-        //    }
-
-        //    return normalized[..maxLength].TrimEnd() + "...";
-        //}
-
-        //private NonPremiumProjectResponse MapNonPremiumProject(Project project)
-        //{
-        //    var response = _mapper.Map<NonPremiumProjectResponse>(project);
-        //    response.ProblemStatement = BuildTeaserText(response.ProblemStatement, 220);
-        //    response.SolutionDescription = BuildTeaserText(response.SolutionDescription, 220);
-        //    response.TargetCustomers = BuildTeaserText(response.TargetCustomers, 120);
-        //    response.UniqueValueProposition = BuildTeaserText(response.UniqueValueProposition, 140);
-        //    return response;
-        //}
+       
 
         // Upload file nếu request có gửi ảnh project lên.
         private async Task<string?> UploadIfPresent(IFormFile? file, string folder)
