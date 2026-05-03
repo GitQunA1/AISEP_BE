@@ -14,7 +14,7 @@ namespace AISEP.BLL.DTOs.Requests
         public string?    UniqueValueProposition { get; set; }
         public string?    BusinessModel          { get; set; }
         public string?    Competitors            { get; set; }
-        public List<int>? IndustryOptionIds      { get; set; }
+        public int?       IndustryOptionId       { get; set; }
         public TeamSizeEnum? TeamSize { get; set; }
         public TeamExperienceEnum? TeamExperience { get; set; }
         public bool? HasTechnicalCofounder { get; set; }

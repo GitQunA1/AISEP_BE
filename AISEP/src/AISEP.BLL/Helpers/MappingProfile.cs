@@ -78,9 +78,9 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.Customer != null
                         ? src.Customer.UserName
                         : "Unknown"))
-                .ForMember(dest => dest.SystemCommissionMessage,
-                    opt => opt.MapFrom(src =>
-                        $"S? ti?n hoa h?ng h? th?ng AISEP nh?n đư?c cho đơn hàng này là {src.SystemCommissionAmount:0}₫. Đây là m?c hoa h?ng đư?c ch?t t?i th?i đi?m t?o booking."))
+                //.ForMember(dest => dest.SystemCommissionMessage,
+                //    opt => opt.MapFrom(src =>
+                //        $"S? ti?n hoa h?ng h? th?ng AISEP nh?n đư?c cho đơn hàng này là {src.SystemCommissionAmount:0}₫. Đây là m?c hoa h?ng đư?c ch?t t?i th?i đi?m t?o booking."))
                 .ForMember(dest => dest.SystemCommissionPercent,
                     opt => opt.MapFrom(src => src.SystemCommissionConfig != null ? src.SystemCommissionConfig.Percent : 0m))
                 .ForMember(dest => dest.AdvisorAvailabilitySlotIds,

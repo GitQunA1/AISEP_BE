@@ -17,8 +17,6 @@ namespace AISEP.BLL.Services.Projects
 {
     public class ProjectService : IProjectService
     {
-        private const int RequiredProjectIndustries = 1;
-
         private readonly IUnitOfWork _unitOfWork;
         private readonly ISieveProcessor _sieveProcessor;
         private readonly IMapper _mapper;
@@ -157,7 +155,7 @@ namespace AISEP.BLL.Services.Projects
             if (startup.ApprovalStatus != ApprovalStatus.Approved)
                 throw new InvalidOperationException("Your startup profile must be approved before using this feature.");
 
-            var industryOption = await ResolveIndustryOptionAsync(dto.IndustryOptionIds);
+            var industryOption = await ResolveIndustryOptionAsync(dto.IndustryOptionId, true);
             var stageOption = await ResolveStageOptionAsync(dto.StageOptionId, true);
             var project = _mapper.Map<Project>(dto);
             project.StartupId = startup.StartupId;
@@ -203,9 +201,9 @@ namespace AISEP.BLL.Services.Projects
                 project.StageOptionId = stageOption!.Id;
                 project.StageOption = stageOption;
             }
-            if (dto.IndustryOptionIds is not null)
+            if (dto.IndustryOptionId.HasValue)
             {
-                var industryOption = await ResolveIndustryOptionAsync(dto.IndustryOptionIds);
+                var industryOption = await ResolveIndustryOptionAsync(dto.IndustryOptionId.Value, true);
                 project.IndustryOptionId = industryOption.Id;
                 project.IndustryOption = industryOption;
             }
@@ -403,29 +401,31 @@ namespace AISEP.BLL.Services.Projects
         private async Task<string?> UploadIfPresent(IFormFile? file, string folder)
             => file is not null ? await _storage.UploadFileAsync(file, folder) : null;
 
-        // Kiểm tra danh sách ngành của project có tồn tại và đang active hay không.
-        private async Task<IndustryOption> ResolveIndustryOptionAsync(IEnumerable<int>? optionIds)
+        // Kiểm tra ngành của project có tồn tại và đang active hay không.
+        private async Task<IndustryOption> ResolveIndustryOptionAsync(int? optionId, bool required)
         {
-            var ids = optionIds?
-                .Distinct()
-                .ToList() ?? [];
-
-            if (ids.Count == 0)
+            if (!optionId.HasValue)
             {
+                if (!required)
+                {
+                    throw new InvalidOperationException("Industry is required.");
+                }
+
                 throw new InvalidOperationException("At least one industry is required.");
             }
-            if (ids.Count != RequiredProjectIndustries)
+
+            if (optionId.Value <= 0)
             {
-                throw new InvalidOperationException("Project must select exactly one industry.");
+                throw new InvalidOperationException("Selected industry is invalid or inactive.");
             }
 
-            var options = await _unitOfWork.IndustryOptions.GetByIdsAsync(ids);
-            if (options.Count != ids.Count || options.Any(x => !x.IsActive))
+            var option = await _unitOfWork.IndustryOptions.GetByIdAsync(optionId.Value);
+            if (option is null || !option.IsActive)
             {
-                throw new InvalidOperationException("One or more selected industries are invalid or inactive.");
+                throw new InvalidOperationException("Selected industry is invalid or inactive.");
             }
 
-            return options.First();
+            return option;
         }
 
         // Kiểm tra stage của project có tồn tại và đang active hay không.

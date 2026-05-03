@@ -24,7 +24,7 @@ namespace AISEP.BLL.Validators.Project
                 || request.UniqueValueProposition is not null
                 || request.BusinessModel is not null
                 || request.Competitors is not null
-                || request.IndustryOptionIds is not null
+                || request.IndustryOptionId.HasValue
                 || request.TeamSize.HasValue
                 || request.TeamExperience.HasValue
                 || request.HasTechnicalCofounder.HasValue

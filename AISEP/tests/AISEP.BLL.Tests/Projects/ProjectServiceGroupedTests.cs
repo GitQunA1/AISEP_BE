@@ -584,7 +584,7 @@ public class ProjectServiceGroupedTests
             ProblemStatement = "Founders lack strategic clarity.",
             SolutionDescription = "Advisor-driven execution intelligence.",
             TargetCustomers = "Startup founders",
-            IndustryOptionIds = [2],
+            IndustryOptionId = 2,
             TeamSize = TeamSizeEnum.TwoFounders,
             TeamExperience = TeamExperienceEnum.IndustryExpert,
             HasTechnicalCofounder = true,
