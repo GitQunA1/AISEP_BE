@@ -362,8 +362,6 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.StartupId))
                 .ForMember(dest => dest.StageOptionId,
                     opt => opt.MapFrom(src => src.StageOptionId))
-                .ForMember(dest => dest.ProjectScorecard,
-                    opt => opt.MapFrom(src => src.Scorecard))
                 .ForMember(dest => dest.Industries,
                     opt => opt.MapFrom(src => src.IndustryOption != null
                         ? new List<string> { src.IndustryOption.Value }

@@ -10,9 +10,7 @@ namespace AISEP.BLL.DTOs.Responses
         public string? ProblemStatement { get; set; }
         public string? SolutionDescription { get; set; }
         public string? TargetCustomers { get; set; }
-        public string? UniqueValueProposition { get; set; }
         public List<string> Industries { get; set; } = [];
-        public ProjectScorecardDto? ProjectScorecard { get; set; }
         public string? ProjectImageUrl { get; set; }
         public string Status { get; set; } = string.Empty;
         public decimal? StartupPotentialScore { get; set; }

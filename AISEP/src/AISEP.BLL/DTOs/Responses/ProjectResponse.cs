@@ -18,7 +18,6 @@
         public ProjectScorecardDto? ProjectScorecard { get; set; }
         public string Status { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
-        //public DateTime? PublishedAt { get; set; }
 
         // Approval / rejection info
         public int? ApprovedById { get; set; }

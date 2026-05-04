@@ -33,8 +33,7 @@ namespace AISEP.API.Controllers
             return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
         }
 
-        [HttpGet("non-premium")]
-       
+        [HttpGet("non-premium")] 
         public async Task<IActionResult> GetAllForNonPremium([FromQuery] SieveModel model)
         {
             var result = await _projectService.GetAllProjectsForNonPremiumAsync(model);
@@ -113,14 +112,6 @@ namespace AISEP.API.Controllers
                 return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not found", 404));
             }
         }
-
-        //[HttpGet("drafts")]
-        //[Authorize]
-        //public async Task<IActionResult> GetDraftProjects([FromQuery] SieveModel model)
-        //{
-        //    var result = await _projectService.GetDraftProjectsAsync(model);
-        //    return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
-        //}
 
         [HttpPost]
         [Authorize(Roles = "Startup")]
