@@ -5,7 +5,6 @@ namespace AISEP.BLL.Validators.Document
 {
     public class UploadDocumentRequestValidator : AbstractValidator<UploadDocumentRequest>
     {
-        private static readonly string[] AllowedMimeTypes = ["application/pdf", "image/jpeg", "image/png"];
         private const long MaxDocSize = 10 * 1024 * 1024; // 10 MB
 
         public UploadDocumentRequestValidator()
@@ -17,9 +16,21 @@ namespace AISEP.BLL.Validators.Document
                 .NotNull().WithMessage("File is required.")
                 .Must(f => f!.Length <= MaxDocSize)
                     .WithMessage("File must not exceed 10MB.")
-                .Must(f => AllowedMimeTypes.Contains(f!.ContentType))
-                    .WithMessage("File only supports PDF, JPG, PNG.")
+                .Must(IsPdfFile)
+                    .WithMessage("File only supports PDF.")
                 .When(x => x.File is not null);
+        }
+
+        private static bool IsPdfFile(IFormFile? file)
+        {
+            if (file is null)
+            {
+                return false;
+            }
+
+            var contentType = file.ContentType?.Trim().ToLowerInvariant();
+            var extension = Path.GetExtension(file.FileName).Trim().ToLowerInvariant();
+            return contentType == "application/pdf" && extension == ".pdf";
         }
     }
 }

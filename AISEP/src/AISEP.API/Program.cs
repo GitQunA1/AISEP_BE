@@ -25,6 +25,7 @@ using AISEP.BLL.Services.AI;
 using AISEP.BLL.Services.Chats;
 using AISEP.BLL.Services.Payments;
 using AISEP.BLL.Services.Notifications;
+using AISEP.BLL.Services.PdfExtraction;
 using AISEP.BLL.Services.Connections;
 using AISEP.BLL.Services.Deals;
 using AISEP.BLL.Services.Wallets;
@@ -32,6 +33,7 @@ using AISEP.BLL.Services.Payouts;
 using AISEP.BLL.Services.SystemCommissions;
 using AISEP.BLL.Services.SystemTerms;
 using AISEP.BLL.Services.PostPrs;
+using AISEP.BLL.Services.ScorecardConfigs;
 using AISEP.BLL.Services.Subscriptions;
 using AISEP.BLL.Services.Transactions;
 using AISEP.BLL.Services.FormValidationRules;
@@ -114,6 +116,7 @@ builder.Services.Configure<SePaySettings>(builder.Configuration.GetSection("SePa
 
 builder.Services.AddHttpClient();
 builder.Services.AddHttpClient<IOpenAiService, OpenAiService>();
+builder.Services.AddHttpClient<IPdfExtractionService, PdfExtractionService>();
 builder.Services.AddScoped<IStartupAIAnalysisService, StartupAIAnalysisService>();
 builder.Services.AddScoped<IInvestorAIAnalysisService, InvestorAIAnalysisService>();
 
@@ -272,6 +275,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IConnectionService, ConnectionService>();
 builder.Services.AddScoped<IDealService, DealService>();
 builder.Services.AddScoped<IPostPrService, PostPrService>();
+builder.Services.AddScoped<IScorecardConfigService, ScorecardConfigService>();
 builder.Services.AddScoped<IFormValidationRuleService, FormValidationRuleService>();
 builder.Services.AddScoped<IDynamicFormSubmissionValidationService, DynamicFormSubmissionValidationService>();
 builder.Services.AddScoped<IIndustryOptionService, IndustryOptionService>();

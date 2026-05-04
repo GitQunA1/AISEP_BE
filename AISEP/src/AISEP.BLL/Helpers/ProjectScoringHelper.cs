@@ -3,9 +3,64 @@ using AISEP.DAL.Enums;
 
 namespace AISEP.BLL.Helpers
 {
+    public class ScorecardBaseScoreResult
+    {
+        public decimal TeamScore { get; set; }
+        public decimal MarketScore { get; set; }
+        public decimal ProductScore { get; set; }
+        public decimal CompetitionScore { get; set; }
+        public decimal TractionScore { get; set; }
+        public decimal InvestmentNeedScore { get; set; }
+        public decimal TotalScore { get; set; }
+
+        public Dictionary<string, ScoreCriterionBreakdown> ToScoreBreakdown()
+        {
+            return new Dictionary<string, ScoreCriterionBreakdown>
+            {
+                ["Team"] = new() { MaxScore = TeamMaxScore, CurrentBaseScore = TeamScore },
+                ["Market"] = new() { MaxScore = MarketMaxScore, CurrentBaseScore = MarketScore },
+                ["Product"] = new() { MaxScore = ProductMaxScore, CurrentBaseScore = ProductScore },
+                ["Competition"] = new() { MaxScore = CompetitionMaxScore, CurrentBaseScore = CompetitionScore },
+                ["Traction"] = new() { MaxScore = TractionMaxScore, CurrentBaseScore = TractionScore },
+                ["InvestmentNeed"] = new() { MaxScore = InvestmentNeedMaxScore, CurrentBaseScore = InvestmentNeedScore }
+            };
+        }
+
+        public Dictionary<string, decimal> GetCurrentBaseScores()
+        {
+            return new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Team"] = TeamScore,
+                ["Market"] = MarketScore,
+                ["Product"] = ProductScore,
+                ["Competition"] = CompetitionScore,
+                ["Traction"] = TractionScore,
+                ["InvestmentNeed"] = InvestmentNeedScore
+            };
+        }
+
+        internal decimal TeamMaxScore { get; set; }
+        internal decimal MarketMaxScore { get; set; }
+        internal decimal ProductMaxScore { get; set; }
+        internal decimal CompetitionMaxScore { get; set; }
+        internal decimal TractionMaxScore { get; set; }
+        internal decimal InvestmentNeedMaxScore { get; set; }
+    }
+
+    public class ScoreCriterionBreakdown
+    {
+        public decimal MaxScore { get; set; }
+        public decimal CurrentBaseScore { get; set; }
+    }
+
     public static class ProjectScoringHelper
     {
         public static decimal CalculateBaseScore(ProjectScorecard scorecard, ScorecardWeightConfig weightConfig)
+        {
+            return CalculateBaseScoreBreakdown(scorecard, weightConfig).TotalScore;
+        }
+
+        public static ScorecardBaseScoreResult CalculateBaseScoreBreakdown(ProjectScorecard scorecard, ScorecardWeightConfig weightConfig)
         {
             var teamScore =
                 Average(
@@ -35,15 +90,29 @@ namespace AISEP.BLL.Helpers
             var investmentNeedScore = ConvertThreeLevelEnum(scorecard.RunwayMonths)
                 * weightConfig.InvestmentNeedWeight;
 
-            return Math.Round(
-                teamScore
+            var totalScore = teamScore
                 + marketScore
                 + productScore
                 + competitionScore
                 + tractionScore
-                + investmentNeedScore,
-                2,
-                MidpointRounding.AwayFromZero);
+                + investmentNeedScore;
+
+            return new ScorecardBaseScoreResult
+            {
+                TeamScore = RoundScore(teamScore),
+                MarketScore = RoundScore(marketScore),
+                ProductScore = RoundScore(productScore),
+                CompetitionScore = RoundScore(competitionScore),
+                TractionScore = RoundScore(tractionScore),
+                InvestmentNeedScore = RoundScore(investmentNeedScore),
+                TotalScore = RoundScore(totalScore),
+                TeamMaxScore = RoundScore(weightConfig.TeamWeight),
+                MarketMaxScore = RoundScore(weightConfig.MarketWeight),
+                ProductMaxScore = RoundScore(weightConfig.ProductWeight),
+                CompetitionMaxScore = RoundScore(weightConfig.CompetitionWeight),
+                TractionMaxScore = RoundScore(weightConfig.TractionWeight),
+                InvestmentNeedMaxScore = RoundScore(weightConfig.InvestmentNeedWeight)
+            };
         }
 
         private static decimal ConvertThreeLevelEnum(TeamSizeEnum value)
@@ -150,6 +219,11 @@ namespace AISEP.BLL.Helpers
         private static decimal Average(params decimal[] values)
         {
             return values.Length == 0 ? 0m : values.Sum() / values.Length;
+        }
+
+        private static decimal RoundScore(decimal value)
+        {
+            return Math.Round(value, 2, MidpointRounding.AwayFromZero);
         }
     }
 }

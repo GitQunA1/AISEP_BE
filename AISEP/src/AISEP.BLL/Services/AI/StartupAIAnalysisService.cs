@@ -1,9 +1,11 @@
-﻿using System.Text.Json;
+﻿using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using AISEP.BLL.Exceptions;
 using AISEP.BLL.Helpers;
 using AISEP.DAL.Common;
 using AISEP.BLL.DTOs.Responses;
+using AISEP.BLL.Services.PdfExtraction;
 using AISEP.BLL.Services.Users;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
@@ -16,17 +18,20 @@ namespace AISEP.BLL.Services.AI
         private readonly IUnitOfWork      _unitOfWork;
         private readonly IUserService     _userService;
         private readonly IOpenAiService _openAiService;
+        private readonly IPdfExtractionService _pdfExtractionService;
         private readonly IMapper           _mapper;
 
         public StartupAIAnalysisService(
             IUnitOfWork unitOfWork,
             IUserService userService,
             IOpenAiService openAiService,
+            IPdfExtractionService pdfExtractionService,
             IMapper mapper)
         {
             _unitOfWork      = unitOfWork;
             _userService     = userService;
             _openAiService   = openAiService;
+            _pdfExtractionService = pdfExtractionService;
             _mapper          = mapper;
         }
 
@@ -41,10 +46,11 @@ namespace AISEP.BLL.Services.AI
             var baseScore = await CalculateBaseScoreAsync(project);
             await ConsumeAiQuotaAsync(project.StartupId);
 
-            var result      = await _openAiService.AnalyzeProjectAsync(project, baseScore);
-            result.BaseScore = baseScore;
-            result.AIAdjustmentScore = Math.Clamp(result.AIAdjustmentScore, -10, 10);
-            result.FinalPotentialScore = Math.Clamp(baseScore + result.AIAdjustmentScore, 0m, 100m);
+            var documentText = await ExtractProjectPdfTextAsync(projectId);
+            var result      = await _openAiService.AnalyzeProjectAsync(project, baseScore, documentText);
+            AiAuditAdjustmentGuard.Normalize(result, baseScore);
+            result.BaseScore = baseScore.TotalScore;
+            result.FinalPotentialScore = Math.Clamp(baseScore.TotalScore + result.TotalAIAdjustmentScore, 0m, 100m);
             var analysisJson = JsonSerializer.Serialize(result);
 
             var existing = await _unitOfWork.StartupAIAnalyses.GetByProjectIdAsync(projectId);
@@ -204,7 +210,7 @@ namespace AISEP.BLL.Services.AI
             await _unitOfWork.SaveChangesAsync();
         }
 
-        private async Task<decimal> CalculateBaseScoreAsync(Project project)
+        private async Task<ScorecardBaseScoreResult> CalculateBaseScoreAsync(Project project)
         {
             if (project.Scorecard is null)
             {
@@ -214,7 +220,67 @@ namespace AISEP.BLL.Services.AI
             var weightConfig = await _unitOfWork.ScorecardWeightConfigs.GetDefaultAsync()
                 ?? throw new InvalidOperationException("Default scorecard weight config is not configured.");
 
-            return ProjectScoringHelper.CalculateBaseScore(project.Scorecard, weightConfig);
+            return ProjectScoringHelper.CalculateBaseScoreBreakdown(project.Scorecard, weightConfig);
+        }
+
+        private async Task<string> ExtractProjectPdfTextAsync(int projectId)
+        {
+            const int maxPromptDocumentCharacters = 15_000;
+            const string truncatedSuffix = "... [Đã cắt bớt do quá dài]";
+
+            var documents = await _unitOfWork.Documents.GetByProjectIdAsync(projectId);
+            var pdfDocuments = documents
+                .Where(IsPdfDocument)
+                .ToList();
+
+            if (pdfDocuments.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            var builder = new StringBuilder();
+            foreach (var document in pdfDocuments)
+            {
+                if (builder.Length >= maxPromptDocumentCharacters)
+                {
+                    break;
+                }
+
+                var extractedText = await _pdfExtractionService.ExtractTextFromPdfUrlAsync(document.FileUrl);
+                if (string.IsNullOrWhiteSpace(extractedText))
+                {
+                    continue;
+                }
+
+                builder.AppendLine($"Tài liệu: {document.DocumentType} - {document.FileName}");
+                builder.AppendLine(extractedText);
+                builder.AppendLine();
+            }
+
+            var text = builder.ToString().Trim();
+            if (text.Length <= maxPromptDocumentCharacters)
+            {
+                return text;
+            }
+
+            var allowedLength = Math.Max(0, maxPromptDocumentCharacters - truncatedSuffix.Length);
+            return text[..allowedLength].TrimEnd() + truncatedSuffix;
+        }
+
+        private static bool IsPdfDocument(Document document)
+        {
+            return HasPdfExtension(document.FileName) || HasPdfExtension(document.FileUrl);
+        }
+
+        private static bool HasPdfExtension(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return false;
+            }
+
+            var withoutQuery = value.Split('?', 2)[0];
+            return withoutQuery.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase);
         }
 
         private static StartupAIAnalysisResponse MapToResponse(StartupAIAnalysis a, IMapper mapper)

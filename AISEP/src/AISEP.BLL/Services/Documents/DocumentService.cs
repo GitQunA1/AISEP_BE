@@ -59,6 +59,8 @@ namespace AISEP.BLL.Services.Documents
             if (project.Status != ProjectStatus.Draft)
                 throw new InvalidOperationException("Chỉ được phép upload tài liệu khi dự án ở trạng thái DRAFT.");
 
+            EnsurePdfFile(request.File);
+
             // Tính hash từ file đang trong memory (trước khi upload)
             var fileHash = await _blockchainService.ComputeFileHashAsync(request.File);
 
@@ -318,6 +320,16 @@ namespace AISEP.BLL.Services.Documents
         {
             if (startup.ApprovalStatus != ApprovalStatus.Approved)
                 throw new InvalidOperationException("Your startup profile must be approved before using this feature.");
+        }
+
+        private static void EnsurePdfFile(IFormFile file)
+        {
+            var contentType = file.ContentType?.Trim().ToLowerInvariant();
+            var extension = Path.GetExtension(file.FileName).Trim().ToLowerInvariant();
+            if (contentType != "application/pdf" || extension != ".pdf")
+            {
+                throw new InvalidOperationException("Chỉ hỗ trợ upload tài liệu PDF.");
+            }
         }
     }
 }

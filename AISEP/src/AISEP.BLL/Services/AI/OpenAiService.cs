@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using System.Net.Http.Headers;
 using System.Globalization;
 using AISEP.DAL.Entities;
+using AISEP.BLL.Helpers;
 using AISEP.BLL.Settings;
 using Microsoft.Extensions.Options;
 
@@ -22,12 +23,12 @@ namespace AISEP.BLL.Services.AI
             _logger     = logger;
         }
 
-        public async Task<AiAnalysisResult> AnalyzeProjectAsync(Project project, decimal baseScore)
+        public async Task<AiAnalysisResult> AnalyzeProjectAsync(Project project, ScorecardBaseScoreResult baseScore, string? documentText = null)
         {
-            var prompt = BuildAnalysisPrompt(project, baseScore, "startup");
+            var prompt = BuildAnalysisPrompt(project, baseScore, "startup", documentText);
 
             _logger.LogInformation("Calling OpenAI startup analysis: model={Model}, baseScore={BaseScore}",
-                _settings.Model, baseScore);
+                _settings.Model, baseScore.TotalScore);
 
             var responseJson = await CallOpenAiAsync(prompt, [], BuildAnalysisJsonSchemaFormat());
             return ParseResponse(responseJson);
@@ -54,41 +55,83 @@ namespace AISEP.BLL.Services.AI
             }
         }
 
-        public async Task<AiAnalysisResult> AnalyzeProjectForInvestorAsync(Project project, decimal baseScore)
+        public async Task<AiAnalysisResult> AnalyzeProjectForInvestorAsync(Project project, ScorecardBaseScoreResult baseScore, string? documentText = null)
         {
-            var prompt = BuildAnalysisPrompt(project, baseScore, "investor");
+            var prompt = BuildAnalysisPrompt(project, baseScore, "investor", documentText);
 
             _logger.LogInformation("Calling OpenAI investor analysis: model={Model}, baseScore={BaseScore}",
-                _settings.Model, baseScore);
+                _settings.Model, baseScore.TotalScore);
 
             var responseJson = await CallOpenAiAsync(prompt, [], BuildAnalysisJsonSchemaFormat());
             return ParseResponse(responseJson);
         }
 
-        private string BuildAnalysisPrompt(Project project, decimal baseScore, string audience)
+        private string BuildAnalysisPrompt(Project project, ScorecardBaseScoreResult baseScore, string audience, string? documentText = null)
         {
-            var baseScoreText = baseScore.ToString("0.##", CultureInfo.InvariantCulture);
+            var baseScoreText = baseScore.TotalScore.ToString("0.##", CultureInfo.InvariantCulture);
             var audienceDescription = audience == "investor"
                 ? "nhà đầu tư đang đánh giá cơ hội đầu tư"
                 : "startup đang tự đánh giá và cải thiện dự án";
             var stageOptionId = project.StageOptionId?.ToString() ?? "N/A";
+            var documentSection = string.IsNullOrWhiteSpace(documentText)
+                ? "Không có nội dung PDF đọc được."
+                : documentText.Trim();
+            var scoreBreakdownJson = JsonSerializer.Serialize(baseScore.ToScoreBreakdown());
+            var checklistJson = JsonSerializer.Serialize(BuildStartupChecklist(project));
 
             return $$"""
-                Bạn là chuyên gia thẩm định đầu tư cấp cao.
-                Hệ thống toán học đã chấm dự án này đạt BaseScore là {{baseScoreText}}/100 điểm.
-                Hãy đọc kỹ văn bản mô tả của dự án.
-                Nếu cách trình bày sắc bén, logic và khả thi, hãy cấp điểm thưởng từ +1 đến +10.
-                Nếu mô tả ngây ngô, thiếu thực tế hoặc viển vông, hãy trừ điểm từ -1 đến -10.
-                Nếu văn bản trung tính, đủ rõ nhưng không nổi bật, có thể trả về 0.
+                Bạn là Kiểm toán viên Thẩm định Đầu tư (Due Diligence Auditor) cấp cao.
+                Nhiệm vụ của bạn là kiểm tra chéo (Cross-check) độ trung thực giữa Form khai báo (Checklist) của Startup và bằng chứng thực tế trong file PDF.
 
-                RÀNG BUỘC NGÔN NGỮ QUAN TRỌNG:
-                Toàn bộ nội dung phân tích, nhận xét, đánh giá BẮT BUỘC phải được viết bằng Tiếng Việt chuyên ngành kinh doanh/startup một cách tự nhiên và trôi chảy.
+                DỮ LIỆU ĐẦU VÀO:
+
+                Bảng phân bổ điểm (Score Breakdown): Chứa MaxScore (Điểm tối đa) và CurrentBaseScore (Điểm gốc hiện tại) của từng tiêu chí.
+
+                Dữ liệu Form Checklist mà Startup đã khai báo.
+
+                Nội dung Text rút trích từ tài liệu PDF.
+
+                QUY TẮC TRỪ/THƯỞNG ĐIỂM (BẮT BUỘC TUÂN THỦ NGHIÊM NGẶT VỀ TOÁN HỌC):
+                Duyệt qua từng hạng mục. Giá trị 'Adjustment' (Điểm điều chỉnh) phải tuân thủ tuyệt đối quy tắc sau:
+
+                Tình huống 1 (Khớp/Có minh chứng tốt): Giữ nguyên điểm (Adjustment = 0). Nếu minh chứng cực kỳ xuất sắc, thưởng nhẹ (Tối đa +2 đến +5 cho toàn bài).
+
+                Tình huống 2 (Sai lệch một phần / Partial Mismatch): PDF có nhắc đến nhưng mức độ thấp hơn Form khai báo. Phạt trừ điểm. LƯU Ý: Số điểm bị trừ (số âm) KHÔNG ĐƯỢC VƯỢT QUÁ 50% số điểm CurrentBaseScore của hạng mục đó. (Ví dụ: CurrentBaseScore là 18.75, chỉ được trừ tối đa -9).
+
+                Tình huống 3 (Khai khống / Missing Evidence): Không tìm thấy bằng chứng, hoặc PDF ghi trái ngược hoàn toàn (tệ hơn) mức khai báo. Thu hồi toàn bộ điểm gốc của hạng mục đó. LƯU Ý: Adjustment BẮT BUỘC phải bằng đúng giá trị -CurrentBaseScore của hạng mục đó, TUYỆT ĐỐI KHÔNG TRỪ LỐ. (Ví dụ: CurrentBaseScore của Team là 22.5, nếu khai khống, ghi đúng -22.5).
+
+                RÀNG BUỘC NGÔN NGỮ: Bắt buộc trả lời bằng Tiếng Việt chuyên ngành.
+
+                ĐỊNH DẠNG OUTPUT JSON:
+                Trả về chuẩn JSON cấu trúc sau:
+
+                TotalAIAdjustmentScore (decimal): Tổng của tất cả các Adjustment thành phần.
+
+                AuditedItems (array of objects): Mỗi object gồm:
+
+                Criteria (string): Tên tiêu chí.
+
+                Finding (string): Nhận xét, so sánh giữa Form và PDF.
+
+                Adjustment (decimal): Điểm cộng/trừ của mục này (Tuân thủ nghiêm ngặt luật toán học ở trên).
+
+                Strengths (array of strings): Điểm sáng.
+
+                Weaknesses (array of strings): Rủi ro lớn nhất.
+
+                Advice (array of strings): Lời khuyên sửa PDF cho khớp Form.
 
                 Đối tượng sử dụng kết quả: {{audienceDescription}}.
+                BaseScore tổng hiện tại: {{baseScoreText}}/100.
+                Không tự tính FinalPotentialScore. Backend C# sẽ tự tính BaseScore + TotalAIAdjustmentScore.
 
-                Chỉ đánh giá chất lượng phần mô tả định tính. Không tự tính điểm cuối cùng.
+                --- BẢNG ĐIỂM CHI TIẾT C# ---
+                {{scoreBreakdownJson}}
 
-                --- DỮ LIỆU DỰ ÁN ---
+                --- CHECKLIST/FORM STARTUP ĐÃ KHAI BÁO ---
+                {{checklistJson}}
+
+                --- DỮ LIỆU TEXT DỰ ÁN ---
                 Tên dự án: {{project.ProjectName}}
                 Mô tả ngắn: {{project.ShortDescription ?? "N/A"}}
                 StageOptionId: {{stageOptionId}}
@@ -98,7 +141,56 @@ namespace AISEP.BLL.Services.AI
                 Giá trị khác biệt: {{project.UniqueValueProposition ?? "N/A"}}
                 Mô hình kinh doanh: {{project.BusinessModel ?? "N/A"}}
                 Đối thủ cạnh tranh: {{project.Competitors ?? "N/A"}}
+
+                --- NỘI DUNG PDF ĐÍNH KÈM ĐÃ TRÍCH XUẤT ---
+                {{documentSection}}
                 """;
+        }
+
+        private static Dictionary<string, object?> BuildStartupChecklist(Project project)
+        {
+            var scorecard = project.Scorecard;
+            return new Dictionary<string, object?>
+            {
+                ["ProjectName"] = project.ProjectName,
+                ["ShortDescription"] = project.ShortDescription,
+                ["StageOptionId"] = project.StageOptionId,
+                ["ProblemStatement"] = project.ProblemStatement,
+                ["SolutionDescription"] = project.SolutionDescription,
+                ["TargetCustomers"] = project.TargetCustomers,
+                ["UniqueValueProposition"] = project.UniqueValueProposition,
+                ["BusinessModel"] = project.BusinessModel,
+                ["Competitors"] = project.Competitors,
+                ["IndustryOptionId"] = project.IndustryOptionId,
+                ["Team"] = scorecard is null ? null : new
+                {
+                    scorecard.TeamSize,
+                    scorecard.TeamExperience,
+                    scorecard.HasTechnicalCofounder
+                },
+                ["Market"] = scorecard is null ? null : new
+                {
+                    scorecard.TargetMarketSize,
+                    scorecard.MarketGrowth
+                },
+                ["Product"] = scorecard is null ? null : new
+                {
+                    scorecard.ProductReadiness,
+                    scorecard.IPProtection
+                },
+                ["Competition"] = scorecard is null ? null : new
+                {
+                    scorecard.BarrierToEntry
+                },
+                ["Traction"] = scorecard is null ? null : new
+                {
+                    scorecard.CurrentTraction
+                },
+                ["InvestmentNeed"] = scorecard is null ? null : new
+                {
+                    scorecard.RunwayMonths
+                }
+            };
         }
 
         private string BuildEligibilityPrompt(Project project, List<Document> documents)
@@ -241,17 +333,43 @@ namespace AISEP.BLL.Services.AI
                     additionalProperties = false,
                     properties = new
                     {
-                        AIAdjustmentScore = new
+                        TotalAIAdjustmentScore = new
                         {
-                            type = "integer",
-                            minimum = -10,
-                            maximum = 10,
-                            description = "Diem cong hoac tru tu -10 den 10."
+                            type = "number",
+                            minimum = -100,
+                            maximum = 5,
+                            description = "Tong diem dieu chinh sau kiem toan rui ro, la tong Adjustment cua AuditedItems."
                         },
-                        Reasoning = new
+                        AuditedItems = new
                         {
-                            type = "string",
-                            description = "Giai thich ngan gon bang tieng Viet ve ly do cong/tru diem."
+                            type = "array",
+                            items = new
+                            {
+                                type = "object",
+                                additionalProperties = false,
+                                properties = new
+                                {
+                                    Criteria = new
+                                    {
+                                        type = "string",
+                                        description = "Ten tieu chi duoc kiem toan, vi du Team, Market, Product, Competition, Traction, InvestmentNeed."
+                                    },
+                                    Finding = new
+                                    {
+                                        type = "string",
+                                        description = "Nhan xet kiem toan bang tieng Viet ve viec checklist co khop voi bang chung PDF hay khong."
+                                    },
+                                    Adjustment = new
+                                    {
+                                        type = "number",
+                                        minimum = -100,
+                                        maximum = 5,
+                                        description = "Diem cong/tru rieng cua tieu chi nay."
+                                    }
+                                },
+                                required = new[] { "Criteria", "Finding", "Adjustment" }
+                            },
+                            description = "Danh sach kiem toan tung hang muc."
                         },
                         Strengths = new
                         {
@@ -274,8 +392,8 @@ namespace AISEP.BLL.Services.AI
                     },
                     required = new[]
                     {
-                        "AIAdjustmentScore",
-                        "Reasoning",
+                        "TotalAIAdjustmentScore",
+                        "AuditedItems",
                         "Strengths",
                         "Weaknesses",
                         "Advice"
@@ -373,8 +491,10 @@ namespace AISEP.BLL.Services.AI
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
                     ?? new AiAnalysisResult();
 
-                result.AIAdjustmentScore = Math.Clamp(result.AIAdjustmentScore, -10, 10);
+                result.TotalAIAdjustmentScore = Math.Clamp(result.TotalAIAdjustmentScore, -100m, 5m);
+                result.AIAdjustmentScore = result.TotalAIAdjustmentScore;
                 result.Reasoning ??= string.Empty;
+                result.AuditedItems ??= [];
                 result.Strengths ??= [];
                 result.Weaknesses ??= [];
                 result.Advice ??= [];

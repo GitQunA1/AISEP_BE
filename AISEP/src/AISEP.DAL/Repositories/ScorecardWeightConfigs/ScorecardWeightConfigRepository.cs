@@ -17,5 +17,12 @@ namespace AISEP.DAL.Repositories.ScorecardWeightConfigs
             => await _context.ScorecardWeightConfigs
                 .OrderBy(x => x.Id)
                 .FirstOrDefaultAsync();
+
+        public Task<ScorecardWeightConfig?> GetByIdAsync(int id)
+            => _context.ScorecardWeightConfigs
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+        public void Update(ScorecardWeightConfig config)
+            => _context.ScorecardWeightConfigs.Update(config);
     }
 }
