@@ -14,18 +14,18 @@ namespace AISEP.BLL.Services.AI
     {
         private readonly IUnitOfWork      _unitOfWork;
         private readonly IUserService     _userService;
-        private readonly IGeminiAiService _geminiAiService;
+        private readonly IOpenAiService _openAiService;
         private readonly IMapper           _mapper;
 
         public StartupAIAnalysisService(
             IUnitOfWork unitOfWork,
             IUserService userService,
-            IGeminiAiService geminiAiService,
+            IOpenAiService openAiService,
             IMapper mapper)
         {
             _unitOfWork      = unitOfWork;
             _userService     = userService;
-            _geminiAiService = geminiAiService;
+            _openAiService   = openAiService;
             _mapper          = mapper;
         }
 
@@ -41,33 +41,29 @@ namespace AISEP.BLL.Services.AI
 
             var documents = (await _unitOfWork.Documents.GetByProjectIdAsync(projectId)).ToList();
 
-            var result      = await _geminiAiService.AnalyzeProjectAsync(project, documents);
-            GeminiAnalysisScoringHelper.NormalizeAnalysisResult(result, includeInvestorFields: false);
-            result.PotentialScore = GeminiAnalysisScoringHelper.CalculatePotentialScore(result);
-            result.PotentialScore = GeminiAnalysisScoringHelper.ApplyDataQualitySanityCap(result.PotentialScore, result, project);
+            var result      = await _openAiService.AnalyzeProjectAsync(project, documents);
+            AiAnalysisScoringHelper.NormalizeAnalysisResult(result, includeInvestorFields: false);
             var analysisJson = JsonSerializer.Serialize(result);
 
             var existing = await _unitOfWork.StartupAIAnalyses.GetByProjectIdAsync(projectId);
 
             if (existing is not null)
             {
-                existing.PotentialScore    = result.PotentialScore;
-                existing.AnalysisJson      = analysisJson;
+                existing.AnalysisJson = analysisJson;
                 existing.IsEligibleStartup = null;
                 existing.EligibilityReason = null;
-                existing.CreatedAt         = DateTime.UtcNow;
+                existing.CreatedAt = DateTime.UtcNow;
                 _unitOfWork.StartupAIAnalyses.Update(existing);
             }
             else
             {
                 existing = new StartupAIAnalysis
                 {
-                    ProjectId         = projectId,
-                    PotentialScore    = result.PotentialScore,
-                    AnalysisJson      = analysisJson,
+                    ProjectId = projectId,
+                    AnalysisJson = analysisJson,
                     IsEligibleStartup = null,
                     EligibilityReason = null,
-                    CreatedAt         = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow
                 };
                 await _unitOfWork.StartupAIAnalyses.AddAsync(existing);
             }
@@ -100,7 +96,7 @@ namespace AISEP.BLL.Services.AI
             }
 
             var documents = (await _unitOfWork.Documents.GetByProjectIdAsync(projectId)).ToList();
-            var result = await _geminiAiService.EvaluateStartupEligibilityAsync(project, documents);
+            var result = await _openAiService.EvaluateStartupEligibilityAsync(project, documents);
 
             var normalizedReason = NormalizeEligibilityReason(result.EligibilityReason);
             var eligibilityJson = JsonSerializer.Serialize(new StartupEligibilityResponse
@@ -202,10 +198,10 @@ namespace AISEP.BLL.Services.AI
 
         private static StartupAIAnalysisResponse MapToResponse(StartupAIAnalysis a, IMapper mapper)
         {
-            var parsedAnalysis = GeminiAnalysisScoringHelper.DeserializeAnalysisJson(a.AnalysisJson);
+            var parsedAnalysis = AiAnalysisScoringHelper.DeserializeAnalysisJson(a.AnalysisJson);
             var response = mapper.Map<StartupAIAnalysisResponse>(a);
             response.Analysis = parsedAnalysis;
-            response.ScoreBreakdown = GeminiAnalysisScoringHelper.BuildBreakdown(parsedAnalysis);
+            response.ScoreBreakdown = AiAnalysisScoringHelper.BuildBreakdown(parsedAnalysis);
             return response;
         }
 

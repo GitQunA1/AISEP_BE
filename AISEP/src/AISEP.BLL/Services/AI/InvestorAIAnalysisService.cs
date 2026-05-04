@@ -16,20 +16,20 @@ namespace AISEP.BLL.Services.AI
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserService _userService;
-        private readonly IGeminiAiService _geminiAiService;
+        private readonly IOpenAiService _openAiService;
         private readonly IMapper _mapper;
         private readonly ISieveProcessor _sieveProcessor;
 
         public InvestorAIAnalysisService(
             IUnitOfWork unitOfWork,
             IUserService userService,
-            IGeminiAiService geminiAiService,
+            IOpenAiService openAiService,
             IMapper mapper,
             ISieveProcessor sieveProcessor)
         {
             _unitOfWork = unitOfWork;
             _userService = userService;
-            _geminiAiService = geminiAiService;
+            _openAiService = openAiService;
             _mapper = mapper;
             _sieveProcessor = sieveProcessor;
         }
@@ -51,10 +51,8 @@ namespace AISEP.BLL.Services.AI
             }
 
             var documents = (await _unitOfWork.Documents.GetByProjectIdAsync(projectId)).ToList();
-            var result = await _geminiAiService.AnalyzeProjectForInvestorAsync(project, documents);
-            GeminiAnalysisScoringHelper.NormalizeAnalysisResult(result, includeInvestorFields: true);
-            result.PotentialScore = GeminiAnalysisScoringHelper.CalculatePotentialScore(result);
-            result.PotentialScore = GeminiAnalysisScoringHelper.ApplyDataQualitySanityCap(result.PotentialScore, result, project);
+            var result = await _openAiService.AnalyzeProjectForInvestorAsync(project, documents);
+            AiAnalysisScoringHelper.NormalizeAnalysisResult(result, includeInvestorFields: true);
 
             var analysisJson = JsonSerializer.Serialize(result);
             var existing = await _unitOfWork.InvestorAIAnalyses
@@ -166,11 +164,10 @@ namespace AISEP.BLL.Services.AI
             InvestorAIAnalysis analysis,
             IMapper mapper)
         {
-            var parsed = GeminiAnalysisScoringHelper.DeserializeAnalysisJson(analysis.AnalysisJson);
+            var parsed = AiAnalysisScoringHelper.DeserializeAnalysisJson(analysis.AnalysisJson);
             var response = mapper.Map<InvestorAIAnalysisResponse>(analysis);
             response.Analysis = parsed;
-            response.PotentialScore = parsed?.PotentialScore;
-            response.ScoreBreakdown = GeminiAnalysisScoringHelper.BuildBreakdown(parsed);
+            response.ScoreBreakdown = AiAnalysisScoringHelper.BuildBreakdown(parsed);
 
             var normalizedVerdict = NormalizeInvestmentVerdict(parsed?.InvestmentVerdict);
             response.InvestmentVerdict = normalizedVerdict;

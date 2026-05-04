@@ -850,10 +850,19 @@ namespace AISEP.Migrations
                     b.Property<string>("AnalysisJson")
                         .HasColumnType("text");
 
+                    b.Property<decimal?>("AIAdjustmentScore")
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<decimal?>("BaseScore")
+                        .HasColumnType("numeric(6,2)");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<decimal?>("FinalPotentialScore")
+                        .HasColumnType("numeric(6,2)");
 
                     b.Property<int>("InvestorId")
                         .HasColumnType("integer");
@@ -1484,9 +1493,6 @@ namespace AISEP.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int?>("IndustryId")
-                        .HasColumnType("integer");
-
                     b.Property<decimal>("InvestmentNeedWeight")
                         .HasColumnType("decimal(5,2)");
 
@@ -1495,9 +1501,6 @@ namespace AISEP.Migrations
 
                     b.Property<decimal>("ProductWeight")
                         .HasColumnType("decimal(5,2)");
-
-                    b.Property<int?>("StageId")
-                        .HasColumnType("integer");
 
                     b.Property<decimal>("TeamWeight")
                         .HasColumnType("decimal(5,2)");
@@ -1511,10 +1514,6 @@ namespace AISEP.Migrations
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("IndustryId");
-
-                    b.HasIndex("StageId");
 
                     b.ToTable("scorecard_weight_configs", (string)null);
 
@@ -1661,6 +1660,12 @@ namespace AISEP.Migrations
                     b.Property<string>("AnalysisJson")
                         .HasColumnType("text");
 
+                    b.Property<decimal?>("AIAdjustmentScore")
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<decimal?>("BaseScore")
+                        .HasColumnType("numeric(6,2)");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -1672,8 +1677,8 @@ namespace AISEP.Migrations
                     b.Property<bool?>("IsEligibleStartup")
                         .HasColumnType("boolean");
 
-                    b.Property<int?>("PotentialScore")
-                        .HasColumnType("integer");
+                    b.Property<decimal?>("FinalPotentialScore")
+                        .HasColumnType("numeric(6,2)");
 
                     b.Property<int>("ProjectId")
                         .HasColumnType("integer");
@@ -2801,23 +2806,6 @@ namespace AISEP.Migrations
                     b.Navigation("Booking");
 
                     b.Navigation("Reviewer");
-                });
-
-            modelBuilder.Entity("AISEP.DAL.Entities.ScorecardWeightConfig", b =>
-                {
-                    b.HasOne("AISEP.DAL.Entities.IndustryOption", "IndustryOption")
-                        .WithMany()
-                        .HasForeignKey("IndustryId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("AISEP.DAL.Entities.StageOption", "StageOption")
-                        .WithMany()
-                        .HasForeignKey("StageId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("IndustryOption");
-
-                    b.Navigation("StageOption");
                 });
 
             modelBuilder.Entity("AISEP.DAL.Entities.Startup", b =>

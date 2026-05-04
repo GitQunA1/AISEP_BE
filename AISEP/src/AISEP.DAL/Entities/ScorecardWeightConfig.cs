@@ -7,9 +7,6 @@ namespace AISEP.DAL.Entities
         [Key]
         public int Id { get; set; }
 
-        public int? IndustryId { get; set; }
-        public int? StageId { get; set; }
-
         [MaxLength(255)]
         public string ConfigName { get; set; } = string.Empty;
 
@@ -22,8 +19,5 @@ namespace AISEP.DAL.Entities
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
-
-        public IndustryOption? IndustryOption { get; set; }
-        public StageOption? StageOption { get; set; }
     }
 }

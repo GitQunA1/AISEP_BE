@@ -106,14 +106,14 @@ builder.Services.Configure<BlockchainSettings>(builder.Configuration.GetSection(
 // Configure CloudinarySettings
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
 
-// Configure GeminiSettings
-builder.Services.Configure<GeminiSettings>(builder.Configuration.GetSection("GeminiSettings"));
+// Configure OpenAISettings
+builder.Services.Configure<OpenAiSettings>(builder.Configuration.GetSection("OpenAISettings"));
 
 // Configure SePaySettings
 builder.Services.Configure<SePaySettings>(builder.Configuration.GetSection("SePaySettings"));
 
 builder.Services.AddHttpClient();
-builder.Services.AddHttpClient<IGeminiAiService, GeminiAiService>();
+builder.Services.AddHttpClient<IOpenAiService, OpenAiService>();
 builder.Services.AddScoped<IStartupAIAnalysisService, StartupAIAnalysisService>();
 builder.Services.AddScoped<IInvestorAIAnalysisService, InvestorAIAnalysisService>();
 

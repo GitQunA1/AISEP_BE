@@ -8,8 +8,10 @@ namespace AISEP.BLL.DTOs.Responses
         public int InvestorId { get; set; }
         public int ProjectId { get; set; }
         public string? AnalysisJson { get; set; }
-        public GeminiAnalysisResult? Analysis { get; set; }
-        public int? PotentialScore { get; set; }
+        public AiAnalysisResult? Analysis { get; set; }
+        public decimal? BaseScore { get; set; }
+        public decimal? AIAdjustmentScore { get; set; }
+        public decimal? FinalPotentialScore { get; set; }
         public List<ScoreBreakdownItem> ScoreBreakdown { get; set; } = [];
         public string InvestmentVerdict { get; set; } = string.Empty;
         public List<string> RiskFlags { get; set; } = [];

@@ -1,87 +1,87 @@
 ﻿using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Net.Http.Headers;
 using AISEP.DAL.Entities;
 using AISEP.BLL.Settings;
 using Microsoft.Extensions.Options;
 
 namespace AISEP.BLL.Services.AI
 {
-    public class GeminiAiService : IGeminiAiService
+    public class OpenAiService : IOpenAiService
     {
-        private readonly GeminiSettings          _settings;
+        private readonly OpenAiSettings          _settings;
         private readonly HttpClient              _httpClient;
-        private readonly ILogger<GeminiAiService> _logger;
+        private readonly ILogger<OpenAiService> _logger;
 
-        public GeminiAiService(IOptions<GeminiSettings> settings, HttpClient httpClient, ILogger<GeminiAiService> logger)
+        public OpenAiService(IOptions<OpenAiSettings> settings, HttpClient httpClient, ILogger<OpenAiService> logger)
         {
             _settings   = settings.Value;
             _httpClient = httpClient;
             _logger     = logger;
         }
 
-        public async Task<GeminiAnalysisResult> AnalyzeProjectAsync(Project project, IEnumerable<Document> documents)
+        public async Task<AiAnalysisResult> AnalyzeProjectAsync(Project project, IEnumerable<Document> documents)
         {
             var docList     = documents.ToList();
             var prompt      = BuildPrompt(project, docList);
-            var inlineParts = await BuildInlinePartsAsync(docList);
+            var inputParts = await BuildInputPartsAsync(docList);
 
-            _logger.LogInformation("Calling Gemini: model={Model}, inlineParts={Count}",
-                _settings.Model, inlineParts.Count);
+            _logger.LogInformation("Calling OpenAI: model={Model}, inputParts={Count}",
+                _settings.Model, inputParts.Count);
 
             try
             {
-                var responseJson = await CallGeminiAsync(prompt, inlineParts);
+                var responseJson = await CallOpenAiAsync(prompt, inputParts);
                 return ParseResponse(responseJson);
             }
-            catch (HttpRequestException ex) when (inlineParts.Count > 0)
+            catch (HttpRequestException ex) when (inputParts.Count > 0)
             {
-                // Fallback: retry text-only if inline_data caused the error
-                _logger.LogWarning("Inline_data call failed ({Msg}). Retrying text-only...", ex.Message);
-                var responseJson = await CallGeminiAsync(prompt, []);
+                _logger.LogWarning("OpenAI document input call failed ({Msg}). Retrying text-only...", ex.Message);
+                var responseJson = await CallOpenAiAsync(prompt, []);
                 return ParseResponse(responseJson);
             }
         }
 
-        public async Task<GeminiEligibilityResult> EvaluateStartupEligibilityAsync(Project project, IEnumerable<Document> documents)
+        public async Task<AiEligibilityResult> EvaluateStartupEligibilityAsync(Project project, IEnumerable<Document> documents)
         {
             var docList = documents.ToList();
             var prompt = BuildEligibilityPrompt(project, docList);
-            var inlineParts = await BuildInlinePartsAsync(docList);
+            var inputParts = await BuildInputPartsAsync(docList);
 
-            _logger.LogInformation("Calling Gemini eligibility evaluation: model={Model}, inlineParts={Count}",
-                _settings.Model, inlineParts.Count);
+            _logger.LogInformation("Calling OpenAI eligibility evaluation: model={Model}, inputParts={Count}",
+                _settings.Model, inputParts.Count);
             try
             {
-                var responseJson = await CallGeminiAsync(prompt, inlineParts);
+                var responseJson = await CallOpenAiAsync(prompt, inputParts);
                 return ParseEligibilityResponse(responseJson);
             }
-            catch (HttpRequestException ex) when (inlineParts.Count > 0)
+            catch (HttpRequestException ex) when (inputParts.Count > 0)
             {
-                _logger.LogWarning("Eligibility inline_data call failed ({Msg}). Retrying text-only...", ex.Message);
-                var responseJson = await CallGeminiAsync(prompt, []);
+                _logger.LogWarning("Eligibility document input call failed ({Msg}). Retrying text-only...", ex.Message);
+                var responseJson = await CallOpenAiAsync(prompt, []);
                 return ParseEligibilityResponse(responseJson);
             }
         }
 
-        public async Task<GeminiAnalysisResult> AnalyzeProjectForInvestorAsync(Project project, IEnumerable<Document> documents)
+        public async Task<AiAnalysisResult> AnalyzeProjectForInvestorAsync(Project project, IEnumerable<Document> documents)
         {
             var docList = documents.ToList();
             var prompt = BuildInvestorPrompt(project, docList);
-            var inlineParts = await BuildInlinePartsAsync(docList);
+            var inputParts = await BuildInputPartsAsync(docList);
 
-            _logger.LogInformation("Calling Gemini (Investor mode): model={Model}, inlineParts={Count}",
-                _settings.Model, inlineParts.Count);
+            _logger.LogInformation("Calling OpenAI (Investor mode): model={Model}, inputParts={Count}",
+                _settings.Model, inputParts.Count);
 
             try
             {
-                var responseJson = await CallGeminiAsync(prompt, inlineParts);
+                var responseJson = await CallOpenAiAsync(prompt, inputParts);
                 return ParseResponse(responseJson);
             }
-            catch (HttpRequestException ex) when (inlineParts.Count > 0)
+            catch (HttpRequestException ex) when (inputParts.Count > 0)
             {
-                _logger.LogWarning("Inline_data investor call failed ({Msg}). Retrying text-only...", ex.Message);
-                var responseJson = await CallGeminiAsync(prompt, []);
+                _logger.LogWarning("Investor document input call failed ({Msg}). Retrying text-only...", ex.Message);
+                var responseJson = await CallOpenAiAsync(prompt, []);
                 return ParseResponse(responseJson);
             }
         }
@@ -146,7 +146,7 @@ namespace AISEP.BLL.Services.AI
                 - 8.6-10.0: Xuất sắc, bằng chứng nổi trội và có traction rõ.
                 Nếu độ tin cậy thấp, phải chấm bảo thủ.
 
-                Không tự tính điểm tổng có trọng số. Backend sẽ tính PotentialScore theo thang 0-100.
+                Không tự tính điểm tổng có trọng số. Backend sẽ xử lý phần điểm riêng.
                 Yêu cầu đầu ra:
                 - Summary: 2-4 câu tiếng Việt, nêu tài liệu/bằng chứng nào ảnh hưởng điểm.
                 - Strengths: 3-5 ý tiếng Việt.
@@ -276,7 +276,7 @@ namespace AISEP.BLL.Services.AI
                 - Nếu bằng chứng yếu, giảm điểm và bổ sung cảnh báo rủi ro.
                 - KHONG tra ve ChaosScore.
 
-                Không tự tính điểm tổng có trọng số. Backend sẽ tính PotentialScore theo thang 0-100.
+                Không tự tính điểm tổng có trọng số. Backend sẽ xử lý phần điểm riêng.
                 Tự kiểm tra trước khi trả kết quả:
                 1) Mỗi component phải có ít nhất 1 phần tử trong evidence hoặc missingData.
                 2) Điểm > 6.5 phải có bằng chứng cụ thể.
@@ -368,40 +368,43 @@ namespace AISEP.BLL.Services.AI
                 """;
         }
 
-        private async Task<string> CallGeminiAsync(string prompt, List<object> inlineParts)
+        private async Task<string> CallOpenAiAsync(string prompt, List<object> inputParts)
         {
             if (string.IsNullOrWhiteSpace(_settings.ApiKey))
             {
-                throw new HttpRequestException("Thiếu Gemini API key. Hãy cấu hình GeminiSettings:ApiKey trong appsettings hoặc biến môi trường.");
+                throw new HttpRequestException("Thiếu OpenAI API key. Hãy cấu hình OpenAISettings:ApiKey trong appsettings hoặc biến môi trường.");
             }
 
-            // Build parts: text prompt first, then each document as inline_data
-            var parts = new List<object> { new { text = prompt } };
-            parts.AddRange(inlineParts);
+            var parts = new List<object> { new { type = "input_text", text = prompt } };
+            parts.AddRange(inputParts);
 
             var requestBody = new
             {
-                contents = new[]
+                model = _settings.Model,
+                input = new[]
                 {
-                    new { parts = parts.ToArray() }
+                    new
+                    {
+                        role = "user",
+                        content = parts.ToArray()
+                    }
                 },
-                generationConfig = new
-                {
-                    temperature     = 0.05,
-                    topK            = 40,
-                    topP            = 0.95,
-                    maxOutputTokens = 8192
-                }
+                temperature = _settings.Temperature,
+                max_output_tokens = _settings.MaxOutputTokens
             };
 
-            var url         = $"{_settings.BaseUrl}/models/{_settings.Model}:generateContent?key={_settings.ApiKey}";
+            var url         = $"{_settings.BaseUrl.TrimEnd('/')}/responses";
             var bodyJson    = JsonSerializer.Serialize(requestBody);
-            var content     = new StringContent(bodyJson, Encoding.UTF8, "application/json");
+            using var request = new HttpRequestMessage(HttpMethod.Post, url)
+            {
+                Content = new StringContent(bodyJson, Encoding.UTF8, "application/json")
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _settings.ApiKey);
 
-            _logger.LogDebug("Gemini URL: {Url}", $"{_settings.BaseUrl}/models/{_settings.Model}:generateContent?key=***");
-            _logger.LogDebug("Gemini request body size: {Size} bytes", Encoding.UTF8.GetByteCount(bodyJson));
+            _logger.LogDebug("OpenAI URL: {Url}", url);
+            _logger.LogDebug("OpenAI request body size: {Size} bytes", Encoding.UTF8.GetByteCount(bodyJson));
 
-            var response = await _httpClient.PostAsync(url, content);
+            var response = await _httpClient.SendAsync(request);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -410,12 +413,12 @@ namespace AISEP.BLL.Services.AI
 
                 var message = statusCode switch
                 {
-                    401 => "Gemini API key không hợp lệ hoặc chưa được cấp quyền.",
-                    403 => "Gemini API bị từ chối quyền (PERMISSION_DENIED). Kiểm tra GeminiSettings:ApiKey, bật Generative Language API, và bỏ giới hạn API key không phù hợp.",
-                    404 => $"Model '{_settings.Model}' không tồn tại hoặc không được hỗ trợ. Kiểm tra lại GeminiSettings.Model trong appsettings.json.",
-                    429 => "Gemini API vượt quá quota. Free tier giới hạn số request/phút và token/ngày. Vui lòng chờ hoặc nâng cấp plan.",
-                    500 => "Gemini API lỗi phía server. Thử lại sau.",
-                    _   => $"Gemini API trả về lỗi {statusCode}."
+                    401 => "OpenAI API key không hợp lệ hoặc chưa được cấp quyền.",
+                    403 => "OpenAI API bị từ chối quyền. Kiểm tra OpenAISettings:ApiKey và quyền truy cập model.",
+                    404 => $"Model '{_settings.Model}' không tồn tại hoặc không được hỗ trợ. Kiểm tra lại OpenAISettings.Model trong appsettings.json.",
+                    429 => "OpenAI API vượt quá quota hoặc rate limit. Vui lòng chờ hoặc kiểm tra billing/limits.",
+                    500 => "OpenAI API lỗi phía server. Thử lại sau.",
+                    _   => $"OpenAI API trả về lỗi {statusCode}."
                 };
 
                 throw new HttpRequestException($"{message}\nChi tiết: {errorBody}");
@@ -425,7 +428,7 @@ namespace AISEP.BLL.Services.AI
         }
 
     
-        private async Task<List<object>> BuildInlinePartsAsync(List<Document> documents)
+        private async Task<List<object>> BuildInputPartsAsync(List<Document> documents)
         {
             var parts = new List<object>();
             var index = 0;
@@ -444,17 +447,27 @@ namespace AISEP.BLL.Services.AI
 
                     parts.Add(new
                     {
+                        type = "input_text",
                         text = $"Document #{index}: Type={doc.DocumentType}, FileName={doc.FileName}. Hãy kiểm tra mức độ liên quan của tài liệu này với dự án trước khi dùng làm bằng chứng."
                     });
 
-                    parts.Add(new
+                    if (mimeType == "application/pdf")
                     {
-                        inline_data = new
+                        parts.Add(new
                         {
-                            mime_type = mimeType,
-                            data      = base64
-                        }
-                    });
+                            type = "input_file",
+                            filename = doc.FileName,
+                            file_data = base64
+                        });
+                    }
+                    else
+                    {
+                        parts.Add(new
+                        {
+                            type = "input_image",
+                            image_url = $"data:{mimeType};base64,{base64}"
+                        });
+                    }
                 }
                 catch
                 {
@@ -476,57 +489,43 @@ namespace AISEP.BLL.Services.AI
                 ".jpg"  => "image/jpeg",
                 ".jpeg" => "image/jpeg",
                 ".webp" => "image/webp",
-                ".heic" => "image/heic",
-                ".heif" => "image/heif",
                 ".gif"  => "image/gif",
                 _       => null  
             };
         }
 
-        private GeminiAnalysisResult ParseResponse(string responseJson)
+        private AiAnalysisResult ParseResponse(string responseJson)
         {
-            var doc  = JsonDocument.Parse(responseJson);
-            var text = doc.RootElement
-                .GetProperty("candidates")[0]
-                .GetProperty("content")
-                .GetProperty("parts")[0]
-                .GetProperty("text")
-                .GetString() ?? "{}";
+            var text = ExtractTextFromOpenAiResponse(responseJson);
 
-            // Strip markdown code blocks Gemini sometimes wraps around JSON
+            // Strip markdown code blocks the model may wrap around JSON.
             text = Regex.Replace(text, @"```json\s*", "").Replace("```", "").Trim();
 
-            _logger.LogDebug("Gemini raw text response: {Text}", text);
+            _logger.LogDebug("OpenAI raw text response: {Text}", text);
 
             // Handle truncated JSON: attempt to auto-close the object
             if (!text.TrimEnd().EndsWith('}'))
             {
-                _logger.LogWarning("Gemini response appears truncated. Attempting auto-repair...");
+                _logger.LogWarning("OpenAI response appears truncated. Attempting auto-repair...");
                 text = text.TrimEnd().TrimEnd(',') + "}";
             }
 
             try
             {
-                return JsonSerializer.Deserialize<GeminiAnalysisResult>(text,
+                return JsonSerializer.Deserialize<AiAnalysisResult>(text,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-                    ?? new GeminiAnalysisResult();
+                    ?? new AiAnalysisResult();
             }
             catch (JsonException ex)
             {
-                _logger.LogError("Failed to parse Gemini response. Raw text: {Text}\nError: {Error}", text, ex.Message);
-                return new GeminiAnalysisResult();
+                _logger.LogError("Failed to parse OpenAI response. Raw text: {Text}\nError: {Error}", text, ex.Message);
+                return new AiAnalysisResult();
             }
         }
 
-        private GeminiEligibilityResult ParseEligibilityResponse(string responseJson)
+        private AiEligibilityResult ParseEligibilityResponse(string responseJson)
         {
-            var doc = JsonDocument.Parse(responseJson);
-            var text = doc.RootElement
-                .GetProperty("candidates")[0]
-                .GetProperty("content")
-                .GetProperty("parts")[0]
-                .GetProperty("text")
-                .GetString() ?? "{}";
+            var text = ExtractTextFromOpenAiResponse(responseJson);
 
             text = Regex.Replace(text, @"```json\s*", "").Replace("```", "").Trim();
 
@@ -537,13 +536,13 @@ namespace AISEP.BLL.Services.AI
 
             try
             {
-                var result = JsonSerializer.Deserialize<GeminiEligibilityResult>(
+                var result = JsonSerializer.Deserialize<AiEligibilityResult>(
                     text,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
                 if (result is null)
                 {
-                    return new GeminiEligibilityResult
+                    return new AiEligibilityResult
                     {
                         IsEligibleStartup = false,
                         EligibilityReason = "Dự án chưa có đủ dữ liệu rõ ràng để kết luận theo bộ tiêu chí IDEO và Lean Startup."
@@ -559,13 +558,55 @@ namespace AISEP.BLL.Services.AI
             }
             catch (JsonException ex)
             {
-                _logger.LogError("Failed to parse Gemini eligibility response. Raw text: {Text}\nError: {Error}", text, ex.Message);
-                return new GeminiEligibilityResult
+                _logger.LogError("Failed to parse OpenAI eligibility response. Raw text: {Text}\nError: {Error}", text, ex.Message);
+                return new AiEligibilityResult
                 {
                     IsEligibleStartup = false,
                     EligibilityReason = "Không thể phân tích kết quả AI hợp lệ. Vui lòng thử lại với thông tin dự án đầy đủ hơn."
                 };
             }
+        }
+
+        private static string ExtractTextFromOpenAiResponse(string responseJson)
+        {
+            using var doc = JsonDocument.Parse(responseJson);
+            var root = doc.RootElement;
+
+            if (root.TryGetProperty("output_text", out var outputText)
+                && outputText.ValueKind == JsonValueKind.String)
+            {
+                return outputText.GetString() ?? "{}";
+            }
+
+            if (root.TryGetProperty("output", out var output)
+                && output.ValueKind == JsonValueKind.Array)
+            {
+                var builder = new StringBuilder();
+                foreach (var item in output.EnumerateArray())
+                {
+                    if (!item.TryGetProperty("content", out var content)
+                        || content.ValueKind != JsonValueKind.Array)
+                    {
+                        continue;
+                    }
+
+                    foreach (var part in content.EnumerateArray())
+                    {
+                        if (part.TryGetProperty("text", out var text)
+                            && text.ValueKind == JsonValueKind.String)
+                        {
+                            builder.Append(text.GetString());
+                        }
+                    }
+                }
+
+                if (builder.Length > 0)
+                {
+                    return builder.ToString();
+                }
+            }
+
+            return "{}";
         }
     }
 }

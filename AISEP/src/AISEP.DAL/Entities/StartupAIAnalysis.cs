@@ -4,7 +4,9 @@
     {
         public int EvaluationId { get; set; }
         public int ProjectId { get; set; }
-        public int? PotentialScore { get; set; }
+        public decimal? BaseScore { get; set; }
+        public decimal? AIAdjustmentScore { get; set; }
+        public decimal? FinalPotentialScore { get; set; }
         public string? AnalysisJson { get; set; }
         public bool? IsEligibleStartup { get; set; }
         public string? EligibilityReason { get; set; }

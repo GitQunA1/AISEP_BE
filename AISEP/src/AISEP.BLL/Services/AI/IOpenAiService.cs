@@ -12,7 +12,7 @@ namespace AISEP.BLL.Services.AI
         public string Reason { get; set; } = string.Empty;
     }
 
-    public class GeminiAnalysisResult
+    public class AiAnalysisResult
     {
         public ComponentEvaluation? Team { get; set; }
         public ComponentEvaluation? Opportunity { get; set; }
@@ -29,7 +29,6 @@ namespace AISEP.BLL.Services.AI
         public double MarketingScore   { get; set; }
         public double InvestmentScore  { get; set; }
         public double OtherScore       { get; set; }
-        public int    PotentialScore   { get; set; }
         public bool   IsEligibleStartup  { get; set; }
         public string EligibilityReason  { get; set; } = string.Empty;
         public string Summary            { get; set; } = string.Empty;
@@ -43,7 +42,7 @@ namespace AISEP.BLL.Services.AI
         public string InvestorNextStep { get; set; } = string.Empty;
     }
 
-    public class GeminiEligibilityResult
+    public class AiEligibilityResult
     {
         [JsonPropertyName("is_eligible_startup")]
         public bool IsEligibleStartup { get; set; }
@@ -52,10 +51,10 @@ namespace AISEP.BLL.Services.AI
         public string EligibilityReason { get; set; } = string.Empty;
     }
 
-    public interface IGeminiAiService
+    public interface IOpenAiService
     {
-        Task<GeminiAnalysisResult> AnalyzeProjectAsync(Project project, IEnumerable<Document> documents);
-        Task<GeminiEligibilityResult> EvaluateStartupEligibilityAsync(Project project, IEnumerable<Document> documents);
-        Task<GeminiAnalysisResult> AnalyzeProjectForInvestorAsync(Project project, IEnumerable<Document> documents);
+        Task<AiAnalysisResult> AnalyzeProjectAsync(Project project, IEnumerable<Document> documents);
+        Task<AiEligibilityResult> EvaluateStartupEligibilityAsync(Project project, IEnumerable<Document> documents);
+        Task<AiAnalysisResult> AnalyzeProjectForInvestorAsync(Project project, IEnumerable<Document> documents);
     }
 }

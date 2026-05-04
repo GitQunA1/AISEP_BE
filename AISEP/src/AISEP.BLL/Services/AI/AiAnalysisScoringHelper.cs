@@ -5,9 +5,9 @@ using AISEP.DAL.Entities;
 
 namespace AISEP.BLL.Services.AI
 {
-    public static class GeminiAnalysisScoringHelper
+    public static class AiAnalysisScoringHelper
     {
-        public static int CalculatePotentialScore(GeminiAnalysisResult result)
+        public static int CalculatePotentialScore(AiAnalysisResult result)
         {
             static double Normalize(double score) => NormalizeScore(score);
             var maxPoints = GetMaxPointProfile();
@@ -24,7 +24,7 @@ namespace AISEP.BLL.Services.AI
             return (int)Math.Round(totalPoints, MidpointRounding.AwayFromZero);
         }
 
-        public static int ApplyDataQualitySanityCap(int potentialScore, GeminiAnalysisResult result, Project project)
+        public static int ApplyDataQualitySanityCap(int potentialScore, AiAnalysisResult result, Project project)
         {
             var capped = potentialScore;
             var weakCoreFields = CountWeakCoreFields(project);
@@ -42,7 +42,7 @@ namespace AISEP.BLL.Services.AI
             return capped;
         }
 
-        public static void NormalizeAnalysisResult(GeminiAnalysisResult result, bool includeInvestorFields)
+        public static void NormalizeAnalysisResult(AiAnalysisResult result, bool includeInvestorFields)
         {
             static double ClampScore(double value) => NormalizeScore(value);
             static double ClampConfidence(double value) => Math.Clamp(value, 0.0, 1.0);
@@ -103,7 +103,7 @@ namespace AISEP.BLL.Services.AI
             }
         }
 
-        public static GeminiAnalysisResult? DeserializeAnalysisJson(string? analysisJson)
+        public static AiAnalysisResult? DeserializeAnalysisJson(string? analysisJson)
         {
             if (string.IsNullOrWhiteSpace(analysisJson))
             {
@@ -112,7 +112,7 @@ namespace AISEP.BLL.Services.AI
 
             try
             {
-                return JsonSerializer.Deserialize<GeminiAnalysisResult>(
+                return JsonSerializer.Deserialize<AiAnalysisResult>(
                     analysisJson,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             }
@@ -122,7 +122,7 @@ namespace AISEP.BLL.Services.AI
             }
         }
 
-        public static List<ScoreBreakdownItem> BuildBreakdown(GeminiAnalysisResult? analysis)
+        public static List<ScoreBreakdownItem> BuildBreakdown(AiAnalysisResult? analysis)
         {
             if (analysis is null)
             {
@@ -255,5 +255,6 @@ namespace AISEP.BLL.Services.AI
         {
             return Math.Clamp(value, 0.0, 10.0);
         }
+
     }
 }

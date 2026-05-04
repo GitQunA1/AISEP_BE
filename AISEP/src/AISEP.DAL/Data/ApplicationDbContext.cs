@@ -336,21 +336,9 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                entity.HasOne(e => e.IndustryOption)
-                    .WithMany()
-                    .HasForeignKey(e => e.IndustryId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                entity.HasOne(e => e.StageOption)
-                    .WithMany()
-                    .HasForeignKey(e => e.StageId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
                 entity.HasData(new ScorecardWeightConfig
                 {
                     Id = 1,
-                    IndustryId = null,
-                    StageId = null,
                     ConfigName = "Default Bill Payne Method",
                     TeamWeight = 30.0m,
                     MarketWeight = 25.0m,
@@ -403,6 +391,9 @@ namespace AISEP.DAL.Data
             {
                 entity.ToTable("project_ai_evaluations");
                 entity.HasKey(e => e.EvaluationId);
+                entity.Property(e => e.BaseScore).HasColumnType("decimal(6,2)");
+                entity.Property(e => e.AIAdjustmentScore).HasColumnType("decimal(5,2)");
+                entity.Property(e => e.FinalPotentialScore).HasColumnType("decimal(6,2)");
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                 entity.HasOne(a => a.Project)
@@ -415,6 +406,9 @@ namespace AISEP.DAL.Data
             {
                 entity.ToTable("investor_ai_analyses");
                 entity.HasKey(e => e.AnalysisId);
+                entity.Property(e => e.BaseScore).HasColumnType("decimal(6,2)");
+                entity.Property(e => e.AIAdjustmentScore).HasColumnType("decimal(5,2)");
+                entity.Property(e => e.FinalPotentialScore).HasColumnType("decimal(6,2)");
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                 entity.HasOne(a => a.Investor)

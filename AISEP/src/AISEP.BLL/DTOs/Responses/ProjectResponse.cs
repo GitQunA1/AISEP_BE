@@ -27,7 +27,7 @@
         public int? RejectedById { get; set; }
         public DateTime? RejectedAt { get; set; }
         public string? RejectionReason { get; set; }
-        public int? StartupPotentialScore { get; set; }
+        public decimal? StartupPotentialScore { get; set; }
         public int FollowerCount { get; set; }
         public bool IsFollowedByCurrentUser { get; set; }
         public bool IsConnectionRequestedByCurrentInvestor { get; set; }

@@ -306,7 +306,7 @@ namespace AISEP.BLL.Helpers
                         ? new List<string> { src.IndustryOption.Value }
                         : new List<string>()))
                 .ForMember(dest => dest.StartupPotentialScore,
-                    opt => opt.MapFrom(src => src.StartupAIAnalysis != null ? src.StartupAIAnalysis.PotentialScore : null))
+                    opt => opt.MapFrom(src => src.StartupAIAnalysis != null ? src.StartupAIAnalysis.FinalPotentialScore : null))
                 .ForMember(dest => dest.Status,
                     opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.ApprovedById, opt => opt.MapFrom(src => src.ApprovedById))
@@ -371,7 +371,7 @@ namespace AISEP.BLL.Helpers
                 .ForMember(dest => dest.Status,
                     opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.StartupPotentialScore,
-                    opt => opt.MapFrom(src => src.StartupAIAnalysis != null ? src.StartupAIAnalysis.PotentialScore : null))
+                    opt => opt.MapFrom(src => src.StartupAIAnalysis != null ? src.StartupAIAnalysis.FinalPotentialScore : null))
                 .ForMember(dest => dest.FollowerCount,
                     opt => opt.MapFrom(src => src.Followers.Count))
                 .ForMember(dest => dest.IsFollowedByCurrentUser,
@@ -513,7 +513,6 @@ namespace AISEP.BLL.Helpers
             // InvestorAIAnalysis Entity ? InvestorAIAnalysisResponse
             CreateMap<InvestorAIAnalysis, InvestorAIAnalysisResponse>()
                 .ForMember(dest => dest.Analysis, opt => opt.Ignore())
-                .ForMember(dest => dest.PotentialScore, opt => opt.Ignore())
                 .ForMember(dest => dest.ScoreBreakdown, opt => opt.Ignore());
 
             // StartupAIAnalysis Entity -> StartupEligibilityResponse
