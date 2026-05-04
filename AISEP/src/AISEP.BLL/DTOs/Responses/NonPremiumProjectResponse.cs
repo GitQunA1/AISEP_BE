@@ -2,6 +2,7 @@ namespace AISEP.BLL.DTOs.Responses
 {
     public class NonPremiumProjectResponse
     {
+        // khong co business model, project score card, competitor,  unique value proposition
         public int ProjectId { get; set; }
         public int StartupId { get; set; }
         public string ProjectName { get; set; } = string.Empty;

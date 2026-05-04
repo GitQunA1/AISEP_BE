@@ -69,9 +69,25 @@ namespace AISEP.BLL.Services.AI
         private string BuildAnalysisPrompt(Project project, ScorecardBaseScoreResult baseScore, string audience, string? documentText = null)
         {
             var baseScoreText = baseScore.TotalScore.ToString("0.##", CultureInfo.InvariantCulture);
-            var audienceDescription = audience == "investor"
-                ? "nhà đầu tư đang đánh giá cơ hội đầu tư"
-                : "startup đang tự đánh giá và cải thiện dự án";
+            var audienceGuidance = audience == "investor"
+                ? """
+                Đối tượng sử dụng kết quả: nhà đầu tư đang đánh giá cơ hội đầu tư.
+
+                HƯỚNG DẪN NỘI DUNG CHO NHÀ ĐẦU TƯ:
+                - Strengths: Viết dưới góc nhìn cơ hội đầu tư: điểm hấp dẫn về thị trường, traction, đội ngũ, sản phẩm, lợi thế cạnh tranh, khả năng tạo upside.
+                - Weaknesses: Viết dưới góc nhìn rủi ro đầu tư: rủi ro mất vốn, thiếu bằng chứng, thị trường nhỏ, traction yếu, sao chép dễ, phụ thuộc outsource, runway ngắn, câu chuyện tăng trưởng chưa rõ.
+                - Advice: Không viết kiểu "sửa PDF" hoặc "startup nên bổ sung hồ sơ" là trọng tâm chính. Hãy viết thành khuyến nghị thẩm định cho investor: nên hỏi startup câu gì, cần kiểm chứng chỉ số nào, cần xem tài liệu nào, nên cân nhắc quyết định đầu tư/watchlist/reject ra sao dựa trên rủi ro.
+                - Ngôn ngữ phải giúp investor hiểu: cơ hội đầu tư này đáng quan tâm ở đâu, rủi ro lớn nhất là gì, và trước khi đầu tư cần due diligence thêm gì.
+                """
+                : """
+                Đối tượng sử dụng kết quả: startup đang tự đánh giá và cải thiện dự án.
+
+                HƯỚNG DẪN NỘI DUNG CHO STARTUP:
+                - Strengths: Viết dưới góc nhìn điểm mạnh hiện có của dự án/startup, những phần nên giữ lại và nhấn mạnh trong hồ sơ.
+                - Weaknesses: Viết dưới góc nhìn điểm yếu cần cải thiện: thiếu bằng chứng, checklist khai quá cao, tài liệu chưa rõ, chỉ số traction/market/team/product còn thiếu.
+                - Advice: Viết thành hành động cải thiện dự án và hồ sơ: cần bổ sung số liệu nào, chỉnh checklist nào, thêm bằng chứng nào vào PDF, cải thiện pitch deck/business plan ra sao.
+                - Ngôn ngữ phải giúp startup biết chính xác cần sửa gì để hồ sơ minh bạch hơn và điểm đánh giá tốt hơn.
+                """;
             var stageOptionId = project.StageOptionId?.ToString() ?? "N/A";
             var documentSection = string.IsNullOrWhiteSpace(documentText)
                 ? "Không có nội dung PDF đọc được."
@@ -92,20 +108,26 @@ namespace AISEP.BLL.Services.AI
                 Nội dung Text rút trích từ tài liệu PDF.
 
                 QUY TẮC TRỪ/THƯỞNG ĐIỂM (BẮT BUỘC TUÂN THỦ NGHIÊM NGẶT VỀ TOÁN HỌC):
-                Duyệt qua từng hạng mục. Giá trị 'Adjustment' (Điểm điều chỉnh) phải tuân thủ tuyệt đối quy tắc sau:
+                Duyệt qua từng hạng mục. Giá trị 'Adjustment' (Điểm điều chỉnh) phải được tính dựa trên CurrentBaseScore của hạng mục đó. Adjustment phải là số âm hoặc 0, trừ khi minh chứng cực kỳ xuất sắc mới được thưởng nhẹ.
 
-                Tình huống 1 (Khớp/Có minh chứng tốt): Giữ nguyên điểm (Adjustment = 0). Nếu minh chứng cực kỳ xuất sắc, thưởng nhẹ (Tối đa +2 đến +5 cho toàn bài).
+                Tình huống 1 (Khớp / Có minh chứng đầy đủ): PDF có bằng chứng rõ ràng, cụ thể và khớp với Form Startup đã khai. Không trừ điểm. Adjustment = 0. Nếu minh chứng cực kỳ xuất sắc, được thưởng nhẹ nhưng tổng điểm thưởng toàn bài tối đa +5.
 
-                Tình huống 2 (Sai lệch một phần / Partial Mismatch): PDF có nhắc đến nhưng mức độ thấp hơn Form khai báo. Phạt trừ điểm. LƯU Ý: Số điểm bị trừ (số âm) KHÔNG ĐƯỢC VƯỢT QUÁ 50% số điểm CurrentBaseScore của hạng mục đó. (Ví dụ: CurrentBaseScore là 18.75, chỉ được trừ tối đa -9).
+                Tình huống 2 (Có minh chứng nhưng yếu hơn Form khai): PDF có nhắc đến nội dung Startup đã khai, nhưng mức độ chứng minh thấp hơn, thiếu chi tiết, hoặc không đủ mạnh so với Form. BẮT BUỘC chọn đúng một trong 3 mức sau, không được tự chọn số khác:
+                - 2A. Lệch nhẹ: PDF có bằng chứng nhưng chỉ thiếu chi tiết phụ, số liệu phụ hoặc diễn giải chưa đầy đủ. Adjustment = -25% CurrentBaseScore của hạng mục đó.
+                - 2B. Lệch vừa: PDF có nhắc đến nhưng thiếu dữ liệu quan trọng, thiếu bằng chứng chính, hoặc chứng minh yếu hơn đáng kể so với Form. Adjustment = -50% CurrentBaseScore của hạng mục đó.
+                - 2C. Lệch nặng: PDF có nhắc đến rất sơ sài, gần như không đủ chứng minh cho mức Form đã khai, nhưng chưa hoàn toàn trái ngược. Adjustment = -75% CurrentBaseScore của hạng mục đó.
 
-                Tình huống 3 (Khai khống / Missing Evidence): Không tìm thấy bằng chứng, hoặc PDF ghi trái ngược hoàn toàn (tệ hơn) mức khai báo. Thu hồi toàn bộ điểm gốc của hạng mục đó. LƯU Ý: Adjustment BẮT BUỘC phải bằng đúng giá trị -CurrentBaseScore của hạng mục đó, TUYỆT ĐỐI KHÔNG TRỪ LỐ. (Ví dụ: CurrentBaseScore của Team là 22.5, nếu khai khống, ghi đúng -22.5).
+                Tình huống 3 (Không có bằng chứng / Khai khống / Trái ngược): Form khai một ưu điểm nhưng PDF hoàn toàn không có bằng chứng cụ thể, hoặc PDF ghi thông tin trái ngược. Adjustment = -100% CurrentBaseScore của hạng mục đó, tức bằng đúng -CurrentBaseScore. TUYỆT ĐỐI KHÔNG TRỪ LỐ.
+
+                LƯU Ý TOÁN HỌC:
+                - Làm tròn Adjustment đến 2 chữ số thập phân.
+                - Adjustment không được nhỏ hơn -CurrentBaseScore của hạng mục.
+                - Với Tình huống 2, bắt buộc dùng đúng -25%, -50%, hoặc -75%; không dùng các mức mơ hồ như -30% hoặc -40%.
 
                 RÀNG BUỘC NGÔN NGỮ: Bắt buộc trả lời bằng Tiếng Việt chuyên ngành.
 
                 ĐỊNH DẠNG OUTPUT JSON:
-                Trả về chuẩn JSON cấu trúc sau:
-
-                TotalAIAdjustmentScore (decimal): Tổng của tất cả các Adjustment thành phần.
+                Trả về chuẩn JSON cấu trúc sau. AI chỉ phân tích nội dung và trả Adjustment từng tiêu chí. KHÔNG trả TotalAIAdjustmentScore, BaseScore, FinalPotentialScore, MaxScore, BaseScore hoặc FinalScore trong output. Backend C# sẽ tự tính toàn bộ các tổng điểm và điểm cuối cùng.
 
                 AuditedItems (array of objects): Mỗi object gồm:
 
@@ -115,15 +137,16 @@ namespace AISEP.BLL.Services.AI
 
                 Adjustment (decimal): Điểm cộng/trừ của mục này (Tuân thủ nghiêm ngặt luật toán học ở trên).
 
-                Strengths (array of strings): Điểm sáng.
+                Strengths (array of strings): Điểm mạnh/điểm hấp dẫn, viết đúng theo vai trò người đọc.
 
-                Weaknesses (array of strings): Rủi ro lớn nhất.
+                Weaknesses (array of strings): Điểm yếu/rủi ro lớn nhất, viết đúng theo vai trò người đọc.
 
-                Advice (array of strings): Lời khuyên sửa PDF cho khớp Form.
+                Advice (array of strings): Khuyến nghị hành động tiếp theo, viết đúng theo vai trò người đọc.
 
-                Đối tượng sử dụng kết quả: {{audienceDescription}}.
+                {{audienceGuidance}}
+
                 BaseScore tổng hiện tại: {{baseScoreText}}/100.
-                Không tự tính FinalPotentialScore. Backend C# sẽ tự tính BaseScore + TotalAIAdjustmentScore.
+                Không tự tính FinalPotentialScore hoặc TotalAIAdjustmentScore. Backend C# sẽ tự cộng Adjustment từ AuditedItems và tính các điểm tổng.
 
                 --- BẢNG ĐIỂM CHI TIẾT C# ---
                 {{scoreBreakdownJson}}
@@ -207,33 +230,41 @@ namespace AISEP.BLL.Services.AI
                 : string.Empty;
 
             return $$"""
-                Bạn là một chuyên gia thẩm định dự án Khởi nghiệp Đổi mới Sáng tạo tại Vườn ươm (Incubator).
-                Nhiệm vụ: xác định dự án có đủ tư cách là "Startup / Ý tưởng sáng tạo" hay không.
-                Bối cảnh: CHẤP NHẬN ý tưởng giai đoạn sớm (Idea Stage), dự án xã hội, mô hình có yếu tố sáng tạo.
+                Bạn là Trợ lý Sàng lọc Hồ sơ Dự án (Document Screening AI) của nền tảng kết nối đầu tư AISEP.
+                Nhiệm vụ của bạn là kiểm tra nhanh (sanity check) xem các file PDF người dùng tải lên có thực sự thuộc về dự án đang khai báo hay không.
 
-                Đánh giá theo Khung 3 Lăng kính Đổi mới của IDEO kết hợp Lean Startup:
-                1) Desirability: Có nỗi đau rõ ràng của nhóm người dùng cụ thể không? Giải pháp có logic không?
-                2) Innovation / Differentiation: Có yếu tố mới mẻ/khác biệt (công nghệ, mô hình kinh doanh, quy trình, ứng dụng mới)?
-                3) Scalability Potential: Nếu thành công có khả năng mở rộng vùng/quốc gia, đóng gói/nhượng quyền/qua Internet?
-                4) Feasibility (lọc cơ bản): Có vi phạm pháp luật, phi logic vật lý, lừa đảo, đa cấp, hoặc quá viển vông không?
+                MỤC TIÊU:
+                - Chỉ xác nhận tài liệu có cùng dự án, cùng sản phẩm, cùng lĩnh vực, hoặc cùng bài toán với thông tin dự án hay không.
+                - Đây KHÔNG phải bước chấm điểm startup, KHÔNG phải thẩm định traction/tài chính/pháp lý.
+                - Chấm rất nhẹ tay. Nếu tài liệu có liên quan cơ bản đến dự án thì chấp nhận.
 
-                Luật loại bỏ (is_eligible_startup = false):
-                - Mô hình buôn bán/dịch vụ nhỏ lẻ truyền thống, không sáng tạo, khó nhân rộng.
-                - Viển vông, phi logic, thiếu thông tin trầm trọng hoặc có dấu hiệu lừa đảo.
+                THÔNG TIN DỰ ÁN CẦN ĐỐI CHIẾU:
+                - Tên dự án.
+                - Mô tả ngắn.
+                - Vấn đề giải quyết.
+                - Giải pháp.
+                - Khách hàng mục tiêu.
+                - Giá trị khác biệt, mô hình kinh doanh, đối thủ nếu có.
 
-                Còn lại, nếu giải quyết vấn đề cụ thể, có đổi mới dù nhỏ, có tiềm năng mở rộng hoặc ứng dụng mô hình/công nghệ mới:
-                - is_eligible_startup = true.
+                TIÊU CHÍ CHẤP NHẬN (is_eligible_startup = true):
+                - PDF nói về cùng tên dự án, hoặc tên hơi khác nhưng core sản phẩm/giải pháp giống.
+                - PDF nói về cùng lĩnh vực, cùng nhóm khách hàng, hoặc cùng bài toán mà dự án khai báo.
+                - PDF thiếu số liệu tài chính, thiếu traction, thiếu market size, hoặc mô tả chưa đầy đủ nhưng vẫn liên quan đến dự án.
+                - PDF là pitch deck, proposal, mô tả sản phẩm, tài liệu kỹ thuật, business plan, hoặc tài liệu giới thiệu có liên quan.
 
-                Quy tắc đánh giá tài liệu đính kèm:
-                - Bắt buộc kiểm tra mức độ liên quan của từng tài liệu với Problem Statement, Solution, Business Model và tên dự án.
-                - Nếu phần lớn tài liệu không liên quan hoặc mâu thuẫn nội dung dự án, coi là thiếu thông tin trầm trọng.
-                - Trong trường hợp đó, bắt buộc kết luận is_eligible_startup = false.
-                - eligibility_reason bắt buộc nêu rõ cụm: "Tài liệu đính kèm không liên quan đến nội dung dự án".
+                CHỈ TỪ CHỐI (is_eligible_startup = false) KHI VÀ CHỈ KHI:
+                - Nội dung PDF hoàn toàn không liên quan đến dự án đang khai báo, ví dụ sách giáo khoa, thực đơn, tiểu thuyết, hóa đơn, CV cá nhân không liên quan, tài liệu rác.
+                - PDF nói về một công ty/startup/sản phẩm hoàn toàn khác và giải quyết bài toán hoàn toàn khác.
+                - PDF không đọc được hoặc không có nội dung đủ để đối chiếu với dự án.
 
-                Yêu cầu cho eligibility_reason:
-                - Viết tiếng Việt.
-                - Tối đa 3 câu ngắn gọn để staff đọc nhanh.
-                - Nêu rõ vì sao duyệt hoặc từ chối theo đúng 4 tiêu chí trên.
+                NHỮNG ĐIỀU PHẢI BỎ QUA:
+                - Không từ chối chỉ vì thiếu tài chính, thiếu traction, thiếu revenue, thiếu market size.
+                - Không từ chối chỉ vì tên dự án hơi khác nếu sản phẩm/bài toán/giải pháp vẫn khớp.
+                - Không đánh giá dự án có sáng tạo, có tiềm năng mở rộng, hay có đủ điều kiện startup theo IDEO/Lean Startup.
+
+                RÀNG BUỘC NGÔN NGỮ:
+                - Bắt buộc trả lời bằng tiếng Việt.
+                - Lý do tối đa 2 câu, rõ ràng để Staff báo lại cho người dùng.
 
                 --- PROJECT DATA ---
                 Name: {{project.ProjectName}}
@@ -248,11 +279,16 @@ namespace AISEP.BLL.Services.AI
                 Uploaded Documents ({{docCount}} tài liệu đọc được){{skippedSummary}}:
                 {{docSummary}}
 
+                ĐỊNH DẠNG OUTPUT JSON:
                 Trả về ONLY JSON, không markdown, không text thêm:
                 {
                   "is_eligible_startup": <boolean>,
-                  "eligibility_reason": "<string tiếng Việt tối đa 3 câu>"
+                  "eligibility_reason": "<string tiếng Việt tối đa 2 câu>"
                 }
+
+                Quy ước:
+                - is_eligible_startup = true nghĩa là tài liệu hợp lệ, thuộc về dự án hoặc liên quan cơ bản đến dự án.
+                - is_eligible_startup = false nghĩa là tài liệu rác, tải nhầm, không đọc được, hoặc thuộc dự án khác.
                 """;
         }
 
@@ -333,13 +369,6 @@ namespace AISEP.BLL.Services.AI
                     additionalProperties = false,
                     properties = new
                     {
-                        TotalAIAdjustmentScore = new
-                        {
-                            type = "number",
-                            minimum = -100,
-                            maximum = 5,
-                            description = "Tong diem dieu chinh sau kiem toan rui ro, la tong Adjustment cua AuditedItems."
-                        },
                         AuditedItems = new
                         {
                             type = "array",
@@ -392,7 +421,6 @@ namespace AISEP.BLL.Services.AI
                     },
                     required = new[]
                     {
-                        "TotalAIAdjustmentScore",
                         "AuditedItems",
                         "Strengths",
                         "Weaknesses",
@@ -529,13 +557,15 @@ namespace AISEP.BLL.Services.AI
                     return new AiEligibilityResult
                     {
                         IsEligibleStartup = false,
-                        EligibilityReason = "Dự án chưa có đủ dữ liệu rõ ràng để kết luận theo bộ tiêu chí IDEO và Lean Startup."
+                        EligibilityReason = "Không thể đọc được kết quả sàng lọc tài liệu. Vui lòng thử lại hoặc kiểm tra file PDF đã tải lên."
                     };
                 }
 
                 if (string.IsNullOrWhiteSpace(result.EligibilityReason))
                 {
-                    result.EligibilityReason = "Dự án chưa có đủ dữ liệu rõ ràng để kết luận theo bộ tiêu chí IDEO và Lean Startup.";
+                    result.EligibilityReason = result.IsEligibleStartup
+                        ? "Tài liệu có liên quan cơ bản đến nội dung dự án."
+                        : "Tài liệu đính kèm không đủ thông tin để đối chiếu với nội dung dự án.";
                 }
 
                 return result;
@@ -546,7 +576,7 @@ namespace AISEP.BLL.Services.AI
                 return new AiEligibilityResult
                 {
                     IsEligibleStartup = false,
-                    EligibilityReason = "Không thể phân tích kết quả AI hợp lệ. Vui lòng thử lại với thông tin dự án đầy đủ hơn."
+                    EligibilityReason = "Không thể phân tích kết quả sàng lọc tài liệu hợp lệ. Vui lòng thử lại hoặc kiểm tra file PDF đã tải lên."
                 };
             }
         }

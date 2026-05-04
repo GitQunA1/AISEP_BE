@@ -10,7 +10,7 @@ namespace AISEP.BLL.DTOs.Responses
         public decimal? AIAdjustmentScore { get; set; }
         public decimal? FinalPotentialScore { get; set; }
         public string? AnalysisJson { get; set; }
-        public AiAnalysisResult? Analysis { get; set; }
+        public AIAnalysisReportDto? Analysis { get; set; }
         public bool? IsEligibleStartup { get; set; }
         public string? EligibilityReason { get; set; }
         public DateTime CreatedAt { get; set; }

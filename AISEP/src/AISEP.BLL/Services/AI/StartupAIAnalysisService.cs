@@ -48,18 +48,16 @@ namespace AISEP.BLL.Services.AI
 
             var documentText = await ExtractProjectPdfTextAsync(projectId);
             var result      = await _openAiService.AnalyzeProjectAsync(project, baseScore, documentText);
-            AiAuditAdjustmentGuard.Normalize(result, baseScore);
-            result.BaseScore = baseScore.TotalScore;
-            result.FinalPotentialScore = Math.Clamp(baseScore.TotalScore + result.TotalAIAdjustmentScore, 0m, 100m);
-            var analysisJson = JsonSerializer.Serialize(result);
+            var report = AIAnalysisReportBuilder.Build(result, baseScore);
+            var analysisJson = JsonSerializer.Serialize(report);
 
             var existing = await _unitOfWork.StartupAIAnalyses.GetByProjectIdAsync(projectId);
 
             if (existing is not null)
             {
-                existing.BaseScore = result.BaseScore;
-                existing.AIAdjustmentScore = result.AIAdjustmentScore;
-                existing.FinalPotentialScore = result.FinalPotentialScore;
+                existing.BaseScore = report.TotalBaseScore;
+                existing.AIAdjustmentScore = report.TotalAIAdjustmentScore;
+                existing.FinalPotentialScore = report.TotalFinalScore;
                 existing.AnalysisJson = analysisJson;
                 existing.IsEligibleStartup = null;
                 existing.EligibilityReason = null;
@@ -71,9 +69,9 @@ namespace AISEP.BLL.Services.AI
                 existing = new StartupAIAnalysis
                 {
                     ProjectId = projectId,
-                    BaseScore = result.BaseScore,
-                    AIAdjustmentScore = result.AIAdjustmentScore,
-                    FinalPotentialScore = result.FinalPotentialScore,
+                    BaseScore = report.TotalBaseScore,
+                    AIAdjustmentScore = report.TotalAIAdjustmentScore,
+                    FinalPotentialScore = report.TotalFinalScore,
                     AnalysisJson = analysisJson,
                     IsEligibleStartup = null,
                     EligibilityReason = null,
@@ -290,7 +288,7 @@ namespace AISEP.BLL.Services.AI
             return response;
         }
 
-        private static AiAnalysisResult? DeserializeAnalysisJson(string? analysisJson)
+        private static AIAnalysisReportDto? DeserializeAnalysisJson(string? analysisJson)
         {
             if (string.IsNullOrWhiteSpace(analysisJson))
             {
@@ -299,7 +297,7 @@ namespace AISEP.BLL.Services.AI
 
             try
             {
-                return JsonSerializer.Deserialize<AiAnalysisResult>(
+                return JsonSerializer.Deserialize<AIAnalysisReportDto>(
                     analysisJson,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             }
@@ -313,7 +311,7 @@ namespace AISEP.BLL.Services.AI
         {
             if (string.IsNullOrWhiteSpace(reason))
             {
-                return "Dự án chưa có đủ dữ liệu rõ ràng để kết luận theo bộ tiêu chí IDEO và Lean Startup.";
+                return "Tài liệu đính kèm không đủ thông tin để đối chiếu với nội dung dự án.";
             }
 
             var normalized = Regex.Replace(reason.Trim(), @"\s+", " ");
@@ -325,7 +323,7 @@ namespace AISEP.BLL.Services.AI
 
             if (sentences.Count == 0)
             {
-                return "Dự án chưa có đủ dữ liệu rõ ràng để kết luận theo bộ tiêu chí IDEO và Lean Startup.";
+                return "Tài liệu đính kèm không đủ thông tin để đối chiếu với nội dung dự án.";
             }
 
             return string.Join(" ", sentences);

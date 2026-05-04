@@ -60,7 +60,7 @@ namespace AISEP.API.Controllers
             }
         }
 
-        /// Đánh giá startup theo IDEO 3 Lenses + Lean Startup
+        /// Sàng lọc nhanh tài liệu đính kèm có thuộc về dự án hay không.
         [HttpPost("{projectId:int}/eligibility-evaluate-staff")]
         [Authorize(Roles = "Staff, Admin")]
         public async Task<IActionResult> EvaluateEligibility(int projectId)

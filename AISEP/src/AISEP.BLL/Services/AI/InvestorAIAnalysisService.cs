@@ -58,19 +58,17 @@ namespace AISEP.BLL.Services.AI
 
             var documentText = await ExtractProjectPdfTextAsync(projectId);
             var result = await _openAiService.AnalyzeProjectForInvestorAsync(project, baseScore, documentText);
-            AiAuditAdjustmentGuard.Normalize(result, baseScore);
-            result.BaseScore = baseScore.TotalScore;
-            result.FinalPotentialScore = Math.Clamp(baseScore.TotalScore + result.TotalAIAdjustmentScore, 0m, 100m);
+            var report = AIAnalysisReportBuilder.Build(result, baseScore);
 
-            var analysisJson = JsonSerializer.Serialize(result);
+            var analysisJson = JsonSerializer.Serialize(report);
             var existing = await _unitOfWork.InvestorAIAnalyses
                 .GetByInvestorAndProjectAsync(investor.InvestorId, projectId);
 
             if (existing is not null)
             {
-                existing.BaseScore = result.BaseScore;
-                existing.AIAdjustmentScore = result.AIAdjustmentScore;
-                existing.FinalPotentialScore = result.FinalPotentialScore;
+                existing.BaseScore = report.TotalBaseScore;
+                existing.AIAdjustmentScore = report.TotalAIAdjustmentScore;
+                existing.FinalPotentialScore = report.TotalFinalScore;
                 existing.AnalysisJson = analysisJson;
                 existing.CreatedAt = DateTime.UtcNow;
                 _unitOfWork.InvestorAIAnalyses.Update(existing);
@@ -81,9 +79,9 @@ namespace AISEP.BLL.Services.AI
                 {
                     InvestorId = investor.InvestorId,
                     ProjectId = projectId,
-                    BaseScore = result.BaseScore,
-                    AIAdjustmentScore = result.AIAdjustmentScore,
-                    FinalPotentialScore = result.FinalPotentialScore,
+                    BaseScore = report.TotalBaseScore,
+                    AIAdjustmentScore = report.TotalAIAdjustmentScore,
+                    FinalPotentialScore = report.TotalFinalScore,
                     AnalysisJson = analysisJson,
                     CreatedAt = DateTime.UtcNow
                 };
@@ -256,7 +254,7 @@ namespace AISEP.BLL.Services.AI
             return response;
         }
 
-        private static AiAnalysisResult? DeserializeAnalysisJson(string? analysisJson)
+        private static AIAnalysisReportDto? DeserializeAnalysisJson(string? analysisJson)
         {
             if (string.IsNullOrWhiteSpace(analysisJson))
             {
@@ -265,7 +263,7 @@ namespace AISEP.BLL.Services.AI
 
             try
             {
-                return JsonSerializer.Deserialize<AiAnalysisResult>(
+                return JsonSerializer.Deserialize<AIAnalysisReportDto>(
                     analysisJson,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             }
