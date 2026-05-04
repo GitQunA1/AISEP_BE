@@ -38,6 +38,7 @@ using AISEP.DAL.Repositories.PostPrs;
 using AISEP.DAL.Repositories.FormValidationRules;
 using AISEP.DAL.Repositories.SystemTerms;
 using AISEP.DAL.Repositories.StageOptions;
+using AISEP.DAL.Repositories.ScorecardWeightConfigs;
 
 namespace AISEP.DAL.Common
 {
@@ -83,6 +84,7 @@ namespace AISEP.DAL.Common
         private IDealRepository?              _deals;
         private IPostPrRepository?            _postPrs;
         private IFormValidationRuleRepository? _formValidationRules;
+        private IScorecardWeightConfigRepository? _scorecardWeightConfigs;
         public UnitOfWork(ApplicationDbContext context)
         {
             _context = context;
@@ -126,6 +128,7 @@ namespace AISEP.DAL.Common
         public IDealRepository              Deals              => _deals              ??= new DealRepository(_context);
         public IPostPrRepository            PostPrs            => _postPrs            ??= new PostPrRepository(_context);
         public IFormValidationRuleRepository FormValidationRules => _formValidationRules ??= new FormValidationRuleRepository(_context);
+        public IScorecardWeightConfigRepository ScorecardWeightConfigs => _scorecardWeightConfigs ??= new ScorecardWeightConfigRepository(_context);
 
         public async Task<int> SaveChangesAsync()
         {

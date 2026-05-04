@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Net.Http.Headers;
+using System.Globalization;
 using AISEP.DAL.Entities;
 using AISEP.BLL.Settings;
 using Microsoft.Extensions.Options;
@@ -21,26 +22,15 @@ namespace AISEP.BLL.Services.AI
             _logger     = logger;
         }
 
-        public async Task<AiAnalysisResult> AnalyzeProjectAsync(Project project, IEnumerable<Document> documents)
+        public async Task<AiAnalysisResult> AnalyzeProjectAsync(Project project, decimal baseScore)
         {
-            var docList     = documents.ToList();
-            var prompt      = BuildPrompt(project, docList);
-            var inputParts = await BuildInputPartsAsync(docList);
+            var prompt = BuildAnalysisPrompt(project, baseScore, "startup");
 
-            _logger.LogInformation("Calling OpenAI: model={Model}, inputParts={Count}",
-                _settings.Model, inputParts.Count);
+            _logger.LogInformation("Calling OpenAI startup analysis: model={Model}, baseScore={BaseScore}",
+                _settings.Model, baseScore);
 
-            try
-            {
-                var responseJson = await CallOpenAiAsync(prompt, inputParts);
-                return ParseResponse(responseJson);
-            }
-            catch (HttpRequestException ex) when (inputParts.Count > 0)
-            {
-                _logger.LogWarning("OpenAI document input call failed ({Msg}). Retrying text-only...", ex.Message);
-                var responseJson = await CallOpenAiAsync(prompt, []);
-                return ParseResponse(responseJson);
-            }
+            var responseJson = await CallOpenAiAsync(prompt, [], BuildAnalysisJsonSchemaFormat());
+            return ParseResponse(responseJson);
         }
 
         public async Task<AiEligibilityResult> EvaluateStartupEligibilityAsync(Project project, IEnumerable<Document> documents)
@@ -64,244 +54,50 @@ namespace AISEP.BLL.Services.AI
             }
         }
 
-        public async Task<AiAnalysisResult> AnalyzeProjectForInvestorAsync(Project project, IEnumerable<Document> documents)
+        public async Task<AiAnalysisResult> AnalyzeProjectForInvestorAsync(Project project, decimal baseScore)
         {
-            var docList = documents.ToList();
-            var prompt = BuildInvestorPrompt(project, docList);
-            var inputParts = await BuildInputPartsAsync(docList);
+            var prompt = BuildAnalysisPrompt(project, baseScore, "investor");
 
-            _logger.LogInformation("Calling OpenAI (Investor mode): model={Model}, inputParts={Count}",
-                _settings.Model, inputParts.Count);
+            _logger.LogInformation("Calling OpenAI investor analysis: model={Model}, baseScore={BaseScore}",
+                _settings.Model, baseScore);
 
-            try
-            {
-                var responseJson = await CallOpenAiAsync(prompt, inputParts);
-                return ParseResponse(responseJson);
-            }
-            catch (HttpRequestException ex) when (inputParts.Count > 0)
-            {
-                _logger.LogWarning("Investor document input call failed ({Msg}). Retrying text-only...", ex.Message);
-                var responseJson = await CallOpenAiAsync(prompt, []);
-                return ParseResponse(responseJson);
-            }
+            var responseJson = await CallOpenAiAsync(prompt, [], BuildAnalysisJsonSchemaFormat());
+            return ParseResponse(responseJson);
         }
 
-        private string BuildPrompt(Project project, List<Document> documents)
+        private string BuildAnalysisPrompt(Project project, decimal baseScore, string audience)
         {
-            var readable = documents.Where(d => GetMimeType(d.FileName) is not null).ToList();
-            var skipped  = documents.Where(d => GetMimeType(d.FileName) is null).ToList();
-            var docCount = readable.Count;
-
-            var docSummary = docCount > 0
-                ? string.Join(", ", readable.Select(d => $"{d.DocumentType} ({d.FileName})"))
-                : "Không có tài liệu đọc được.";
-            var skippedSummary = skipped.Count > 0
-                ? $" | Bỏ qua (định dạng không hỗ trợ): {string.Join(", ", skipped.Select(d => d.FileName))}"
-                : string.Empty;
+            var baseScoreText = baseScore.ToString("0.##", CultureInfo.InvariantCulture);
+            var audienceDescription = audience == "investor"
+                ? "nhà đầu tư đang đánh giá cơ hội đầu tư"
+                : "startup đang tự đánh giá và cải thiện dự án";
+            var stageOptionId = project.StageOptionId?.ToString() ?? "N/A";
 
             return $$"""
-                Bạn là chuyên gia thẩm định startup theo phương pháp Bill Payne Scorecard.
-                Nhiệm vụ: phân tích dự án và tài liệu đính kèm, chấm điểm 7 thành phần.
-                BẮT BUỘC:
-                - Chỉ trả về 1 JSON hợp lệ, không markdown, không text thừa.
-                - TẤT CẢ nội dung chữ trong JSON phải là tiếng Việt (reason, evidence, missingData, Summary, Strengths, Weaknesses, Recommendations).
+                Bạn là chuyên gia thẩm định đầu tư cấp cao.
+                Hệ thống toán học đã chấm dự án này đạt BaseScore là {{baseScoreText}}/100 điểm.
+                Hãy đọc kỹ văn bản mô tả của dự án.
+                Nếu cách trình bày sắc bén, logic và khả thi, hãy cấp điểm thưởng từ +1 đến +10.
+                Nếu mô tả ngây ngô, thiếu thực tế hoặc viển vông, hãy trừ điểm từ -1 đến -10.
+                Nếu văn bản trung tính, đủ rõ nhưng không nổi bật, có thể trả về 0.
+
+                RÀNG BUỘC NGÔN NGỮ QUAN TRỌNG:
+                Toàn bộ nội dung phân tích, nhận xét, đánh giá BẮT BUỘC phải được viết bằng Tiếng Việt chuyên ngành kinh doanh/startup một cách tự nhiên và trôi chảy.
+
+                Đối tượng sử dụng kết quả: {{audienceDescription}}.
+
+                Chỉ đánh giá chất lượng phần mô tả định tính. Không tự tính điểm cuối cùng.
 
                 --- DỮ LIỆU DỰ ÁN ---
                 Tên dự án: {{project.ProjectName}}
                 Mô tả ngắn: {{project.ShortDescription ?? "N/A"}}
-                StageOptionId: {{project.StageOptionId?.ToString() ?? "N/A"}}
+                StageOptionId: {{stageOptionId}}
                 Bài toán: {{project.ProblemStatement ?? "N/A"}}
                 Giải pháp: {{project.SolutionDescription ?? "N/A"}}
                 Khách hàng mục tiêu: {{project.TargetCustomers ?? "N/A"}}
                 Giá trị khác biệt: {{project.UniqueValueProposition ?? "N/A"}}
                 Mô hình kinh doanh: {{project.BusinessModel ?? "N/A"}}
                 Đối thủ cạnh tranh: {{project.Competitors ?? "N/A"}}
-                Tài liệu tải lên ({{docCount}} tài liệu đọc được){{skippedSummary}}:
-                {{docSummary}}
-
-                --- CÁCH CHẤM ĐIỂM ---
-                Chấm tuyệt đối từng thành phần theo thang 0.0-10.0:
-                - 5.0 = mức trung bình thị trường
-                - 7.5 = mạnh
-                - 9.0+ = xuất sắc
-                - dưới 4.0 = yếu
-
-                7 thành phần:
-                1) Team: thong tin doi ngu (neu co)
-                2) Opportunity: TargetCustomers
-                3) Product: SolutionDescription, StageOptionId
-                4) Competition: Competitors, UniqueValueProposition
-                5) Marketing: BusinessModel
-                6) Investment: độ rõ ràng nhu cầu vốn và sử dụng vốn
-                7) Other: chất lượng tài liệu, tính nhất quán tổng thể
-
-                --- GIAI ĐOẠN PHÁT TRIỂN ---
-                Stage là option động từ hệ thống. Chỉ dùng giá trị được cung cấp như ngữ cảnh đánh giá, không giả định danh sách stage cố định.
-
-                --- RUBRIC (NGHIÊM NGẶT) ---
-                - 0.0-2.0: Thiếu dữ liệu hoặc dữ liệu không liên quan.
-                - 2.1-4.0: Có thông tin cơ bản nhưng bằng chứng yếu.
-                - 4.1-6.5: Mức trung bình thị trường, bằng chứng chấp nhận được.
-                - 6.6-8.5: Mạnh, có bằng chứng cụ thể và kiểm chứng được.
-                - 8.6-10.0: Xuất sắc, bằng chứng nổi trội và có traction rõ.
-                Nếu độ tin cậy thấp, phải chấm bảo thủ.
-
-                Không tự tính điểm tổng có trọng số. Backend sẽ xử lý phần điểm riêng.
-                Yêu cầu đầu ra:
-                - Summary: 2-4 câu tiếng Việt, nêu tài liệu/bằng chứng nào ảnh hưởng điểm.
-                - Strengths: 3-5 ý tiếng Việt.
-                - Weaknesses: 3-5 ý tiếng Việt.
-                - Recommendations: 5-8 hành động tiếng Việt, theo thứ tự ưu tiên, tập trung trực tiếp vào việc cải thiện dự án (đội ngũ, sản phẩm, thị trường, vận hành), không chỉ để tăng điểm.
-
-                Tự kiểm tra trước khi trả kết quả:
-                1) Mỗi component phải có ít nhất 1 phần tử trong evidence hoặc missingData.
-                2) Điểm > 6.5 phải có bằng chứng cụ thể.
-                3) Trả về JSON hợp lệ duy nhất.
-
-                --- MẪU OUTPUT BẮT BUỘC (CHỈ JSON) ---
-                {
-                  "Team": {
-                    "score": <decimal 0.0-10.0>,
-                    "evidence": ["<bằng chứng ngắn 1>", "<bằng chứng ngắn 2>"],
-                    "missingData": ["<dữ liệu còn thiếu 1>"],
-                    "confidence": <decimal 0.0-1.0>,
-                    "reason": "<giải thích lý do chấm điểm bằng tiếng Việt>"
-                  },
-                  "Opportunity": {
-                    "score": <decimal 0.0-10.0>,
-                    "evidence": [],
-                    "missingData": [],
-                    "confidence": <decimal 0.0-1.0>,
-                    "reason": "<giải thích lý do chấm điểm bằng tiếng Việt>"
-                  },
-                  "Product": {
-                    "score": <decimal 0.0-10.0>,
-                    "evidence": [],
-                    "missingData": [],
-                    "confidence": <decimal 0.0-1.0>,
-                    "reason": "<giải thích lý do chấm điểm bằng tiếng Việt>"
-                  },
-                  "Competition": {
-                    "score": <decimal 0.0-10.0>,
-                    "evidence": [],
-                    "missingData": [],
-                    "confidence": <decimal 0.0-1.0>,
-                    "reason": "<giải thích lý do chấm điểm bằng tiếng Việt>"
-                  },
-                  "Marketing": {
-                    "score": <decimal 0.0-10.0>,
-                    "evidence": [],
-                    "missingData": [],
-                    "confidence": <decimal 0.0-1.0>,
-                    "reason": "<giải thích lý do chấm điểm bằng tiếng Việt>"
-                  },
-                  "Investment": {
-                    "score": <decimal 0.0-10.0>,
-                    "evidence": [],
-                    "missingData": [],
-                    "confidence": <decimal 0.0-1.0>,
-                    "reason": "<giải thích lý do chấm điểm bằng tiếng Việt>"
-                  },
-                  "Other": {
-                    "score": <decimal 0.0-10.0>,
-                    "evidence": [],
-                    "missingData": [],
-                    "confidence": <decimal 0.0-1.0>,
-                    "reason": "<giải thích lý do chấm điểm bằng tiếng Việt>"
-                  },
-                  "Summary": "<tóm tắt tiếng Việt>",
-                  "Strengths": ["<điểm mạnh 1>", "<điểm mạnh 2>"],
-                  "Weaknesses": ["<điểm yếu 1>", "<điểm yếu 2>"],
-                  "Recommendations": ["<hành động 1>", "<hành động 2>"]
-                }
-                """;
-        }
-
-        private string BuildInvestorPrompt(Project project, List<Document> documents)
-        {
-            var readable = documents.Where(d => GetMimeType(d.FileName) is not null).ToList();
-            var skipped = documents.Where(d => GetMimeType(d.FileName) is null).ToList();
-            var docCount = readable.Count;
-
-            var docSummary = docCount > 0
-                ? string.Join(", ", readable.Select(d => $"{d.DocumentType} ({d.FileName})"))
-                : "Không có tài liệu đọc được.";
-            var skippedSummary = skipped.Count > 0
-                ? $" | Bỏ qua (định dạng không hỗ trợ): {string.Join(", ", skipped.Select(d => d.FileName))}"
-                : string.Empty;
-
-            return $$"""
-                Bạn là chuyên gia thẩm định dự án ở góc nhìn nhà đầu tư theo Bill Payne Scorecard.
-                Nhiệm vụ: phân tích dự án và tài liệu đính kèm để hỗ trợ quyết định đầu tư.
-                BẮT BUỘC:
-                - Chỉ trả về 1 JSON hợp lệ, không markdown, không text thừa.
-                - TẤT CẢ nội dung chữ trong JSON phải là tiếng Việt.
-
-                --- DỮ LIỆU DỰ ÁN ---
-                Tên dự án: {{project.ProjectName}}
-                Mô tả ngắn: {{project.ShortDescription ?? "N/A"}}
-                StageOptionId: {{project.StageOptionId?.ToString() ?? "N/A"}}
-                Bài toán: {{project.ProblemStatement ?? "N/A"}}
-                Giải pháp: {{project.SolutionDescription ?? "N/A"}}
-                Khách hàng mục tiêu: {{project.TargetCustomers ?? "N/A"}}
-                Giá trị khác biệt: {{project.UniqueValueProposition ?? "N/A"}}
-                Mô hình kinh doanh: {{project.BusinessModel ?? "N/A"}}
-                Đối thủ cạnh tranh: {{project.Competitors ?? "N/A"}}
-                Tài liệu tải lên ({{docCount}} tài liệu đọc được){{skippedSummary}}:
-                {{docSummary}}
-
-                --- HƯỚNG DẪN CHẤM ĐIỂM ---
-                Chấm tuyệt đối 0.0-10.0 cho 7 thành phần.
-                Không tự gán trọng số cố định, backend sẽ tổng hợp điểm theo trọng số từng giai đoạn.
-
-                --- GIAI ĐOẠN PHÁT TRIỂN ---
-                Stage là option động từ hệ thống. Chỉ dùng giá trị được cung cấp như ngữ cảnh đánh giá, không giả định danh sách stage cố định.
-
-                Mốc tham chiếu:
-                - 5.0 = trung bình thị trường
-                - 7.5 = mạnh
-                - 9.0+ = xuất sắc
-
-                --- RUBRIC (NGHIÊM NGẶT) ---
-                - 0.0-2.0: Thiếu dữ liệu hoặc dữ liệu không liên quan.
-                - 2.1-4.0: Có dữ liệu cơ bản nhưng bằng chứng yếu.
-                - 4.1-6.5: Mức trung bình thị trường, có bằng chứng chấp nhận được.
-                - 6.6-8.5: Mạnh, bằng chứng rõ ràng và kiểm chứng được.
-                - 8.6-10.0: Xuất sắc, bằng chứng nổi trội và traction tốt.
-                Nếu độ tin cậy thấp, bắt buộc chấm bảo thủ.
-
-                Trọng tâm nhà đầu tư:
-                - Nhấn mạnh khả năng đầu tư được, rủi ro giảm giá trị, rủi ro thực thi, độ tin cậy dữ liệu.
-                - Điểm > 6.5 phải có bằng chứng cụ thể từ dự án/tài liệu.
-                - Nếu bằng chứng yếu, giảm điểm và bổ sung cảnh báo rủi ro.
-                - KHONG tra ve ChaosScore.
-
-                Không tự tính điểm tổng có trọng số. Backend sẽ xử lý phần điểm riêng.
-                Tự kiểm tra trước khi trả kết quả:
-                1) Mỗi component phải có ít nhất 1 phần tử trong evidence hoặc missingData.
-                2) Điểm > 6.5 phải có bằng chứng cụ thể.
-                3) InvestmentVerdict phải nhất quán với RiskFlags và DealBreakers.
-                4) Trả về JSON hợp lệ duy nhất.
-
-                --- MẪU OUTPUT BẮT BUỘC (CHỈ JSON) ---
-                {
-                  "Team": {"score": 0.0, "evidence": [], "missingData": [], "confidence": 0.0, "reason": ""},
-                  "Opportunity": {"score": 0.0, "evidence": [], "missingData": [], "confidence": 0.0, "reason": ""},
-                  "Product": {"score": 0.0, "evidence": [], "missingData": [], "confidence": 0.0, "reason": ""},
-                  "Competition": {"score": 0.0, "evidence": [], "missingData": [], "confidence": 0.0, "reason": ""},
-                  "Marketing": {"score": 0.0, "evidence": [], "missingData": [], "confidence": 0.0, "reason": ""},
-                  "Investment": {"score": 0.0, "evidence": [], "missingData": [], "confidence": 0.0, "reason": ""},
-                  "Other": {"score": 0.0, "evidence": [], "missingData": [], "confidence": 0.0, "reason": ""},
-                  "Summary": "",
-                  "Strengths": [],
-                  "Weaknesses": [],
-                  "Recommendations": [],
-                  "InvestmentVerdict": "Nên đầu tư|Theo dõi|Từ chối",
-                  "RiskFlags": [],
-                  "DealBreakers": [],
-                  "DueDiligenceQuestions": [],
-                  "InvestorNextStep": ""
-                }
                 """;
         }
 
@@ -368,7 +164,7 @@ namespace AISEP.BLL.Services.AI
                 """;
         }
 
-        private async Task<string> CallOpenAiAsync(string prompt, List<object> inputParts)
+        private async Task<string> CallOpenAiAsync(string prompt, List<object> inputParts, object? textFormat = null)
         {
             if (string.IsNullOrWhiteSpace(_settings.ApiKey))
             {
@@ -378,10 +174,10 @@ namespace AISEP.BLL.Services.AI
             var parts = new List<object> { new { type = "input_text", text = prompt } };
             parts.AddRange(inputParts);
 
-            var requestBody = new
+            var requestBody = new Dictionary<string, object?>
             {
-                model = _settings.Model,
-                input = new[]
+                ["model"] = _settings.Model,
+                ["input"] = new[]
                 {
                     new
                     {
@@ -389,9 +185,14 @@ namespace AISEP.BLL.Services.AI
                         content = parts.ToArray()
                     }
                 },
-                temperature = _settings.Temperature,
-                max_output_tokens = _settings.MaxOutputTokens
+                ["temperature"] = _settings.Temperature,
+                ["max_output_tokens"] = _settings.MaxOutputTokens
             };
+
+            if (textFormat is not null)
+            {
+                requestBody["text"] = new { format = textFormat };
+            }
 
             var url         = $"{_settings.BaseUrl.TrimEnd('/')}/responses";
             var bodyJson    = JsonSerializer.Serialize(requestBody);
@@ -425,6 +226,62 @@ namespace AISEP.BLL.Services.AI
             }
 
             return await response.Content.ReadAsStringAsync();
+        }
+
+        private static object BuildAnalysisJsonSchemaFormat()
+        {
+            return new
+            {
+                type = "json_schema",
+                name = "project_ai_adjustment_analysis",
+                strict = true,
+                schema = new
+                {
+                    type = "object",
+                    additionalProperties = false,
+                    properties = new
+                    {
+                        AIAdjustmentScore = new
+                        {
+                            type = "integer",
+                            minimum = -10,
+                            maximum = 10,
+                            description = "Diem cong hoac tru tu -10 den 10."
+                        },
+                        Reasoning = new
+                        {
+                            type = "string",
+                            description = "Giai thich ngan gon bang tieng Viet ve ly do cong/tru diem."
+                        },
+                        Strengths = new
+                        {
+                            type = "array",
+                            items = new { type = "string" },
+                            description = "Cac diem manh bang tieng Viet."
+                        },
+                        Weaknesses = new
+                        {
+                            type = "array",
+                            items = new { type = "string" },
+                            description = "Cac rui ro hoac diem yeu bang tieng Viet."
+                        },
+                        Advice = new
+                        {
+                            type = "array",
+                            items = new { type = "string" },
+                            description = "Loi khuyen hanh dong bang tieng Viet."
+                        }
+                    },
+                    required = new[]
+                    {
+                        "AIAdjustmentScore",
+                        "Reasoning",
+                        "Strengths",
+                        "Weaknesses",
+                        "Advice"
+                    }
+                }
+            };
         }
 
     
@@ -512,9 +369,16 @@ namespace AISEP.BLL.Services.AI
 
             try
             {
-                return JsonSerializer.Deserialize<AiAnalysisResult>(text,
+                var result = JsonSerializer.Deserialize<AiAnalysisResult>(text,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
                     ?? new AiAnalysisResult();
+
+                result.AIAdjustmentScore = Math.Clamp(result.AIAdjustmentScore, -10, 10);
+                result.Reasoning ??= string.Empty;
+                result.Strengths ??= [];
+                result.Weaknesses ??= [];
+                result.Advice ??= [];
+                return result;
             }
             catch (JsonException ex)
             {

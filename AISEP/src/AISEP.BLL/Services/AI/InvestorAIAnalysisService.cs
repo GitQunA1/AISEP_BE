@@ -41,8 +41,6 @@ namespace AISEP.BLL.Services.AI
                 ?? throw new KeyNotFoundException("Investor profile not found.");
             EnsureInvestorApproved(investor);
 
-            await ConsumeAiQuotaAsync(userId);
-
             var project = await _unitOfWork.Projects.GetByIdAsync(projectId)
                 ?? throw new KeyNotFoundException($"Project {projectId} not found.");
             if (project.Status != ProjectStatus.Approved)
@@ -50,9 +48,13 @@ namespace AISEP.BLL.Services.AI
                 throw new InvalidOperationException("Investor AI analysis is only available when project status is Approved.");
             }
 
-            var documents = (await _unitOfWork.Documents.GetByProjectIdAsync(projectId)).ToList();
-            var result = await _openAiService.AnalyzeProjectForInvestorAsync(project, documents);
-            AiAnalysisScoringHelper.NormalizeAnalysisResult(result, includeInvestorFields: true);
+            var baseScore = await CalculateBaseScoreAsync(project);
+            await ConsumeAiQuotaAsync(userId);
+
+            var result = await _openAiService.AnalyzeProjectForInvestorAsync(project, baseScore);
+            result.BaseScore = baseScore;
+            result.AIAdjustmentScore = Math.Clamp(result.AIAdjustmentScore, -10, 10);
+            result.FinalPotentialScore = Math.Clamp(baseScore + result.AIAdjustmentScore, 0m, 100m);
 
             var analysisJson = JsonSerializer.Serialize(result);
             var existing = await _unitOfWork.InvestorAIAnalyses
@@ -60,6 +62,9 @@ namespace AISEP.BLL.Services.AI
 
             if (existing is not null)
             {
+                existing.BaseScore = result.BaseScore;
+                existing.AIAdjustmentScore = result.AIAdjustmentScore;
+                existing.FinalPotentialScore = result.FinalPotentialScore;
                 existing.AnalysisJson = analysisJson;
                 existing.CreatedAt = DateTime.UtcNow;
                 _unitOfWork.InvestorAIAnalyses.Update(existing);
@@ -70,6 +75,9 @@ namespace AISEP.BLL.Services.AI
                 {
                     InvestorId = investor.InvestorId,
                     ProjectId = projectId,
+                    BaseScore = result.BaseScore,
+                    AIAdjustmentScore = result.AIAdjustmentScore,
+                    FinalPotentialScore = result.FinalPotentialScore,
                     AnalysisJson = analysisJson,
                     CreatedAt = DateTime.UtcNow
                 };
@@ -154,6 +162,19 @@ namespace AISEP.BLL.Services.AI
             await _unitOfWork.SaveChangesAsync();
         }
 
+        private async Task<decimal> CalculateBaseScoreAsync(Project project)
+        {
+            if (project.Scorecard is null)
+            {
+                throw new InvalidOperationException("Project scorecard is required before running AI analysis.");
+            }
+
+            var weightConfig = await _unitOfWork.ScorecardWeightConfigs.GetDefaultAsync()
+                ?? throw new InvalidOperationException("Default scorecard weight config is not configured.");
+
+            return ProjectScoringHelper.CalculateBaseScore(project.Scorecard, weightConfig);
+        }
+
         private static void EnsureInvestorApproved(Investor investor)
         {
             if (investor.ApprovalStatus != ApprovalStatus.Approved)
@@ -164,60 +185,28 @@ namespace AISEP.BLL.Services.AI
             InvestorAIAnalysis analysis,
             IMapper mapper)
         {
-            var parsed = AiAnalysisScoringHelper.DeserializeAnalysisJson(analysis.AnalysisJson);
             var response = mapper.Map<InvestorAIAnalysisResponse>(analysis);
-            response.Analysis = parsed;
-            response.ScoreBreakdown = AiAnalysisScoringHelper.BuildBreakdown(parsed);
-
-            var normalizedVerdict = NormalizeInvestmentVerdict(parsed?.InvestmentVerdict);
-            response.InvestmentVerdict = normalizedVerdict;
-            response.RiskFlags = parsed?.RiskFlags ?? [];
-            response.DealBreakers = parsed?.DealBreakers ?? [];
-            response.DueDiligenceQuestions = parsed?.DueDiligenceQuestions ?? [];
-            response.InvestorNextStep = parsed?.InvestorNextStep ?? string.Empty;
-
-            if (response.Analysis is not null)
-            {
-                response.Analysis.InvestmentVerdict = normalizedVerdict;
-            }
-
+            response.Analysis = DeserializeAnalysisJson(analysis.AnalysisJson);
             return response;
         }
 
-        private static string NormalizeInvestmentVerdict(string? verdict)
+        private static AiAnalysisResult? DeserializeAnalysisJson(string? analysisJson)
         {
-            if (string.IsNullOrWhiteSpace(verdict))
+            if (string.IsNullOrWhiteSpace(analysisJson))
             {
-                return string.Empty;
+                return null;
             }
 
-            var normalized = verdict.Trim();
-            if (normalized.Equals("Nen dau tu", StringComparison.OrdinalIgnoreCase))
+            try
             {
-                return "Nen dau tu";
+                return JsonSerializer.Deserialize<AiAnalysisResult>(
+                    analysisJson,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             }
-            if (normalized.Equals("Theo doi", StringComparison.OrdinalIgnoreCase))
+            catch (JsonException)
             {
-                return "Theo doi";
+                return null;
             }
-            if (normalized.Equals("Tu choi", StringComparison.OrdinalIgnoreCase))
-            {
-                return "Tu choi";
-            }
-            if (normalized.Equals("Strong", StringComparison.OrdinalIgnoreCase))
-            {
-                return "Nen dau tu";
-            }
-            if (normalized.Equals("Watchlist", StringComparison.OrdinalIgnoreCase))
-            {
-                return "Theo doi";
-            }
-            if (normalized.Equals("Pass", StringComparison.OrdinalIgnoreCase))
-            {
-                return "Tu choi";
-            }
-
-            return normalized;
         }
 
         private static bool IsStaffOrAdmin(string? role)

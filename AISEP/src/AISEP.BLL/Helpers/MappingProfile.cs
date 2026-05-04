@@ -507,13 +507,11 @@ namespace AISEP.BLL.Helpers
 
             // StartupAIAnalysis Entity ? StartupAIAnalysisResponse
             CreateMap<StartupAIAnalysis, StartupAIAnalysisResponse>()
-                .ForMember(dest => dest.Analysis, opt => opt.Ignore())
-                .ForMember(dest => dest.ScoreBreakdown, opt => opt.Ignore());
+                .ForMember(dest => dest.Analysis, opt => opt.Ignore());
 
             // InvestorAIAnalysis Entity ? InvestorAIAnalysisResponse
             CreateMap<InvestorAIAnalysis, InvestorAIAnalysisResponse>()
-                .ForMember(dest => dest.Analysis, opt => opt.Ignore())
-                .ForMember(dest => dest.ScoreBreakdown, opt => opt.Ignore());
+                .ForMember(dest => dest.Analysis, opt => opt.Ignore());
 
             // StartupAIAnalysis Entity -> StartupEligibilityResponse
             CreateMap<StartupAIAnalysis, StartupEligibilityResponse>()

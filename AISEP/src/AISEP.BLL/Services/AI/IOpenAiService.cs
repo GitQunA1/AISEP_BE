@@ -3,43 +3,17 @@ using System.Text.Json.Serialization;
 
 namespace AISEP.BLL.Services.AI
 {
-    public class ComponentEvaluation
-    {
-        public double Score { get; set; }
-        public List<string> Evidence { get; set; } = [];
-        public List<string> MissingData { get; set; } = [];
-        public double Confidence { get; set; }
-        public string Reason { get; set; } = string.Empty;
-    }
-
     public class AiAnalysisResult
     {
-        public ComponentEvaluation? Team { get; set; }
-        public ComponentEvaluation? Opportunity { get; set; }
-        public ComponentEvaluation? Product { get; set; }
-        public ComponentEvaluation? Competition { get; set; }
-        public ComponentEvaluation? Marketing { get; set; }
-        public ComponentEvaluation? Investment { get; set; }
-        public ComponentEvaluation? Other { get; set; }
-
-        public double TeamScore        { get; set; }
-        public double OpportunityScore { get; set; }
-        public double ProductScore     { get; set; }
-        public double CompetitionScore { get; set; }
-        public double MarketingScore   { get; set; }
-        public double InvestmentScore  { get; set; }
-        public double OtherScore       { get; set; }
-        public bool   IsEligibleStartup  { get; set; }
-        public string EligibilityReason  { get; set; } = string.Empty;
-        public string Summary            { get; set; } = string.Empty;
+        public int AIAdjustmentScore { get; set; }
+        public string Reasoning { get; set; } = string.Empty;
         public List<string> Strengths { get; set; } = [];
         public List<string> Weaknesses { get; set; } = [];
-        public List<string> Recommendations { get; set; } = [];
-        public string InvestmentVerdict { get; set; } = string.Empty;
-        public List<string> RiskFlags { get; set; } = [];
-        public List<string> DealBreakers { get; set; } = [];
-        public List<string> DueDiligenceQuestions { get; set; } = [];
-        public string InvestorNextStep { get; set; } = string.Empty;
+        public List<string> Advice { get; set; } = [];
+        public decimal BaseScore { get; set; }
+        public decimal FinalPotentialScore { get; set; }
+        public bool   IsEligibleStartup  { get; set; }
+        public string EligibilityReason  { get; set; } = string.Empty;
     }
 
     public class AiEligibilityResult
@@ -53,8 +27,8 @@ namespace AISEP.BLL.Services.AI
 
     public interface IOpenAiService
     {
-        Task<AiAnalysisResult> AnalyzeProjectAsync(Project project, IEnumerable<Document> documents);
+        Task<AiAnalysisResult> AnalyzeProjectAsync(Project project, decimal baseScore);
         Task<AiEligibilityResult> EvaluateStartupEligibilityAsync(Project project, IEnumerable<Document> documents);
-        Task<AiAnalysisResult> AnalyzeProjectForInvestorAsync(Project project, IEnumerable<Document> documents);
+        Task<AiAnalysisResult> AnalyzeProjectForInvestorAsync(Project project, decimal baseScore);
     }
 }

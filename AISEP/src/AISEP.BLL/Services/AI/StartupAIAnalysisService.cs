@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.RegularExpressions;
 using AISEP.BLL.Exceptions;
+using AISEP.BLL.Helpers;
 using AISEP.DAL.Common;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.BLL.Services.Users;
@@ -37,18 +38,22 @@ namespace AISEP.BLL.Services.AI
                 throw new InvalidOperationException("AI analysis is only available when project status is Draft.");
             }
 
+            var baseScore = await CalculateBaseScoreAsync(project);
             await ConsumeAiQuotaAsync(project.StartupId);
 
-            var documents = (await _unitOfWork.Documents.GetByProjectIdAsync(projectId)).ToList();
-
-            var result      = await _openAiService.AnalyzeProjectAsync(project, documents);
-            AiAnalysisScoringHelper.NormalizeAnalysisResult(result, includeInvestorFields: false);
+            var result      = await _openAiService.AnalyzeProjectAsync(project, baseScore);
+            result.BaseScore = baseScore;
+            result.AIAdjustmentScore = Math.Clamp(result.AIAdjustmentScore, -10, 10);
+            result.FinalPotentialScore = Math.Clamp(baseScore + result.AIAdjustmentScore, 0m, 100m);
             var analysisJson = JsonSerializer.Serialize(result);
 
             var existing = await _unitOfWork.StartupAIAnalyses.GetByProjectIdAsync(projectId);
 
             if (existing is not null)
             {
+                existing.BaseScore = result.BaseScore;
+                existing.AIAdjustmentScore = result.AIAdjustmentScore;
+                existing.FinalPotentialScore = result.FinalPotentialScore;
                 existing.AnalysisJson = analysisJson;
                 existing.IsEligibleStartup = null;
                 existing.EligibilityReason = null;
@@ -60,6 +65,9 @@ namespace AISEP.BLL.Services.AI
                 existing = new StartupAIAnalysis
                 {
                     ProjectId = projectId,
+                    BaseScore = result.BaseScore,
+                    AIAdjustmentScore = result.AIAdjustmentScore,
+                    FinalPotentialScore = result.FinalPotentialScore,
                     AnalysisJson = analysisJson,
                     IsEligibleStartup = null,
                     EligibilityReason = null,
@@ -196,13 +204,43 @@ namespace AISEP.BLL.Services.AI
             await _unitOfWork.SaveChangesAsync();
         }
 
+        private async Task<decimal> CalculateBaseScoreAsync(Project project)
+        {
+            if (project.Scorecard is null)
+            {
+                throw new InvalidOperationException("Project scorecard is required before running AI analysis.");
+            }
+
+            var weightConfig = await _unitOfWork.ScorecardWeightConfigs.GetDefaultAsync()
+                ?? throw new InvalidOperationException("Default scorecard weight config is not configured.");
+
+            return ProjectScoringHelper.CalculateBaseScore(project.Scorecard, weightConfig);
+        }
+
         private static StartupAIAnalysisResponse MapToResponse(StartupAIAnalysis a, IMapper mapper)
         {
-            var parsedAnalysis = AiAnalysisScoringHelper.DeserializeAnalysisJson(a.AnalysisJson);
             var response = mapper.Map<StartupAIAnalysisResponse>(a);
-            response.Analysis = parsedAnalysis;
-            response.ScoreBreakdown = AiAnalysisScoringHelper.BuildBreakdown(parsedAnalysis);
+            response.Analysis = DeserializeAnalysisJson(a.AnalysisJson);
             return response;
+        }
+
+        private static AiAnalysisResult? DeserializeAnalysisJson(string? analysisJson)
+        {
+            if (string.IsNullOrWhiteSpace(analysisJson))
+            {
+                return null;
+            }
+
+            try
+            {
+                return JsonSerializer.Deserialize<AiAnalysisResult>(
+                    analysisJson,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            }
+            catch (JsonException)
+            {
+                return null;
+            }
         }
 
         private static string NormalizeEligibilityReason(string? reason)

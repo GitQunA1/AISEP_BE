@@ -11,7 +11,6 @@ namespace AISEP.BLL.DTOs.Responses
         public decimal? FinalPotentialScore { get; set; }
         public string? AnalysisJson { get; set; }
         public AiAnalysisResult? Analysis { get; set; }
-        public List<ScoreBreakdownItem> ScoreBreakdown { get; set; } = [];
         public bool? IsEligibleStartup { get; set; }
         public string? EligibilityReason { get; set; }
         public DateTime CreatedAt { get; set; }

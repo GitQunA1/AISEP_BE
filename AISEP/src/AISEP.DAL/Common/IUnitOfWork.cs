@@ -35,6 +35,7 @@ using AISEP.DAL.Repositories.FormValidationRules;
 using AISEP.DAL.Repositories.SystemCommissionConfigs;
 using AISEP.DAL.Repositories.SystemTerms;
 using AISEP.DAL.Repositories.StageOptions;
+using AISEP.DAL.Repositories.ScorecardWeightConfigs;
 namespace AISEP.DAL.Common
 {
     public interface IUnitOfWork : IDisposable
@@ -77,6 +78,7 @@ namespace AISEP.DAL.Common
         IDealRepository              Deals              { get; }
         IPostPrRepository            PostPrs            { get; }
         IFormValidationRuleRepository FormValidationRules { get; }
+        IScorecardWeightConfigRepository ScorecardWeightConfigs { get; }
 
         Task<int> SaveChangesAsync();
     }
