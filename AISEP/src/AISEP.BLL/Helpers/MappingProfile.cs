@@ -229,6 +229,9 @@ namespace AISEP.BLL.Helpers
             // SystemTerm Entity -> SystemTermResponse
             CreateMap<SystemTerm, SystemTermResponse>();
 
+            // DueDiligenceTemplate Entity -> DueDiligenceTemplateResponse
+            CreateMap<DueDiligenceTemplate, DueDiligenceTemplateResponse>();
+
             CreateMap<Transaction, AdminTransactionResponse>()
                 .ForMember(dest => dest.Type,
                     opt => opt.MapFrom(src => src.Type.ToString()))

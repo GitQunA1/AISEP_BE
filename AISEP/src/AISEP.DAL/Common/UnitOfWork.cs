@@ -31,14 +31,13 @@ using AISEP.DAL.Repositories.UnlockedProjects;
 using AISEP.DAL.Repositories.Notifications;
 using AISEP.DAL.Repositories.ConnectionRequests;
 using AISEP.DAL.Repositories.Deals;
-//using AISEP.DAL.Repositories.NFTRecords;
-//using AISEP.DAL.Repositories.WithdrawRequests;
 using AISEP.DAL.Repositories.SystemCommissionConfigs;
 using AISEP.DAL.Repositories.PostPrs;
 using AISEP.DAL.Repositories.FormValidationRules;
 using AISEP.DAL.Repositories.SystemTerms;
 using AISEP.DAL.Repositories.StageOptions;
 using AISEP.DAL.Repositories.ScorecardWeightConfigs;
+using AISEP.DAL.Repositories.DueDiligenceTemplates;
 
 namespace AISEP.DAL.Common
 {
@@ -85,6 +84,7 @@ namespace AISEP.DAL.Common
         private IPostPrRepository?            _postPrs;
         private IFormValidationRuleRepository? _formValidationRules;
         private IScorecardWeightConfigRepository? _scorecardWeightConfigs;
+        private IDueDiligenceTemplateRepository? _dueDiligenceTemplates;
         public UnitOfWork(ApplicationDbContext context)
         {
             _context = context;
@@ -129,6 +129,7 @@ namespace AISEP.DAL.Common
         public IPostPrRepository            PostPrs            => _postPrs            ??= new PostPrRepository(_context);
         public IFormValidationRuleRepository FormValidationRules => _formValidationRules ??= new FormValidationRuleRepository(_context);
         public IScorecardWeightConfigRepository ScorecardWeightConfigs => _scorecardWeightConfigs ??= new ScorecardWeightConfigRepository(_context);
+        public IDueDiligenceTemplateRepository DueDiligenceTemplates => _dueDiligenceTemplates ??= new DueDiligenceTemplateRepository(_context);
 
         public async Task<int> SaveChangesAsync()
         {
