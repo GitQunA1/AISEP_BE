@@ -40,6 +40,23 @@ namespace AISEP.API.Controllers
             return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
         }
 
+        [HttpGet("search")]
+        [Authorize]
+        public async Task<IActionResult> Search(
+            [FromQuery] SieveModel model,
+            [FromQuery] string? query = null)
+        {
+            var result = await _projectService.SearchProjectsAsync(model, query);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
+        }
+
+        [HttpGet("matching/non-premium")]
+        public async Task<IActionResult> GetMatchingProjectsForNonPremium([FromQuery] SieveModel model)
+        {
+            var result = await _projectService.GetMatchingProjectsForNonPremiumAsync(model);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
+        }
+
         [HttpGet("non-premium/{projectId:int}")]
         public async Task<IActionResult> GetByIdForNonPremium(int projectId)
         {

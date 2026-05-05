@@ -39,10 +39,12 @@ namespace AISEP.BLL.Services.Startups
             _dynamicFormValidationService = dynamicFormValidationService;
         }
 
-        public async Task<PagedResult<StartupResponse>> SearchStartupsAsync(SieveModel model, string? industry = null, string? stage = null)
+        public async Task<PagedResult<StartupResponse>> SearchStartupsAsync(
+            SieveModel model,
+            string? query = null)
         {
-            var query = _unitOfWork.Startups.SearchStartupsQuery(industry, stage);
-            return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, s => _mapper.Map<StartupResponse>(s));
+            var startups = _unitOfWork.Startups.SearchStartupsQuery(query);
+            return await PaginationHelper.PaginateAsync(startups, model, _sieveProcessor, s => _mapper.Map<StartupResponse>(s));
         }
 
         public async Task<StartupResponse?> GetStartupByIdAsync(int id)

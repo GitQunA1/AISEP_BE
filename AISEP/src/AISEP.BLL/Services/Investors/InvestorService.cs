@@ -46,6 +46,40 @@ namespace AISEP.BLL.Services.Investors
             return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, i => _mapper.Map<InvestorResponse>(i));
         }
 
+        public async Task<PagedResult<InvestorResponse>> GetMatchingInvestorsForCurrentStartupAsync(SieveModel model)
+        {
+            var currentUserId = _userService.GetUserId();
+            var startup = await _unitOfWork.Startups.GetByUserIdAsync(currentUserId)
+                ?? throw new KeyNotFoundException("Startup profile not found.");
+
+            if (startup.ApprovalStatus != ApprovalStatus.Approved)
+            {
+                throw new InvalidOperationException("Your startup profile must be approved before using this feature.");
+            }
+
+            var industryIds = startup.StartupIndustries
+                .Select(si => si.IndustryOptionId)
+                .Concat(startup.Projects.Select(p => p.IndustryOptionId))
+                .Where(id => id > 0)
+                .ToHashSet();
+
+            var stageOptionIds = startup.Projects
+                .Where(p => p.Status == ProjectStatus.Approved && p.StageOptionId.HasValue)
+                .Select(p => p.StageOptionId!.Value)
+                .ToHashSet();
+
+            var query = _unitOfWork.Investors.GetAllQuery()
+                .Where(i => i.ApprovalStatus == ApprovalStatus.Approved)
+                .OrderByDescending(i => i.InvestorIndustries.Any(ii => industryIds.Contains(ii.IndustryOptionId))
+                    && i.PreferredStageOptionId.HasValue
+                    && stageOptionIds.Contains(i.PreferredStageOptionId.Value))
+                .ThenByDescending(i => i.InvestorIndustries.Any(ii => industryIds.Contains(ii.IndustryOptionId)))
+                .ThenByDescending(i => i.PreferredStageOptionId.HasValue && stageOptionIds.Contains(i.PreferredStageOptionId.Value))
+                .ThenBy(i => i.InvestorId);
+
+            return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, i => _mapper.Map<InvestorResponse>(i));
+        }
+
         public async Task<InvestorResponse?> GetByIdAsync(int investorId)
         {
             var investor = await _unitOfWork.Investors.GetByIdAsync(investorId);
@@ -319,6 +353,7 @@ namespace AISEP.BLL.Services.Investors
                 });
             }
         }
+
     }
 }
 

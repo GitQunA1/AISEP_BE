@@ -5,7 +5,8 @@ namespace AISEP.DAL.Repositories.Startups
 {
     public interface IStartupRepository
     {
-        IQueryable<Startup> SearchStartupsQuery(string? industry = null, string? stage = null, string? searchTerm = null);
+        IQueryable<Startup> SearchStartupsQuery(
+            string? query = null);
         IQueryable<Startup> GetByStatusQuery(ApprovalStatus? status = null);
         Task<Startup?> GetByIdAsync(int id);
         Task<Startup?> GetByUserIdAsync(int userId);

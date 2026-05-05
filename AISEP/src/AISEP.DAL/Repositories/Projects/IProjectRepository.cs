@@ -6,6 +6,7 @@ namespace AISEP.DAL.Repositories.Projects
     public interface IProjectRepository
     {
         IQueryable<Project> GetAllQuery();
+        IQueryable<Project> SearchProjectsQuery(string? query = null);
         IQueryable<Project> GetByStartupIdQuery(int startupId);
         IQueryable<Project> GetByStatusQuery(ProjectStatus status);
         Task<Project?> GetByIdAsync(int id);
