@@ -148,44 +148,13 @@ namespace AISEP.BLL.Services.Projects
             {
                 var investor = await _unitOfWork.Investors.GetByUserIdAsync(currentUserId.Value);
                 return investor is not null && investor.ApprovalStatus == ApprovalStatus.Approved
-                    ? BuildInvestorMatchingProjectQuery(investor)
+                    ? _unitOfWork.Projects.GetInvestorMatchingProjectsQuery(
+                        investor.InvestorIndustries.Select(ii => ii.IndustryOptionId),
+                        investor.PreferredStageOptionId)
                     : defaultQuery;
             }
 
             return defaultQuery;
-        }
-
-        private IQueryable<Project> BuildInvestorMatchingProjectQuery(Investor investor)
-        {
-            if (investor.ApprovalStatus != ApprovalStatus.Approved)
-            {
-                throw new InvalidOperationException("Your investor profile must be approved before using this feature.");
-            }
-
-            var industryIds = investor.InvestorIndustries
-                .Select(ii => ii.IndustryOptionId)
-                .ToHashSet();
-
-            var query = _unitOfWork.Projects.GetAllQuery()
-                .Where(p =>
-                    p.Status == ProjectStatus.Approved &&
-                    p.Startup.ApprovalStatus == ApprovalStatus.Approved);
-
-            if (investor.PreferredStageOptionId.HasValue)
-            {
-                var preferredStageOptionId = investor.PreferredStageOptionId.Value;
-                return query
-                    .OrderByDescending(p => industryIds.Contains(p.IndustryOptionId) && p.StageOptionId == preferredStageOptionId)
-                    .ThenByDescending(p => industryIds.Contains(p.IndustryOptionId))
-                    .ThenByDescending(p => p.StageOptionId == preferredStageOptionId)
-                    .ThenByDescending(p => p.CreatedAt)
-                    .ThenBy(p => p.ProjectId);
-            }
-
-            return query
-                .OrderByDescending(p => industryIds.Contains(p.IndustryOptionId))
-                .ThenByDescending(p => p.CreatedAt)
-                .ThenBy(p => p.ProjectId);
         }
 
        

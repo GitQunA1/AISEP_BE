@@ -1,5 +1,6 @@
 ﻿using AISEP.DAL.Data;
 using AISEP.DAL.Entities;
+using AISEP.DAL.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace AISEP.DAL.Repositories.Investors
@@ -21,6 +22,33 @@ namespace AISEP.DAL.Repositories.Investors
                 .Include(i => i.InvestorIndustries)
                     .ThenInclude(ii => ii.IndustryOption)
                 .OrderBy(i => i.InvestorId)
+                .AsQueryable();
+        }
+
+        public IQueryable<Investor> GetStartupMatchingInvestorsQuery(IEnumerable<int> industryOptionIds, IEnumerable<int> stageOptionIds)
+        {
+            var industryIds = industryOptionIds
+                .Where(id => id > 0)
+                .Distinct()
+                .ToList();
+
+            var stageIds = stageOptionIds
+                .Where(id => id > 0)
+                .Distinct()
+                .ToList();
+
+            return _context.Investors
+                .Include(i => i.User)
+                .Include(i => i.PreferredStageOption)
+                .Include(i => i.InvestorIndustries)
+                    .ThenInclude(ii => ii.IndustryOption)
+                .Where(i => i.ApprovalStatus == ApprovalStatus.Approved)
+                .OrderByDescending(i => i.InvestorIndustries.Any(ii => industryIds.Contains(ii.IndustryOptionId))
+                    && i.PreferredStageOptionId.HasValue
+                    && stageIds.Contains(i.PreferredStageOptionId.Value))
+                .ThenByDescending(i => i.InvestorIndustries.Any(ii => industryIds.Contains(ii.IndustryOptionId)))
+                .ThenByDescending(i => i.PreferredStageOptionId.HasValue && stageIds.Contains(i.PreferredStageOptionId.Value))
+                .ThenBy(i => i.InvestorId)
                 .AsQueryable();
         }
 
