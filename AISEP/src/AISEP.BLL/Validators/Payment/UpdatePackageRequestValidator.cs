@@ -8,27 +8,27 @@ namespace AISEP.BLL.Validators.Payment
         public UpdatePackageRequestValidator()
         {
             RuleFor(x => x.PackageName)
-                .NotEmpty().WithMessage("PackageName is required.")
-                .MaximumLength(255).WithMessage("PackageName must not exceed 255 characters.");
+                .NotEmpty().WithMessage("PackageName là bắt buộc.")
+                .MaximumLength(255).WithMessage("PackageName không được vượt quá 255 ký tự.");
 
             RuleFor(x => x.Description)
-                .MaximumLength(2000).WithMessage("Description must not exceed 2000 characters.")
+                .MaximumLength(2000).WithMessage("Description không được vượt quá 2000 ký tự.")
                 .When(x => !string.IsNullOrWhiteSpace(x.Description));
 
             RuleFor(x => x.Price)
-                .GreaterThan(0).WithMessage("Price must be greater than 0.");
+                .GreaterThan(0).WithMessage("Price phải lớn hơn 0.");
 
             RuleFor(x => x.DurationMonths)
-                .GreaterThan(0).WithMessage("DurationMonths must be greater than 0.");
+                .GreaterThan(0).WithMessage("DurationMonths phải lớn hơn 0.");
 
             RuleFor(x => x.MaxAiRequests)
-                .GreaterThanOrEqualTo(0).WithMessage("MaxAiRequests must be greater than or equal to 0.");
+                .GreaterThanOrEqualTo(0).WithMessage("MaxAiRequests phải lớn hơn hoặc bằng 0.");
 
             RuleFor(x => x.MaxProjectViews)
-                .GreaterThanOrEqualTo(0).WithMessage("MaxProjectViews must be greater than or equal to 0.");
+                .GreaterThanOrEqualTo(0).WithMessage("MaxProjectViews phải lớn hơn hoặc bằng 0.");
 
             RuleFor(x => x.FreeBookingCount)
-                .GreaterThanOrEqualTo(0).WithMessage("FreeBookingCount must be greater than or equal to 0.");
+                .GreaterThanOrEqualTo(0).WithMessage("FreeBookingCount phải lớn hơn hoặc bằng 0.");
         }
     }
 }

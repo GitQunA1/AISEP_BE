@@ -11,11 +11,11 @@ namespace AISEP.BLL.Validators.FormValidationRules
 
             RuleFor(x => x.FormKey)
                 .NotEmpty()
-                .WithMessage("FormKey is required.");
+                .WithMessage("FormKey là bắt buộc.");
 
             RuleFor(x => x.FieldKey)
                 .NotEmpty()
-                .WithMessage("FieldKey is required.");
+                .WithMessage("FieldKey là bắt buộc.");
         }
     }
 }

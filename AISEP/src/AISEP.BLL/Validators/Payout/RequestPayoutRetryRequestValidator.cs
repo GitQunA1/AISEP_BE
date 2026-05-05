@@ -8,8 +8,8 @@ namespace AISEP.BLL.Validators.Payout
         public RequestPayoutRetryRequestValidator()
         {
             RuleFor(x => x.ResolutionNote)
-                .NotEmpty().WithMessage("Resolution note is required.")
-                .MaximumLength(1000).WithMessage("Resolution note must not exceed 1000 characters.");
+                .NotEmpty().WithMessage("Ghi chú xử lý là bắt buộc.")
+                .MaximumLength(1000).WithMessage("Ghi chú xử lý không được vượt quá 1000 ký tự.");
         }
     }
 }

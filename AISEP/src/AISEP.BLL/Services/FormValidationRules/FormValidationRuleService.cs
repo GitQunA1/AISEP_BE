@@ -53,7 +53,7 @@ namespace AISEP.BLL.Services.FormValidationRules
             var rule = await _unitOfWork.FormValidationRules.GetByFormAndFieldAsync(normalizedFormKey, normalizedFieldKey);
             if (rule is not null)
             {
-                throw new InvalidOperationException("A validation rule for this form and field already exists.");
+                throw new InvalidOperationException("Đã tồn tại rule validate cho form và field này.");
             }
 
             rule = new FormValidationRule
@@ -78,7 +78,7 @@ namespace AISEP.BLL.Services.FormValidationRules
             var rule = await _unitOfWork.FormValidationRules.GetByIdAsync(id);
             if (rule is null)
             {
-                throw new KeyNotFoundException("Validation rule not found.");
+                throw new KeyNotFoundException("Không tìm thấy rule validate.");
             }
 
             ApplyRequest(rule, request);
@@ -99,28 +99,28 @@ namespace AISEP.BLL.Services.FormValidationRules
                 }
                 catch (ArgumentException ex)
                 {
-                    throw new InvalidOperationException($"CustomRegexPattern is invalid: {ex.Message}");
+                    throw new InvalidOperationException($"CustomRegexPattern không hợp lệ: {ex.Message}");
                 }
             }
 
             if (request.MinLength.HasValue && request.MinLength < 0)
             {
-                throw new InvalidOperationException("MinLength cannot be negative.");
+                throw new InvalidOperationException("MinLength không được âm.");
             }
 
             if (request.MaxLength.HasValue && request.MaxLength < 0)
             {
-                throw new InvalidOperationException("MaxLength cannot be negative.");
+                throw new InvalidOperationException("MaxLength không được âm.");
             }
 
             if (request.MinLength.HasValue && request.MaxLength.HasValue && request.MinLength > request.MaxLength)
             {
-                throw new InvalidOperationException("MinLength cannot be greater than MaxLength.");
+                throw new InvalidOperationException("MinLength không được lớn hơn MaxLength.");
             }
 
             if (request.MinValue.HasValue && request.MaxValue.HasValue && request.MinValue > request.MaxValue)
             {
-                throw new InvalidOperationException("MinValue cannot be greater than MaxValue.");
+                throw new InvalidOperationException("MinValue không được lớn hơn MaxValue.");
             }
 
             if (request.AllowedFileTypes is not null)
@@ -131,13 +131,13 @@ namespace AISEP.BLL.Services.FormValidationRules
 
                 if (invalidTypes.Count != 0)
                 {
-                    throw new InvalidOperationException("AllowedFileTypes cannot contain empty values.");
+                    throw new InvalidOperationException("AllowedFileTypes không được chứa giá trị rỗng.");
                 }
             }
 
             if (request.StageOptionIds is not null && request.StageOptionIds.Any(id => id <= 0))
             {
-                throw new InvalidOperationException("StageOptionIds must contain positive stage option ids.");
+                throw new InvalidOperationException("StageOptionIds phải là các id dương.");
             }
 
             if (request.StageOptionIds is { Count: > 0 })
@@ -149,7 +149,7 @@ namespace AISEP.BLL.Services.FormValidationRules
 
                 if (stageOptions.Count != requestedIds.Count || stageOptions.Any(x => !x.IsActive))
                 {
-                    throw new InvalidOperationException("One or more required stage options are invalid or inactive.");
+                    throw new InvalidOperationException("Một hoặc nhiều stage option không hợp lệ hoặc đã bị vô hiệu.");
                 }
             }
         }

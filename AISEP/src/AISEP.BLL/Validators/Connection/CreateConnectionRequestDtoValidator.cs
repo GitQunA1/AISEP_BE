@@ -8,10 +8,10 @@ namespace AISEP.BLL.Validators.Connection
         public CreateConnectionRequestDtoValidator()
         {
             RuleFor(x => x.ProjectId)
-                .GreaterThan(0).WithMessage("ProjectId must be a positive number.");
+                .GreaterThan(0).WithMessage("ProjectId phải là số dương.");
 
             RuleFor(x => x.Message)
-                .MaximumLength(1000).WithMessage("Message must not exceed 1000 characters.")
+                .MaximumLength(1000).WithMessage("Message không được vượt quá 1000 ký tự.")
                 .When(x => !string.IsNullOrWhiteSpace(x.Message));
         }
     }

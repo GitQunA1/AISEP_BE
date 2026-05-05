@@ -8,27 +8,27 @@ namespace AISEP.BLL.Validators.Booking
         public CreateBookingRequestValidator()
         {
             RuleFor(x => x.AdvisorId)
-                .NotEmpty().WithMessage("AdvisorId is required.")
-                .GreaterThan(0).WithMessage("AdvisorId must be a positive number.");
+                .NotEmpty().WithMessage("AdvisorId là bắt buộc.")
+                .GreaterThan(0).WithMessage("AdvisorId phải là số dương.");
 
             RuleFor(x => x.ProjectId)
-                .NotEmpty().WithMessage("ProjectId is required.")
-                .GreaterThan(0).WithMessage("ProjectId must be a positive number.");
+                .NotEmpty().WithMessage("ProjectId là bắt buộc.")
+                .GreaterThan(0).WithMessage("ProjectId phải là số dương.");
 
             RuleFor(x => x.OldBookingId)
                 .GreaterThan(0)
                 .When(x => x.OldBookingId.HasValue)
-                .WithMessage("OldBookingId must be a positive number.");
+                .WithMessage("OldBookingId phải là số dương.");
 
             RuleFor(x => x.AdvisorAvailabilitySlotIds)
-                .NotEmpty().WithMessage("At least one slot must be selected.");
+                .NotEmpty().WithMessage("Cần chọn ít nhất một khung giờ.");
 
             RuleFor(x => x.AdvisorAvailabilitySlotIds)
                 .Must(ids => ids.Distinct().Count() == ids.Count)
-                .WithMessage("Selected slots must be unique.");
+                .WithMessage("Các khung giờ được chọn không được trùng nhau.");
 
             RuleFor(x => x.Note)
-                .MaximumLength(1000).WithMessage("Note must not exceed 1000 characters.");
+                .MaximumLength(1000).WithMessage("Ghi chú không được vượt quá 1000 ký tự.");
         }
     }
 }

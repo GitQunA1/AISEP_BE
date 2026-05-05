@@ -9,40 +9,40 @@ namespace AISEP.BLL.Validators.User
         {
             RuleFor(x => x)
                 .Must(HasAtLeastOneField)
-                .WithMessage("At least one field must be provided for update.");
+                .WithMessage("Cần cung cấp ít nhất một trường để cập nhật.");
 
             RuleFor(x => x.UserName)
-                .NotEmpty().WithMessage("UserName must not be empty when provided.")
-                .MinimumLength(2).WithMessage("UserName must be at least 2 characters.")
-                .MaximumLength(100).WithMessage("UserName must not exceed 100 characters.")
+                .NotEmpty().WithMessage("UserName không được để trống khi được cung cấp.")
+                .MinimumLength(2).WithMessage("UserName phải có ít nhất 2 ký tự.")
+                .MaximumLength(100).WithMessage("UserName không được vượt quá 100 ký tự.")
                 .When(x => x.UserName is not null);
 
             RuleFor(x => x.FullName)
-                .NotEmpty().WithMessage("FullName must not be empty when provided.")
-                .MinimumLength(2).WithMessage("FullName must be at least 2 characters.")
-                .MaximumLength(100).WithMessage("FullName must not exceed 100 characters.")
+                .NotEmpty().WithMessage("FullName không được để trống khi được cung cấp.")
+                .MinimumLength(2).WithMessage("FullName phải có ít nhất 2 ký tự.")
+                .MaximumLength(100).WithMessage("FullName không được vượt quá 100 ký tự.")
                 .When(x => x.FullName is not null);
 
             RuleFor(x => x.Email)
-                .NotEmpty().WithMessage("Email must not be empty when provided.")
-                .EmailAddress().WithMessage("Invalid email format.")
+                .NotEmpty().WithMessage("Email không được để trống khi được cung cấp.")
+                .EmailAddress().WithMessage("Email không đúng định dạng.")
                 .When(x => x.Email is not null);
 
             RuleFor(x => x.PhoneNumber)
-                .MaximumLength(20).WithMessage("PhoneNumber must not exceed 20 characters.")
+                .MaximumLength(20).WithMessage("PhoneNumber không được vượt quá 20 ký tự.")
                 .When(x => x.PhoneNumber is not null);
 
             RuleFor(x => x.Role)
-                .IsInEnum().WithMessage("Invalid role.")
+                .IsInEnum().WithMessage("Vai trò không hợp lệ.")
                 .When(x => x.Role.HasValue);
 
             RuleFor(x => x.Status)
-                .IsInEnum().WithMessage("Invalid status.")
+                .IsInEnum().WithMessage("Trạng thái không hợp lệ.")
                 .When(x => x.Status.HasValue);
 
             RuleFor(x => x.DateOfBirth)
                 .LessThanOrEqualTo(_ => DateTime.UtcNow.Date)
-                .WithMessage("Date of birth cannot be in the future.")
+                .WithMessage("Ngày sinh không được nằm trong tương lai.")
                 .When(x => x.DateOfBirth.HasValue);
         }
 

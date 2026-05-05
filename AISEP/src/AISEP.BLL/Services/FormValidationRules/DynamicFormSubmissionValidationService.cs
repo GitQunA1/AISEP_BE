@@ -102,19 +102,19 @@ namespace AISEP.BLL.Services.FormValidationRules
 
             if (value is null)
             {
-                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} is required."));
+                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} là bắt buộc."));
                 return;
             }
 
             if (value is string text && string.IsNullOrWhiteSpace(text))
             {
-                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} is required."));
+                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} là bắt buộc."));
                 return;
             }
 
             if (value is IEnumerable enumerable && value is not string && !enumerable.Cast<object?>().Any())
             {
-                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} is required."));
+                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} là bắt buộc."));
             }
         }
 
@@ -154,12 +154,12 @@ namespace AISEP.BLL.Services.FormValidationRules
 
             if (rule.MinLength.HasValue && trimmed.Length < rule.MinLength.Value)
             {
-                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} must be at least {rule.MinLength.Value} characters."));
+                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} phải có ít nhất {rule.MinLength.Value} ký tự."));
             }
 
             if (rule.MaxLength.HasValue && trimmed.Length > rule.MaxLength.Value)
             {
-                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} must not exceed {rule.MaxLength.Value} characters."));
+                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} không được vượt quá {rule.MaxLength.Value} ký tự."));
             }
 
             ValidatePattern(rule, trimmed, failures);
@@ -170,7 +170,7 @@ namespace AISEP.BLL.Services.FormValidationRules
         {
             if (rule.MaxFileSizeBytes.HasValue && file.Length > rule.MaxFileSizeBytes.Value)
             {
-                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} must not exceed {rule.MaxFileSizeBytes.Value} bytes."));
+                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} không được vượt quá {rule.MaxFileSizeBytes.Value} byte."));
             }
 
             if (!string.IsNullOrWhiteSpace(rule.AllowedFileTypesJson))
@@ -178,7 +178,7 @@ namespace AISEP.BLL.Services.FormValidationRules
                 var allowedTypes = JsonSerializer.Deserialize<List<string>>(rule.AllowedFileTypesJson, JsonOptions) ?? [];
                 if (allowedTypes.Count > 0 && !allowedTypes.Contains(file.ContentType, StringComparer.OrdinalIgnoreCase))
                 {
-                    failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} has unsupported file type."));
+                    failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} có định dạng tệp không được hỗ trợ."));
                 }
             }
         }
@@ -191,18 +191,18 @@ namespace AISEP.BLL.Services.FormValidationRules
 
             if (rule.MinLength.HasValue && count < rule.MinLength.Value)
             {
-                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} must have at least {rule.MinLength.Value} item(s)."));
+                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} phải có ít nhất {rule.MinLength.Value} mục."));
             }
 
             if (rule.MaxLength.HasValue && count > rule.MaxLength.Value)
             {
-                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} must not exceed {rule.MaxLength.Value} item(s)."));
+                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} không được vượt quá {rule.MaxLength.Value} mục."));
             }
 
             if (IsEnumerableOfEnum(property.PropertyType)
                 && items.Where(x => x is not null).Any(x => x!.GetType().IsEnum && !Enum.IsDefined(x.GetType(), x)))
             {
-                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} has invalid enum value."));
+                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} có giá trị enum không hợp lệ."));
             }
         }
 
@@ -213,7 +213,7 @@ namespace AISEP.BLL.Services.FormValidationRules
             {
                 if (!Enum.IsDefined(value.GetType(), value))
                 {
-                    failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} has invalid enum value."));
+                    failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} có giá trị enum không hợp lệ."));
                 }
 
                 return;
@@ -226,12 +226,12 @@ namespace AISEP.BLL.Services.FormValidationRules
 
             if (rule.MinValue.HasValue && numericValue < rule.MinValue.Value)
             {
-                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} must be greater than or equal to {rule.MinValue.Value}."));
+                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} phải lớn hơn hoặc bằng {rule.MinValue.Value}."));
             }
 
             if (rule.MaxValue.HasValue && numericValue > rule.MaxValue.Value)
             {
-                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} must be less than or equal to {rule.MaxValue.Value}."));
+                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} phải nhỏ hơn hoặc bằng {rule.MaxValue.Value}."));
             }
         }
 
@@ -245,7 +245,7 @@ namespace AISEP.BLL.Services.FormValidationRules
 
             if (!Regex.IsMatch(text, rule.CustomRegexPattern, RegexOptions.None, TimeSpan.FromSeconds(1)))
             {
-                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} does not match the expected pattern."));
+                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} không đúng định dạng yêu cầu."));
             }
         }
 

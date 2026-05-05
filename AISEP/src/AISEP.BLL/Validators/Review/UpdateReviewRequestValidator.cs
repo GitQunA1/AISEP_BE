@@ -8,12 +8,12 @@ namespace AISEP.BLL.Validators.Review
         public UpdateReviewRequestValidator()
         {
             RuleFor(x => x.Rating)
-                .NotEmpty().WithMessage("Rating is required.")
-                .InclusiveBetween(1, 5).WithMessage("Rating must be between 1 and 5.");
+                .NotEmpty().WithMessage("Rating là bắt buộc.")
+                .InclusiveBetween(1, 5).WithMessage("Rating phải nằm trong khoảng 1 đến 5.");
 
             RuleFor(x => x.ReviewContent)
-                .NotEmpty().WithMessage("Review content is required.")
-                .MaximumLength(2000).WithMessage("Review content must not exceed 2000 characters.");
+                .NotEmpty().WithMessage("Nội dung đánh giá là bắt buộc.")
+                .MaximumLength(2000).WithMessage("Nội dung đánh giá không được vượt quá 2000 ký tự.");
         }
     }
 }

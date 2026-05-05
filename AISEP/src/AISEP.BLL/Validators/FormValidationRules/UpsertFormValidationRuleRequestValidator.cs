@@ -18,16 +18,16 @@ namespace AISEP.BLL.Validators.FormValidationRules
 
             RuleFor(x => x)
                 .Must(x => !x.MinLength.HasValue || !x.MaxLength.HasValue || x.MinLength <= x.MaxLength)
-                .WithMessage("MinLength cannot be greater than MaxLength.");
+                .WithMessage("MinLength không được lớn hơn MaxLength.");
 
             RuleFor(x => x)
                 .Must(x => !x.MinValue.HasValue || !x.MaxValue.HasValue || x.MinValue <= x.MaxValue)
-                .WithMessage("MinValue cannot be greater than MaxValue.");
+                .WithMessage("MinValue không được lớn hơn MaxValue.");
 
             RuleFor(x => x.CustomRegexPattern)
                 .Must(BeValidRegex)
                 .When(x => !string.IsNullOrWhiteSpace(x.CustomRegexPattern))
-                .WithMessage("CustomRegexPattern must be a valid regular expression.");
+                .WithMessage("CustomRegexPattern phải là biểu thức chính quy hợp lệ.");
 
             RuleForEach(x => x.AllowedFileTypes)
                 .NotEmpty()

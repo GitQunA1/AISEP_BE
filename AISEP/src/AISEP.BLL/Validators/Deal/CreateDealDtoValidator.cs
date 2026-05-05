@@ -10,16 +10,16 @@ namespace AISEP.BLL.Validators.Deal
         public CreateDealDtoValidator()
         {
             RuleFor(x => x.ProjectId)
-                .NotEmpty().WithMessage("ProjectId is required.")
-                .GreaterThan(0).WithMessage("ProjectId must be a positive number.");
+                .NotEmpty().WithMessage("ProjectId là bắt buộc.")
+                .GreaterThan(0).WithMessage("ProjectId phải là số dương.");
 
             RuleFor(x => x.EvidenceFile)
-                .NotNull().WithMessage("EvidenceFile is required.")
-                .Must(file => file is { Length: > 0 }).WithMessage("EvidenceFile is required.");
+                .NotNull().WithMessage("EvidenceFile là bắt buộc.")
+                .Must(file => file is { Length: > 0 }).WithMessage("EvidenceFile là bắt buộc.");
 
             RuleFor(x => x.EvidenceFile)
                 .Must(IsSupportedEvidence)
-                .WithMessage("EvidenceFile must be an image or PDF.")
+                .WithMessage("EvidenceFile phải là ảnh hoặc PDF.")
                 .When(x => x.EvidenceFile is not null);
         }
 

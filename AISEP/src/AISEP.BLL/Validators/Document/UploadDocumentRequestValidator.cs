@@ -10,14 +10,14 @@ namespace AISEP.BLL.Validators.Document
         public UploadDocumentRequestValidator()
         {
             RuleFor(x => x.DocumentType)
-                .IsInEnum().WithMessage("Document type is not valid.");
+                .IsInEnum().WithMessage("Loại tài liệu không hợp lệ.");
 
             RuleFor(x => x.File)
-                .NotNull().WithMessage("File is required.")
+                .NotNull().WithMessage("Tệp là bắt buộc.")
                 .Must(f => f!.Length <= MaxDocSize)
-                    .WithMessage("File must not exceed 10MB.")
+                    .WithMessage("Tệp không được vượt quá 10MB.")
                 .Must(IsPdfFile)
-                    .WithMessage("File only supports PDF.")
+                    .WithMessage("Tệp chỉ hỗ trợ PDF.")
                 .When(x => x.File is not null);
         }
 
