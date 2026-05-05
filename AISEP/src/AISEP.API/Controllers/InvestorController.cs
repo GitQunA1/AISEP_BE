@@ -57,8 +57,27 @@ namespace AISEP.API.Controllers
             }
         }
 
-      
+        [HttpGet("matching/startup")]
+        [Authorize(Roles = "Startup")]
+        public async Task<IActionResult> GetMatchingInvestorsForStartup([FromQuery] SieveModel model)
+        {
+            try
+            {
+                var result = await _investorService.GetMatchingInvestorsForCurrentStartupAsync(model);
+                return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse(ex.Message, "Not found", 404));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ApiResponse<object>.ErrorResponse(ex.Message, "Conflict", 409));
+            }
+        }
+
        
+        
         [HttpPost]
         [Authorize(Roles = "Investor")]
         public async Task<IActionResult> Create([FromForm] CreateInvestorRequest dto)

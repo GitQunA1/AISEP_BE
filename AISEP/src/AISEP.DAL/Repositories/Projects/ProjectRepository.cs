@@ -35,6 +35,42 @@ namespace AISEP.DAL.Repositories.Projects
                 .AsQueryable();
         }
 
+        public IQueryable<Project> SearchProjectsQuery(string? query = null)
+        {
+            var keyword = query?.Trim().ToLower();
+
+            return _context.Projects
+                .Include(p => p.Startup)
+                .Include(p => p.StageOption)
+                .Include(p => p.IndustryOption)
+                .Include(p => p.Scorecard)
+                .Include(p => p.StartupAIAnalysis)
+                .Include(p => p.Followers)
+                .Include(p => p.ConnectionRequests)
+                .Include(p => p.ProjectAdvisorAssignments)
+                    .ThenInclude(pa => pa.Advisor)
+                        .ThenInclude(a => a.User)
+                .Include(p => p.ProjectAdvisorAssignments)
+                    .ThenInclude(pa => pa.Advisor)
+                        .ThenInclude(a => a.AdvisorIndustries)
+                            .ThenInclude(ai => ai.IndustryOption)
+                .Where(p =>
+                    p.Status == ProjectStatus.Approved &&
+                    (string.IsNullOrWhiteSpace(keyword) ||
+                        p.ProjectName.ToLower().Contains(keyword) ||
+                        (p.ShortDescription != null && p.ShortDescription.ToLower().Contains(keyword)) ||
+                        (p.ProblemStatement != null && p.ProblemStatement.ToLower().Contains(keyword)) ||
+                        (p.SolutionDescription != null && p.SolutionDescription.ToLower().Contains(keyword)) ||
+                        (p.TargetCustomers != null && p.TargetCustomers.ToLower().Contains(keyword)) ||
+                        (p.UniqueValueProposition != null && p.UniqueValueProposition.ToLower().Contains(keyword)) ||
+                        (p.BusinessModel != null && p.BusinessModel.ToLower().Contains(keyword)) ||
+                        (p.Competitors != null && p.Competitors.ToLower().Contains(keyword)) ||
+                        (p.IndustryOption != null && p.IndustryOption.Value.ToLower().Contains(keyword)) ||
+                        (p.StageOption != null && p.StageOption.Value.ToLower().Contains(keyword))))
+                .OrderBy(p => p.ProjectId)
+                .AsQueryable();
+        }
+
         public IQueryable<Project> GetByStartupIdQuery(int startupId)
         {
             return _context.Projects

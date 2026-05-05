@@ -14,11 +14,16 @@ namespace AISEP.DAL.Repositories.Startups
             _context = context;
         }
 
-        public IQueryable<Startup> SearchStartupsQuery(string? industry = null, string? stage = null, string? searchTerm = null)
+        public IQueryable<Startup> SearchStartupsQuery(
+            string? query = null)
         {
+            var keyword = query?.Trim().ToLower();
+
             return _context.Startups
                 .Include(s => s.Projects)
                     .ThenInclude(p => p.StageOption)
+                .Include(s => s.Projects)
+                    .ThenInclude(p => p.IndustryOption)
                 .Include(s => s.Projects)
                     .ThenInclude(p => p.Followers)
                 .Include(s => s.StartupIndustries)
@@ -26,9 +31,12 @@ namespace AISEP.DAL.Repositories.Startups
                 .Include(s => s.User)
                 .Where(s =>
                     s.ApprovalStatus == ApprovalStatus.Approved &&
-                    (string.IsNullOrWhiteSpace(industry) || s.StartupIndustries.Any(si => si.IndustryOption.Value.ToLower().Contains(industry.ToLower()))) &&
-                    (string.IsNullOrWhiteSpace(stage) || s.Projects.Any(p => p.StageOption != null && p.StageOption.Value.ToLower() == stage.ToLower())) &&
-                    (string.IsNullOrWhiteSpace(searchTerm) || (s.CompanyName != null && s.CompanyName.ToLower().Contains(searchTerm.ToLower())))
+                    (string.IsNullOrWhiteSpace(keyword) ||
+                        (s.CompanyName != null && s.CompanyName.ToLower().Contains(keyword)) ||
+                        (s.Founder != null && s.Founder.ToLower().Contains(keyword)) ||
+                        (s.CountryCity != null && s.CountryCity.ToLower().Contains(keyword))) 
+                        //||
+                        //(s.Website != null && s.Website.ToLower().Contains(keyword)))
                 )
                 .OrderBy(s => s.StartupId)
                 .AsQueryable();

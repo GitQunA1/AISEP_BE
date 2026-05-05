@@ -58,9 +58,11 @@ namespace AISEP.API.Controllers
 
         [HttpGet("search")]
         [Authorize]
-        public async Task<IActionResult> Search([FromQuery] SieveModel model, [FromQuery] string? industry = null, [FromQuery] string? stage = null)
+        public async Task<IActionResult> Search(
+            [FromQuery] SieveModel model,
+            [FromQuery] string? query = null)
         {
-            var result = await _startupService.SearchStartupsAsync(model, industry, stage);
+            var result = await _startupService.SearchStartupsAsync(model, query);
             return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
         }
 
