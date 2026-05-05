@@ -25,18 +25,18 @@ namespace AISEP.API.Controllers
             _blockchainService = blockchainService;
         }
 
-        //[HttpGet]
-        //[Authorize]
-        //public async Task<IActionResult> GetAll([FromQuery] SieveModel model)
-        //{
-        //    var result = await _projectService.GetAllProjectsAsync(model);
-        //    return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
-        //}
-
         [HttpGet("non-premium")] 
         public async Task<IActionResult> GetAllForNonPremium([FromQuery] SieveModel model)
         {
             var result = await _projectService.GetAllProjectsForNonPremiumAsync(model);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Staff, Admin")]
+        public async Task<IActionResult> GetAll([FromQuery] SieveModel model)
+        {
+            var result = await _projectService.GetAllProjectsAsync(model);
             return Ok(ApiResponse<object>.SuccessResponse(result, "Success"));
         }
 
