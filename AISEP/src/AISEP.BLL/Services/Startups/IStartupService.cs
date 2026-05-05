@@ -11,7 +11,9 @@ namespace AISEP.BLL.Services.Startups
        
         Task<PagedResult<StartupResponse>> GetAllStartupsAsync(SieveModel model);
         Task<PagedResult<StartupResponse>> GetStartupsByStatusAsync(SieveModel model, string? status = null);
-        Task<PagedResult<StartupResponse>> SearchStartupsAsync(SieveModel model, string? industry = null, string? stage = null);
+        Task<PagedResult<StartupResponse>> SearchStartupsAsync(
+            SieveModel model,
+            string? query = null);
         Task<StartupResponse?> GetStartupByIdAsync(int id);
 
      

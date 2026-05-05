@@ -80,6 +80,114 @@ namespace AISEP.BLL.Services.Projects
             return pagedResult;
         }
 
+        public async Task<PagedResult<NonPremiumProjectResponse>> SearchProjectsAsync(
+            SieveModel model,
+            string? query = null)
+        {
+            var currentUserId = GetCurrentUserIdOrNull();
+            var currentInvestorId = await GetCurrentInvestorIdOrNullAsync(currentUserId);
+
+            var pagedResult = await PaginationHelper.PaginateAsync(
+                _unitOfWork.Projects.SearchProjectsQuery(query),
+                model,
+                _sieveProcessor,
+                p => MapNonPremiumProjectResponseWithCurrentUser(p, currentUserId, currentInvestorId));
+
+            if (!currentUserId.HasValue)
+            {
+                return pagedResult;
+            }
+
+            var items = pagedResult.Items.ToList();
+            foreach (var item in items)
+            {
+                item.IsUnlockedByCurrentUser = await _unitOfWork.UnlockedProjects.ExistsAsync(currentUserId.Value, item.ProjectId);
+            }
+
+            pagedResult.Items = items;
+            return pagedResult;
+        }
+
+        public async Task<PagedResult<NonPremiumProjectResponse>> GetMatchingProjectsForNonPremiumAsync(SieveModel model)
+        {
+            var currentUserId = GetCurrentUserIdOrNull();
+            var currentInvestorId = await GetCurrentInvestorIdOrNullAsync(currentUserId);
+            var query = await BuildMatchingProjectQueryForCurrentUserOrDefaultAsync(currentUserId);
+
+            var pagedResult = await PaginationHelper.PaginateAsync(
+                query,
+                model,
+                _sieveProcessor,
+                p => MapNonPremiumProjectResponseWithCurrentUser(p, currentUserId, currentInvestorId));
+
+            if (currentUserId.HasValue)
+            {
+                var items = pagedResult.Items.ToList();
+                foreach (var item in items)
+                {
+                    item.IsUnlockedByCurrentUser = await _unitOfWork.UnlockedProjects.ExistsAsync(currentUserId.Value, item.ProjectId);
+                }
+
+                pagedResult.Items = items;
+            }
+
+            return pagedResult;
+        }
+
+        private async Task<IQueryable<Project>> BuildMatchingProjectQueryForCurrentUserOrDefaultAsync(int? currentUserId)
+        {
+            var defaultQuery = _unitOfWork.Projects.GetAllQuery();
+
+            if (!currentUserId.HasValue)
+            {
+                return defaultQuery;
+            }
+
+            var role = _userService.GetUserRole();
+            if (string.Equals(role, "Investor", StringComparison.OrdinalIgnoreCase))
+            {
+                var investor = await _unitOfWork.Investors.GetByUserIdAsync(currentUserId.Value);
+                return investor is not null && investor.ApprovalStatus == ApprovalStatus.Approved
+                    ? BuildInvestorMatchingProjectQuery(investor)
+                    : defaultQuery;
+            }
+
+            return defaultQuery;
+        }
+
+        private IQueryable<Project> BuildInvestorMatchingProjectQuery(Investor investor)
+        {
+            if (investor.ApprovalStatus != ApprovalStatus.Approved)
+            {
+                throw new InvalidOperationException("Your investor profile must be approved before using this feature.");
+            }
+
+            var industryIds = investor.InvestorIndustries
+                .Select(ii => ii.IndustryOptionId)
+                .ToHashSet();
+
+            var query = _unitOfWork.Projects.GetAllQuery()
+                .Where(p =>
+                    p.Status == ProjectStatus.Approved &&
+                    p.Startup.ApprovalStatus == ApprovalStatus.Approved);
+
+            if (investor.PreferredStageOptionId.HasValue)
+            {
+                var preferredStageOptionId = investor.PreferredStageOptionId.Value;
+                return query
+                    .OrderByDescending(p => industryIds.Contains(p.IndustryOptionId) && p.StageOptionId == preferredStageOptionId)
+                    .ThenByDescending(p => industryIds.Contains(p.IndustryOptionId))
+                    .ThenByDescending(p => p.StageOptionId == preferredStageOptionId)
+                    .ThenByDescending(p => p.CreatedAt)
+                    .ThenBy(p => p.ProjectId);
+            }
+
+            return query
+                .OrderByDescending(p => industryIds.Contains(p.IndustryOptionId))
+                .ThenByDescending(p => p.CreatedAt)
+                .ThenBy(p => p.ProjectId);
+        }
+
        
         public async Task<NonPremiumProjectResponse?> GetProjectForNonPremiumByIdAsync(int id)
         {
@@ -394,8 +502,6 @@ namespace AISEP.BLL.Services.Projects
 
             return _mapper.Map<NonPremiumProjectResponse>(project);
         }
-
-       
 
         // Upload file nếu request có gửi ảnh project lên.
         private async Task<string?> UploadIfPresent(IFormFile? file, string folder)
