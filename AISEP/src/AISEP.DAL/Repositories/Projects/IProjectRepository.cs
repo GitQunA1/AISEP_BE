@@ -7,6 +7,7 @@ namespace AISEP.DAL.Repositories.Projects
     {
         IQueryable<Project> GetAllQuery();
         IQueryable<Project> SearchProjectsQuery(string? query = null);
+        IQueryable<Project> GetInvestorMatchingProjectsQuery(IEnumerable<int> industryOptionIds, int? preferredStageOptionId);
         IQueryable<Project> GetByStartupIdQuery(int startupId);
         IQueryable<Project> GetByStatusQuery(ProjectStatus status);
         Task<Project?> GetByIdAsync(int id);

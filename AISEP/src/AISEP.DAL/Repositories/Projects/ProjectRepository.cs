@@ -71,6 +71,51 @@ namespace AISEP.DAL.Repositories.Projects
                 .AsQueryable();
         }
 
+        public IQueryable<Project> GetInvestorMatchingProjectsQuery(IEnumerable<int> industryOptionIds, int? preferredStageOptionId)
+        {
+            var industryIds = industryOptionIds
+                .Where(id => id > 0)
+                .Distinct()
+                .ToList();
+
+            var query = _context.Projects
+                .Include(p => p.Startup)
+                .Include(p => p.StageOption)
+                .Include(p => p.IndustryOption)
+                .Include(p => p.Scorecard)
+                .Include(p => p.StartupAIAnalysis)
+                .Include(p => p.Followers)
+                .Include(p => p.ConnectionRequests)
+                .Include(p => p.ProjectAdvisorAssignments)
+                    .ThenInclude(pa => pa.Advisor)
+                        .ThenInclude(a => a.User)
+                .Include(p => p.ProjectAdvisorAssignments)
+                    .ThenInclude(pa => pa.Advisor)
+                        .ThenInclude(a => a.AdvisorIndustries)
+                            .ThenInclude(ai => ai.IndustryOption)
+                .Where(p =>
+                    p.Status == ProjectStatus.Approved &&
+                    p.Startup.ApprovalStatus == ApprovalStatus.Approved);
+
+            if (preferredStageOptionId.HasValue)
+            {
+                var stageOptionId = preferredStageOptionId.Value;
+                return query
+                    .OrderByDescending(p => industryIds.Contains(p.IndustryOptionId) && p.StageOptionId == stageOptionId)
+                    .ThenByDescending(p => industryIds.Contains(p.IndustryOptionId))
+                    .ThenByDescending(p => p.StageOptionId == stageOptionId)
+                    .ThenByDescending(p => p.CreatedAt)
+                    .ThenBy(p => p.ProjectId)
+                    .AsQueryable();
+            }
+
+            return query
+                .OrderByDescending(p => industryIds.Contains(p.IndustryOptionId))
+                .ThenByDescending(p => p.CreatedAt)
+                .ThenBy(p => p.ProjectId)
+                .AsQueryable();
+        }
+
         public IQueryable<Project> GetByStartupIdQuery(int startupId)
         {
             return _context.Projects

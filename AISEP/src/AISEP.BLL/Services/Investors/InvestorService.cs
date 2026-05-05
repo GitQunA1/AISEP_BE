@@ -68,14 +68,7 @@ namespace AISEP.BLL.Services.Investors
                 .Select(p => p.StageOptionId!.Value)
                 .ToHashSet();
 
-            var query = _unitOfWork.Investors.GetAllQuery()
-                .Where(i => i.ApprovalStatus == ApprovalStatus.Approved)
-                .OrderByDescending(i => i.InvestorIndustries.Any(ii => industryIds.Contains(ii.IndustryOptionId))
-                    && i.PreferredStageOptionId.HasValue
-                    && stageOptionIds.Contains(i.PreferredStageOptionId.Value))
-                .ThenByDescending(i => i.InvestorIndustries.Any(ii => industryIds.Contains(ii.IndustryOptionId)))
-                .ThenByDescending(i => i.PreferredStageOptionId.HasValue && stageOptionIds.Contains(i.PreferredStageOptionId.Value))
-                .ThenBy(i => i.InvestorId);
+            var query = _unitOfWork.Investors.GetStartupMatchingInvestorsQuery(industryIds, stageOptionIds);
 
             return await PaginationHelper.PaginateAsync(query, model, _sieveProcessor, i => _mapper.Map<InvestorResponse>(i));
         }
