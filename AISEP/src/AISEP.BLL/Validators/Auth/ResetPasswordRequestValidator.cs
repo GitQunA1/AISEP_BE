@@ -8,10 +8,10 @@ namespace AISEP.BLL.Validators.Auth
         public ResetPasswordRequestValidator()
         {
             RuleFor(x => x.UserId)
-                .NotEmpty().WithMessage("UserId là bắt buộc.");
+                .NotEmpty().WithMessage("Mã người dùng là bắt buộc.");
 
             RuleFor(x => x.Token)
-                .NotEmpty().WithMessage("Token là bắt buộc.");
+                .NotEmpty().WithMessage("Mã xác thực là bắt buộc.");
 
             RuleFor(x => x.NewPassword)
                 .NotEmpty().WithMessage("Mật khẩu mới là bắt buộc.")

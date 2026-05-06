@@ -1,4 +1,4 @@
-using AISEP.BLL.DTOs.Requests;
+﻿using AISEP.BLL.DTOs.Requests;
 using FluentValidation;
 
 namespace AISEP.BLL.Validators.User
@@ -12,15 +12,15 @@ namespace AISEP.BLL.Validators.User
                 .WithMessage("Cần cung cấp ít nhất một trường để cập nhật.");
 
             RuleFor(x => x.UserName)
-                .NotEmpty().WithMessage("UserName không được để trống khi được cung cấp.")
-                .MinimumLength(2).WithMessage("UserName phải có ít nhất 2 ký tự.")
-                .MaximumLength(100).WithMessage("UserName không được vượt quá 100 ký tự.")
+                .NotEmpty().WithMessage("Tên người dùng không được để trống khi được cung cấp.")
+                .MinimumLength(2).WithMessage("Tên người dùng phải có ít nhất 2 ký tự.")
+                .MaximumLength(100).WithMessage("Tên người dùng không được vượt quá 100 ký tự.")
                 .When(x => x.UserName is not null);
 
             RuleFor(x => x.FullName)
-                .NotEmpty().WithMessage("FullName không được để trống khi được cung cấp.")
-                .MinimumLength(2).WithMessage("FullName phải có ít nhất 2 ký tự.")
-                .MaximumLength(100).WithMessage("FullName không được vượt quá 100 ký tự.")
+                .NotEmpty().WithMessage("Họ và tên không được để trống khi được cung cấp.")
+                .MinimumLength(2).WithMessage("Họ và tên phải có ít nhất 2 ký tự.")
+                .MaximumLength(100).WithMessage("Họ và tên không được vượt quá 100 ký tự.")
                 .When(x => x.FullName is not null);
 
             RuleFor(x => x.Email)
@@ -29,7 +29,7 @@ namespace AISEP.BLL.Validators.User
                 .When(x => x.Email is not null);
 
             RuleFor(x => x.PhoneNumber)
-                .MaximumLength(20).WithMessage("PhoneNumber không được vượt quá 20 ký tự.")
+                .MaximumLength(20).WithMessage("Số điện thoại không được vượt quá 20 ký tự.")
                 .When(x => x.PhoneNumber is not null);
 
             RuleFor(x => x.Role)
@@ -42,7 +42,7 @@ namespace AISEP.BLL.Validators.User
 
             RuleFor(x => x.DateOfBirth)
                 .LessThanOrEqualTo(_ => DateTime.UtcNow.Date)
-                .WithMessage("Ngày sinh không được nằm trong tương lai.")
+                .WithMessage("Ngày sinh không được ở tương lai.")
                 .When(x => x.DateOfBirth.HasValue);
         }
 

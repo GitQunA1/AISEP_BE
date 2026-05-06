@@ -4,7 +4,7 @@ namespace AISEP.BLL.DTOs.Requests
 {
     public class RefreshTokenRequest
     {
-        [Required(ErrorMessage = "Refresh token là bắt buộc.")]
+        [Required(ErrorMessage = "Mã làm mới phiên đăng nhập là bắt buộc.")]
         public string RefreshToken { get; set; } = string.Empty;
     }
 }

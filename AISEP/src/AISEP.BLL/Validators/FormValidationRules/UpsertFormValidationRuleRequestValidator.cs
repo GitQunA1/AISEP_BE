@@ -1,4 +1,4 @@
-using AISEP.BLL.DTOs.Requests;
+﻿using AISEP.BLL.DTOs.Requests;
 using FluentValidation;
 using System.Text.RegularExpressions;
 
@@ -18,16 +18,16 @@ namespace AISEP.BLL.Validators.FormValidationRules
 
             RuleFor(x => x)
                 .Must(x => !x.MinLength.HasValue || !x.MaxLength.HasValue || x.MinLength <= x.MaxLength)
-                .WithMessage("MinLength không được lớn hơn MaxLength.");
+                .WithMessage("Độ dài tối thiểu không được lớn hơn độ dài tối đa.");
 
             RuleFor(x => x)
                 .Must(x => !x.MinValue.HasValue || !x.MaxValue.HasValue || x.MinValue <= x.MaxValue)
-                .WithMessage("MinValue không được lớn hơn MaxValue.");
+                .WithMessage("Giá trị tối thiểu không được lớn hơn giá trị tối đa.");
 
             RuleFor(x => x.CustomRegexPattern)
                 .Must(BeValidRegex)
                 .When(x => !string.IsNullOrWhiteSpace(x.CustomRegexPattern))
-                .WithMessage("CustomRegexPattern phải là biểu thức chính quy hợp lệ.");
+                .WithMessage("Mẫu biểu thức chính quy tùy chỉnh phải hợp lệ.");
 
             RuleForEach(x => x.AllowedFileTypes)
                 .NotEmpty()

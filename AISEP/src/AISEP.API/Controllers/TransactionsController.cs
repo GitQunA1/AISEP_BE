@@ -15,7 +15,7 @@ namespace AISEP.API.Controllers
         {
             _transactionService = transactionService;
         }
-        //l?y danh sách t?ng h?p hoa h?ng ð?t ph?ng ð? thu ðý?c
+        //l?y danh sách t?ng h?p hoa h?ng booking ð? thu ðý?c
         [HttpGet("collected-bookingcommission")]
         [Authorize(Roles = "Staff,Admin")]
         public async Task<IActionResult> GetCollectedBookingCommissionIds()

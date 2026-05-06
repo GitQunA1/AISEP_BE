@@ -1,4 +1,4 @@
-using AISEP.DAL.Common;
+﻿using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using FluentValidation;
 using FluentValidation.Results;
@@ -178,12 +178,12 @@ namespace AISEP.BLL.Services.FormValidationRules
                 var allowedTypes = JsonSerializer.Deserialize<List<string>>(rule.AllowedFileTypesJson, JsonOptions) ?? [];
                 if (allowedTypes.Count > 0 && !allowedTypes.Contains(file.ContentType, StringComparer.OrdinalIgnoreCase))
                 {
-                    failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} có định dạng tệp không được hỗ trợ."));
+                    failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} có loại tệp không được hỗ trợ."));
                 }
             }
         }
 
-        // Validate field kieu danh sach, vi du list enum nhu industries.
+        // Validate trường kiểu danh sách, ví dụ danh sách giá trị liệt kê như industries.
         private static void ValidateEnumerable(FormValidationRule rule, PropertyInfo property, IEnumerable enumerable, List<ValidationFailure> failures)
         {
             var items = enumerable.Cast<object?>().ToList();
@@ -206,7 +206,7 @@ namespace AISEP.BLL.Services.FormValidationRules
             }
         }
 
-        // Validate field kieu so hoac enum don.
+        // Validate trường kiểu số hoặc giá trị liệt kê đơn.
         private static void ValidateScalar(FormValidationRule rule, PropertyInfo property, object value, List<ValidationFailure> failures)
         {
             if (IsEnumType(property.PropertyType) && value.GetType().IsEnum)
