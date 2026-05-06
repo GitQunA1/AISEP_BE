@@ -164,6 +164,7 @@ namespace AISEP.BLL.Services.ConsultingReports
 
             _unitOfWork.ConsultingReports.Update(report);
             await _unitOfWork.SaveChangesAsync();
+            await NotifyAdvisorRevisionRequestedAsync(report);
 
             return _mapper.Map<ConsultingReportResponse>(report);
         }
@@ -387,6 +388,24 @@ namespace AISEP.BLL.Services.ConsultingReports
             await _notificationService.SendNotificationAsync(
                 booking.CustomerId,
                 title,
+                message,
+                NotificationType.General,
+                booking.BookingId,
+                "Booking");
+        }
+
+        private async Task NotifyAdvisorRevisionRequestedAsync(ConsultingReport report)
+        {
+            var booking = report.Booking;
+            var advisorUserId = booking.Advisor.UserId;
+            var reason = report.RevisionRequestReason;
+            var message = string.IsNullOrWhiteSpace(reason)
+                ? "Khách hàng đã yêu cầu chỉnh sửa báo cáo tư vấn. Vui lòng cập nhật và nộp lại trong 24 giờ."
+                : $"Khách hàng đã yêu cầu chỉnh sửa báo cáo tư vấn. Vui lòng cập nhật và nộp lại trong 24 giờ.";
+
+            await _notificationService.SendNotificationAsync(
+                advisorUserId,
+                "Báo cáo tư vấn cần chỉnh sửa",
                 message,
                 NotificationType.General,
                 booking.BookingId,
