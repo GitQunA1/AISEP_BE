@@ -1,0 +1,212 @@
+@startuml
+title Deal Flow - Create Deal and Counterparty Verification
+
+autonumber
+skinparam monochrome true
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam ParticipantPadding 20
+skinparam BoxPadding 10
+skinparam RoundCorner 10
+
+actor "Initiator\n(Investor or Startup)" as Initiator
+actor "Counterparty\n(Startup or Investor)" as Counterparty
+participant ": Web / App" as FE
+participant ": DealsController" as DealsController
+participant ": IUserService" as UserService
+participant ": IInvestorService" as InvestorService
+participant ": IStartupService" as StartupService
+participant ": DealService" as DealService
+participant ": IBlockchainService" as BlockchainService
+participant ": IStorageService" as StorageService
+participant ": NotificationService" as NotificationService
+participant ": SignalRNotificationRealtimePublisher" as RealtimePublisher
+participant ": NotificationHub" as NotificationHub
+participant ": IUnitOfWork" as UoW
+database ": PostgreSQL DB" as DB
+
+== Create deal ==
+
+Initiator -> FE: Create deal with evidence file
+FE -> DealsController: POST /api/Deals (CreateDealDto)
+activate DealsController
+DealsController -> UserService: GetUserId()
+UserService --> DealsController: userId
+
+alt Initiator is Investor
+    DealsController -> InvestorService: GetMyProfileAsync()
+    InvestorService --> DealsController: investor
+    DealsController -> DealService: CreateDealForInvestorAsync(investorId, dto)
+else Initiator is Startup
+    DealsController -> StartupService: GetMyProfileAsync()
+    StartupService --> DealsController: startup
+    DealsController -> DealService: CreateDealForStartupAsync(startupId, dto)
+end
+
+activate DealService
+DealService -> UoW: Investors.GetByIdAsync(...) / Startups.GetByIdAsync(...)
+activate UoW
+UoW --> DealService: approved actor profile
+deactivate UoW
+DealService -> UoW: Projects.GetByIdAsync(dto.ProjectId)
+activate UoW
+UoW --> DealService: project with startup
+deactivate UoW
+
+alt Startup creates deal
+    DealService -> UoW: ConnectionRequests.GetByStartupQuery(startupId)
+    activate UoW
+    UoW --> DealService: latest accepted connection and investor
+    deactivate UoW
+end
+
+DealService -> UoW: Deals.HasBlockingDealAsync(investorId, projectId)
+activate UoW
+UoW --> DealService: hasBlockingDeal
+deactivate UoW
+
+alt Blocking deal exists or validation fails
+    DealService --> DealsController: throw InvalidOperationException / ForbiddenAccessException
+    DealsController --> FE: error response
+else Create PendingCounterpartyConfirmation deal
+    DealService -> DealService: ValidateInvestmentTerms(dto)
+    DealService -> BlockchainService: ComputeFileHashAsync(dto.EvidenceFile)
+    activate BlockchainService
+    BlockchainService --> DealService: documentHash
+    deactivate BlockchainService
+    DealService -> StorageService: UploadFileAsync(dto.EvidenceFile, "deal-evidences")
+    activate StorageService
+    StorageService --> DealService: documentUrl
+    deactivate StorageService
+    DealService -> BlockchainService: RegisterDocumentAsync(documentHash, startupId)
+    activate BlockchainService
+    BlockchainService --> DealService: txHash
+    deactivate BlockchainService
+
+    DealService -> DealService: Map CreateDealDto to Deal\nSet InitiatorRole, confirmations,\nStatus=PendingCounterpartyConfirmation,\nDocumentUrl, DocumentHash
+    DealService -> UoW: Deals.AddAsync(deal)
+    activate UoW
+    UoW --> DealService: added
+    deactivate UoW
+    DealService -> UoW: SaveChangesAsync()
+    activate UoW
+    UoW -> DB: INSERT Deal
+    activate DB
+    DB --> UoW: OK
+    deactivate DB
+    deactivate UoW
+
+    DealService -> NotificationService: SendNotificationAsync(counterpartyUserId,\n"Yeu cau xac nhan giao dich ky ket", ..., Deal, dealId, "Deal")
+    activate NotificationService
+    NotificationService -> UoW: Notifications.AddAsync(notification)
+    activate UoW
+    UoW --> NotificationService: added
+    deactivate UoW
+    NotificationService -> UoW: SaveChangesAsync()
+    activate UoW
+    UoW -> DB: INSERT Notification
+    activate DB
+    DB --> UoW: OK
+    deactivate DB
+    deactivate UoW
+    NotificationService -> RealtimePublisher: PublishToUserAsync(counterpartyUserId, notificationDto)
+    activate RealtimePublisher
+    RealtimePublisher -> NotificationHub: Clients.User(userId).SendAsync("notification_received", notificationDto)
+    activate NotificationHub
+    deactivate NotificationHub
+    deactivate RealtimePublisher
+    deactivate NotificationService
+
+    DealService -> UoW: Deals.GetByIdWithDetailsAsync(dealId)
+    activate UoW
+    UoW --> DealService: created deal
+    deactivate UoW
+    DealService --> DealsController: DealDto
+    DealsController --> FE: 200 OK
+end
+deactivate DealService
+deactivate DealsController
+
+== Counterparty verifies deal ==
+
+Counterparty -> FE: Confirm or reject deal
+FE -> DealsController: PATCH /api/Deals/{id}/verify (VerifyDealRequestDto)
+activate DealsController
+DealsController -> UserService: GetUserId()
+UserService --> DealsController: userId
+
+alt Counterparty is Investor
+    DealsController -> InvestorService: GetMyProfileAsync()
+    InvestorService --> DealsController: investor
+    DealsController -> DealService: VerifyDealForInvestorAsync(investorId, id, dto)
+else Counterparty is Startup
+    DealsController -> StartupService: GetMyProfileAsync()
+    StartupService --> DealsController: startup
+    DealsController -> DealService: VerifyDealForStartupAsync(startupId, id, dto)
+end
+
+activate DealService
+DealService -> UoW: Deals.GetByIdWithDetailsAsync(dealId)
+activate UoW
+UoW --> DealService: deal
+deactivate UoW
+DealService -> DealService: Ensure owner, approved profile,\nEnsureCounterpartyRole(...),\nEnsureDealStatus(PendingCounterpartyConfirmation)
+
+alt Permission/status validation fails
+    DealService --> DealsController: throw ForbiddenAccessException / InvalidOperationException
+    DealsController --> FE: 403 / 409
+else Counterparty rejects
+    DealService -> DealService: Set actor confirmation=false\nStatus=Canceled
+    DealService -> UoW: Deals.Update(deal)
+    activate UoW
+    UoW --> DealService: updated
+    deactivate UoW
+    DealService -> UoW: SaveChangesAsync()
+    activate UoW
+    UoW -> DB: UPDATE Deal(Status=Canceled)
+    activate DB
+    DB --> UoW: OK
+    deactivate DB
+    deactivate UoW
+    DealService -> NotificationService: SendNotificationAsync(initiatorUserId,\n"Giao dich bi tu choi", ..., Deal, dealId, "Deal")
+    activate NotificationService
+    NotificationService -> UoW: Notifications.AddAsync(notification)
+    UoW --> NotificationService: added
+    NotificationService -> UoW: SaveChangesAsync()
+    UoW -> DB: INSERT Notification
+    DB --> UoW: OK
+    NotificationService -> RealtimePublisher: PublishToUserAsync(initiatorUserId, notificationDto)
+    RealtimePublisher -> NotificationHub: Clients.User(userId).SendAsync("notification_received", notificationDto)
+    deactivate NotificationService
+    DealService --> DealsController: DealDto
+    DealsController --> FE: 200 OK
+else Counterparty confirms
+    DealService -> DealService: ApplyCounterpartyConfirmation(...)\nStatus=PendingStaffApproval
+    DealService -> UoW: Deals.Update(deal)
+    activate UoW
+    UoW --> DealService: updated
+    deactivate UoW
+    DealService -> UoW: SaveChangesAsync()
+    activate UoW
+    UoW -> DB: UPDATE Deal(Status=PendingStaffApproval)
+    activate DB
+    DB --> UoW: OK
+    deactivate DB
+    deactivate UoW
+    DealService -> NotificationService: SendNotificationAsync(initiatorUserId,\n"Doi tac da xac nhan giao dich", ..., Deal, dealId, "Deal")
+    activate NotificationService
+    NotificationService -> UoW: Notifications.AddAsync(notification)
+    UoW --> NotificationService: added
+    NotificationService -> UoW: SaveChangesAsync()
+    UoW -> DB: INSERT Notification
+    DB --> UoW: OK
+    NotificationService -> RealtimePublisher: PublishToUserAsync(initiatorUserId, notificationDto)
+    RealtimePublisher -> NotificationHub: Clients.User(userId).SendAsync("notification_received", notificationDto)
+    deactivate NotificationService
+    DealService --> DealsController: DealDto
+    DealsController --> FE: 200 OK
+end
+deactivate DealService
+deactivate DealsController
+
+@enduml

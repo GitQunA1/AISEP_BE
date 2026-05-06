@@ -1,0 +1,258 @@
+@startuml
+title Deal Flow - Staff Review, Reupload, and Blockchain Assignment
+
+autonumber
+skinparam monochrome true
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam ParticipantPadding 20
+skinparam BoxPadding 10
+skinparam RoundCorner 10
+
+actor "Staff / Admin" as Staff
+actor "Deal Initiator\n(Investor or Startup)" as Initiator
+participant ": Web / App" as FE
+participant ": DealsController" as DealsController
+participant ": DealService" as DealService
+participant ": IBlockchainService" as BlockchainService
+participant ": IStorageService" as StorageService
+participant ": IBlockchainOwnershipAssignmentQueue" as OwnershipQueue
+participant ": BlockchainOwnershipAssignmentBackgroundService" as BgService
+participant ": IServiceScopeFactory" as ScopeFactory
+participant ": NotificationService" as NotificationService
+participant ": SignalRNotificationRealtimePublisher" as RealtimePublisher
+participant ": NotificationHub" as NotificationHub
+participant ": IUnitOfWork" as UoW
+database ": PostgreSQL DB" as DB
+participant ": Ethereum Smart Contract" as Chain
+
+== Staff reviews verified deal ==
+
+Staff -> FE: Review deal evidence
+FE -> DealsController: PUT /api/Deals/{id}/staff-review (StaffReviewDealRequestDto)
+activate DealsController
+DealsController -> DealService: StaffReviewDealAsync(id, dto)
+activate DealService
+DealService -> UoW: Deals.GetByIdWithDetailsAsync(dealId)
+activate UoW
+UoW --> DealService: deal
+deactivate UoW
+DealService -> DealService: EnsureDealStatus(PendingStaffApproval)
+
+alt Invalid status or missing IsApproved
+    DealService --> DealsController: throw InvalidOperationException
+    DealsController --> FE: error response
+else Staff rejects evidence
+    DealService -> DealService: Status=RequireReupload\nResetConfirmationForInitiator(deal)
+    DealService -> UoW: Deals.Update(deal)
+    activate UoW
+    UoW --> DealService: updated
+    deactivate UoW
+    DealService -> UoW: SaveChangesAsync()
+    activate UoW
+    UoW -> DB: UPDATE Deal(Status=RequireReupload)
+    activate DB
+    DB --> UoW: OK
+    deactivate DB
+    deactivate UoW
+
+    DealService -> NotificationService: SendNotificationAsync(initiatorUserId,\n"Yeu cau tai lai minh chung", ..., Deal, dealId, "Deal")
+    activate NotificationService
+    NotificationService -> UoW: Notifications.AddAsync(notification)
+    UoW --> NotificationService: added
+    NotificationService -> UoW: SaveChangesAsync()
+    UoW -> DB: INSERT Notification
+    DB --> UoW: OK
+    NotificationService -> RealtimePublisher: PublishToUserAsync(initiatorUserId, notificationDto)
+    RealtimePublisher -> NotificationHub: Clients.User(userId).SendAsync("notification_received", notificationDto)
+    deactivate NotificationService
+
+    DealService --> DealsController: DealDto
+    DealsController --> FE: 200 OK
+else Staff approves evidence
+    DealService -> DealService: Ensure DocumentUrl exists\nStatus=ProcessingBlockchain
+    DealService -> UoW: Deals.Update(deal)
+    activate UoW
+    UoW --> DealService: updated
+    deactivate UoW
+    DealService -> UoW: SaveChangesAsync()
+    activate UoW
+    UoW -> DB: UPDATE Deal(Status=ProcessingBlockchain)
+    activate DB
+    DB --> UoW: OK
+    deactivate DB
+    deactivate UoW
+
+    DealService -> OwnershipQueue: QueueAsync(DocumentOwnerAssignmentWorkItem(dealId))
+    activate OwnershipQueue
+    OwnershipQueue --> DealService: queued
+    deactivate OwnershipQueue
+
+    DealService -> NotificationService: SendNotificationAsync(investorUserId,\n"Dang xu ly blockchain", ..., Deal, dealId, "Deal")
+    activate NotificationService
+    NotificationService -> UoW: Notifications.AddAsync(notification)
+    UoW --> NotificationService: added
+    NotificationService -> UoW: SaveChangesAsync()
+    UoW -> DB: INSERT Notification
+    DB --> UoW: OK
+    NotificationService -> RealtimePublisher: PublishToUserAsync(investorUserId, notificationDto)
+    RealtimePublisher -> NotificationHub: Clients.User(userId).SendAsync("notification_received", notificationDto)
+    deactivate NotificationService
+
+    DealService -> NotificationService: SendNotificationAsync(startupUserId,\n"Dang xu ly blockchain", ..., Deal, dealId, "Deal")
+    activate NotificationService
+    NotificationService -> UoW: Notifications.AddAsync(notification)
+    UoW --> NotificationService: added
+    NotificationService -> UoW: SaveChangesAsync()
+    UoW -> DB: INSERT Notification
+    DB --> UoW: OK
+    NotificationService -> RealtimePublisher: PublishToUserAsync(startupUserId, notificationDto)
+    RealtimePublisher -> NotificationHub: Clients.User(userId).SendAsync("notification_received", notificationDto)
+    deactivate NotificationService
+
+    DealService --> DealsController: DealDto
+    DealsController --> FE: 200 OK
+end
+deactivate DealService
+deactivate DealsController
+
+== Initiator reuploads evidence when required ==
+
+Initiator -> FE: Reupload evidence
+FE -> DealsController: PUT /api/Deals/{id}/reupload (ReuploadDealEvidenceDto)
+activate DealsController
+DealsController -> DealService: ReuploadDealEvidenceForInvestorAsync(...) /\nReuploadDealEvidenceForStartupAsync(...)
+activate DealService
+DealService -> UoW: Deals.GetByIdWithDetailsAsync(dealId)
+activate UoW
+UoW --> DealService: deal
+deactivate UoW
+DealService -> DealService: Ensure owner, approved profile,\nEnsureInitiatorRole(...),\nEnsureDealAllowsReupload(...)
+
+alt Validation fails
+    DealService --> DealsController: throw ForbiddenAccessException / InvalidOperationException
+    DealsController --> FE: 403 / 409
+else Reupload succeeds
+    DealService -> BlockchainService: ComputeFileHashAsync(request.EvidenceFile)
+    activate BlockchainService
+    BlockchainService --> DealService: documentHash
+    deactivate BlockchainService
+    DealService -> StorageService: UploadFileAsync(request.EvidenceFile, "deal-evidences")
+    activate StorageService
+    StorageService --> DealService: documentUrl
+    deactivate StorageService
+    DealService -> BlockchainService: RegisterDocumentAsync(documentHash, startupId)
+    activate BlockchainService
+    BlockchainService --> DealService: txHash
+    deactivate BlockchainService
+
+    DealService -> DealService: Update DocumentUrl, DocumentHash\nClear BlockchainTxHash, BlockchainVerifiedAt,\nBlockchainErrorMessage\nStatus=PendingCounterpartyConfirmation\nResetConfirmationForInitiator(deal)
+    DealService -> UoW: Deals.Update(deal)
+    activate UoW
+    UoW --> DealService: updated
+    deactivate UoW
+    DealService -> UoW: SaveChangesAsync()
+    activate UoW
+    UoW -> DB: UPDATE Deal(Status=PendingCounterpartyConfirmation)
+    activate DB
+    DB --> UoW: OK
+    deactivate DB
+    deactivate UoW
+
+    DealService -> NotificationService: SendNotificationAsync(counterpartyUserId,\n"Yeu cau xac nhan giao dich ky ket", ..., Deal, dealId, "Deal")
+    activate NotificationService
+    NotificationService -> UoW: Notifications.AddAsync(notification)
+    UoW --> NotificationService: added
+    NotificationService -> UoW: SaveChangesAsync()
+    UoW -> DB: INSERT Notification
+    DB --> UoW: OK
+    NotificationService -> RealtimePublisher: PublishToUserAsync(counterpartyUserId, notificationDto)
+    RealtimePublisher -> NotificationHub: Clients.User(userId).SendAsync("notification_received", notificationDto)
+    deactivate NotificationService
+
+    DealService --> DealsController: DealDto
+    DealsController --> FE: 200 OK
+end
+deactivate DealService
+deactivate DealsController
+
+== Background processes blockchain assignment ==
+
+BgService -> OwnershipQueue: DequeueAsync(stoppingToken)
+activate OwnershipQueue
+OwnershipQueue --> BgService: DocumentOwnerAssignmentWorkItem(dealId)
+deactivate OwnershipQueue
+BgService -> ScopeFactory: CreateScope()
+activate ScopeFactory
+ScopeFactory --> BgService: scoped services
+deactivate ScopeFactory
+BgService -> UoW: Deals.GetByIdWithDetailsAsync(dealId)
+activate UoW
+UoW --> BgService: deal
+deactivate UoW
+
+alt Missing deal, evidence, or investor wallet
+    BgService -> BgService: MarkBlockchainFailedAsync(...)
+    BgService -> UoW: Deals.Update(deal)
+    UoW --> BgService: updated
+    BgService -> UoW: SaveChangesAsync()
+    UoW -> DB: UPDATE Deal(Status=BlockchainFailed)
+    DB --> UoW: OK
+    BgService -> NotificationService: SendNotificationAsync(investorUserId, "Giao dich can xu ly", ..., Deal, dealId, "Deal")
+    BgService -> NotificationService: SendNotificationAsync(startupUserId, "Giao dich can xu ly", ..., Deal, dealId, "Deal")
+else Blockchain processing succeeds
+    BgService -> BlockchainService: ComputeFileHashFromUrlAsync(deal.DocumentUrl)\n(if deal.DocumentHash is empty)
+    activate BlockchainService
+    BlockchainService --> BgService: documentHash
+    deactivate BlockchainService
+    BgService -> BlockchainService: VerifyDocumentAsync(documentHash)
+    activate BlockchainService
+    BlockchainService -> Chain: verifyDocument(fileHash)
+    activate Chain
+    Chain --> BlockchainService: startupId, timestamp, owners
+    deactivate Chain
+    BlockchainService --> BgService: verification data
+    deactivate BlockchainService
+    alt Document not registered
+        BgService -> BlockchainService: RegisterDocumentAsync(documentHash, startupId)
+        activate BlockchainService
+        BlockchainService -> Chain: registerDocument(fileHash, startupId)
+        Chain --> BlockchainService: txHash
+        BlockchainService --> BgService: txHash
+        deactivate BlockchainService
+    end
+    BgService -> BlockchainService: AssignDocumentOwnerAsync(documentHash, investorWallet)
+    activate BlockchainService
+    BlockchainService -> Chain: addDocumentOwner(fileHash, investorWallet)
+    activate Chain
+    Chain --> BlockchainService: txHash
+    deactivate Chain
+    BlockchainService --> BgService: txHash
+    deactivate BlockchainService
+
+    BgService -> BgService: Status=Completed\nIsCompleted=true\nCompletionDate=UtcNow\nBlockchainTxHash=txHash\nBlockchainVerifiedAt=UtcNow
+    BgService -> UoW: Deals.Update(deal)
+    activate UoW
+    UoW --> BgService: updated
+    deactivate UoW
+    BgService -> UoW: SaveChangesAsync()
+    activate UoW
+    UoW -> DB: UPDATE Deal(Status=Completed, BlockchainTxHash)
+    activate DB
+    DB --> UoW: OK
+    deactivate DB
+    deactivate UoW
+    BgService -> NotificationService: SendNotificationAsync(investorUserId, "Giao dich da hoan tat", ..., Deal, dealId, "Deal")
+    BgService -> NotificationService: SendNotificationAsync(startupUserId, "Giao dich da hoan tat", ..., Deal, dealId, "Deal")
+else Blockchain throws after retries
+    BgService -> BgService: MarkBlockchainFailedAsync(...)
+    BgService -> UoW: Deals.Update(deal)
+    UoW --> BgService: updated
+    BgService -> UoW: SaveChangesAsync()
+    UoW -> DB: UPDATE Deal(Status=BlockchainFailed, BlockchainErrorMessage)
+    DB --> UoW: OK
+    BgService -> NotificationService: SendNotificationAsync(investorUserId, "Giao dich can xu ly", ..., Deal, dealId, "Deal")
+    BgService -> NotificationService: SendNotificationAsync(startupUserId, "Giao dich can xu ly", ..., Deal, dealId, "Deal")
+end
+
+@enduml
