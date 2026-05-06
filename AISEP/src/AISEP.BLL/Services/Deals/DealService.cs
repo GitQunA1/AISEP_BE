@@ -468,8 +468,6 @@ namespace AISEP.BLL.Services.Deals
             var documentHash = await _blockchainService.ComputeFileHashAsync(file);
             var documentUrl = await _storageService.UploadFileAsync(file, "deal-evidences");
 
-            await _blockchainService.RegisterDocumentAsync(documentHash, startupId);
-
             return (documentUrl, documentHash);
         }
 
