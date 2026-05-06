@@ -1,5 +1,7 @@
 using AISEP.BLL.DTOs.Requests;
+using AISEP.BLL.DTOs.Responses;
 using AISEP.BLL.Helpers;
+using AISEP.BLL.Services.Admins;
 using AISEP.BLL.Services.Transactions;
 using AISEP.BLL.Services.Users;
 using Microsoft.AspNetCore.Authorization;
@@ -15,11 +17,13 @@ namespace AISEP.API.Controllers
     {
         private readonly IUserService _userService;
         private readonly ITransactionService _transactionService;
+        private readonly IAdminService _adminService;
 
-        public AdminController(IUserService userService, ITransactionService transactionService)
+        public AdminController(IUserService userService, ITransactionService transactionService, IAdminService adminService)
         {
             _userService = userService;
             _transactionService = transactionService;
+            _adminService = adminService;
         }
 
         [HttpGet("transactions")]
@@ -34,6 +38,49 @@ namespace AISEP.API.Controllers
         {
             var result = await _userService.GetAllForAdminAsync(model);
             return Ok(ApiResponse<object>.SuccessResponse(result, "Users retrieved successfully."));
+        }
+
+        [HttpGet("platform-overview")]
+        public async Task<IActionResult> GetPlatformOverview([FromQuery] DateTime? from, [FromQuery] DateTime? to)
+        {
+            var response = await _adminService.GetPlatformOverviewAsync(from, to);
+
+            return Ok(ApiResponse<object>.SuccessResponse(response, "Platform overview retrieved successfully."));
+        }
+
+        [HttpGet("project-status")]
+        public async Task<IActionResult> GetProjectStatusBreakdown()
+        {
+            var response = await _adminService.GetProjectStatusBreakdownAsync();
+            return Ok(ApiResponse<object>.SuccessResponse(response, "Project status breakdown retrieved successfully."));
+        }
+
+        [HttpGet("investment-trends")]
+        public async Task<IActionResult> GetInvestmentTrends(
+            [FromQuery] DateTime? from,
+            [FromQuery] DateTime? to,
+            [FromQuery] DateTime? fromDate,
+            [FromQuery] DateTime? toDate)
+        {
+            var response = await _adminService.GetInvestmentTrendsAsync(fromDate ?? from, toDate ?? to);
+            return Ok(ApiResponse<object>.SuccessResponse(response, "Investment trends retrieved successfully."));
+        }
+
+        [HttpGet("platform-revenue")]
+        public async Task<IActionResult> GetPlatformRevenue(
+            [FromQuery] int? month,
+            [FromQuery] int? year,
+            [FromQuery] DateTime? from,
+            [FromQuery] DateTime? to,
+            [FromQuery] DateTime? fromDate,
+            [FromQuery] DateTime? toDate)
+        {
+            var response = await _adminService.GetPlatformRevenueStatisticsAsync(
+                month,
+                year,
+                fromDate ?? from,
+                toDate ?? to);
+            return Ok(ApiResponse<object>.SuccessResponse(response, "Platform revenue statistics retrieved successfully."));
         }
 
         [HttpGet("users/{id:int}")]
