@@ -7,6 +7,10 @@ namespace AISEP.DAL.Entities
         public int DealId { get; set; }
         public int InvestorId { get; set; }
         public int ProjectId { get; set; }
+        public decimal InvestedAmount { get; set; }
+        public InvestmentType Type { get; set; }
+        public decimal? EquityPercentage { get; set; }
+        public string? ExchangeTerms { get; set; }
         public bool StartupConfirmed { get; set; }
         public bool InvestorConfirmed { get; set; }
         public DealStatus Status { get; set; }

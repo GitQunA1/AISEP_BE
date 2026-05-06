@@ -1,4 +1,5 @@
 using AISEP.BLL.DTOs.Requests;
+using AISEP.DAL.Enums;
 using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using System.IO;
@@ -12,6 +13,23 @@ namespace AISEP.BLL.Validators.Deal
             RuleFor(x => x.ProjectId)
                 .NotEmpty().WithMessage("ProjectId là bắt buộc.")
                 .GreaterThan(0).WithMessage("ProjectId phải là số dương.");
+
+            RuleFor(x => x.InvestedAmount)
+                .GreaterThan(0).WithMessage("InvestedAmount phải lớn hơn 0.");
+
+            RuleFor(x => x.Type)
+                .IsInEnum().WithMessage("Type không hợp lệ.");
+
+            RuleFor(x => x.EquityPercentage)
+                .NotNull().WithMessage("EquityPercentage là bắt buộc khi chọn Cổ phần.")
+                .GreaterThan(0).WithMessage("EquityPercentage phải lớn hơn 0.")
+                .LessThanOrEqualTo(100).WithMessage("EquityPercentage phải nhỏ hơn hoặc bằng 100.")
+                .When(x => x.Type == InvestmentType.Equity);
+
+            RuleFor(x => x.ExchangeTerms)
+                .NotEmpty().WithMessage("ExchangeTerms là bắt buộc khi chọn Điều khoản khác.")
+                .MaximumLength(500).WithMessage("ExchangeTerms tối đa 500 ký tự.")
+                .When(x => x.Type == InvestmentType.CustomTerms);
 
             RuleFor(x => x.EvidenceFile)
                 .NotNull().WithMessage("EvidenceFile là bắt buộc.")
@@ -40,5 +58,6 @@ namespace AISEP.BLL.Validators.Deal
 
             return extension is ".jpg" or ".jpeg" or ".png" or ".webp";
         }
+
     }
 }

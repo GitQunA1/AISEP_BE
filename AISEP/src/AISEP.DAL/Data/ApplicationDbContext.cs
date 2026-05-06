@@ -445,6 +445,10 @@ namespace AISEP.DAL.Data
             {
                 entity.ToTable("deals");
                 entity.HasKey(e => e.DealId);
+                entity.Property(e => e.InvestedAmount).HasColumnType("decimal(18,2)").IsRequired();
+                entity.Property(e => e.Type).HasConversion<string>().HasMaxLength(50).IsRequired();
+                entity.Property(e => e.EquityPercentage).HasColumnType("decimal(5,2)");
+                entity.Property(e => e.ExchangeTerms).HasMaxLength(500);
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.DocumentUrl).HasMaxLength(1000);
                 entity.Property(e => e.DocumentHash).HasMaxLength(255);

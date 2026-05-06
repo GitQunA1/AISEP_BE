@@ -526,6 +526,8 @@ namespace AISEP.BLL.Helpers
 
             // Deal Entity -> DealDto
             CreateMap<Deal, DealDto>()
+                .ForMember(dest => dest.Type,
+                    opt => opt.MapFrom(src => src.Type.ToString()))
                 .ForMember(dest => dest.Status,
                     opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.InitiatorRole,
