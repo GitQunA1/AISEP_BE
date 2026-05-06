@@ -202,7 +202,7 @@ namespace AISEP.BLL.Services.FormValidationRules
             if (IsEnumerableOfEnum(property.PropertyType)
                 && items.Where(x => x is not null).Any(x => x!.GetType().IsEnum && !Enum.IsDefined(x.GetType(), x)))
             {
-                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} có giá trị không hợp lệ."));
+                failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} có giá trị enum không hợp lệ."));
             }
         }
 
@@ -213,7 +213,7 @@ namespace AISEP.BLL.Services.FormValidationRules
             {
                 if (!Enum.IsDefined(value.GetType(), value))
                 {
-                    failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} có giá trị không hợp lệ."));
+                    failures.Add(new ValidationFailure(rule.FieldKey, $"{rule.FieldKey} có giá trị enum không hợp lệ."));
                 }
 
                 return;

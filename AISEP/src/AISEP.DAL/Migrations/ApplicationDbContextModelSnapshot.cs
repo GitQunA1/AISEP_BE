@@ -642,6 +642,33 @@ namespace AISEP.Migrations
                     b.ToTable("documents", (string)null);
                 });
 
+            modelBuilder.Entity("AISEP.DAL.Entities.DueDiligenceTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ContentJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("due_diligence_templates", (string)null);
+                });
+
             modelBuilder.Entity("AISEP.DAL.Entities.FormValidationRule", b =>
                 {
                     b.Property<int>("Id")

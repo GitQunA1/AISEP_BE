@@ -10,12 +10,21 @@ namespace AISEP.BLL.Validators.Deal
         public ReuploadDealEvidenceDtoValidator()
         {
             RuleFor(x => x.EvidenceFile)
+<<<<<<< HEAD
                 .NotNull().WithMessage("Tệp bằng chứng là bắt buộc.")
                 .Must(file => file is { Length: > 0 }).WithMessage("Tệp bằng chứng là bắt buộc.");
 
             RuleFor(x => x.EvidenceFile)
                 .Must(IsSupportedEvidence)
                 .WithMessage("Tệp bằng chứng phải là hình ảnh hoặc PDF.")
+=======
+                .NotNull().WithMessage("EvidenceFile là bắt buộc.")
+                .Must(file => file is { Length: > 0 }).WithMessage("EvidenceFile là bắt buộc.");
+
+            RuleFor(x => x.EvidenceFile)
+                .Must(IsSupportedEvidence)
+                .WithMessage("EvidenceFile phải là ảnh hoặc PDF.")
+>>>>>>> main
                 .When(x => x.EvidenceFile is not null);
         }
 

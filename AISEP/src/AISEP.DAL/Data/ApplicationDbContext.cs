@@ -58,12 +58,13 @@ namespace AISEP.DAL.Data
         public DbSet<BookingSlot> BookingSlots { get; set; }
         public DbSet<FormValidationRule> FormValidationRules { get; set; }
         public DbSet<FormValidationRuleStageOption> FormValidationRuleStageOptions { get; set; }
+        public DbSet<DueDiligenceTemplate> DueDiligenceTemplates { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // ?? Identity tables ????????????????????????????????????????????
+            //Identity tables
             modelBuilder.Entity<User>(entity =>
             {
                 entity.ToTable("users");
@@ -83,7 +84,7 @@ namespace AISEP.DAL.Data
             modelBuilder.Entity<IdentityUserToken<int>>().ToTable("user_tokens");
             modelBuilder.Entity<IdentityRoleClaim<int>>().ToTable("role_claims");
 
-            // ?? MODULE 1: PROFILES ?????????????????????????????????????????
+            //MODULE 1: PROFILES
             modelBuilder.Entity<Startup>(entity =>
             {
                 entity.ToTable("startups");
@@ -983,6 +984,15 @@ namespace AISEP.DAL.Data
                     .WithMany(e => e.FormValidationRuleStageOptions)
                     .HasForeignKey(e => e.StageOptionId)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<DueDiligenceTemplate>(entity =>
+            {
+                entity.ToTable("due_diligence_templates");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.ContentJson).HasColumnType("text");
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
             });
         }
     }
