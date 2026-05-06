@@ -1,4 +1,4 @@
-using AISEP.BLL.DTOs.Requests;
+﻿using AISEP.BLL.DTOs.Requests;
 using FluentValidation;
 
 namespace AISEP.BLL.Validators.Payment
@@ -8,14 +8,14 @@ namespace AISEP.BLL.Validators.Payment
         public SePayWebhookRequestValidator()
         {
             RuleFor(x => x.TransferAmount)
-                .GreaterThan(0).WithMessage("TransferAmount phải lớn hơn 0.");
+                .GreaterThan(0).WithMessage("Số tiền chuyển khoản phải lớn hơn 0.");
 
             RuleFor(x => x.Content)
-                .MaximumLength(2000).WithMessage("Content không được vượt quá 2000 ký tự.")
+                .MaximumLength(2000).WithMessage("Nội dung không được vượt quá 2000 ký tự.")
                 .When(x => !string.IsNullOrWhiteSpace(x.Content));
 
             RuleFor(x => x.Description)
-                .MaximumLength(2000).WithMessage("Description không được vượt quá 2000 ký tự.")
+                .MaximumLength(2000).WithMessage("Mô tả không được vượt quá 2000 ký tự.")
                 .When(x => !string.IsNullOrWhiteSpace(x.Description));
         }
     }

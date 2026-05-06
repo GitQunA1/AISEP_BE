@@ -1,4 +1,4 @@
-using AISEP.BLL.DTOs.Requests;
+﻿using AISEP.BLL.DTOs.Requests;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
 using FluentValidation;
@@ -10,6 +10,7 @@ namespace AISEP.BLL.Validators.Auth
     public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
     {
         private const string TextPattern = @"^[\p{L}\p{N}\s]*$";
+        private const string FullNamePattern = @"^[\p{L}\s]*$";
         //private readonly UserManager<AppUser> _userManager;
 
         public RegisterRequestValidator() { 
@@ -29,6 +30,9 @@ namespace AISEP.BLL.Validators.Auth
                 .MaximumLength(100).WithMessage("Họ và tên không được vượt quá 100 ký tự.")
                 .Matches(TextPattern).WithMessage("Họ và tên chứa ký tự không hợp lệ.");
                 
+
+            RuleFor(x => x.FullName)
+                .Matches(FullNamePattern).WithMessage("Họ và tên chỉ được chứa chữ cái và khoảng trắng.");
 
             RuleFor(x => x.Email)
                 .NotEmpty().WithMessage("Email là bắt buộc.")

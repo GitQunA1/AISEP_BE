@@ -10,7 +10,7 @@ namespace AISEP.BLL.Validators.ConsultingReport
         public CreateConsultingReportRequestValidator()
         {
             RuleFor(x => x.BookingId)
-                .GreaterThan(0).WithMessage("BookingId phải lớn hơn 0.");
+                .GreaterThan(0).WithMessage("Mã lịch đặt phải lớn hơn 0.");
 
             RuleFor(x => x.MeetingTitle)
                 .NotEmpty().WithMessage("Tiêu đề buổi họp là bắt buộc.")

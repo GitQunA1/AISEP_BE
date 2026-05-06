@@ -8,17 +8,17 @@ namespace AISEP.BLL.Validators.Booking
         public CreateBookingRequestValidator()
         {
             RuleFor(x => x.AdvisorId)
-                .NotEmpty().WithMessage("AdvisorId là bắt buộc.")
-                .GreaterThan(0).WithMessage("AdvisorId phải là số dương.");
+                .NotEmpty().WithMessage("Mã cố vấn là bắt buộc.")
+                .GreaterThan(0).WithMessage("Mã cố vấn phải là số dương.");
 
             RuleFor(x => x.ProjectId)
-                .NotEmpty().WithMessage("ProjectId là bắt buộc.")
-                .GreaterThan(0).WithMessage("ProjectId phải là số dương.");
+                .NotEmpty().WithMessage("Mã dự án là bắt buộc.")
+                .GreaterThan(0).WithMessage("Mã dự án phải là số dương.");
 
             RuleFor(x => x.OldBookingId)
                 .GreaterThan(0)
                 .When(x => x.OldBookingId.HasValue)
-                .WithMessage("OldBookingId phải là số dương.");
+                .WithMessage("Mã lịch đặt cũ phải là số dương.");
 
             RuleFor(x => x.AdvisorAvailabilitySlotIds)
                 .NotEmpty().WithMessage("Cần chọn ít nhất một khung giờ.");

@@ -1,4 +1,4 @@
-using AISEP.BLL.DTOs.Requests;
+﻿using AISEP.BLL.DTOs.Requests;
 using FluentValidation;
 
 namespace AISEP.BLL.Validators.Review
@@ -8,8 +8,13 @@ namespace AISEP.BLL.Validators.Review
         public UpdateReviewRequestValidator()
         {
             RuleFor(x => x.Rating)
-                .NotEmpty().WithMessage("Rating là bắt buộc.")
-                .InclusiveBetween(1, 5).WithMessage("Rating phải nằm trong khoảng 1 đến 5.");
+
+                .NotEmpty().WithMessage("Đánh giá là bắt buộc.")
+                .InclusiveBetween(1, 5).WithMessage("Đánh giá phải nằm trong khoảng từ 1 đến 5.");
+
+                //.NotEmpty().WithMessage("Rating là bắt buộc.")
+                //.InclusiveBetween(1, 5).WithMessage("Rating phải nằm trong khoảng 1 đến 5.");
+
 
             RuleFor(x => x.ReviewContent)
                 .NotEmpty().WithMessage("Nội dung đánh giá là bắt buộc.")

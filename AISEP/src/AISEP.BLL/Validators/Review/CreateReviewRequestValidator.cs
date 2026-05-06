@@ -8,12 +8,12 @@ namespace AISEP.BLL.Validators.Review
         public CreateReviewRequestValidator()
         {
             RuleFor(x => x.BookingId)
-                .NotEmpty().WithMessage("BookingId là bắt buộc.")
-                .GreaterThan(0).WithMessage("BookingId phải là số dương.");
+                .NotEmpty().WithMessage("Mã lịch đặt là bắt buộc.")
+                .GreaterThan(0).WithMessage("Mã lịch đặt phải là số dương.");
 
             RuleFor(x => x.Rating)
-                .NotEmpty().WithMessage("Rating là bắt buộc.")
-                .InclusiveBetween(1, 5).WithMessage("Rating phải nằm trong khoảng 1 đến 5.");
+                .NotEmpty().WithMessage("Đánh giá là bắt buộc.")
+                .InclusiveBetween(1, 5).WithMessage("Đánh giá phải nằm trong khoảng từ 1 đến 5.");
 
             RuleFor(x => x.ReviewContent)
                 .NotEmpty().WithMessage("Nội dung đánh giá là bắt buộc.")

@@ -11,8 +11,8 @@ namespace AISEP.BLL.Validators.Deal
         public CreateDealDtoValidator()
         {
             RuleFor(x => x.ProjectId)
-                .NotEmpty().WithMessage("ProjectId là bắt buộc.")
-                .GreaterThan(0).WithMessage("ProjectId phải là số dương.");
+                .NotEmpty().WithMessage("Mã dự án là bắt buộc.")
+                .GreaterThan(0).WithMessage("Mã dự án phải là số dương.");
 
             RuleFor(x => x.InvestedAmount)
                 .GreaterThan(0).WithMessage("InvestedAmount phải lớn hơn 0.");
@@ -32,12 +32,12 @@ namespace AISEP.BLL.Validators.Deal
                 .When(x => x.Type == InvestmentType.CustomTerms);
 
             RuleFor(x => x.EvidenceFile)
-                .NotNull().WithMessage("EvidenceFile là bắt buộc.")
-                .Must(file => file is { Length: > 0 }).WithMessage("EvidenceFile là bắt buộc.");
+                .NotNull().WithMessage("Tệp bằng chứng là bắt buộc.")
+                .Must(file => file is { Length: > 0 }).WithMessage("Tệp bằng chứng là bắt buộc.");
 
             RuleFor(x => x.EvidenceFile)
                 .Must(IsSupportedEvidence)
-                .WithMessage("EvidenceFile phải là ảnh hoặc PDF.")
+                .WithMessage("Tệp bằng chứng phải là hình ảnh hoặc PDF.")
                 .When(x => x.EvidenceFile is not null);
         }
 

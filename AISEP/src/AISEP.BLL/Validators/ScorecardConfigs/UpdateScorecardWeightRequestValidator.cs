@@ -8,22 +8,22 @@ namespace AISEP.BLL.Validators.ScorecardConfigs
         public UpdateScorecardWeightRequestValidator()
         {
             RuleFor(x => x.TeamWeight)
-                .GreaterThanOrEqualTo(0).WithMessage("TeamWeight không được âm.");
+                .GreaterThanOrEqualTo(0).WithMessage("Trọng số đội ngũ không được âm.");
 
             RuleFor(x => x.MarketWeight)
-                .GreaterThanOrEqualTo(0).WithMessage("MarketWeight không được âm.");
+                .GreaterThanOrEqualTo(0).WithMessage("Trọng số thị trường không được âm.");
 
             RuleFor(x => x.ProductWeight)
-                .GreaterThanOrEqualTo(0).WithMessage("ProductWeight không được âm.");
+                .GreaterThanOrEqualTo(0).WithMessage("Trọng số sản phẩm không được âm.");
 
             RuleFor(x => x.CompetitionWeight)
-                .GreaterThanOrEqualTo(0).WithMessage("CompetitionWeight không được âm.");
+                .GreaterThanOrEqualTo(0).WithMessage("Trọng số cạnh tranh không được âm.");
 
             RuleFor(x => x.TractionWeight)
-                .GreaterThanOrEqualTo(0).WithMessage("TractionWeight không được âm.");
+                .GreaterThanOrEqualTo(0).WithMessage("Trọng số sức kéo không được âm.");
 
             RuleFor(x => x.InvestmentNeedWeight)
-                .GreaterThanOrEqualTo(0).WithMessage("InvestmentNeedWeight không được âm.");
+                .GreaterThanOrEqualTo(0).WithMessage("Trọng số nhu cầu đầu tư không được âm.");
 
             RuleFor(x => x)
                 .Must(HaveExactlyOneHundredTotalWeight)

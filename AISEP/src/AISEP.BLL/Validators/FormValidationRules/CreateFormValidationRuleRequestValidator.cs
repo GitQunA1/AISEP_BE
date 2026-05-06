@@ -1,4 +1,4 @@
-using AISEP.BLL.DTOs.Requests;
+﻿using AISEP.BLL.DTOs.Requests;
 using FluentValidation;
 
 namespace AISEP.BLL.Validators.FormValidationRules
@@ -11,11 +11,11 @@ namespace AISEP.BLL.Validators.FormValidationRules
 
             RuleFor(x => x.FormKey)
                 .NotEmpty()
-                .WithMessage("FormKey là bắt buộc.");
+                .WithMessage("Khóa biểu mẫu là bắt buộc.");
 
             RuleFor(x => x.FieldKey)
                 .NotEmpty()
-                .WithMessage("FieldKey là bắt buộc.");
+                .WithMessage("Khóa trường là bắt buộc.");
         }
     }
 }

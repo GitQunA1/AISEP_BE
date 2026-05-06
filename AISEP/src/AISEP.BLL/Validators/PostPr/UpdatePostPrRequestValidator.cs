@@ -1,4 +1,4 @@
-using AISEP.BLL.DTOs.Requests;
+﻿using AISEP.BLL.DTOs.Requests;
 using FluentValidation;
 
 namespace AISEP.BLL.Validators.PostPr
@@ -12,13 +12,13 @@ namespace AISEP.BLL.Validators.PostPr
                 .WithMessage("Cần cung cấp ít nhất một trường để cập nhật.");
 
             RuleFor(x => x.Title)
-                .NotEmpty().WithMessage("Title không được để trống khi được cung cấp.")
-                .MaximumLength(255).WithMessage("Title không được vượt quá 255 ký tự.")
+                .NotEmpty().WithMessage("Tiêu đề không được để trống khi được cung cấp.")
+                .MaximumLength(255).WithMessage("Tiêu đề không được vượt quá 255 ký tự.")
                 .When(x => x.Title is not null);
 
             RuleFor(x => x.Content)
-                .NotEmpty().WithMessage("Content không được để trống khi được cung cấp.")
-                .MaximumLength(10000).WithMessage("Content không được vượt quá 10000 ký tự.")
+                .NotEmpty().WithMessage("Nội dung không được để trống khi được cung cấp.")
+                .MaximumLength(10000).WithMessage("Nội dung không được vượt quá 10000 ký tự.")
                 .When(x => x.Content is not null);
         }
 

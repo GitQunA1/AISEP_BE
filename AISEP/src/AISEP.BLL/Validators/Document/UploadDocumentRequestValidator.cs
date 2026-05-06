@@ -1,4 +1,4 @@
-using AISEP.BLL.DTOs.Requests;
+﻿using AISEP.BLL.DTOs.Requests;
 using FluentValidation;
 
 namespace AISEP.BLL.Validators.Document
@@ -17,7 +17,7 @@ namespace AISEP.BLL.Validators.Document
                 .Must(f => f!.Length <= MaxDocSize)
                     .WithMessage("Tệp không được vượt quá 10MB.")
                 .Must(IsPdfFile)
-                    .WithMessage("Tệp chỉ hỗ trợ PDF.")
+                    .WithMessage("Tệp chỉ hỗ trợ định dạng PDF.")
                 .When(x => x.File is not null);
         }
 

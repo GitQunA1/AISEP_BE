@@ -1,4 +1,4 @@
-using AISEP.BLL.DTOs.Requests;
+﻿using AISEP.BLL.DTOs.Requests;
 using FluentValidation;
 
 namespace AISEP.BLL.Validators.Investor
@@ -9,8 +9,8 @@ namespace AISEP.BLL.Validators.Investor
         {
             RuleFor(x => x.Reason)
                 .NotNull().WithMessage("Lý do không được để null.")
-                //.Must(reason => !string.IsNullOrWhiteSpace(reason)).WithMessage("Reason is required.")
-                .Matches("^[a-zA-Z0-9 .,!?'-àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]*$").WithMessage("Lý do chứa ký tự không hợp lệ.")
+                //.Must(reason => !string.IsNullOrWhiteSpace(reason)).WithMessage("Lý do là bắt buộc.")
+                .Matches(@"^[\p{L}\p{N}\s.,!?'\-]*$").WithMessage("Lý do chứa ký tự không hợp lệ.")
                 .MaximumLength(2000).WithMessage("Lý do không được vượt quá 2000 ký tự.");
         }
     }

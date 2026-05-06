@@ -1,4 +1,4 @@
-using AISEP.BLL.DTOs.Requests;
+﻿using AISEP.BLL.DTOs.Requests;
 using FluentValidation;
 
 namespace AISEP.BLL.Validators.Payment
@@ -8,27 +8,27 @@ namespace AISEP.BLL.Validators.Payment
         public UpdatePackageRequestValidator()
         {
             RuleFor(x => x.PackageName)
-                .NotEmpty().WithMessage("PackageName là bắt buộc.")
-                .MaximumLength(255).WithMessage("PackageName không được vượt quá 255 ký tự.");
+                .NotEmpty().WithMessage("Tên gói là bắt buộc.")
+                .MaximumLength(255).WithMessage("Tên gói không được vượt quá 255 ký tự.");
 
             RuleFor(x => x.Description)
-                .MaximumLength(2000).WithMessage("Description không được vượt quá 2000 ký tự.")
+                .MaximumLength(2000).WithMessage("Mô tả không được vượt quá 2000 ký tự.")
                 .When(x => !string.IsNullOrWhiteSpace(x.Description));
 
             RuleFor(x => x.Price)
-                .GreaterThan(0).WithMessage("Price phải lớn hơn 0.");
+                .GreaterThan(0).WithMessage("Giá phải lớn hơn 0.");
 
             RuleFor(x => x.DurationMonths)
-                .GreaterThan(0).WithMessage("DurationMonths phải lớn hơn 0.");
+                .GreaterThan(0).WithMessage("Số tháng hiệu lực phải lớn hơn 0.");
 
             RuleFor(x => x.MaxAiRequests)
-                .GreaterThanOrEqualTo(0).WithMessage("MaxAiRequests phải lớn hơn hoặc bằng 0.");
+                .GreaterThanOrEqualTo(0).WithMessage("Số lượt AI tối đa phải lớn hơn hoặc bằng 0.");
 
             RuleFor(x => x.MaxProjectViews)
-                .GreaterThanOrEqualTo(0).WithMessage("MaxProjectViews phải lớn hơn hoặc bằng 0.");
+                .GreaterThanOrEqualTo(0).WithMessage("Số lượt xem dự án tối đa phải lớn hơn hoặc bằng 0.");
 
             RuleFor(x => x.FreeBookingCount)
-                .GreaterThanOrEqualTo(0).WithMessage("FreeBookingCount phải lớn hơn hoặc bằng 0.");
+                .GreaterThanOrEqualTo(0).WithMessage("Số lượt đặt lịch miễn phí phải lớn hơn hoặc bằng 0.");
         }
     }
 }

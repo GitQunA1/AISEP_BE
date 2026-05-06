@@ -1,4 +1,4 @@
-using AISEP.BLL.DTOs.Requests;
+﻿using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.BLL.Helpers;
 using AISEP.DAL.Common;
@@ -53,7 +53,7 @@ namespace AISEP.BLL.Services.FormValidationRules
             var rule = await _unitOfWork.FormValidationRules.GetByFormAndFieldAsync(normalizedFormKey, normalizedFieldKey);
             if (rule is not null)
             {
-                throw new InvalidOperationException("Đã tồn tại rule validate cho form và field này.");
+                throw new InvalidOperationException("Quy tắc validation cho biểu mẫu và trường này đã tồn tại.");
             }
 
             rule = new FormValidationRule
@@ -78,7 +78,7 @@ namespace AISEP.BLL.Services.FormValidationRules
             var rule = await _unitOfWork.FormValidationRules.GetByIdAsync(id);
             if (rule is null)
             {
-                throw new KeyNotFoundException("Không tìm thấy rule validate.");
+                throw new KeyNotFoundException("Không tìm thấy quy tắc validation.");
             }
 
             ApplyRequest(rule, request);
@@ -99,28 +99,28 @@ namespace AISEP.BLL.Services.FormValidationRules
                 }
                 catch (ArgumentException ex)
                 {
-                    throw new InvalidOperationException($"CustomRegexPattern không hợp lệ: {ex.Message}");
+                    throw new InvalidOperationException($"Mẫu biểu thức chính quy tùy chỉnh không hợp lệ: {ex.Message}");
                 }
             }
 
             if (request.MinLength.HasValue && request.MinLength < 0)
             {
-                throw new InvalidOperationException("MinLength không được âm.");
+                throw new InvalidOperationException("Độ dài tối thiểu không được âm.");
             }
 
             if (request.MaxLength.HasValue && request.MaxLength < 0)
             {
-                throw new InvalidOperationException("MaxLength không được âm.");
+                throw new InvalidOperationException("Độ dài tối đa không được âm.");
             }
 
             if (request.MinLength.HasValue && request.MaxLength.HasValue && request.MinLength > request.MaxLength)
             {
-                throw new InvalidOperationException("MinLength không được lớn hơn MaxLength.");
+                throw new InvalidOperationException("Độ dài tối thiểu không được lớn hơn độ dài tối đa.");
             }
 
             if (request.MinValue.HasValue && request.MaxValue.HasValue && request.MinValue > request.MaxValue)
             {
-                throw new InvalidOperationException("MinValue không được lớn hơn MaxValue.");
+                throw new InvalidOperationException("Giá trị tối thiểu không được lớn hơn giá trị tối đa.");
             }
 
             if (request.AllowedFileTypes is not null)
@@ -131,13 +131,13 @@ namespace AISEP.BLL.Services.FormValidationRules
 
                 if (invalidTypes.Count != 0)
                 {
-                    throw new InvalidOperationException("AllowedFileTypes không được chứa giá trị rỗng.");
+                    throw new InvalidOperationException("Danh sách loại tệp được phép không được chứa giá trị rỗng.");
                 }
             }
 
             if (request.StageOptionIds is not null && request.StageOptionIds.Any(id => id <= 0))
             {
-                throw new InvalidOperationException("StageOptionIds phải là các id dương.");
+                throw new InvalidOperationException("Danh sách giai đoạn phải chứa các mã giai đoạn là số dương.");
             }
 
             if (request.StageOptionIds is { Count: > 0 })
@@ -149,7 +149,7 @@ namespace AISEP.BLL.Services.FormValidationRules
 
                 if (stageOptions.Count != requestedIds.Count || stageOptions.Any(x => !x.IsActive))
                 {
-                    throw new InvalidOperationException("Một hoặc nhiều stage option không hợp lệ hoặc đã bị vô hiệu.");
+                    throw new InvalidOperationException("Một hoặc nhiều giai đoạn bắt buộc không hợp lệ hoặc không hoạt động.");
                 }
             }
         }
@@ -225,7 +225,7 @@ namespace AISEP.BLL.Services.FormValidationRules
         {
             if (string.IsNullOrWhiteSpace(value))
             {
-                throw new InvalidOperationException($"{parameterName} is required.");
+                throw new InvalidOperationException($"{GetParameterDisplayName(parameterName)} là bắt buộc.");
             }
 
             return value.Trim();
@@ -234,5 +234,14 @@ namespace AISEP.BLL.Services.FormValidationRules
         // Chuẩn hóa giá trị tùy chọn: rỗng thì trả null, có dữ liệu thì trim.
         private static string? NormalizeNullableValue(string? value)
             => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+        private static string GetParameterDisplayName(string parameterName)
+            => parameterName switch
+            {
+                "formKey" => "Khóa biểu mẫu",
+                "FieldKey" => "Khóa trường",
+                "fieldKey" => "Khóa trường",
+                _ => parameterName
+            };
     }
 }
