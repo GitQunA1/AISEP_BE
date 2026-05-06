@@ -3,6 +3,7 @@ using AISEP.DAL.Common;
 using AISEP.DAL.Data;
 using AISEP.DAL.Entities;
 using AISEP.BLL.Services.Auth;
+using AISEP.BLL.Services.Admins;
 using AISEP.BLL.Services.Blockchain;
 using AISEP.BLL.Services.Bookings;
 using AISEP.BLL.Services.Users;
@@ -241,6 +242,7 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 // Add Services
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IUserReportService, UserReportService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
