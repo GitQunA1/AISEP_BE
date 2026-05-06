@@ -40,7 +40,14 @@ namespace AISEP.BLL.Tests.Deals
             var (service, unitOfWork, dealRepo, investorRepo, projectRepo, connectionRepo, notification, mapper, storage, queue) = CreateSut(seedDeal);
 
             var evidenceFile = BuildFormFile("deal-301.pdf");
-            var request = new CreateDealDto { ProjectId = seedDeal.ProjectId, EvidenceFile = evidenceFile };
+            var request = new CreateDealDto
+            {
+                ProjectId = seedDeal.ProjectId,
+                InvestedAmount = 1000m,
+                Type = InvestmentType.Equity,
+                EquityPercentage = 10m,
+                EvidenceFile = evidenceFile
+            };
 
             dealRepo
                 .Setup(x => x.AddAsync(It.IsAny<Deal>()))
@@ -82,7 +89,14 @@ namespace AISEP.BLL.Tests.Deals
                 Startup = seedDeal.Project.Startup
             });
 
-            var request = new CreateDealDto { ProjectId = seedDeal.ProjectId, EvidenceFile = BuildFormFile("deal-302.pdf") };
+            var request = new CreateDealDto
+            {
+                ProjectId = seedDeal.ProjectId,
+                InvestedAmount = 1000m,
+                Type = InvestmentType.Equity,
+                EquityPercentage = 10m,
+                EvidenceFile = BuildFormFile("deal-302.pdf")
+            };
 
             var ex = await Assert.ThrowsAsync<ForbiddenAccessException>(() =>
                 service.CreateDealForStartupAsync(seedDeal.Project.StartupId, request));
@@ -275,7 +289,11 @@ namespace AISEP.BLL.Tests.Deals
                 .Setup(x => x.Map<Deal>(It.IsAny<CreateDealDto>()))
                 .Returns<CreateDealDto>(dto => new Deal
                 {
-                    ProjectId = dto.ProjectId
+                    ProjectId = dto.ProjectId,
+                    InvestedAmount = dto.InvestedAmount,
+                    Type = dto.Type,
+                    EquityPercentage = dto.EquityPercentage,
+                    ExchangeTerms = dto.ExchangeTerms
                 });
 
             mapperMock
@@ -288,6 +306,10 @@ namespace AISEP.BLL.Tests.Deals
                     ProjectId = d.ProjectId,
                     ProjectName = d.Project.ProjectName,
                     StartupName = d.Project.Startup.CompanyName ?? string.Empty,
+                    InvestedAmount = d.InvestedAmount,
+                    Type = d.Type.ToString(),
+                    EquityPercentage = d.EquityPercentage,
+                    ExchangeTerms = d.ExchangeTerms,
                     Status = d.Status.ToString(),
                     DealDate = d.DealDate,
                     DocumentUrl = d.DocumentUrl,
@@ -392,6 +414,9 @@ namespace AISEP.BLL.Tests.Deals
                 DealId = dealId,
                 InvestorId = investorId,
                 ProjectId = project.ProjectId,
+                InvestedAmount = 1000m,
+                Type = InvestmentType.Equity,
+                EquityPercentage = 10m,
                 Investor = investor,
                 Project = project,
                 DocumentUrl = "https://storage.test/evidence.pdf",

@@ -66,6 +66,7 @@ namespace AISEP.BLL.Services.Deals
                 throw new InvalidOperationException("You already have an active deal for this project.");
             }
 
+            ValidateInvestmentTerms(dto);
             var (documentUrl, documentHash) = await UploadEvidenceAsync(dto.EvidenceFile, project.StartupId);
 
             var deal = _mapper.Map<Deal>(dto);
@@ -127,6 +128,7 @@ namespace AISEP.BLL.Services.Deals
                 throw new InvalidOperationException("You already have an active deal for this project.");
             }
 
+            ValidateInvestmentTerms(dto);
             var (documentUrl, documentHash) = await UploadEvidenceAsync(dto.EvidenceFile, project.StartupId);
 
             var deal = _mapper.Map<Deal>(dto);
@@ -471,6 +473,7 @@ namespace AISEP.BLL.Services.Deals
             return (documentUrl, documentHash);
         }
 
+
         private async Task<ConnectionRequest> GetLatestAcceptedConnectionAsync(int startupId, int projectId)
         {
             var connection = await _unitOfWork.ConnectionRequests.GetByStartupQuery(startupId)
@@ -510,6 +513,39 @@ namespace AISEP.BLL.Services.Deals
             if (deal.Status != DealStatus.RequireReupload && deal.Status != DealStatus.PendingCounterpartyConfirmation)
             {
                 throw new InvalidOperationException("Deal is not allowed to reupload evidence in current status.");
+            }
+        }
+
+        private static void ValidateInvestmentTerms(CreateDealDto dto)
+        {
+            if (dto.InvestedAmount <= 0)
+            {
+                throw new InvalidOperationException("InvestedAmount must be greater than 0.");
+            }
+
+            if (!Enum.IsDefined(typeof(InvestmentType), dto.Type))
+            {
+                throw new InvalidOperationException("Investment type is invalid.");
+            }
+
+            if (dto.Type == InvestmentType.Equity)
+            {
+                if (dto.EquityPercentage is null || dto.EquityPercentage <= 0 || dto.EquityPercentage > 100)
+                {
+                    throw new InvalidOperationException("EquityPercentage must be between 0 and 100.");
+                }
+
+                dto.ExchangeTerms = null;
+            }
+            else if (dto.Type == InvestmentType.CustomTerms)
+            {
+                if (string.IsNullOrWhiteSpace(dto.ExchangeTerms))
+                {
+                    throw new InvalidOperationException("ExchangeTerms is required for custom terms.");
+                }
+
+                dto.ExchangeTerms = dto.ExchangeTerms.Trim();
+                dto.EquityPercentage = null;
             }
         }
 
