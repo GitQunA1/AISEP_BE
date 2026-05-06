@@ -13,6 +13,7 @@ using Sieve.Models;
 using Sieve.Services;
 using AISEP.BLL.Services.Users;
 using AISEP.BLL.Services.ProjectAdvisorAssignments;
+using AISEP.BLL.Services.Notifications;
 
 namespace AISEP.BLL.Services.Documents
 {
@@ -25,6 +26,7 @@ namespace AISEP.BLL.Services.Documents
         private readonly IMapper _mapper;
         private readonly IUserService _currentUserService;
         private readonly IProjectAdvisorAutoAssignService _projectAdvisorAutoAssignService;
+        private readonly INotificationService _notificationService;
 
         public DocumentService(
             IUnitOfWork unitOfWork,
@@ -33,7 +35,8 @@ namespace AISEP.BLL.Services.Documents
             ISieveProcessor sieveProcessor,
             IMapper mapper,
             IUserService currentUserService,
-            IProjectAdvisorAutoAssignService projectAdvisorAutoAssignService
+            IProjectAdvisorAutoAssignService projectAdvisorAutoAssignService,
+            INotificationService notificationService
             )
         {
             _unitOfWork = unitOfWork;
@@ -43,6 +46,7 @@ namespace AISEP.BLL.Services.Documents
             _mapper = mapper;
             _currentUserService = currentUserService;
             _projectAdvisorAutoAssignService = projectAdvisorAutoAssignService;
+            _notificationService = notificationService;
         }
 
         public async Task<DocumentResponse> UploadDocumentAsync(int projectId, int userId, UploadDocumentRequest request)
@@ -249,6 +253,14 @@ namespace AISEP.BLL.Services.Documents
 
             await _projectAdvisorAutoAssignService.TryAssignAdvisorAsync(project);
             await _unitOfWork.SaveChangesAsync();
+
+            await _notificationService.SendNotificationAsync(
+                project.Startup.UserId,
+                "Dự án đã được duyệt",
+                $"Dự án \"{project.ProjectName}\" của bạn đã được duyệt.",
+                NotificationType.General,
+                project.ProjectId,
+                "Project");
 
             return _mapper.Map<DocumentResponse>(document);
         }

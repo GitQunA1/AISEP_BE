@@ -1,4 +1,4 @@
-using AISEP.BLL.DTOs.Requests;
+﻿using AISEP.BLL.DTOs.Requests;
 using FluentValidation;
 
 namespace AISEP.BLL.Validators.AdvisorBankAccount
@@ -13,16 +13,16 @@ namespace AISEP.BLL.Validators.AdvisorBankAccount
         private void ApplyCommonRules()
         {
             RuleFor(x => x.BankName)
-                .NotEmpty().WithMessage("Bank name is required.")
-                .MaximumLength(255).WithMessage("Bank name must not exceed 255 characters.");
+                .NotEmpty().WithMessage("Tên ngân hàng là bắt buộc.")
+                .MaximumLength(255).WithMessage("Tên ngân hàng không được vượt quá 255 ký tự.");
 
             RuleFor(x => x.AccountNumber)
-                .NotEmpty().WithMessage("Account number is required.")
-                .MaximumLength(100).WithMessage("Account number must not exceed 100 characters.");
+                .NotEmpty().WithMessage("Số tài khoản là bắt buộc.")
+                .MaximumLength(100).WithMessage("Số tài khoản không được vượt quá 100 ký tự.");
 
             RuleFor(x => x.AccountHolderName)
-                .NotEmpty().WithMessage("Account holder name is required.")
-                .MaximumLength(255).WithMessage("Account holder name must not exceed 255 characters.");
+                .NotEmpty().WithMessage("Tên chủ tài khoản là bắt buộc.")
+                .MaximumLength(255).WithMessage("Tên chủ tài khoản không được vượt quá 255 ký tự.");
         }
     }
 }

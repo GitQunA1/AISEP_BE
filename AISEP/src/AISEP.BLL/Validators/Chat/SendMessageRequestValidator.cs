@@ -1,4 +1,4 @@
-using AISEP.BLL.DTOs.Requests;
+﻿using AISEP.BLL.DTOs.Requests;
 using FluentValidation;
 
 namespace AISEP.BLL.Validators.Chat
@@ -8,8 +8,8 @@ namespace AISEP.BLL.Validators.Chat
         public SendMessageRequestValidator()
         {
             RuleFor(x => x.Content)
-                .NotEmpty().WithMessage("The message content cannot be empty.")
-                .MaximumLength(2000).WithMessage("The message cannot exceed 2000 characters.");
+                .NotEmpty().WithMessage("Nội dung tin nhắn không được để trống.")
+                .MaximumLength(2000).WithMessage("Tin nhắn không được vượt quá 2000 ký tự.");
         }
     }
 }

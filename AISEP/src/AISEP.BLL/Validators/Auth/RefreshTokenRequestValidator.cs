@@ -8,8 +8,8 @@ namespace AISEP.BLL.Validators.Auth
         public RefreshTokenRequestValidator()
         {
             RuleFor(x => x.RefreshToken)
-                .NotEmpty().WithMessage("Refresh token là bắt buộc.")
-                .MaximumLength(500).WithMessage("Refresh token không được vượt quá 500 ký tự.");
+                .NotEmpty().WithMessage("Mã làm mới phiên đăng nhập là bắt buộc.")
+                .MaximumLength(500).WithMessage("Mã làm mới phiên đăng nhập không được vượt quá 500 ký tự.");
         }
     }
 }

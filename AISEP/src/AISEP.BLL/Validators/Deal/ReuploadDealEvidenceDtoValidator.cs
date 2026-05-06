@@ -1,4 +1,4 @@
-using AISEP.BLL.DTOs.Requests;
+﻿using AISEP.BLL.DTOs.Requests;
 using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using System.IO;
@@ -10,12 +10,12 @@ namespace AISEP.BLL.Validators.Deal
         public ReuploadDealEvidenceDtoValidator()
         {
             RuleFor(x => x.EvidenceFile)
-                .NotNull().WithMessage("EvidenceFile is required.")
-                .Must(file => file is { Length: > 0 }).WithMessage("EvidenceFile is required.");
+                .NotNull().WithMessage("Tệp bằng chứng là bắt buộc.")
+                .Must(file => file is { Length: > 0 }).WithMessage("Tệp bằng chứng là bắt buộc.");
 
             RuleFor(x => x.EvidenceFile)
                 .Must(IsSupportedEvidence)
-                .WithMessage("EvidenceFile must be an image or PDF.")
+                .WithMessage("Tệp bằng chứng phải là hình ảnh hoặc PDF.")
                 .When(x => x.EvidenceFile is not null);
         }
 

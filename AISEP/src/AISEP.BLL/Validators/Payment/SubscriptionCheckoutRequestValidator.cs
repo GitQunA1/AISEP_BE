@@ -1,4 +1,4 @@
-using AISEP.BLL.DTOs.Requests;
+﻿using AISEP.BLL.DTOs.Requests;
 using FluentValidation;
 
 namespace AISEP.BLL.Validators.Payment
@@ -8,7 +8,7 @@ namespace AISEP.BLL.Validators.Payment
         public SubscriptionCheckoutRequestValidator()
         {
             RuleFor(x => x.PackageId)
-                .GreaterThan(0).WithMessage("PackageId must be greater than 0.");
+                .GreaterThan(0).WithMessage("Mã gói phải lớn hơn 0.");
         }
     }
 }

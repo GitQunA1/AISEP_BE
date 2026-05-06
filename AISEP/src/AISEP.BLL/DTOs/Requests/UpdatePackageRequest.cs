@@ -10,10 +10,10 @@ namespace AISEP.BLL.DTOs.Requests
 
         public string? Description { get; set; }
 
-        [Range(0.01, double.MaxValue, ErrorMessage = "Price must be greater than 0.")]
+        [Range(0.01, double.MaxValue, ErrorMessage = "Giá phải lớn hơn 0.")]
         public decimal Price { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "DurationMonths must be greater than 0.")]
+        [Range(1, int.MaxValue, ErrorMessage = "Số tháng hiệu lực phải lớn hơn 0.")]
         public int DurationMonths { get; set; }
 
         [Range(0, int.MaxValue)]

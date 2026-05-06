@@ -1,4 +1,4 @@
-using AISEP.BLL.DTOs.Requests;
+﻿using AISEP.BLL.DTOs.Requests;
 using FluentValidation;
 
 namespace AISEP.BLL.Validators.Payout
@@ -8,7 +8,7 @@ namespace AISEP.BLL.Validators.Payout
         public MarkPayoutPaidRequestValidator()
         {
             RuleFor(x => x.Note)
-                .MaximumLength(1000).WithMessage("Note must not exceed 1000 characters.")
+                .MaximumLength(1000).WithMessage("Ghi chú không được vượt quá 1000 ký tự.")
                 .When(x => !string.IsNullOrWhiteSpace(x.Note));
         }
     }

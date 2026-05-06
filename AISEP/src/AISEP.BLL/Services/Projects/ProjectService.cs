@@ -5,6 +5,7 @@ using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.Storage;
 using AISEP.BLL.Services.Users;
 using AISEP.BLL.Services.FormValidationRules;
+using AISEP.BLL.Services.Notifications;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
@@ -23,6 +24,7 @@ namespace AISEP.BLL.Services.Projects
         private readonly IUserService _userService;
         private readonly IStorageService _storage;
         private readonly IDynamicFormSubmissionValidationService _dynamicFormValidationService;
+        private readonly INotificationService _notificationService;
 
         public ProjectService(
             IUnitOfWork unitOfWork,
@@ -30,7 +32,8 @@ namespace AISEP.BLL.Services.Projects
             IMapper mapper,
             IUserService userService,
             IStorageService storage,
-            IDynamicFormSubmissionValidationService dynamicFormValidationService)
+            IDynamicFormSubmissionValidationService dynamicFormValidationService,
+            INotificationService notificationService)
         {
             _unitOfWork = unitOfWork;
             _sieveProcessor = sieveProcessor;
@@ -38,6 +41,7 @@ namespace AISEP.BLL.Services.Projects
             _userService = userService;
             _storage = storage;
             _dynamicFormValidationService = dynamicFormValidationService;
+            _notificationService = notificationService;
         }
 
         // lấy danh sách project cho tk bth
@@ -330,6 +334,12 @@ namespace AISEP.BLL.Services.Projects
            
             _unitOfWork.Projects.Update(project);
             await _unitOfWork.SaveChangesAsync();
+
+            await NotifyStaffAndAdminsAsync(
+                "Dự án chờ duyệt",
+                $"Dự án \"{project.ProjectName}\" của startup \"{startup.CompanyName}\" đã được gửi và đang chờ phê duyệt.",
+                project.ProjectId,
+                "Project");
         }
 
         // Từ chối project đang ở trạng thái Pending.
@@ -348,6 +358,14 @@ namespace AISEP.BLL.Services.Projects
             project.RejectedById = _userService.GetUserId();
             _unitOfWork.Projects.Update(project);
             await _unitOfWork.SaveChangesAsync();
+
+            await _notificationService.SendNotificationAsync(
+                project.Startup.UserId,
+                "Dự án bị từ chối",
+                $"Dự án \"{project.ProjectName}\" đã bị từ chối. Lý do: {project.RejectionReason}",
+                NotificationType.General,
+                project.ProjectId,
+                "Project");
         }
 
         // Xác định user hiện tại có được bypass quota xem project hay không.
@@ -523,6 +541,25 @@ namespace AISEP.BLL.Services.Projects
             }
 
             return option;
+        }
+
+        private async Task NotifyStaffAndAdminsAsync(string title, string message, int? referenceId = null, string? referenceType = null)
+        {
+            var reviewerIds = await _unitOfWork.Users.GetAllQuery()
+                .Where(u => u.Role == UserRole.Staff || u.Role == UserRole.Admin)
+                .Select(u => u.Id)
+                .ToListAsync();
+
+            foreach (var reviewerId in reviewerIds)
+            {
+                await _notificationService.SendNotificationAsync(
+                    reviewerId,
+                    title,
+                    message,
+                    NotificationType.System,
+                    referenceId,
+                    referenceType);
+            }
         }
     }
 }
