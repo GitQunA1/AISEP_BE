@@ -94,7 +94,7 @@ namespace AISEP.BLL.Services.ProjectAdvisorAssignments
                             && b.CreatedAt >= behaviorWindowStart
                             && b.Status == BookingStatus.Cancel
                             && b.Note != null
-                            && b.Note.Contains("[Advisor Reject]"))
+                            && b.Note.Contains("[Từ chối]"))
                 .GroupBy(b => b.AdvisorId)
                 .Select(g => new { AdvisorId = g.Key, Count = g.Count() })
                 .ToDictionaryAsync(x => x.AdvisorId, x => x.Count, cancellationToken);

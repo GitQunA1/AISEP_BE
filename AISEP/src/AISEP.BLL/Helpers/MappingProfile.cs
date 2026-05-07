@@ -293,6 +293,32 @@ namespace AISEP.BLL.Helpers
                     opt => opt.MapFrom(src => src.Advisor != null && src.Advisor.User != null
                         ? src.Advisor.User.UserName
                         : $"Advisor {src.AdvisorId}"))
+                .ForMember(dest => dest.HourlyRate,
+                    opt => opt.MapFrom(src => src.Advisor != null ? src.Advisor.HourlyRate : null))
+                .ForMember(dest => dest.Rating,
+                    opt => opt.MapFrom(src => src.Advisor != null ? src.Advisor.Rating : null))
+                .ForMember(dest => dest.Industries,
+                    opt => opt.MapFrom(src => src.Advisor != null && src.Advisor.AdvisorIndustries != null
+                        ? src.Advisor.AdvisorIndustries.Select(ai => ai.IndustryOption.Value).ToList()
+                        : new List<string>()))
+                .ForMember(dest => dest.AssignedAt,
+                    opt => opt.MapFrom(src => src.AssignedAt));
+
+            CreateMap<ProjectAdvisorAssignment, AssignedProjectAdvisorResponse>()
+                .ForMember(dest => dest.AdvisorId,
+                    opt => opt.MapFrom(src => src.AdvisorId))
+                .ForMember(dest => dest.AdvisorName,
+                    opt => opt.MapFrom(src => src.Advisor != null && src.Advisor.User != null
+                        ? src.Advisor.User.UserName
+                        : $"Advisor {src.AdvisorId}"))
+                .ForMember(dest => dest.HourlyRate,
+                    opt => opt.MapFrom(src => src.Advisor != null ? src.Advisor.HourlyRate : null))
+                .ForMember(dest => dest.Rating,
+                    opt => opt.MapFrom(src => src.Advisor != null ? src.Advisor.Rating : null))
+                .ForMember(dest => dest.Industries,
+                    opt => opt.MapFrom(src => src.Advisor != null && src.Advisor.AdvisorIndustries != null
+                        ? src.Advisor.AdvisorIndustries.Select(ai => ai.IndustryOption.Value).ToList()
+                        : new List<string>()))
                 .ForMember(dest => dest.AssignedAt,
                     opt => opt.MapFrom(src => src.AssignedAt));
 
@@ -357,7 +383,11 @@ namespace AISEP.BLL.Helpers
                         .Select(pa => pa.Advisor != null && pa.Advisor.AdvisorIndustries != null
                             ? pa.Advisor.AdvisorIndustries.Select(ai => ai.IndustryOption.Value).ToList()
                             : new List<string>())
-                        .FirstOrDefault() ?? new List<string>()));
+                        .FirstOrDefault() ?? new List<string>()))
+                .ForMember(dest => dest.AssignedAdvisors,
+                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignments
+                        .OrderByDescending(pa => pa.AssignedAt)
+                        .ToList()));
 
             // Project Entity ? NonPremiumProjectResponse
             CreateMap<Project, NonPremiumProjectResponse>()
@@ -413,7 +443,11 @@ namespace AISEP.BLL.Helpers
                         .Select(pa => pa.Advisor != null && pa.Advisor.AdvisorIndustries != null
                             ? pa.Advisor.AdvisorIndustries.Select(ai => ai.IndustryOption.Value).ToList()
                             : new List<string>())
-                        .FirstOrDefault() ?? new List<string>()));
+                        .FirstOrDefault() ?? new List<string>()))
+                .ForMember(dest => dest.AssignedAdvisors,
+                    opt => opt.MapFrom(src => src.ProjectAdvisorAssignments
+                        .OrderByDescending(pa => pa.AssignedAt)
+                        .ToList()));
 
             // CreateProjectRequest -> Project Entity
             CreateMap<CreateProjectRequest, Project>()

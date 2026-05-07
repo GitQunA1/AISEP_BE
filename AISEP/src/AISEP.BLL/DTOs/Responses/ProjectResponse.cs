@@ -35,5 +35,6 @@
         public decimal? AssignedAdvisorHourlyRate { get; set; }
         public decimal? AssignedAdvisorRating { get; set; }
         public List<string> AssignedAdvisorIndustries { get; set; } = [];
+        public List<AssignedProjectAdvisorResponse> AssignedAdvisors { get; set; } = [];
     }
 }

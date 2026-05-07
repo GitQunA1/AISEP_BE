@@ -487,7 +487,7 @@ namespace AISEP.BLL.Services.Bookings
             booking.Status = BookingStatus.Cancel;
             booking.Note = string.IsNullOrWhiteSpace(reason)
                 ? booking.Note
-                : $"[Advisor Reject] {reason}";
+                : $"[Từ chối] {reason}";
             ReleaseBookedSlots(booking);
             await RefundFreeBookingQuotaAsync(booking);
 
