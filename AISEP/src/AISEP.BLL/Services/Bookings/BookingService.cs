@@ -141,8 +141,7 @@ namespace AISEP.BLL.Services.Bookings
                 Status = BookingStatus.Pending,
                 Note = dto.Note,
                 OldBookingId = dto.OldBookingId,
-                IsPaymentWaived = false,
-                UsedPremiumFreeQuota = false
+                FreeQuotaType = BookingFreeQuotaType.None
             };
 
             var hourlyRate = advisor.HourlyRate ?? 0;
@@ -167,10 +166,9 @@ namespace AISEP.BLL.Services.Bookings
                         throw new InvalidOperationException("You do not have any free premium booking quota left.");
                     }
 
-                    booking.IsPaymentWaived = true;
                     subscription.RemainingFreeBookings -= 1;
                     _unitOfWork.Subscriptions.Update(subscription);
-                    booking.UsedPremiumFreeQuota = true;
+                    booking.FreeQuotaType = BookingFreeQuotaType.Premium;
                 }
                 else
                 {
@@ -179,8 +177,8 @@ namespace AISEP.BLL.Services.Bookings
                         throw new InvalidOperationException("You do not have any bonus free booking quota left.");
                     }
 
-                    booking.IsPaymentWaived = true;
                     customer.BonusFreeBookings -= 1;
+                    booking.FreeQuotaType = BookingFreeQuotaType.Bonus;
                 }
             }
 
@@ -197,7 +195,7 @@ namespace AISEP.BLL.Services.Bookings
                 await _unitOfWork.Bookings.AddAsync(booking);
                 await _unitOfWork.SaveChangesAsync();
 
-                if (booking.UsedPremiumFreeQuota)
+                if (booking.FreeQuotaType == BookingFreeQuotaType.Premium)
                 {
                     var latestSubscription = await _unitOfWork.Subscriptions.GetLatestActiveAsync(currentUser)
                         ?? throw new InvalidOperationException("Active subscription not found while logging premium free booking usage.");
@@ -448,7 +446,7 @@ namespace AISEP.BLL.Services.Bookings
             if (booking.Status != BookingStatus.Pending)
                 throw new InvalidOperationException("Only pending bookings can be approved.");
 
-            booking.Status = booking.IsPaymentWaived || booking.Price <= 0m
+            booking.Status = booking.FreeQuotaType != BookingFreeQuotaType.None || booking.Price <= 0m
                 ? BookingStatus.Confirmed
                 : BookingStatus.ApprovedAwaitingPayment;
             await _unitOfWork.SaveChangesAsync();
@@ -489,6 +487,7 @@ namespace AISEP.BLL.Services.Bookings
                 ? booking.Note
                 : $"[Advisor Reject] {reason}";
             ReleaseBookedSlots(booking);
+            await RefundFreeBookingQuotaAsync(booking);
 
             await _unitOfWork.SaveChangesAsync();
 
@@ -515,6 +514,7 @@ namespace AISEP.BLL.Services.Bookings
                     ? "[System] Booking marked as no-response because advisor did not respond within 1 minute."
                     : $"{booking.Note} | [System] Advisor response timeout (1m), marked as no-response.";
                 ReleaseBookedSlots(booking);
+                await RefundFreeBookingQuotaAsync(booking);
             }
 
             if (expiredBookings.Count > 0)
@@ -550,6 +550,7 @@ namespace AISEP.BLL.Services.Bookings
                     ? "[System] Booking marked as no-response because advisor response deadline passed."
                     : $"{booking.Note} | [System] Advisor response deadline passed, marked as no-response.";
                 ReleaseBookedSlots(booking);
+                await RefundFreeBookingQuotaAsync(booking);
                 await _unitOfWork.SaveChangesAsync();
                 await NotifyNoResponseAndSuggestNextAdvisorAsync(booking);
                 throw new InvalidOperationException("Booking response window has expired.");
@@ -564,6 +565,35 @@ namespace AISEP.BLL.Services.Bookings
                 bookingSlot.AdvisorAvailability.UpdatedAt = DateTime.UtcNow;
                 _unitOfWork.AdvisorAvailabilities.Update(bookingSlot.AdvisorAvailability);
             }
+        }
+
+        private async Task RefundFreeBookingQuotaAsync(Booking booking)
+        {
+            if (booking.FreeQuotaType == BookingFreeQuotaType.None)
+            {
+                return;
+            }
+
+            if (booking.FreeQuotaType == BookingFreeQuotaType.Premium)
+            {
+                var usageLog = await _unitOfWork.PremiumFreeBookingUsageLogs.GetByBookingIdAsync(booking.BookingId);
+                var subscription = usageLog is null
+                    ? await _unitOfWork.Subscriptions.GetLatestActiveAsync(booking.CustomerId)
+                    : await _unitOfWork.Subscriptions.GetByIdAsync(usageLog.SubscriptionId);
+
+                if (subscription is null)
+                {
+                    throw new InvalidOperationException("Premium free booking usage subscription not found for refund.");
+                }
+
+                subscription.RemainingFreeBookings += 1;
+                _unitOfWork.Subscriptions.Update(subscription);
+                return;
+            }
+
+            var customer = await _unitOfWork.Users.GetByIdAsync(booking.CustomerId)
+                ?? throw new KeyNotFoundException("Customer not found.");
+            customer.BonusFreeBookings += 1;
         }
 
         private async Task EnsureProjectSelectableForCurrentUserAsync(Project project, int currentUserId, string? currentRole)

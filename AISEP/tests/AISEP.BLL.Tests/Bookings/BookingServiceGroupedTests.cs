@@ -15,6 +15,7 @@ using AISEP.DAL.Repositories.Projects;
 using AISEP.DAL.Repositories.ProjectAdvisorAssignments;
 using AISEP.DAL.Repositories.Subscriptions;
 using AISEP.DAL.Repositories.SystemCommissionConfigs;
+using AISEP.DAL.Repositories.Users;
 using AutoMapper;
 using Moq;
 using Sieve.Services;
@@ -538,6 +539,88 @@ public class BookingServiceGroupedTests
             Times.Once);
     }
 
+    [Fact]
+    public async Task UT129_RejectBookingAsync_ShouldRefundPremiumFreeQuota_WhenRejected()
+    {
+        var booking = BuildAdvisorActionBooking(
+            bookingId: 806,
+            advisorId: 10,
+            customerId: 5000,
+            status: BookingStatus.Pending,
+            createdAt: DateTime.UtcNow.AddMinutes(-1),
+            price: 120,
+            isPaymentWaived: true,
+            includeProject: true);
+        booking.FreeQuotaType = BookingFreeQuotaType.Premium;
+
+        var subscription = new Subscription
+        {
+            SubscriptionId = 99,
+            UserId = booking.CustomerId,
+            RemainingFreeBookings = 0,
+            Status = SubscriptionStatus.Active,
+            StartDate = DateTime.UtcNow.AddDays(-1),
+            EndDate = DateTime.UtcNow.AddDays(10)
+        };
+
+        var (service, unitOfWork, bookingRepo, advisorRepo, _, _, _, _, subscriptionRepo, _, userService, _, _, usageLogRepo, _) = CreateSut();
+        bookingRepo.Setup(x => x.GetByIdForAdvisorActionAsync(806)).ReturnsAsync(booking);
+        advisorRepo.Setup(x => x.GetByUserIdAsync(7005)).ReturnsAsync(new Advisor { AdvisorId = 10, UserId = 7005, ApprovalStatus = ApprovalStatus.Approved });
+        userService.Setup(x => x.GetUserId()).Returns(7005);
+        usageLogRepo.Setup(x => x.GetByBookingIdAsync(806)).ReturnsAsync(new PremiumFreeBookingUsageLog
+        {
+            UserId = booking.CustomerId,
+            BookingId = booking.BookingId,
+            SubscriptionId = subscription.SubscriptionId,
+            BookingDurationHours = 1,
+            UsedAt = DateTime.UtcNow
+        });
+        subscriptionRepo.Setup(x => x.GetByIdAsync(subscription.SubscriptionId)).ReturnsAsync(subscription);
+
+        await service.RejectBookingAsync(806, "No fit now");
+
+        Assert.Equal(1, subscription.RemainingFreeBookings);
+        subscriptionRepo.Verify(x => x.Update(subscription), Times.Once);
+        unitOfWork.Verify(x => x.SaveChangesAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task UT130_ExpirePendingAdvisorResponsesAsync_ShouldRefundBonusFreeBooking_WhenNoResponse()
+    {
+        var booking = BuildAdvisorActionBooking(
+            bookingId: 807,
+            advisorId: 10,
+            customerId: 5000,
+            status: BookingStatus.Pending,
+            createdAt: DateTime.UtcNow.AddMinutes(-30),
+            price: 120,
+            isPaymentWaived: true,
+            includeProject: true);
+        booking.FreeQuotaType = BookingFreeQuotaType.Bonus;
+        var customer = new User
+        {
+            Id = booking.CustomerId,
+            UserName = "customer",
+            Role = UserRole.Investor,
+            Status = UserStatus.Active,
+            CreatedAt = DateTime.UtcNow,
+            BonusFreeBookings = 0
+        };
+
+        var (service, unitOfWork, bookingRepo, advisorRepo, _, _, _, _, _, _, _, _, _, _, _) = CreateSut();
+        var userRepo = Mock.Get(unitOfWork.Object.Users);
+        bookingRepo.Setup(x => x.GetExpiredAwaitingAdvisorResponseAsync(It.IsAny<DateTime>())).ReturnsAsync([booking]);
+        advisorRepo.Setup(x => x.GetAllQuery()).Returns(new List<Advisor>().AsQueryable());
+        userRepo.Setup(x => x.GetByIdAsync(booking.CustomerId)).ReturnsAsync(customer);
+
+        var count = await service.ExpirePendingAdvisorResponsesAsync();
+
+        Assert.Equal(1, count);
+        Assert.Equal(BookingStatus.NoResponse, booking.Status);
+        Assert.Equal(1, customer.BonusFreeBookings);
+        unitOfWork.Verify(x => x.SaveChangesAsync(), Times.Once);
+    }
+
     private static (
         BookingService Service,
         Mock<IUnitOfWork> UnitOfWork,
@@ -568,6 +651,7 @@ public class BookingServiceGroupedTests
         var mapperMock = new Mock<IMapper>();
         var notificationServiceMock = new Mock<INotificationService>();
         var usageLogRepositoryMock = new Mock<IPremiumFreeBookingUsageLogRepository>();
+        var userRepositoryMock = new Mock<IUserRepository>();
         var sieveProcessorMock = new Mock<ISieveProcessor>();
 
         var defaultAdvisor = BuildAdvisor(10, 9000, 100);
@@ -583,6 +667,7 @@ public class BookingServiceGroupedTests
         unitOfWorkMock.SetupGet(x => x.Subscriptions).Returns(subscriptionRepositoryMock.Object);
         unitOfWorkMock.SetupGet(x => x.SystemCommissionConfigs).Returns(commissionRepositoryMock.Object);
         unitOfWorkMock.SetupGet(x => x.PremiumFreeBookingUsageLogs).Returns(usageLogRepositoryMock.Object);
+        unitOfWorkMock.SetupGet(x => x.Users).Returns(userRepositoryMock.Object);
         unitOfWorkMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
 
         advisorRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(defaultAdvisor);
@@ -637,8 +722,7 @@ public class BookingServiceGroupedTests
                 Status = b.Status,
                 Price = b.Price,
                 Note = b.Note,
-                IsPaymentWaived = b.IsPaymentWaived,
-                UsedPremiumFreeQuota = b.UsedPremiumFreeQuota,
+                FreeQuotaType = b.FreeQuotaType,
                 AdvisorAvailabilitySlotIds = b.BookingSlots.Select(x => x.AdvisorAvailabilityId).ToList(),
                 SlotCount = b.BookingSlots.Count
             });
@@ -792,7 +876,7 @@ public class BookingServiceGroupedTests
             Status = status,
             CreatedAt = createdAt,
             Price = price,
-            IsPaymentWaived = isPaymentWaived,
+            FreeQuotaType = isPaymentWaived ? BookingFreeQuotaType.Bonus : BookingFreeQuotaType.None,
             BookingSlots =
             [
                 new BookingSlot

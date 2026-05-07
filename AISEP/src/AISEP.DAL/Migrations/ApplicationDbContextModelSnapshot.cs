@@ -263,10 +263,12 @@ namespace AISEP.Migrations
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsPaymentWaived")
+                    b.Property<string>("FreeQuotaType")
+                        .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("None");
 
                     b.Property<string>("Note")
                         .HasMaxLength(1000)
@@ -296,11 +298,6 @@ namespace AISEP.Migrations
 
                     b.Property<int?>("SystemCommissionConfigId")
                         .HasColumnType("integer");
-
-                    b.Property<bool>("UsedPremiumFreeQuota")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
 
                     b.HasKey("BookingId");
 
