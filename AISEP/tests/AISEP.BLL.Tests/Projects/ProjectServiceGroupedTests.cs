@@ -2,6 +2,7 @@ using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.BLL.Exceptions;
 using AISEP.BLL.Services.FormValidationRules;
+using AISEP.BLL.Services.Notifications;
 using AISEP.BLL.Services.Projects;
 using AISEP.BLL.Services.Storage;
 using AISEP.BLL.Services.Users;
@@ -345,6 +346,7 @@ public class ProjectServiceGroupedTests
         var userServiceMock = new Mock<IUserService>();
         var storageServiceMock = new Mock<IStorageService>();
         var dynamicFormValidationServiceMock = new Mock<IDynamicFormSubmissionValidationService>();
+        var notificationServiceMock = new Mock<INotificationService>();
         var industryOptionRepositoryMock = new Mock<IIndustryOptionRepository>();
         var stageOptionRepositoryMock = new Mock<IStageOptionRepository>();
         var sieveProcessorMock = new Mock<ISieveProcessor>();
@@ -469,7 +471,8 @@ public class ProjectServiceGroupedTests
             mapper,
             userServiceMock.Object,
             storageServiceMock.Object,
-            dynamicFormValidationServiceMock.Object);
+            dynamicFormValidationServiceMock.Object,
+            notificationServiceMock.Object);
 
         return (
             service,

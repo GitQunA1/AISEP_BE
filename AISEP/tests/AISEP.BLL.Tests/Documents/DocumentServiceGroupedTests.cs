@@ -2,6 +2,7 @@ using AISEP.BLL.DTOs.Requests;
 using AISEP.BLL.DTOs.Responses;
 using AISEP.BLL.Services.Blockchain;
 using AISEP.BLL.Services.Documents;
+using AISEP.BLL.Services.Notifications;
 using AISEP.BLL.Services.ProjectAdvisorAssignments;
 using AISEP.BLL.Services.Storage;
 using AISEP.BLL.Services.Users;
@@ -375,6 +376,7 @@ public class DocumentServiceGroupedTests
         var sieveProcessorMock = new Mock<ISieveProcessor>();
         var advisorsRepositoryMock = new Mock<IAdvisorsRepository>();
         var projectAdvisorAssignmentRepositoryMock = new Mock<IProjectAdvisorAssignmentRepository>();
+        var notificationServiceMock = new Mock<INotificationService>();
 
         var mapperConfig = new MapperConfiguration(cfg =>
         {
@@ -430,7 +432,8 @@ public class DocumentServiceGroupedTests
             sieveProcessorMock.Object,
             mapper,
             userServiceMock.Object,
-            projectAdvisorAutoAssignServiceMock.Object);
+            projectAdvisorAutoAssignServiceMock.Object,
+            notificationServiceMock.Object);
 
         return (
             service,

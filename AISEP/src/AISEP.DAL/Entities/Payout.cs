@@ -20,6 +20,7 @@ namespace AISEP.DAL.Entities
         public DateTime? RetryRequestedAt { get; set; }
         public string? RetryRequestNote { get; set; }
         public string? Note { get; set; }
+        public string? PayoutProofFileUrl { get; set; }
         public string BankName { get; set; } = string.Empty;
         public string AccountNumber { get; set; } = string.Empty;
         public string AccountHolderName { get; set; } = string.Empty;

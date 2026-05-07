@@ -3,6 +3,7 @@ using AISEP.BLL.DTOs.Responses;
 using AISEP.BLL.Exceptions;
 using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.BackgroundServices;
+using AISEP.BLL.Services.Blockchain;
 using AISEP.BLL.Services.Deals;
 using AISEP.BLL.Services.Notifications;
 using AISEP.BLL.Services.Storage;
@@ -257,6 +258,7 @@ namespace AISEP.BLL.Tests.Deals
             var mapperMock = new Mock<IMapper>();
             var storageServiceMock = new Mock<IStorageService>();
             var queueMock = new Mock<IBlockchainOwnershipAssignmentQueue>();
+            var blockchainServiceMock = new Mock<IBlockchainService>();
 
             unitOfWorkMock.SetupGet(x => x.Deals).Returns(dealRepositoryMock.Object);
             unitOfWorkMock.SetupGet(x => x.Investors).Returns(investorRepositoryMock.Object);
@@ -327,6 +329,7 @@ namespace AISEP.BLL.Tests.Deals
                 notificationServiceMock.Object,
                 mapperMock.Object,
                 queueMock.Object,
+                blockchainServiceMock.Object,
                 storageServiceMock.Object,
                 sieveProcessor);
 
