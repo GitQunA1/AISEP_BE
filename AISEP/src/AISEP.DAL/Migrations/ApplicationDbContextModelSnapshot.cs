@@ -1066,6 +1066,10 @@ namespace AISEP.Migrations
                     b.Property<int?>("PayoutGroupId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("PayoutProofFileUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
                     b.Property<DateTime>("PeriodFromDate")
                         .HasColumnType("date");
 

@@ -785,6 +785,7 @@ namespace AISEP.DAL.Data
                 entity.Property(e => e.Amount).HasColumnType("decimal(18,2)").IsRequired();
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.Note).HasMaxLength(1000);
+                entity.Property(e => e.PayoutProofFileUrl).HasMaxLength(1000);
                 entity.Property(e => e.RejectReason).HasMaxLength(1000);
                 entity.Property(e => e.RetryRequestNote).HasMaxLength(1000);
                 entity.Property(e => e.BankName).HasMaxLength(255).IsRequired();
