@@ -217,34 +217,52 @@ namespace AISEP.BLL.Services.Documents
             if (project.Status != ProjectStatus.Pending)
                 throw new InvalidOperationException("Chỉ duyệt dự án đang chờ duyệt (Pending).");
 
-            var document = _unitOfWork.Documents.GetQueryable()
-                .FirstOrDefault(d => d.ProjectId == projectId);
-            if (document is null)
+            var documents = _unitOfWork.Documents.GetQueryable()
+                .Where(d => d.ProjectId == projectId)
+                .OrderBy(d => d.DocumentId)
+                .ToList();
+            if (documents.Count == 0)
                 throw new InvalidOperationException("Không tìm thấy tài liệu gắn với dự án này. Vui lòng upload tài liệu trước khi duyệt.");
 
-            if (string.IsNullOrEmpty(document.FileHash))
-                throw new InvalidOperationException("Tài liệu chưa có thông tin hash. Vui lòng upload lại tài liệu.");
+            var documentMissingHash = documents.FirstOrDefault(d => string.IsNullOrEmpty(d.FileHash));
+            if (documentMissingHash is not null)
+                throw new InvalidOperationException($"Tài liệu {documentMissingHash.DocumentId} chưa có thông tin hash. Vui lòng upload lại tài liệu.");
 
-            string txHash;
-            try
+            foreach (var document in documents)
             {
-                txHash = await _blockchainService.RegisterDocumentAsync(document.FileHash, projectId);
-            }
-            catch (SmartContractRevertException ex)
-            {
-                if (ex.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase))
+                if (!string.IsNullOrWhiteSpace(document.BlockchainTxHash))
                 {
-                    throw new InvalidOperationException(
-                        "Document hash already exists on blockchain. This project may have been approved before or the same file was already registered.");
+                    if (!document.IsIpProtected || document.VerifiedAt is null)
+                    {
+                        document.IsIpProtected = true;
+                        document.VerifiedAt ??= DateTime.UtcNow;
+                        _unitOfWork.Documents.Update(document);
+                    }
+
+                    continue;
                 }
 
-                throw new InvalidOperationException($"Blockchain transaction failed: {ex.Message}");
-            }
+                string txHash;
+                try
+                {
+                    txHash = await _blockchainService.RegisterDocumentAsync(document.FileHash!, projectId);
+                }
+                catch (SmartContractRevertException ex)
+                {
+                    if (ex.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase))
+                    {
+                        throw new InvalidOperationException(
+                            "Document hash already exists on blockchain. This project may have been approved before or the same file was already registered.");
+                    }
 
-            document.BlockchainTxHash = txHash;
-            document.IsIpProtected = true;
-            document.VerifiedAt = DateTime.UtcNow;
-            _unitOfWork.Documents.Update(document);
+                    throw new InvalidOperationException($"Blockchain transaction failed: {ex.Message}");
+                }
+
+                document.BlockchainTxHash = txHash;
+                document.IsIpProtected = true;
+                document.VerifiedAt = DateTime.UtcNow;
+                _unitOfWork.Documents.Update(document);
+            }
 
             project.Status = ProjectStatus.Approved;
             project.ApprovedAt = DateTime.UtcNow;
@@ -262,7 +280,7 @@ namespace AISEP.BLL.Services.Documents
                 project.ProjectId,
                 "Project");
 
-            return _mapper.Map<DocumentResponse>(document);
+            return _mapper.Map<DocumentResponse>(documents[0]);
         }
 
         private async Task EnsureCanViewProjectDocumentsAsync(int projectId, int userId, string role)
