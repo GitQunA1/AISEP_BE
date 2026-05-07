@@ -2,6 +2,7 @@
 using AISEP.BLL.DTOs.Responses;
 using AISEP.BLL.Helpers;
 using AISEP.BLL.Services.Notifications;
+using AISEP.BLL.Services.Storage;
 using AISEP.DAL.Common;
 using AISEP.DAL.Entities;
 using AISEP.DAL.Enums;
@@ -19,19 +20,22 @@ namespace AISEP.BLL.Services.Payouts
         private readonly IMapper _mapper;
         private readonly IPayoutGroupService _payoutGroupService;
         private readonly INotificationService _notificationService;
+        private readonly IStorageService _storageService;
 
         public PayoutService(
             IUnitOfWork unitOfWork,
             ISieveProcessor sieveProcessor,
             IMapper mapper,
             IPayoutGroupService payoutGroupService,
-            INotificationService notificationService)
+            INotificationService notificationService,
+            IStorageService storageService)
         {
             _unitOfWork = unitOfWork;
             _sieveProcessor = sieveProcessor;
             _mapper = mapper;
             _payoutGroupService = payoutGroupService;
             _notificationService = notificationService;
+            _storageService = storageService;
         }
 
         public async Task<PayoutResponse> MarkPaidAsync(int payoutId, int staffUserId, MarkPayoutPaidRequest request)
@@ -52,6 +56,8 @@ namespace AISEP.BLL.Services.Payouts
             {
                 throw new InvalidOperationException("Wallet balance is not enough to mark this payout as paid.");
             }
+
+            var proofFileUrl = await UploadProofFileAsync(request.ProofFile);
 
             payout.Wallet.Balance = Math.Round(payout.Wallet.Balance - payout.Amount, 2, MidpointRounding.AwayFromZero);
             _unitOfWork.Wallets.Update(payout.Wallet);
@@ -89,6 +95,7 @@ namespace AISEP.BLL.Services.Payouts
             payout.RejectedById = null;
             payout.RejectReason = null;
             payout.Note = string.IsNullOrWhiteSpace(request.Note) ? payout.Note : request.Note.Trim();
+            payout.PayoutProofFileUrl = proofFileUrl;
 
             _unitOfWork.Payouts.Update(payout);
             await _unitOfWork.SaveChangesAsync();
@@ -101,6 +108,41 @@ namespace AISEP.BLL.Services.Payouts
             await NotifyAdvisorPaidAsync(payout);
 
             return _mapper.Map<PayoutResponse>(payout);
+        }
+
+        private async Task<string> UploadProofFileAsync(IFormFile? proofFile)
+        {
+            if (proofFile is null || proofFile.Length == 0)
+            {
+                throw new InvalidOperationException("Vui lòng upload chứng từ thanh toán.");
+            }
+
+            EnsureSupportedProofFile(proofFile);
+            return await _storageService.UploadFileAsync(proofFile, "payout-proofs");
+        }
+
+        private static void EnsureSupportedProofFile(IFormFile file)
+        {
+            var contentType = file.ContentType?.Trim().ToLowerInvariant();
+            var extension = Path.GetExtension(file.FileName).Trim().ToLowerInvariant();
+            var isAllowed = (contentType, extension) switch
+            {
+                ("application/pdf", ".pdf") => true,
+                ("image/jpeg", ".jpg") => true,
+                ("image/jpeg", ".jpeg") => true,
+                ("image/png", ".png") => true,
+                _ => false
+            };
+
+            if (!isAllowed)
+            {
+                throw new InvalidOperationException("Chứng từ thanh toán chỉ hỗ trợ PDF, JPG hoặc PNG.");
+            }
+
+            if (file.Length > 10 * 1024 * 1024)
+            {
+                throw new InvalidOperationException("Chứng từ thanh toán không được vượt quá 10MB.");
+            }
         }
 
         public async Task<PayoutResponse> RequestRetryAsync(int payoutId, int advisorUserId, RequestPayoutRetryRequest request)

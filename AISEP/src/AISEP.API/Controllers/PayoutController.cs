@@ -23,7 +23,7 @@ namespace AISEP.API.Controllers
 
         [HttpPatch("{id:int}/mark-paid")]
         [Authorize(Roles = "Staff,Admin")]
-        public async Task<IActionResult> MarkPaid(int id, [FromBody] MarkPayoutPaidRequest request)
+        public async Task<IActionResult> MarkPaid(int id, [FromForm] MarkPayoutPaidRequest request)
         {
             var staffId = _userService.GetUserId();
             var result = await _payoutService.MarkPaidAsync(id, staffId, request);

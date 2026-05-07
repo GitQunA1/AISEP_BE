@@ -38,7 +38,7 @@ namespace AISEP.BLL.Services.AI
     public interface IOpenAiService
     {
         Task<AiAnalysisResult> AnalyzeProjectAsync(Project project, ScorecardBaseScoreResult baseScore, string? documentText = null);
-        Task<AiEligibilityResult> EvaluateStartupEligibilityAsync(Project project, IEnumerable<Document> documents, string? documentText = null);
+        Task<AiEligibilityResult> EvaluateStartupEligibilityAsync(Project project, IEnumerable<Document> documents);
         Task<AiAnalysisResult> AnalyzeProjectForInvestorAsync(Project project, ScorecardBaseScoreResult baseScore, string? documentText = null);
     }
 }

@@ -16,6 +16,10 @@ namespace AISEP.DAL.Repositories.PremiumFreeBookingUsageLogs
         public async Task AddAsync(PremiumFreeBookingUsageLog log)
             => await _context.PremiumFreeBookingUsageLogs.AddAsync(log);
 
+        public async Task<PremiumFreeBookingUsageLog?> GetByBookingIdAsync(int bookingId)
+            => await _context.PremiumFreeBookingUsageLogs
+                .FirstOrDefaultAsync(x => x.BookingId == bookingId);
+
         public IQueryable<PremiumFreeBookingUsageLog> GetByUserIdQuery(int userId)
             => _context.PremiumFreeBookingUsageLogs
                 .Where(x => x.UserId == userId)

@@ -78,6 +78,7 @@ namespace AISEP.BLL.Services.ProjectAdvisorAssignments
             var advisorIds = advisorCandidates.Select(x => x.Advisor.AdvisorId).ToList();
             var today = DateTime.UtcNow.Date;
             var weekEndExclusive = today.AddDays(7);
+            var behaviorWindowStart = DateTime.UtcNow.AddDays(-30);
 
             var availableCounts = await _unitOfWork.AdvisorAvailabilities.GetQuery()
                 .Where(x => advisorIds.Contains(x.AdvisorId)
@@ -90,6 +91,7 @@ namespace AISEP.BLL.Services.ProjectAdvisorAssignments
 
             var rejectedCounts = await _unitOfWork.Bookings.GetBookingQuery()
                 .Where(b => advisorIds.Contains(b.AdvisorId)
+                            && b.CreatedAt >= behaviorWindowStart
                             && b.Status == BookingStatus.Cancel
                             && b.Note != null
                             && b.Note.Contains("[Advisor Reject]"))
@@ -99,6 +101,7 @@ namespace AISEP.BLL.Services.ProjectAdvisorAssignments
 
             var noResponseCounts = await _unitOfWork.Bookings.GetBookingQuery()
                 .Where(b => advisorIds.Contains(b.AdvisorId)
+                            && b.CreatedAt >= behaviorWindowStart
                             && b.Status == BookingStatus.NoResponse)
                 .GroupBy(b => b.AdvisorId)
                 .Select(g => new { AdvisorId = g.Key, Count = g.Count() })

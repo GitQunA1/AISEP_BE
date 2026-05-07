@@ -489,6 +489,7 @@ namespace AISEP.BLL.Services.Bookings
                 ? booking.Note
                 : $"[Advisor Reject] {reason}";
             ReleaseBookedSlots(booking);
+            await RefundFreeBookingQuotaAsync(booking);
 
             await _unitOfWork.SaveChangesAsync();
 
@@ -515,6 +516,7 @@ namespace AISEP.BLL.Services.Bookings
                     ? "[System] Booking marked as no-response because advisor did not respond within 1 minute."
                     : $"{booking.Note} | [System] Advisor response timeout (1m), marked as no-response.";
                 ReleaseBookedSlots(booking);
+                await RefundFreeBookingQuotaAsync(booking);
             }
 
             if (expiredBookings.Count > 0)
@@ -550,6 +552,7 @@ namespace AISEP.BLL.Services.Bookings
                     ? "[System] Booking marked as no-response because advisor response deadline passed."
                     : $"{booking.Note} | [System] Advisor response deadline passed, marked as no-response.";
                 ReleaseBookedSlots(booking);
+                await RefundFreeBookingQuotaAsync(booking);
                 await _unitOfWork.SaveChangesAsync();
                 await NotifyNoResponseAndSuggestNextAdvisorAsync(booking);
                 throw new InvalidOperationException("Booking response window has expired.");
@@ -564,6 +567,35 @@ namespace AISEP.BLL.Services.Bookings
                 bookingSlot.AdvisorAvailability.UpdatedAt = DateTime.UtcNow;
                 _unitOfWork.AdvisorAvailabilities.Update(bookingSlot.AdvisorAvailability);
             }
+        }
+
+        private async Task RefundFreeBookingQuotaAsync(Booking booking)
+        {
+            if (!booking.IsPaymentWaived)
+            {
+                return;
+            }
+
+            if (booking.UsedPremiumFreeQuota)
+            {
+                var usageLog = await _unitOfWork.PremiumFreeBookingUsageLogs.GetByBookingIdAsync(booking.BookingId);
+                var subscription = usageLog is null
+                    ? await _unitOfWork.Subscriptions.GetLatestActiveAsync(booking.CustomerId)
+                    : await _unitOfWork.Subscriptions.GetByIdAsync(usageLog.SubscriptionId);
+
+                if (subscription is null)
+                {
+                    throw new InvalidOperationException("Premium free booking usage subscription not found for refund.");
+                }
+
+                subscription.RemainingFreeBookings += 1;
+                _unitOfWork.Subscriptions.Update(subscription);
+                return;
+            }
+
+            var customer = await _unitOfWork.Users.GetByIdAsync(booking.CustomerId)
+                ?? throw new KeyNotFoundException("Customer not found.");
+            customer.BonusFreeBookings += 1;
         }
 
         private async Task EnsureProjectSelectableForCurrentUserAsync(Project project, int currentUserId, string? currentRole)

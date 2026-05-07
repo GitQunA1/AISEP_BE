@@ -108,8 +108,7 @@ namespace AISEP.BLL.Services.AI
             }
 
             var documents = (await _unitOfWork.Documents.GetByProjectIdAsync(projectId)).ToList();
-            var documentText = await ExtractProjectPdfTextAsync(projectId);
-            var result = await _openAiService.EvaluateStartupEligibilityAsync(project, documents, documentText);
+            var result = await _openAiService.EvaluateStartupEligibilityAsync(project, documents);
 
             var normalizedReason = NormalizeEligibilityReason(result.EligibilityReason);
             var eligibilityJson = JsonSerializer.Serialize(new StartupEligibilityResponse
