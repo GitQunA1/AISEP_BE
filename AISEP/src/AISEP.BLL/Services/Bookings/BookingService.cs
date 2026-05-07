@@ -141,7 +141,8 @@ namespace AISEP.BLL.Services.Bookings
                 Status = BookingStatus.Pending,
                 Note = dto.Note,
                 OldBookingId = dto.OldBookingId,
-                FreeQuotaType = BookingFreeQuotaType.None
+                IsPaymentWaived = false,
+                UsedPremiumFreeQuota = false
             };
 
             var hourlyRate = advisor.HourlyRate ?? 0;
@@ -166,9 +167,10 @@ namespace AISEP.BLL.Services.Bookings
                         throw new InvalidOperationException("You do not have any free premium booking quota left.");
                     }
 
+                    booking.IsPaymentWaived = true;
                     subscription.RemainingFreeBookings -= 1;
                     _unitOfWork.Subscriptions.Update(subscription);
-                    booking.FreeQuotaType = BookingFreeQuotaType.Premium;
+                    booking.UsedPremiumFreeQuota = true;
                 }
                 else
                 {
@@ -177,8 +179,8 @@ namespace AISEP.BLL.Services.Bookings
                         throw new InvalidOperationException("You do not have any bonus free booking quota left.");
                     }
 
+                    booking.IsPaymentWaived = true;
                     customer.BonusFreeBookings -= 1;
-                    booking.FreeQuotaType = BookingFreeQuotaType.Bonus;
                 }
             }
 
@@ -195,7 +197,7 @@ namespace AISEP.BLL.Services.Bookings
                 await _unitOfWork.Bookings.AddAsync(booking);
                 await _unitOfWork.SaveChangesAsync();
 
-                if (booking.FreeQuotaType == BookingFreeQuotaType.Premium)
+                if (booking.UsedPremiumFreeQuota)
                 {
                     var latestSubscription = await _unitOfWork.Subscriptions.GetLatestActiveAsync(currentUser)
                         ?? throw new InvalidOperationException("Active subscription not found while logging premium free booking usage.");
@@ -446,7 +448,7 @@ namespace AISEP.BLL.Services.Bookings
             if (booking.Status != BookingStatus.Pending)
                 throw new InvalidOperationException("Only pending bookings can be approved.");
 
-            booking.Status = booking.FreeQuotaType != BookingFreeQuotaType.None || booking.Price <= 0m
+            booking.Status = booking.IsPaymentWaived || booking.Price <= 0m
                 ? BookingStatus.Confirmed
                 : BookingStatus.ApprovedAwaitingPayment;
             await _unitOfWork.SaveChangesAsync();
@@ -569,12 +571,12 @@ namespace AISEP.BLL.Services.Bookings
 
         private async Task RefundFreeBookingQuotaAsync(Booking booking)
         {
-            if (booking.FreeQuotaType == BookingFreeQuotaType.None)
+            if (!booking.IsPaymentWaived)
             {
                 return;
             }
 
-            if (booking.FreeQuotaType == BookingFreeQuotaType.Premium)
+            if (booking.UsedPremiumFreeQuota)
             {
                 var usageLog = await _unitOfWork.PremiumFreeBookingUsageLogs.GetByBookingIdAsync(booking.BookingId);
                 var subscription = usageLog is null

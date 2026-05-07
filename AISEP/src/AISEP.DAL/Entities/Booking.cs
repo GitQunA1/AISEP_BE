@@ -14,7 +14,8 @@ namespace AISEP.DAL.Entities
         public int? SystemCommissionConfigId { get; set; }
         public decimal SystemCommissionAmount { get; set; }
         public int? OldBookingId { get; set; }
-        public BookingFreeQuotaType FreeQuotaType { get; set; } = BookingFreeQuotaType.None;
+        public bool IsPaymentWaived { get; set; }
+        public bool UsedPremiumFreeQuota { get; set; }
         public BookingStatus Status { get; set; }
         public string? Note { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

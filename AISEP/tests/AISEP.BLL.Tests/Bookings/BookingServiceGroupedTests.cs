@@ -551,7 +551,7 @@ public class BookingServiceGroupedTests
             price: 120,
             isPaymentWaived: true,
             includeProject: true);
-        booking.FreeQuotaType = BookingFreeQuotaType.Premium;
+        booking.UsedPremiumFreeQuota = true;
 
         var subscription = new Subscription
         {
@@ -596,7 +596,7 @@ public class BookingServiceGroupedTests
             price: 120,
             isPaymentWaived: true,
             includeProject: true);
-        booking.FreeQuotaType = BookingFreeQuotaType.Bonus;
+        booking.UsedPremiumFreeQuota = false;
         var customer = new User
         {
             Id = booking.CustomerId,
@@ -722,7 +722,8 @@ public class BookingServiceGroupedTests
                 Status = b.Status,
                 Price = b.Price,
                 Note = b.Note,
-                FreeQuotaType = b.FreeQuotaType,
+                IsPaymentWaived = b.IsPaymentWaived,
+                UsedPremiumFreeQuota = b.UsedPremiumFreeQuota,
                 AdvisorAvailabilitySlotIds = b.BookingSlots.Select(x => x.AdvisorAvailabilityId).ToList(),
                 SlotCount = b.BookingSlots.Count
             });
@@ -876,7 +877,7 @@ public class BookingServiceGroupedTests
             Status = status,
             CreatedAt = createdAt,
             Price = price,
-            FreeQuotaType = isPaymentWaived ? BookingFreeQuotaType.Bonus : BookingFreeQuotaType.None,
+            IsPaymentWaived = isPaymentWaived,
             BookingSlots =
             [
                 new BookingSlot
