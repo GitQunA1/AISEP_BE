@@ -490,7 +490,8 @@ namespace AISEP.DAL.Data
                 entity.HasKey(e => e.BookingId);
                 entity.Property(e => e.Price).HasColumnType("decimal(18,2)").IsRequired();
                 entity.Property(e => e.SystemCommissionAmount).HasColumnType("decimal(18,2)").HasDefaultValue(0m);
-                entity.Property(e => e.FreeQuotaType).HasConversion<string>().HasMaxLength(50).IsRequired().HasDefaultValue(BookingFreeQuotaType.None);
+                entity.Property(e => e.IsPaymentWaived).HasDefaultValue(false);
+                entity.Property(e => e.UsedPremiumFreeQuota).HasDefaultValue(false);
                 entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.Note).HasMaxLength(1000);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
