@@ -34,25 +34,14 @@ namespace AISEP.BLL.Services.AI
             return ParseResponse(responseJson);
         }
 
-        public async Task<AiEligibilityResult> EvaluateStartupEligibilityAsync(Project project, IEnumerable<Document> documents)
+        public async Task<AiEligibilityResult> EvaluateStartupEligibilityAsync(Project project, IEnumerable<Document> documents, string? documentText = null)
         {
             var docList = documents.ToList();
-            var prompt = BuildEligibilityPrompt(project, docList);
-            var inputParts = await BuildInputPartsAsync(docList);
+            var prompt = BuildEligibilityPrompt(project, docList, documentText);
 
-            _logger.LogInformation("Calling OpenAI eligibility evaluation: model={Model}, inputParts={Count}",
-                _settings.Model, inputParts.Count);
-            try
-            {
-                var responseJson = await CallOpenAiAsync(prompt, inputParts);
-                return ParseEligibilityResponse(responseJson);
-            }
-            catch (HttpRequestException ex) when (inputParts.Count > 0)
-            {
-                _logger.LogWarning("Eligibility document input call failed ({Msg}). Retrying text-only...", ex.Message);
-                var responseJson = await CallOpenAiAsync(prompt, []);
-                return ParseEligibilityResponse(responseJson);
-            }
+            _logger.LogInformation("Calling OpenAI eligibility evaluation: model={Model}", _settings.Model);
+            var responseJson = await CallOpenAiAsync(prompt, []);
+            return ParseEligibilityResponse(responseJson);
         }
 
         public async Task<AiAnalysisResult> AnalyzeProjectForInvestorAsync(Project project, ScorecardBaseScoreResult baseScore, string? documentText = null)
@@ -216,11 +205,14 @@ namespace AISEP.BLL.Services.AI
             };
         }
 
-        private string BuildEligibilityPrompt(Project project, List<Document> documents)
+        private string BuildEligibilityPrompt(Project project, List<Document> documents, string? documentText)
         {
             var readable = documents.Where(d => GetMimeType(d.FileName) is not null).ToList();
             var skipped = documents.Where(d => GetMimeType(d.FileName) is null).ToList();
             var docCount = readable.Count;
+            var documentSection = string.IsNullOrWhiteSpace(documentText)
+                ? "Không có nội dung PDF đọc được."
+                : documentText.Trim();
 
             var docSummary = docCount > 0
                 ? string.Join(", ", readable.Select(d => $"{d.DocumentType} ({d.FileName})"))
@@ -278,6 +270,9 @@ namespace AISEP.BLL.Services.AI
                 Competitors: {{project.Competitors ?? "N/A"}}
                 Uploaded Documents ({{docCount}} tài liệu đọc được){{skippedSummary}}:
                 {{docSummary}}
+
+                --- NỘI DUNG PDF ĐÍNH KÈM ĐÃ TRÍCH XUẤT ---
+                {{documentSection}}
 
                 ĐỊNH DẠNG OUTPUT JSON:
                 Trả về ONLY JSON, không markdown, không text thêm:
