@@ -10,6 +10,8 @@
   <img src="https://img.shields.io/badge/Ethereum-Sepolia-3C3C3D?logo=ethereum&logoColor=white" alt="Ethereum Sepolia" />
   <img src="https://img.shields.io/badge/SignalR-Realtime-512BD4?logo=dotnet&logoColor=white" alt="SignalR" />
   <img src="https://img.shields.io/badge/Cloudinary-Storage-3448C5?logo=cloudinary&logoColor=white" alt="Cloudinary" />
+  <img src="https://img.shields.io/badge/AWS-Cloud-FF9900?logo=amazonaws&logoColor=white" alt="AWS" />
+  <img src="https://img.shields.io/badge/Cloudflare-Tunnel-F38020?logo=cloudflare&logoColor=white" alt="Cloudflare" />
   <img src="https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white" alt="Docker" />
 </p>
 
@@ -82,7 +84,35 @@ All sensitive documents are **hashed and registered on the Ethereum Sepolia bloc
 | **API Docs** | Swagger / Swashbuckle |
 | **Containerization** | Docker (multi-stage build) |
 
-### Architecture
+### Infrastructure & Deployment
+
+| Category | Technology / Service |
+|---|---|
+| **Cloud Provider** | **AWS** — Both the Backend API server and the PostgreSQL database are hosted on AWS EC2/RDS instances (bootstrapped with the AWS $100 free credit). |
+| **Network Security** | **Cloudflare Tunnel** — The server is securely exposed to the internet through a Cloudflare Tunnel. This eliminates the need to open inbound firewall ports and provides built-in DDoS protection, bot mitigation, and TLS termination. |
+| **Production Domain** | **`aisep.tech`** — The production API is reachable at `https://aisep.tech`. The tunnel routes all traffic from this domain directly to the Docker container running on the AWS instance. |
+
+```
+  [Client / Frontend]  →  https://aisep.tech
+          │
+          ▼
+  ┌───────────────────┐
+  │  Cloudflare Edge  │  ← DDoS protection, TLS, WAF
+  └───────────────────┘
+          │  (Cloudflare Tunnel — outbound only)
+          ▼
+  ┌───────────────────────────────────────┐
+  │           AWS EC2 Instance            │
+  │  ┌─────────────────────────────────┐  │
+  │  │  Docker: AISEP.API (port 8080)  │  │
+  │  └─────────────────────────────────┘  │
+  │  ┌─────────────────────────────────┐  │
+  │  │  PostgreSQL Database (port 5432)│  │
+  │  └─────────────────────────────────┘  │
+  └───────────────────────────────────────┘
+```
+
+### Application Architecture
 
 The project follows a **classic 3-layer architecture**:
 
@@ -120,8 +150,9 @@ AISEP_BE/
 │   │   │   ├── Middleware/             #   Global exception handler
 │   │   │   ├── ContractABI.json        #   Ethereum smart contract ABI
 │   │   │   ├── Dockerfile              #   Multi-stage Docker build
-│   │   │   ├── Program.cs             #   DI, Auth, CORS, pipeline config
-│   │   │   └── appsettings.json       #   Application configuration
+│   │   │   ├── Program.cs              #   DI, Auth, CORS, pipeline config
+│   │   │   ├── appsettings.json        #   🔒 Real secrets — Git-ignored!
+│   │   │   └── appsettings.example.json  #   Template with dummy values — committed to Git
 │   │   │
 │   │   ├── AISEP.BLL/                  # 🧠 Business Logic Layer
 │   │   │   ├── Services/              #   41 service modules
@@ -202,13 +233,16 @@ CREATE DATABASE "aisepDB";
 
 ### 3. Configure Application Settings
 
-Create or edit the development configuration file:
+The repository includes `appsettings.example.json` — a safe template with dummy/placeholder values committed to Git. The real `appsettings.json` (containing actual secrets) is **gitignored** and never pushed to GitHub.
 
-```
-AISEP/src/AISEP.API/appsettings.Development.json
+Copy the template and fill in your own credentials:
+
+```bash
+cd AISEP/src/AISEP.API
+cp appsettings.example.json appsettings.json
 ```
 
-> 📄 A ready-to-use template is provided in the repository as `appsettings.Development.json`. Fill in your own API keys and credentials. See the **[appsettings.Development.json Template](#appsettings-template)** section below.
+Then open `appsettings.json` and replace every `YOUR_..._HERE` placeholder with your actual values.
 
 ### 4. Restore NuGet Packages
 
@@ -336,23 +370,30 @@ The application runs **5 hosted background services**:
 
 ---
 
-## 📝 Environment Variables
+## 📝 Configuration & Environment Variables
 
-The application supports standard ASP.NET Core configuration layering:
+### Configuration File Strategy
+
+`appsettings.json` holds the real credentials and is **gitignored** — it is never pushed to GitHub. The repository instead ships `appsettings.example.json` as a safe template (with dummy values only) so new developers can clone the repo, copy the example file, rename it to `appsettings.json`, and fill in their own credentials.
 
 ```
-appsettings.json                    ← Base configuration
-appsettings.Development.json        ← Development overrides (gitignored)
-appsettings.Production.json         ← Production overrides
-Environment Variables               ← Highest priority (for Docker/CI)
+appsettings.example.json   ← committed to Git   (dummy values — safe to share)
+appsettings.json           ← Git-ignored         (your real secrets — local only)
 ```
 
-For Docker deployments, override settings using the `__` separator:
+### Production on AWS (Docker + Cloudflare Tunnel)
+
+On the AWS EC2 instance, sensitive settings are passed via environment variables at Docker runtime, keeping no secret files on disk:
 
 ```bash
-ConnectionStrings__DefaultConnection="Host=...;Port=5432;..."
-JwtSettings__SecretKey="your-secret"
+docker run -p 8080:8080 \
+  -e "ConnectionStrings__DefaultConnection=Host=localhost;Port=5432;Database=aisepDB;..." \
+  -e "JwtSettings__SecretKey=your-production-secret" \
+  -e "OpenAISettings__ApiKey=sk-..." \
+  aisep-api
 ```
+
+Traffic is then routed from `https://aisep.tech` through the **Cloudflare Tunnel** to the container's port `8080` — no inbound firewall ports need to be opened on the EC2 instance.
 
 ---
 
