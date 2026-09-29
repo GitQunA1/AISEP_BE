@@ -83,7 +83,8 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(
                 "http://localhost:3000",
                 "https://aisep.tech",
-                "https://www.aisep.tech")
+                "https://www.aisep.tech",
+                "https://aisep-web.vercel.app")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
@@ -331,8 +332,6 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
-
-
 
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
