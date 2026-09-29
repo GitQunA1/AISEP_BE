@@ -5,11 +5,8 @@ WORKDIR /src
 # Copy project files
 COPY . ./
 
-# Restore packages
-RUN dotnet restore "AISEP.API.csproj"
-
-# Build and publish
-RUN dotnet publish "AISEP.API.csproj" -c Release -o /app/publish
+RUN dotnet restore "AISEP.API/AISEP.API.csproj"
+RUN dotnet publish "AISEP.API/AISEP.API.csproj" -c Release -o /app/publish
 
 # ===== STAGE 2: Run =====
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
